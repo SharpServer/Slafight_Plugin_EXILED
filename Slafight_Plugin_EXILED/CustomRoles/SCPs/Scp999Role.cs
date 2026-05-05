@@ -50,11 +50,7 @@ public class Scp999Role : CRole
         player.SetCustomInfo("SCP-999");
 
         player.Position = Door.Get(DoorType.Scp173NewGate).Position + new Vector3(0f, 1f, 0f);
-        
-        Timing.CallDelayed(0.045f, () =>
-        {
-            LabApiHandler.Schem999(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
-        });
+        LabApiHandler.Schem999(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
     }
     
     private void CancelRagdoll(SpawningRagdollEventArgs ev)

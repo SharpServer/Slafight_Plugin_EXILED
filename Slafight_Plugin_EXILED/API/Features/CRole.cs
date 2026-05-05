@@ -359,6 +359,10 @@ public abstract class CRole
                     Text = $"<size=24>{Description}</size>", Id = "CRoleSpawnedHint"
                 };
             }
+
+            var display = player.GetPlayerDisplay();
+            display.TryGetHint("CRoleSpawnedHint", out var oldHint);
+            if (oldHint != null) player.RemoveHint(oldHint);
             player.AddHint(hint);
             Timing.CallDelayed(DescriptionDuration, () =>
             {
