@@ -15,7 +15,6 @@ using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
-using Random = UnityEngine.Random;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -29,28 +28,28 @@ public class CandyWarriersAttackEvent : SpecialEvent
 
     // ===== 内部状態 =====
     private bool _teslaDisabled = false;
-    private string warrierColor = "#ffffff";
+    private string _warrierColor = "#ffffff";
+
+    private EventHandler EventHandler => EventHandler.Instance;
 
     private Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio =>
         EventHandler.CreateAndPlayAudio;
 
+    // ===== 実行エントリポイント =====
     public override bool IsReadyToExecute()
     {
         return MapFlags.GetSeason() is SeasonTypeId.April or SeasonTypeId.Halloween;
     }
 
-    // ===== イベント入り口 =====
     protected override void OnExecute(int eventPID)
     {
         _teslaDisabled = false;
 
-        if (CancelIfOutdated())
-            return;
+        if (CancelIfOutdated()) return;
 
-        DoCandyWarriorsSetup();
+        Timing.RunCoroutine(RaidCoroutine());
     }
 
-    // ===== イベントサブスク / 解除 =====
     public override void RegisterEvents()
     {
         Exiled.Events.Handlers.Player.TriggeringTesla += DisableTesla;
@@ -62,200 +61,163 @@ public class CandyWarriersAttackEvent : SpecialEvent
     }
 
     // ===== メイン処理 =====
-    private void DoCandyWarriorsSetup()
+    private IEnumerator<float> RaidCoroutine()
     {
-        var eventHandler = EventHandler.Instance;
+        var evHandler = EventHandler;
 
         Warhead.IsLocked = true;
-        eventHandler.DeadmanDisable = true;
-
-        if (CancelIfOutdated())
-            return;
+        evHandler.DeadmanDisable = true;
 
         DecontaminationController.Singleton.DecontaminationOverride =
             DecontaminationController.DecontaminationStatus.Disabled;
         DecontaminationController.Singleton.TimeOffset = int.MinValue;
         DecontaminationController.DeconBroadcastDeconMessage = "除染は取り消されました";
 
-        if (CancelIfOutdated())
-            return;
+        yield return Timing.WaitForSeconds(1f);
+        if (CancelIfOutdated()) yield break;
 
-        var candyTargets = StaticUtils.SelectRandomPlayersByRatio(CTeam.SCPs, 1f / 3f);
-        foreach (var player in candyTargets)
+        // カラー決定
+        _warrierColor = MapFlags.GetSeason() is SeasonTypeId.April ? "#ff8cd9" : "#ff9633";
+
+        // 役職変換
+        foreach (var player in StaticUtils.SelectRandomPlayersByRatio(CTeam.SCPs, 1f / 3f))
         {
             player.SetRole(MapFlags.GetSeason() is SeasonTypeId.April
                 ? CRoleTypeId.CandyWarrierApril
                 : CRoleTypeId.CandyWarrierHalloween);
         }
 
-        // 以降の Cassie / シーケンスは元コードを移植
-        Timing.CallDelayed(8f, () =>
-        {
-            if (CancelIfOutdated()) return;
+        yield return Timing.WaitForSeconds(8f);
+        if (CancelIfOutdated()) yield break;
 
-            Exiled.API.Features.Cassie.MessageTranslated(
-                "$pitch_1.02 Danger Detected Unknown Organism in Gate A . Please Check $pitch_.2 .g4 .g1 .g2",
-                "警告、不明な生命体がGate Aで検出されました。確認を",
-                true);
+        Exiled.API.Features.Cassie.MessageTranslated(
+            "$pitch_1.02 Danger Detected Unknown Organism in Gate A . Please Check $pitch_.2 .g4 .g1 .g2",
+            "警告、不明な生命体がGate Aで検出されました。確認を",
+            true);
 
-            Timing.CallDelayed(12f, () =>
-            {
-                if (CancelIfOutdated()) return;
-                
-                if (MapFlags.GetSeason() is SeasonTypeId.April)
-                {
-                    warrierColor = "#ff8cd9";
-                }
-                else
-                {
-                    warrierColor = "#ff9633";
-                }
-                
-                Exiled.API.Features.Cassie.MessageTranslated(
-                    "$pitch_.8 Successfully terminated Foundations Cassie System and putted New Division Cassie System . Cassie is now under us",
-                    $"<color=#00b7eb>財団のCassieシステム</color>の<color=red>終了</color>に成功。新たな<color={warrierColor}>お菓子の戦士たちのCassieシステム</color>の導入も成功。<split> Cassieは今や<b><color={warrierColor}>お菓子の帝王</color></b>の手中にある。",
-                    false);
+        yield return Timing.WaitForSeconds(12f);
+        if (CancelIfOutdated()) yield break;
 
-                Timing.CallDelayed(45f, () =>
-                {
-                    if (CancelIfOutdated()) return;
+        Exiled.API.Features.Cassie.MessageTranslated(
+            "$pitch_.8 Successfully terminated Foundations Cassie System and putted New Division Cassie System . Cassie is now under us",
+            $"<color=#00b7eb>財団のCassieシステム</color>の<color=red>終了</color>に成功。新たな<color={_warrierColor}>お菓子の戦士たちのCassieシステム</color>の導入も成功。<split> Cassieは今や<b><color={_warrierColor}>お菓子の帝王</color></b>の手中にある。",
+            false);
 
-                    Exiled.API.Features.Cassie.MessageTranslated(
-                        "$pitch_.8 First Order . Light up all facility . Accepted .",
-                        $"<b><color={warrierColor}>お菓子の帝王</color></b>の最初の指令：全施設のライトアップ ...承認",
-                        false);
+        yield return Timing.WaitForSeconds(45f);
+        if (CancelIfOutdated()) yield break;
 
-                    Timing.RunCoroutine(LightUpCoroutine());
+        Exiled.API.Features.Cassie.MessageTranslated(
+            "$pitch_.8 First Order . Light up all facility . Accepted .",
+            $"<b><color={_warrierColor}>お菓子の帝王</color></b>の最初の指令：全施設のライトアップ ...承認",
+            false);
 
-                    Timing.CallDelayed(8f, () =>
-                    {
-                        if (CancelIfOutdated()) return;
+        Timing.RunCoroutine(LightUpCoroutine());
 
-                        Exiled.API.Features.Cassie.MessageTranslated(
-                            "$pitch_.8 Next Order . Turn off Tesla Gates . Accepted .",
-                            "次の指令：テスラゲートの無効化 ...承認",
-                            false);
+        yield return Timing.WaitForSeconds(8f);
+        if (CancelIfOutdated()) yield break;
 
-                        _teslaDisabled = true;
+        Exiled.API.Features.Cassie.MessageTranslated(
+            "$pitch_.8 Next Order . Turn off Tesla Gates . Accepted .",
+            "次の指令：テスラゲートの無効化 ...承認",
+            false);
 
-                        Timing.CallDelayed(8f, () =>
-                        {
-                            if (CancelIfOutdated()) return;
+        _teslaDisabled = true;
 
-                            Exiled.API.Features.Cassie.MessageTranslated(
-                                "$pitch_.8 All Division . Work Time .",
-                                "戦士達よ、働く時間だ。",
-                                false);
-                        });
-                    });
+        yield return Timing.WaitForSeconds(8f);
+        if (CancelIfOutdated()) yield break;
 
-                    var testingDelayedInt = 1000f;
-                    Timing.CallDelayed(testingDelayedInt, () =>
-                    {
-                        if (CancelIfOutdated()) return;
+        Exiled.API.Features.Cassie.MessageTranslated(
+            "$pitch_.8 All Division . Work Time .",
+            "戦士達よ、働く時間だ。",
+            false);
 
-                        var candyCount = Player.List.OfType<Player>().Count(player => player.GetCustomRole() is CRoleTypeId.CandyWarrierApril or CRoleTypeId.CandyWarrierHalloween);
+        yield return Timing.WaitForSeconds(1000f);
+        if (CancelIfOutdated()) yield break;
 
-                        if (candyCount != 0)
-                        {
-                            HandleCandyWarriorSuccess();
-                        }
-                        else
-                        {
-                            HandleCandyWarriorFailure();
-                        }
-                    });
-                });
-            });
-        });
+        bool candyAlive = Player.List.Any(p =>
+            p != null && p.GetCustomRole() is CRoleTypeId.CandyWarrierApril or CRoleTypeId.CandyWarrierHalloween);
+
+        if (candyAlive)
+            Timing.RunCoroutine(CandySuccessCoroutine());
+        else
+            HandleCandyWarriorFailure();
     }
 
-    private void HandleCandyWarriorSuccess()
+    // ===== 成功時 =====
+    private IEnumerator<float> CandySuccessCoroutine()
     {
-        if (CancelIfOutdated()) return;
+        if (CancelIfOutdated()) yield break;
 
         Exiled.API.Features.Cassie.MessageTranslated(
             "$pitch_.8 All Division Agents Tasks completed . Last Order . . $pitch_.75 Destroy the Facility . $pitch_.4 .g1 $pitch_.26 .g5 .g6 .g4 $pitch_2 .g1 $pitch_.75 Good by all anomalys and foundation personnels .",
-            $"全戦士達の任務完了を確認。最後の指令を下す：<b><color={warrierColor}>施設を爆破させよ</color></b>",
+            $"全戦士達の任務完了を確認。最後の指令を下す：<b><color={_warrierColor}>施設を爆破させよ</color></b>",
             true);
 
-        Timing.CallDelayed(15f, () =>
+        yield return Timing.WaitForSeconds(15f);
+        if (CancelIfOutdated()) yield break;
+
+        Exiled.API.Features.Cassie.MessageTranslated(
+            "$pitch_.2 .g4 .g4 $pitch_1 $pitch_.75 BY ORDER OF DIVISION COMMAND . THE DEAD MANS SEQUENCE AND ATTACK PROTOCOL ACTIVATED . DETONATION IN TMINUS 145 SECONDS . PLEASE B .g4 O .g6 .g3 .g4",
+            $"BY ORDER OF <color={_warrierColor}><b>DIVISION COMMAND</b></color>. THE DEAD MANS SEQUENCE AND PINK CANDY ATTACK PROTOCOL ACTIVATED. DETONATION IN T-145 SECONDS. <color=red><b>PLEASE BOOM</b></color>",
+            true);
+
+        yield return Timing.WaitForSeconds(10f);
+        if (CancelIfOutdated()) yield break;
+
+        CreateAndPlayAudio("cir.ogg", "Cassie", Vector3.zero, true, null, false, 999999999f, 0f);
+
+        SchematicObject schematicObject;
+        try
         {
-            if (CancelIfOutdated()) return;
+            schematicObject = ObjectSpawner.SpawnSchematic("Candy_Nuke", Vector3.zero);
+        }
+        catch (Exception)
+        {
+            yield break;
+        }
 
-            Exiled.API.Features.Cassie.MessageTranslated(
-                "$pitch_.2 .g4 .g4 $pitch_1 $pitch_.75 BY ORDER OF DIVISION COMMAND . THE DEAD MANS SEQUENCE AND ATTACK PROTOCOL ACTIVATED . DETONATION IN TMINUS 145 SECONDS . PLEASE B .g4 O .g6 .g3 .g4",
-                $"BY ORDER OF <color={warrierColor}><b>DIVISION COMMAND</b></color>. THE DEAD MANS SEQUENCE AND PINK CANDY ATTACK PROTOCOL ACTIVATED. DETONATION IN T-145 SECONDS. <color=red><b>PLEASE BOOM</b></color>",
-                true);
+        yield return Timing.WaitForSeconds(0.5f);
 
-            Timing.CallDelayed(10f, () =>
-            {
-                if (CancelIfOutdated()) return;
+        if (schematicObject == null) yield break;
 
-                CreateAndPlayAudio("cir.ogg", "Cassie", Vector3.zero, true, null!, false, 999999999f, 0f);
+        schematicObject.Position = new Vector3(-90f, 500f, -45f);
+        schematicObject.Rotation = Quaternion.Euler(new Vector3(0, 0, 55));
+        Timing.RunCoroutine(NukeDownCoroutine(schematicObject));
 
-                SchematicObject? schematicObject;
-                try
-                {
-                    schematicObject = ObjectSpawner.SpawnSchematic("Candy_Nuke", Vector3.zero);
-                }
-                catch (Exception)
-                {
-                    schematicObject = null;
-                    return;
-                }
+        ColorUtility.TryParseHtmlString("#ff4fad", out var roomColor);
+        foreach (var room in Room.List)
+        {
+            room.AreLightsOff = false;
+            room.Color = roomColor;
+        }
 
-                Timing.CallDelayed(0.5f, () =>
-                {
-                    if (schematicObject == null) return;
+        foreach (var door in Door.List)
+        {
+            if (door.Type is DoorType.ElevatorGateA or DoorType.ElevatorGateB
+                          or DoorType.ElevatorLczA  or DoorType.ElevatorLczB
+                          or DoorType.ElevatorNuke  or DoorType.ElevatorScp049
+                          or DoorType.ElevatorServerRoom)
+                continue;
 
-                    schematicObject.Position = new Vector3(-90f, 500f, -45f);
-                    schematicObject.Rotation = Quaternion.Euler(new Vector3(0, 0, 55));
-                    Timing.RunCoroutine(NukeDownCoroutine(schematicObject));
-                });
+            door.IsOpen = true;
+            door.Lock(DoorLockType.Warhead);
+        }
 
-                foreach (var room in Room.List)
-                {
-                    room.AreLightsOff = false;
-                    ColorUtility.TryParseHtmlString("#ff4fad", out var color);
-                    room.Color = color;
-                }
+        yield return Timing.WaitForSeconds(145f);
+        if (CancelIfOutdated()) yield break;
 
-                foreach (var door in Door.List)
-                {
-                    if (door.Type != DoorType.ElevatorGateA &&
-                        door.Type != DoorType.ElevatorGateB &&
-                        door.Type != DoorType.ElevatorLczA &&
-                        door.Type != DoorType.ElevatorLczB &&
-                        door.Type != DoorType.ElevatorNuke &&
-                        door.Type != DoorType.ElevatorScp049 &&
-                        door.Type != DoorType.ElevatorServerRoom)
-                    {
-                        door.IsOpen = true;
-                        door.Lock(DoorLockType.Warhead);
-                    }
-                }
+        foreach (var player in Player.List)
+        {
+            if (player == null || !player.IsAlive) continue;
 
-                Timing.CallDelayed(145f, () =>
-                {
-                    if (CancelIfOutdated()) return;
-
-                    foreach (var player in Player.List)
-                    {
-                        if (player == null || !player.IsAlive) continue;
-
-                        player.ExplodeEffect(ProjectileType.FragGrenade);
-
-                        if (player.Zone == ZoneType.Surface)
-                            player.Kill("MEGABALL ATTACKに爆破された");
-                        else
-                            player.Kill("ALPHA WARHEADに爆破された");
-                    }
-                });
-            });
-        });
+            player.ExplodeEffect(ProjectileType.FragGrenade);
+            player.Kill(player.Zone == ZoneType.Surface
+                ? "MEGABALL ATTACKに爆破された"
+                : "ALPHA WARHEADに爆破された");
+        }
     }
 
+    // ===== 失敗時 =====
     private void HandleCandyWarriorFailure()
     {
         if (CancelIfOutdated()) return;
@@ -269,43 +231,60 @@ public class CandyWarriersAttackEvent : SpecialEvent
     // ===== Tesla 無効化 =====
     private void DisableTesla(TriggeringTeslaEventArgs ev)
     {
-        if (CancelIfOutdated())
-            return;
-
+        if (CancelIfOutdated()) return;
         ev.DisableTesla = _teslaDisabled;
     }
 
     // ===== コルーチン =====
     private IEnumerator<float> NukeDownCoroutine(SchematicObject schem)
     {
+        if (schem == null || schem.transform == null)
+        {
+            Log.Warn("[Candy Raid] NukeDown aborted: schem or transform is null at start.");
+            yield break;
+        }
+
         float elapsedTime = 0f;
-        float totalDuration = 150f;
-        Vector3 startPos = new Vector3(-90f, 500f, schem.transform.position.z);
-        Vector3 endPos = new Vector3(70f, 300f, schem.transform.position.z);
+        const float totalDuration = 150f;
+        float z = schem.transform.position.z;
+        Vector3 startPos = new Vector3(-90f, 500f, z);
+        Vector3 endPos   = new Vector3( 70f, 300f, z);
 
         while (elapsedTime < totalDuration)
         {
-            if (CancelIfOutdated())
+            if (CancelIfOutdated() || Round.IsLobby || Round.IsEnded)
+            {
+                Log.Info("[Candy Raid] NukeDown stopped: event outdated or round ended.");
                 yield break;
+            }
+
+            if (schem == null || schem.transform == null)
+            {
+                Log.Warn("[Candy Raid] NukeDown stopped: schem destroyed.");
+                yield break;
+            }
 
             elapsedTime += Time.deltaTime;
-            float progress = elapsedTime / totalDuration;
-            schem.transform.position = Vector3.Lerp(startPos, endPos, progress);
+            schem.transform.position = Vector3.Lerp(startPos, endPos, elapsedTime / totalDuration);
+
             yield return 0f;
         }
+
+        if (schem != null && schem.transform != null)
+            schem.transform.position = endPos;
     }
 
     private IEnumerator<float> LightUpCoroutine()
     {
+        ColorUtility.TryParseHtmlString(_warrierColor, out var color);
+
         for (;;)
         {
-            if (CancelIfOutdated())
-                yield break;
+            if (CancelIfOutdated()) yield break;
 
-            foreach (Room room in Room.List)
+            foreach (var room in Room.List)
             {
                 room.AreLightsOff = false;
-                ColorUtility.TryParseHtmlString(warrierColor, out var color);
                 room.Color = color;
             }
 
