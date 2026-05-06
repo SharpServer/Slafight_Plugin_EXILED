@@ -251,23 +251,21 @@ public class SpecialEventsHandler : IBootstrapHandler
     /// </summary>
     private List<SpecialEventType> GetAllowedEvents()
     {
-        // 直近 N 件を HashSet にして O(1) で除外判定
         var recentEvents = new HashSet<SpecialEventType>(
             HappenedEvents.TakeLastCompat(EventCooldownCount)
         );
 
+        // HappenedEvents への記録タイミングがどうズレても
+        // CurrentEvent と同じイベントは絶対に選ばれないようにする保険
+        if (CurrentEvent != SpecialEventType.None)
+            recentEvents.Add(CurrentEvent);
+
         var allowed = new List<SpecialEventType>();
         foreach (SpecialEventType type in Enum.GetValues(typeof(SpecialEventType)))
         {
-            if (type == SpecialEventType.None)
-                continue;
-
-            if (!SpecialEvent.IsEventExecutable(type))
-                continue;
-
-            if (recentEvents.Contains(type))
-                continue;
-
+            if (type == SpecialEventType.None) continue;
+            if (!SpecialEvent.IsEventExecutable(type)) continue;
+            if (recentEvents.Contains(type)) continue;
             allowed.Add(type);
         }
 
@@ -351,12 +349,18 @@ public class SpecialEventsHandler : IBootstrapHandler
     public void RoundRestartSkipEvent()
     {
         EventPID++;
+
+        // CurrentEvent を None にクリアする前に履歴へ記録
+        // （RoundRestartAddEvent → SelectRandom が走る前に HappenedEvents へ確実に入れる）
+        if (CurrentEvent != SpecialEventType.None)
+            RecordHappenedEvent(CurrentEvent);
+
         CurrentEvent = SpecialEventType.None;
 
         if (EventQueue.Count <= 1)
             return;
 
-        SkipEvent();
+        SkipEvent(); // キュー先頭のイベントも別途記録される（二重記録だが実害なし）
     }
 
     public void RoundRestartAddEvent()
