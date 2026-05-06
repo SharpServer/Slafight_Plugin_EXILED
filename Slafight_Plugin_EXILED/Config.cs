@@ -8,31 +8,37 @@ namespace Slafight_Plugin_EXILED;
 using Exiled.API.Interfaces;
 public class Config : IConfig
 {
-    [Description("Set Enable or Disable")]
+    [Description("プラグインの有効/無効を設定します")]
     public bool IsEnabled { get; set; } = true;
-    [Description("Show Debug Logs?")]
+
+    [Description("デバッグログを出力するかどうか")]
     public bool Debug { get; set; } = true;
-    [Description("Server Specific Season. 0=Normal,1=Halloween,2=Christmas,3=April,4=FifthFestival")]
-    public int Season { get; set; } = 4;
-    [Description("Server Is Beta Mode?")]
+
+    [Description("サーバーのシーズンを設定します。0=通常, 1=ハロウィン, 2=クリスマス, 3=エイプリルフール, 4=第五祭")]
+    public int Season { get; set; } = 0;
+
+    [Description("ベータモードを有効にするかどうか")]
     public bool IsBeta { get; set; } = false;
-        
-    [Description("")]
+
+    [Description("音声ファイルのディレクトリパス。空欄の場合は EXILED/ServerContents をデフォルトとして使用します")]
     private string _audioReferences;
-    public string AudioReferences 
-    { 
-        get => string.IsNullOrEmpty(_audioReferences) 
+    public string AudioReferences
+    {
+        get => string.IsNullOrEmpty(_audioReferences)
             ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EXILED", "ServerContents")
             : _audioReferences;
         set => _audioReferences = value;
     }
-        
-    [Description("")]
+
+    [Description("SpecialEvent（ゲーム中に低確率で発生するイベント）の有効/無効を設定します")]
     public bool EventAllowed { get; set; } = true;
-    [Description("各 SpecialEvent の抽選重み設定")]
+
+    [Description("各SpecialEventの抽選重みを設定します。値が大きいほど発生しやすくなります")]
     public SpecialEventWeightContext EventWeights { get; set; } = new();
-    [Description("")]
+
+    [Description("Omega Warhead が爆発するまでの時間（秒）")]
     public float OwBoomTime { get; set; } = 160f;
-    [Description("")]
+
+    [Description("Delta Warhead が爆発するまでの時間（秒）")]
     public float DwBoomTime { get; set; } = 100f;
 }
