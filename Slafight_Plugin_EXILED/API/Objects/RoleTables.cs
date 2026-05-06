@@ -205,9 +205,9 @@ namespace Slafight_Plugin_EXILED.API.Objects
                 new RoleModePool(
                     Tables: new RoleTablePool(
                         ScpRoles: ScpRolesNormal,
-                        ScientistRoles: ScientistRoles,
+                        ScientistRoles: ScientistRolesApril,
                         GuardRoles: GuardRoles,
-                        ClassDRoles: ClassDRoles
+                        ClassDRoles: ClassDRolesApril
                     ),
                     Limits: RoleLimitPoolApril
                 )
