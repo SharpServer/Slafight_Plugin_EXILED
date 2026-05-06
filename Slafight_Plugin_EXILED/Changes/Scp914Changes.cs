@@ -62,16 +62,11 @@ public static class Scp914Changes
     /// <summary>全アイテム共通の 1/6 ロール。Scp513 または CapybaraMissile に置き換え。</summary>
     private static void RegisterWildcard()
     {
-        Scp914Registry.WildcardRule = Scp914Rule.Custom(ctx =>
-        {
-            var position = ctx.OutputPosition;
-            if (UnityEngine.Random.Range(0, 10) == 0)
-                CItem.Get<Scp513Item>()?.Spawn(position);
-            else
-                CItem.Get<CapybaraMissile>()?.Spawn(position);
-
-            ctx.Pickup?.Destroy();
-        }).WithChance(1f / 6f);
+        // 1/12 で当選後、さらに 1/10 で Scp513、残り 9/10 で CapybaraMissile
+        Scp914Registry.WildcardRule = Scp914Rule.Weighted(
+            (1f / 10f, Scp914Rule.ToCItem<Scp513Item>()),
+            (9f / 10f, Scp914Rule.ToCItem<CapybaraMissile>())
+        ).WithChance(1f / 12f);
     }
 
     /// <summary>vanilla ItemType → Custom/CItem の変換ルール。</summary>
@@ -79,12 +74,13 @@ public static class Scp914Changes
     {
         Scp914Registry.RegisterVanilla(ItemType.Adrenaline, new()
         {
-            All = Scp914Rule.ToCItem<SerumD>(),
+            VeryFine = Scp914Rule.ToCItem<SerumD>(),
         });
 
         Scp914Registry.RegisterVanilla(ItemType.SCP500, new()
         {
-            All = Scp914Rule.ToCItem<ClassXMemoryForcePil>(),
+            Fine = Scp914Rule.ToCItem<ClassXMemoryForcePil>(),
+            VeryFine = Scp914Rule.ToCItem<ClassZMemoryForcePil>().WithChance(1f / 4f)
         });
 
         Scp914Registry.RegisterVanilla(ItemType.KeycardJanitor, new()
@@ -107,10 +103,6 @@ public static class Scp914Changes
         {
             All = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 4f),
         });
-        Scp914Registry.RegisterVanilla(ItemType.KeycardMTFPrivate, new()
-        {
-            All = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 3f),
-        });
         Scp914Registry.RegisterVanilla(ItemType.KeycardContainmentEngineer, new()
         {
             OneToOne = Scp914Rule.ToCItem<Toolbox>(),
@@ -119,29 +111,40 @@ public static class Scp914Changes
             Fine     = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 3f),
             VeryFine = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 3f),
         });
+        Scp914Registry.RegisterVanilla(ItemType.KeycardMTFPrivate, new()
+        {
+            Coarse   = Scp914Rule.Destroy,
+            Rough    = Scp914Rule.ToVanilla(ItemType.KeycardGuard),
+            OneToOne = Scp914Rule.ToCItem<KeycardSecurityChief>(),
+            Fine     = Scp914Rule.Weighted((1f / 2f, Scp914Rule.ToVanilla(ItemType.KeycardMTFCaptain)), (1f / 2f, Scp914Rule.ToCItem<MasterCard>())),
+            VeryFine = Scp914Rule.ToCItem<MasterCard>()
+        });
         Scp914Registry.RegisterVanilla(ItemType.KeycardMTFOperative, new()
         {
-            All = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 2f),
+            Coarse   = Scp914Rule.ToCItem<KeycardConscripts>().WithChance(1f / 6f),
+            Rough    = Scp914Rule.ToVanilla(ItemType.KeycardMTFPrivate),
+            OneToOne = Scp914Rule.Keep,
+            Fine     = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 3f),
+            VeryFine = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 2f),
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardMTFCaptain, new()
         {
-            All = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 2f),
+            All = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 4f),
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardFacilityManager, new()
         {
-            All = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 2f),
+            All = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 4f),
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardChaosInsurgency, new()
         {
-            Coarse   = Scp914Rule.ToCItem<KeycardConscripts>().WithChance(1f / 4f),
-            Rough    = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 2f),
-            OneToOne = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 2f),
-            Fine     = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 2f),
+            Coarse   = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 6f),
+            Rough    = Scp914Rule.ToCItem<KeycardConscripts>(),
+            OneToOne = Scp914Rule.Keep,
+            Fine     = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 3f),
             VeryFine = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 2f),
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardO5, new()
         {
-            Fine     = Scp914Rule.ToCItem<OmegaWarheadAccess>().WithChance(1f / 2f),
             VeryFine = Scp914Rule.ToCItem<OmegaWarheadAccess>().WithChance(1f / 2f),
         });
 
@@ -193,6 +196,7 @@ public static class Scp914Changes
     {
         Scp914Registry.RegisterCItem<KeycardFifthist>(new()
         {
+            All = Scp914Rule.Destroy,
             Coarse   = Scp914Rule.ToCItem<Scp1425>(),
             Fine     = Scp914Rule.ToCItem<KeycardFifthistPriest>(),
             VeryFine = Scp914Rule.ToCItem<MagicMissile>().WithChance(1f / 3f),
@@ -200,6 +204,7 @@ public static class Scp914Changes
 
         Scp914Registry.RegisterCItem<KeycardFifthistPriest>(new()
         {
+            All = Scp914Rule.Destroy,
             Coarse   = Scp914Rule.ToCItem<KeycardFifthist>(),
             Fine     = Scp914Rule.ToCItem<MagicMissile>(),
             VeryFine = Scp914Rule.ToCItem<CaneOfTheStars>(),
@@ -207,11 +212,13 @@ public static class Scp914Changes
 
         Scp914Registry.RegisterCItem<Scp1425>(new()
         {
+            All = Scp914Rule.Destroy,
             OneToOne = Scp914Rule.ToCItem<GoCRecruitPaper>(),
         });
 
         Scp914Registry.RegisterCItem<GoCRecruitPaper>(new()
         {
+            All = Scp914Rule.Destroy,
             OneToOne = Scp914Rule.ToCItem<Scp1425>(),
         });
 
@@ -325,22 +332,15 @@ public static class Scp914Changes
 
         Scp914Registry.RegisterCItem<KeycardConscripts>(new()
         {
+            Rough    = Scp914Rule.Destroy, 
+            Coarse   = Scp914Rule.ToCItem<KeycardSecurityChief>(), 
+            OneToOne = Scp914Rule.Keep,
             Fine     = Scp914Rule.ToVanilla(ItemType.KeycardChaosInsurgency),
-            VeryFine = Scp914Rule.Custom(ctx =>
-            {
-                if (UnityEngine.Random.Range(0, 5) == 0)
-                {
-                    if (ctx.IsInventory)
-                        ctx.Owner!.AddItem(ItemType.KeycardO5);
-                    else
-                        Exiled.API.Features.Pickups.Pickup.CreateAndSpawn(ItemType.KeycardO5, ctx.OutputPosition);
-                }
-
-                if (ctx.IsInventory)
-                    ctx.Owner!.RemoveItem(ctx.Item!, true);
-                else
-                    ctx.Pickup?.Destroy();
-            }),
+            // 1/5 で KeycardO5、残り 4/5 は Destroy（入力消すだけ）
+            VeryFine = Scp914Rule.Weighted(
+                (1f / 5f, Scp914Rule.ToVanilla(ItemType.KeycardO5)),
+                (4f / 5f, Scp914Rule.Destroy)
+            ),
         });
 
         Scp914Registry.RegisterCItem<KeycardSecurityChief>(new()
@@ -354,8 +354,10 @@ public static class Scp914Changes
 
         Scp914Registry.RegisterCItem<CloakGenerator>(new()
         {
+            All = Scp914Rule.Destroy,
             Rough  = Scp914Rule.ToVanilla(ItemType.SCP268),
             Coarse = Scp914Rule.ToVanilla(ItemType.SCP268),
+            OneToOne = Scp914Rule.Keep
         });
 
         Scp914Registry.RegisterCItem<CaneOfTheStars>(new()
@@ -364,28 +366,21 @@ public static class Scp914Changes
             Coarse   = Scp914Rule.ToCItem<KeycardFifthistPriest>(),
             OneToOne = Scp914Rule.ToVanilla(ItemType.SCP1509),
             Fine     = Scp914Rule.Keep,
-            VeryFine = Scp914Rule.Custom(ctx =>
-            {
-                if (UnityEngine.Random.Range(0, 77) == 0)
-                {
-                    if (ctx.IsInventory)
-                        CItem.Get<SchwarzschildQuasar>()?.Give(ctx.Owner, true);
-                    else
-                        CItem.Get<SchwarzschildQuasar>()?.Spawn(ctx.OutputPosition);
-                }
-
-                if (ctx.IsInventory)
-                    ctx.Owner!.RemoveItem(ctx.Item!, true);
-                else
-                    ctx.Pickup?.Destroy();
-            })
+            // 1/77 で SchwarzschildQuasar、残りは Destroy
+            VeryFine = Scp914Rule.Weighted(
+                (1f / 77f, Scp914Rule.ToCItem<SchwarzschildQuasar>()),
+                (76f / 77f, Scp914Rule.Destroy)
+            ),
         });
 
         Scp914Registry.RegisterCItem<ThrowableScp244>(new()
         {
             Rough    = Scp914Rule.Destroy,
-            Coarse   = Scp914Rule.ToVanilla(_ =>
-                UnityEngine.Random.Range(0, 2) == 0 ? ItemType.SCP244a : ItemType.SCP244b),
+            // 50% SCP244a、50% SCP244b
+            Coarse   = Scp914Rule.Weighted(
+                (0.5f, Scp914Rule.ToVanilla(ItemType.SCP244a)),
+                (0.5f, Scp914Rule.ToVanilla(ItemType.SCP244b))
+            ),
             OneToOne = Scp914Rule.Keep,
             Fine     = Scp914Rule.Destroy,
             VeryFine = Scp914Rule.Destroy,

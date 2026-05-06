@@ -74,6 +74,14 @@ public static class Scp914Dispatcher
                     for (var i = 0; i < rule.Count; i++)
                         SpawnCItem(rule.CItemType!, ev.OutputPosition);
                     break;
+                
+                case Scp914RuleKind.Weighted:
+                {
+                    ev.IsAllowed = false;
+                    if (PickWeighted(rule) is { } picked)
+                        ApplyPickup(picked, ev);
+                    break;
+                }
 
                 case Scp914RuleKind.Custom:
                     ev.IsAllowed = false;
@@ -148,6 +156,14 @@ public static class Scp914Dispatcher
                     for (var i = 0; i < rule.Count; i++)
                         AddOrDropCItem(owner, rule.CItemType!, dropPosition);
                     break;
+                
+                case Scp914RuleKind.Weighted:
+                {
+                    ev.IsAllowed = false;
+                    if (PickWeighted(rule) is { } picked)
+                        ApplyInventory(picked, ev);
+                    break;
+                }
 
                 case Scp914RuleKind.Custom:
                     ev.IsAllowed = false;
@@ -221,5 +237,29 @@ public static class Scp914Dispatcher
 
         if (!player.IsInventoryFull && instance.Give(player, true) != null) return;
         instance.Spawn(dropPosition);
+    }
+    
+    /// <summary>
+    /// WeightedEntries から相対重みで 1 つ選ぶ。
+    /// 残り確率（合計 < 1 時）は null（Passthrough 相当）を返す。
+    /// </summary>
+    private static Scp914Rule? PickWeighted(Scp914Rule rule)
+    {
+        var entries = rule.WeightedEntries;
+        if (entries == null || entries.Length == 0) return null;
+
+        // 合計を算出し、正規化のベースを決める（>1 なら圧縮、≤1 なら残りは「ハズレ」）
+        float total = 0f;
+        foreach (var (w, _) in entries) total += w;
+        float normalizer = MathF.Max(total, 1f);
+
+        double roll = Random.NextDouble() * normalizer;
+        float cursor = 0f;
+        foreach (var (w, r) in entries)
+        {
+            cursor += w;
+            if (roll < cursor) return r;
+        }
+        return null; // ハズレ → Passthrough 相当
     }
 }
