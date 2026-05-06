@@ -105,20 +105,8 @@ public class Scp513Item : CItem
         if (!CheckHeld(ev.Player)) return;
         Scp513.AddTarget(ev.Player);
         ev.Player.ShowHint("<size=25>何か視線を感じる気がする...</size>");
-        Room? room = null;
-        var i = 0;
-        while (room is null || room.Type is RoomType.HczIncineratorWayside or RoomType.Hcz079)
-        {
-            if (i >= 5)
-            {
-                room = Room.Get(RoomType.HczHid);
-                break;
-            }
-            room = Room.Random(ZoneType.HeavyContainment);
-            i++;
-        }
-
-        Spawn(room.Cameras.GetRandomValue().Position);
+        var room = Room.Random(ZoneType.HeavyContainment);
+        Spawn(room.WorldPosition(Vector3.up * 0.25f));
         ev.Item?.Destroy();
     }
 }
