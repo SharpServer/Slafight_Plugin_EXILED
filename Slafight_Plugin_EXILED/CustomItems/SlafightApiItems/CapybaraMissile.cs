@@ -12,7 +12,7 @@ namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
 public class CapybaraMissile : CItemWeapon
 {
-    public override string DisplayName => "I love NW";
+    public override string DisplayName => "XXX-CAPYBARA-XXX";
     public override string Description => "HUBERT YEAAAAAAAAA";
 
     protected override string UniqueKey => "CapybaraMissile";
