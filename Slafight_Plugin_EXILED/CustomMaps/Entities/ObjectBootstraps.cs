@@ -50,6 +50,9 @@ public class ObjectBootstraps : IBootstrapHandler
                 case "HczASQ":
                     new Document(){ Position = pos, DocumentType = DocumentType.AboutSQ }.Create();
                     break;
+                case "LczS3005D":
+                    new Document(){ Position = pos, DocumentType = DocumentType.Scp3005 }.Create();
+                    break;
             }
         }
     }

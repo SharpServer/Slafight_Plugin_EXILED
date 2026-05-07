@@ -11,6 +11,7 @@ using Slafight_Plugin_EXILED.Abilities;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
+using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using UnityEngine;
@@ -58,17 +59,13 @@ public class Scp3005Role : CRole
         player.Health = maxHealth-1;
         player.EnableEffect(EffectType.MovementBoost, 50);
 
-        var spawnRoom = Room.Get(RoomType.LczPlants);
-        Vector3 offset = new(0f, 7.35f, 0f);
-        player.Position = spawnRoom.Position + spawnRoom.Rotation * offset;
-        player.Rotation = spawnRoom.Rotation;
-
         // ★ Scale は触らない
         LabApiHandler.Schem3005(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
 
         player.AddAbility(new MagicMissileAbility(player));
         player.AddAbility(new SoundOfFifthAbility(player));
 
+        Timing.RunCoroutine(WaitAndTeleport(player));
         Timing.RunCoroutine(Scp3005Coroutine(player));
     }
     
@@ -114,6 +111,21 @@ public class Scp3005Role : CRole
     {
         if (!Check(ev.Player)) return;
         ev.IsAllowed = false;
+    }
+    
+    private IEnumerator<float> WaitAndTeleport(Player player)
+    {
+        // スポーンポイントが初期化されるまで待機（最大10秒）
+        float elapsed = 0f;
+        while (MapFlags.Scp3005SpawnPoint == Vector3.zero && elapsed < 10f)
+        {
+            yield return Timing.WaitForSeconds(0.25f);
+            elapsed += 0.25f;
+            if (!Check(player)) yield break;
+        }
+
+        yield return Timing.WaitForSeconds(0.05f);
+        player.Position = MapFlags.Scp3005SpawnPoint;
     }
 
     private static IEnumerator<float> Scp3005Coroutine(Player player)

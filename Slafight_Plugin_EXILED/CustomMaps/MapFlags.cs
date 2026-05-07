@@ -12,6 +12,7 @@ public static class MapFlags
     public static bool IsWarheadBooming => WarheadBoomEffectHandler.IsBooming;
     public static bool IsOverrideActivated = false;
     public static Vector3 Scp682SpawnPoint = Vector3.zero;
+    public static Vector3 Scp3005SpawnPoint = Vector3.zero;
     public static Vector3 FacilityManagerSpawnPoint = Vector3.zero;
     public static Vector3 AntiAntiMemeDocPoint = Vector3.zero;
     public static Vector3 SqDoorPoint = Vector3.zero;
