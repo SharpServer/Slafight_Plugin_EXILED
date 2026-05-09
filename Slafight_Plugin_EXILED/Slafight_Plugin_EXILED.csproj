@@ -98,9 +98,6 @@
         <Reference Include="ProjectMER">
             <HintPath>$(SL_References)\ProjectMER.dll</HintPath>
         </Reference>
-        <Reference Include="Slafight">
-            <HintPath>$(SL_References)\Slafight.dll</HintPath>
-        </Reference>
         <Reference Include="Unity.TextMeshPro">
             <HintPath>$(SL_References)\Unity.TextMeshPro.dll</HintPath>
         </Reference>
@@ -186,6 +183,7 @@
         <Compile Include="API\Features\CItemHybrid.cs" />
         <Compile Include="API\Features\CItemKeycard.cs" />
         <Compile Include="API\Features\CItemWeapon.cs" />
+        <Compile Include="API\Features\GeneratorPrefab.cs" />
         <Compile Include="API\Features\NetworkVisibilityManager.cs" />
         <Compile Include="API\Features\Scp914\Scp914Context.cs" />
         <Compile Include="API\Features\Scp914\Scp914Rule.cs" />
@@ -225,7 +223,7 @@
         <Compile Include="API\Interface\IObjectPrefab.cs" />
         <Compile Include="API\Interface\ISpawnableObject.cs" />
         <Compile Include="API\Objects\RoleTables.cs" />
-        <Compile Include="API\Structs\WObjectInfo.cs" />
+        <Compile Include="API\Structs\ObjectInfo.cs" />
         <Compile Include="Changes\CandyChanges.cs" />
         <Compile Include="Changes\ChristmasChanges.cs" />
         <Compile Include="Changes\EasterEggsHandler.cs" />
