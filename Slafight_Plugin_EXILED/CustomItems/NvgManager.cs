@@ -137,10 +137,12 @@ public static class NvgManager
         BatteryData[serial] = battery;
         ActiveData[serial]  = data;
 
-        // StartNvg 時点で既に観戦中のプレイヤーへ明示的に同期する
-        // （InitShowState の ApplyShowState は全員に走るが、観戦判定が
-        //   InitShowState 呼び出し時点の IsAlive / CurrentSpectatingPlayers に依存するため念押し）
-        SyncSpectatorsForOwner(player, light.Base?.netIdentity, show: true);
+        // InitShowState の CallDelayed(0f) と同フレームになるよう、観戦者同期も遅らせる
+        Timing.CallDelayed(0f, () =>
+        {
+            if (player == null || !player.IsConnected) return;
+            SyncSpectatorsForOwner(player, light.Base?.netIdentity, show: true);
+        });
     }
 
     /// <summary>NVG を停止する。電池残量は保持される。</summary>
@@ -232,12 +234,17 @@ public static class NvgManager
             light.Color     = prof.LightColor;
             light.Transform.SetParent(player.Transform, true);
 
-            // Owner を設定するだけで Show/Hide・観戦者制御はすべて NetworkVisibilityManager が担う
-            light.InitShowState(new NetworkShowState
+            // Spawn 直後は Mirror の送信がフレームをまたぐため、
+            // 1フレーム後に InitShowState を送ることで ShowForConnection が確実に届く
+            Timing.CallDelayed(0f, () =>
             {
-                OwnerId             = player.Id,
-                ShowToOwner         = true,
-                SpectatorVisibility = SpectatorVisibility.Show,
+                if (light?.Base == null) return;
+                light.InitShowState(new NetworkShowState
+                {
+                    OwnerId             = player.Id,
+                    ShowToOwner         = true,
+                    SpectatorVisibility = SpectatorVisibility.Show,
+                });
             });
 
             return light;
