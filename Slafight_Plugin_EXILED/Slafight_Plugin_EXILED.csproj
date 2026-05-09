@@ -180,7 +180,6 @@
         <Compile Include="API\Features\CItem.cs" />
         <Compile Include="API\Features\CItemHybrid.cs" />
         <Compile Include="API\Features\CItemArmor.cs" />
-        <Compile Include="API\Features\CItemHybrid.cs" />
         <Compile Include="API\Features\CItemKeycard.cs" />
         <Compile Include="API\Features\CItemWeapon.cs" />
         <Compile Include="API\Features\GeneratorPrefab.cs" />
