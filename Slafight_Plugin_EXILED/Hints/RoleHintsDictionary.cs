@@ -109,5 +109,9 @@ internal static class RoleHintsDictionary
             "<color=red>Cursemaster - Sergey Makarov</color>",
             "<color=#a0a0a0>Alone</color>",
             "<color=red><b>邪魔者を滅ぼし、サイト-02から毒を浄化せよ</b></color>"),
+        
+        // ── Experimental Features ──────────────────────────────────────────
+        [CRoleTypeId.SecurityTeamGuard] = ("<color=#00b7eb>Security Team Guard</color>", FoundTeam, FoundObj),
+        [CRoleTypeId.ChaosIntruder] = ("<color=#228b22>Chaos Insurgency Intruder</color>",ChaosTeam, ChaosObj),
     };
 }
