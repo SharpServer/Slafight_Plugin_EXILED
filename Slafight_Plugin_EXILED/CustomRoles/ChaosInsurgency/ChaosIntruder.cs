@@ -32,8 +32,7 @@ public class ChaosIntruder : CRole
         player.AddItem(ItemType.Medkit);
         player.AddItem(ItemType.Adrenaline);
         player.AddItem(ItemType.ArmorCombat);
-        if (!player.HasItem(ItemType.GunRevolver))
-            player.AddItem(ItemType.GunRevolver);
+        player.GiveCItem<GunSuppressiver>();
         CItem.Get<KeycardConscripts>()?.Give(player); // Conscripts Card
         CItem.Get<CUA_SpyKit>()?.Give(player);
         
