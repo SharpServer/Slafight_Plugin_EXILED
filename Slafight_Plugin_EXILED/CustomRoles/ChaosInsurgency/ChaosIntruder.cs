@@ -13,8 +13,8 @@ namespace Slafight_Plugin_EXILED.CustomRoles.ChaosInsurgency;
 
 public class ChaosIntruder : CRole
 {
-    protected override string RoleName { get; set; } = "カオス・インサージェンシー 潜入工作員";
-    protected override string Description { get; set; } = "施設に潜入した先遣隊。施設の偵察や略奪を行え！";
+    protected override string RoleName { get; set; } = "カオス・インサージェンシー 侵入兵";
+    protected override string Description { get; set; } = "施設に侵入した小規模部隊。警備隊の壊滅及び仲間の脱出を目指せ！";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.ChaosIntruder;
     protected override CTeam Team { get; set; } = CTeam.ChaosInsurgency;
     protected override string UniqueRoleKey { get; set; } = "ChaosIntruder";
@@ -33,8 +33,7 @@ public class ChaosIntruder : CRole
         player.AddItem(ItemType.Adrenaline);
         player.AddItem(ItemType.ArmorCombat);
         player.GiveCItem<GunSuppressiver>();
-        CItem.Get<KeycardConscripts>()?.Give(player); // Conscripts Card
-        CItem.Get<CUA_SpyKit>()?.Give(player);
+        player.GiveCItem<KeycardConscripts>();
         
         player.AddAmmo(AmmoType.Ammo44Cal, 6);
 
