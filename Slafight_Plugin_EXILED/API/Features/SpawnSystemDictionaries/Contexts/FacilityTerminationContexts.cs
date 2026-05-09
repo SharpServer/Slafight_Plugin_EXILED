@@ -15,24 +15,24 @@ public static class FacilityTerminationContexts
             // FoundationStaffWaveWeights
             new() 
             { 
-                { SpawnTypeId.MTF_LastOperationNormal, 100 },
+                { SpawnTypeId.MtfLastOperationNormal, 100 },
             },
             // FoundationEnemyWaveWeights
             new() 
             { 
-                { SpawnTypeId.GOI_ChaosNormal, 30 },
-                { SpawnTypeId.GOI_GoCNormal,   70 },
+                { SpawnTypeId.GoiChaosNormal, 30 },
+                { SpawnTypeId.GoiGoCNormal,   70 },
             },
             // FoundationStaffMiniWaveWeights
             new()
             {
-                { SpawnTypeId.MTF_LastOperationBackup, 100 },
+                { SpawnTypeId.MtfLastOperationBackup, 100 },
             },
             // FoundationEnemyMiniWaveWeights
             new()
             {
-                { SpawnTypeId.GOI_ChaosBackup, 30 },
-                { SpawnTypeId.GOI_GoCBackup,   70 },
+                { SpawnTypeId.GoiChaosBackup, 30 },
+                { SpawnTypeId.GoiGoCBackup,   70 },
             },
             lastOpPack,
             gocPack,

@@ -181,7 +181,8 @@ public class EventHandler : IBootstrapHandler
             { "Scp173SpawnPoint", pos => Scp173SpawnPoint = pos + Vector3.up * 0.05f },
             { "Scp682SpawnPoint", pos => MapFlags.Scp682SpawnPoint = pos },
             { "Scp3005SpawnPoint", pos => MapFlags.Scp3005SpawnPoint = pos },
-            { "FacilityManagerSpawnPoint", pos => MapFlags.FacilityManagerSpawnPoint = pos }
+            { "FacilityManagerSpawnPoint", pos => MapFlags.FacilityManagerSpawnPoint = pos },
+            { "FirstTeamSpawnPoint", pos => MapFlags.FirstTeamSpawnPoint = pos },
         };
 
         foreach (var point in TriggerPointManager.GetAll())

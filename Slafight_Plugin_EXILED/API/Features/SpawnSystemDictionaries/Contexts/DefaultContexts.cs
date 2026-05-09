@@ -18,6 +18,9 @@ public static class DefaultContexts
         UnitPackRegistry.TryGet("MTF_SneBackup",      out var sneBackupPack);
         UnitPackRegistry.TryGet("GOI_ChaosBackup",    out var chaosBackupPack);
         UnitPackRegistry.TryGet("GOI_FifthistBackup", out var fifthBackupPack);
+        
+        UnitPackRegistry.TryGet("SecurityTeam",       out var securityTeamPack);
+        UnitPackRegistry.TryGet("ChaosAgents",        out var chaosAgentsPack);
 
         var defaultContext = new SpawnContext(
             "Default",
@@ -34,7 +37,10 @@ public static class DefaultContexts
             chaosNormalPack,
             chaosBackupPack,
             fifthNormalPack,
-            fifthBackupPack
+            fifthBackupPack,
+            
+            securityTeamPack,
+            chaosAgentsPack
         );
 
         SpawnContextRegistry.Register(defaultContext);

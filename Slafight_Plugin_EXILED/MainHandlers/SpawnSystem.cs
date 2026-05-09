@@ -69,40 +69,40 @@ public class SpawnSystem : IBootstrapHandler
     {
         public Dictionary<SpawnTypeId, int> FoundationStaffWaveWeights { get; set; } = new()
         {
-            { SpawnTypeId.MTF_NtfNormal, 80 },
-            { SpawnTypeId.MTF_HDNormal,  20 },
-            { SpawnTypeId.MTF_SneNormal, 0 },
+            { SpawnTypeId.MtfNtfNormal, 80 },
+            { SpawnTypeId.MtfHdNormal,  20 },
+            { SpawnTypeId.MtfSneNormal, 0 },
         };
 
         public Dictionary<SpawnTypeId, int> FoundationEnemyWaveWeights { get; set; } = new()
         {
-            { SpawnTypeId.GOI_ChaosNormal,    100 },
-            { SpawnTypeId.GOI_FifthistNormal, 0   },
+            { SpawnTypeId.GoiChaosNormal,    100 },
+            { SpawnTypeId.GoiFifthistNormal, 0   },
         };
 
         public Dictionary<SpawnTypeId, int> FoundationStaffMiniWaveWeights { get; set; } = new()
         {
-            { SpawnTypeId.MTF_NtfBackup, 80 },
-            { SpawnTypeId.MTF_HDBackup,  20 },
-            { SpawnTypeId.MTF_SneBackup, 0 },
+            { SpawnTypeId.MtfNtfBackup, 80 },
+            { SpawnTypeId.MtfHdBackup,  20 },
+            { SpawnTypeId.MtfSneBackup, 0 },
         };
 
         public Dictionary<SpawnTypeId, int> FoundationEnemyMiniWaveWeights { get; set; } = new()
         {
-            { SpawnTypeId.GOI_ChaosBackup,    100 },
-            { SpawnTypeId.GOI_FifthistBackup, 0   },
+            { SpawnTypeId.GoiChaosBackup,    100 },
+            { SpawnTypeId.GoiFifthistBackup, 0   },
         };
 
         public Dictionary<SpawnTypeId, float> SpawnRatios { get; set; } = new()
         {
-            { SpawnTypeId.MTF_NtfNormal,      1.0f },
-            { SpawnTypeId.MTF_NtfBackup,      1.0f },
-            { SpawnTypeId.MTF_HDNormal,       1.0f },
-            { SpawnTypeId.MTF_HDBackup,       0.5f },
-            { SpawnTypeId.GOI_ChaosNormal,    1.0f },
-            { SpawnTypeId.GOI_ChaosBackup,    1.0f },
-            { SpawnTypeId.GOI_FifthistNormal, 1.0f },
-            { SpawnTypeId.GOI_FifthistBackup, 0.5f },
+            { SpawnTypeId.MtfNtfNormal,      1.0f },
+            { SpawnTypeId.MtfNtfBackup,      1.0f },
+            { SpawnTypeId.MtfHdNormal,       1.0f },
+            { SpawnTypeId.MtfHdBackup,       0.5f },
+            { SpawnTypeId.GoiChaosNormal,    1.0f },
+            { SpawnTypeId.GoiChaosBackup,    1.0f },
+            { SpawnTypeId.GoiFifthistNormal, 1.0f },
+            { SpawnTypeId.GoiFifthistBackup, 0.5f },
         };
 
         public int ScpThresholdHigh    { get; set; } = 3;
@@ -301,13 +301,13 @@ public class SpawnSystem : IBootstrapHandler
         {
             if (ev.Wave.IsMiniWave)
             {
-                if (baseWeights.ContainsKey(SpawnTypeId.MTF_HDBackup))
-                    baseWeights[SpawnTypeId.MTF_HDBackup] *= 2;
+                if (baseWeights.ContainsKey(SpawnTypeId.MtfHdBackup))
+                    baseWeights[SpawnTypeId.MtfHdBackup] *= 2;
             }
             else
             {
-                if (baseWeights.ContainsKey(SpawnTypeId.MTF_HDNormal))
-                    baseWeights[SpawnTypeId.MTF_HDNormal] *= 2;
+                if (baseWeights.ContainsKey(SpawnTypeId.MtfHdNormal))
+                    baseWeights[SpawnTypeId.MtfHdNormal] *= 2;
             }
         }
 
@@ -399,14 +399,14 @@ public class SpawnSystem : IBootstrapHandler
 
         Faction faction = spawnType switch
         {
-            SpawnTypeId.MTF_NtfNormal or SpawnTypeId.MTF_NtfBackup
-                or SpawnTypeId.MTF_HDNormal or SpawnTypeId.MTF_HDBackup
-                or SpawnTypeId.MTF_LastOperationNormal or SpawnTypeId.MTF_LastOperationBackup
+            SpawnTypeId.MtfNtfNormal or SpawnTypeId.MtfNtfBackup
+                or SpawnTypeId.MtfHdNormal or SpawnTypeId.MtfHdBackup
+                or SpawnTypeId.MtfLastOperationNormal or SpawnTypeId.MtfLastOperationBackup
                 => Faction.FoundationStaff,
 
-            SpawnTypeId.GOI_ChaosNormal or SpawnTypeId.GOI_ChaosBackup
-                or SpawnTypeId.GOI_FifthistNormal or SpawnTypeId.GOI_FifthistBackup
-                or SpawnTypeId.GOI_GoCNormal or SpawnTypeId.GOI_GoCBackup
+            SpawnTypeId.GoiChaosNormal or SpawnTypeId.GoiChaosBackup
+                or SpawnTypeId.GoiFifthistNormal or SpawnTypeId.GoiFifthistBackup
+                or SpawnTypeId.GoiGoCNormal or SpawnTypeId.GoiGoCBackup
                 => Faction.FoundationEnemy,
 
             _ => Faction.Unclassified

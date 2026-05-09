@@ -425,6 +425,7 @@ public class SpecialEventsHandler : IBootstrapHandler
                 SpecialEventType.OperationBlackout or
                 SpecialEventType.Scp1509BattleField or
                 SpecialEventType.SnowWarriersAttack or
+                SpecialEventType.CaseColourlessGreen or
                 SpecialEventType.FacilityTermination => false,
             _ => true
         };

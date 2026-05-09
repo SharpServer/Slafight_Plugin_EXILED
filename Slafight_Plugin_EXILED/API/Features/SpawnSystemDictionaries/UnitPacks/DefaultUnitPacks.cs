@@ -14,7 +14,7 @@ public static class DefaultUnitPacks
             new()
             {
                 {
-                    SpawnTypeId.MTF_NtfNormal,
+                    SpawnTypeId.MtfNtfNormal,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.NtfGeneral),    (1f,  false)  },
@@ -34,7 +34,7 @@ public static class DefaultUnitPacks
             new()
             {
                 {
-                    SpawnTypeId.MTF_NtfBackup,
+                    SpawnTypeId.MtfNtfBackup,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(RoleTypeId.NtfSergeant), (1f,  true) },
@@ -51,7 +51,7 @@ public static class DefaultUnitPacks
             new()
             {
                 {
-                    SpawnTypeId.MTF_HDNormal,
+                    SpawnTypeId.MtfHdNormal,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.HdMarshal),   (1f,  false)  },
@@ -68,7 +68,7 @@ public static class DefaultUnitPacks
             new()
             {
                 {
-                    SpawnTypeId.MTF_HDBackup,
+                    SpawnTypeId.MtfHdBackup,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.HdCommander), (1f,  true)  },
@@ -85,7 +85,7 @@ public static class DefaultUnitPacks
             new()
             {
                 {
-                    SpawnTypeId.GOI_ChaosNormal,
+                    SpawnTypeId.GoiChaosNormal,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.ChaosCommando), (1f,  false) },
@@ -106,7 +106,7 @@ public static class DefaultUnitPacks
             new()
             {
                 {
-                    SpawnTypeId.GOI_ChaosBackup,
+                    SpawnTypeId.GoiChaosBackup,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.ChaosSignal),  (1f,  true)  },
@@ -125,7 +125,7 @@ public static class DefaultUnitPacks
             new()
             {
                 {
-                    SpawnTypeId.GOI_FifthistNormal,
+                    SpawnTypeId.GoiFifthistNormal,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.FifthistPriest),   (1f,  true)  },
@@ -143,7 +143,7 @@ public static class DefaultUnitPacks
             new()
             {
                 {
-                    SpawnTypeId.GOI_FifthistBackup,
+                    SpawnTypeId.GoiFifthistBackup,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.FifthistRescure),  (1f,  false) },
@@ -154,5 +154,33 @@ public static class DefaultUnitPacks
             }
         );
         UnitPackRegistry.Register(fifthBackupPack);
+
+        var securityTeamPack = new UnitPack(
+            "SecurityTeam",
+            new()
+            {
+                {
+                    SpawnTypeId.SecurityTeam,
+                    new()
+                    {
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.SecurityTeamGuard), (99f, false) }
+                    }
+                }
+            }
+        );
+
+        var chaosAgentPack = new UnitPack(
+            "ChaosAgents",
+            new()
+            {
+                {
+                    SpawnTypeId.ChaosAgents,
+                    new()
+                    {
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.ChaosIntruder), (99f, false) },
+                    }
+                }
+            }
+        );
     }
 }

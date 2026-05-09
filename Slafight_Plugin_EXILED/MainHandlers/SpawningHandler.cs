@@ -50,34 +50,34 @@ public class SpawningHandler : IBootstrapHandler
             {
                 if (ev.IsMiniWave)
                 {
-                    if (w.ContainsKey(SpawnTypeId.GOI_FifthistBackup))
-                        w[SpawnTypeId.GOI_FifthistBackup] = 40;
-                    if (w.ContainsKey(SpawnTypeId.GOI_ChaosBackup))
-                        w[SpawnTypeId.GOI_ChaosBackup] = 60;
+                    if (w.ContainsKey(SpawnTypeId.GoiFifthistBackup))
+                        w[SpawnTypeId.GoiFifthistBackup] = 40;
+                    if (w.ContainsKey(SpawnTypeId.GoiChaosBackup))
+                        w[SpawnTypeId.GoiChaosBackup] = 60;
                 }
                 else
                 {
-                    if (w.ContainsKey(SpawnTypeId.GOI_FifthistNormal))
-                        w[SpawnTypeId.GOI_FifthistNormal] = 40;
-                    if (w.ContainsKey(SpawnTypeId.GOI_ChaosNormal))
-                        w[SpawnTypeId.GOI_ChaosNormal] = 60;
+                    if (w.ContainsKey(SpawnTypeId.GoiFifthistNormal))
+                        w[SpawnTypeId.GoiFifthistNormal] = 40;
+                    if (w.ContainsKey(SpawnTypeId.GoiChaosNormal))
+                        w[SpawnTypeId.GoiChaosNormal] = 60;
                 }
             }
             else
             {
                 if (ev.IsMiniWave)
                 {
-                    if (w.ContainsKey(SpawnTypeId.GOI_FifthistBackup))
-                        w[SpawnTypeId.GOI_FifthistBackup] = 0;
-                    if (w.ContainsKey(SpawnTypeId.GOI_ChaosBackup))
-                        w[SpawnTypeId.GOI_ChaosBackup] = 100;
+                    if (w.ContainsKey(SpawnTypeId.GoiFifthistBackup))
+                        w[SpawnTypeId.GoiFifthistBackup] = 0;
+                    if (w.ContainsKey(SpawnTypeId.GoiChaosBackup))
+                        w[SpawnTypeId.GoiChaosBackup] = 100;
                 }
                 else
                 {
-                    if (w.ContainsKey(SpawnTypeId.GOI_FifthistNormal))
-                        w[SpawnTypeId.GOI_FifthistNormal] = 0;
-                    if (w.ContainsKey(SpawnTypeId.GOI_ChaosNormal))
-                        w[SpawnTypeId.GOI_ChaosNormal] = 100;
+                    if (w.ContainsKey(SpawnTypeId.GoiFifthistNormal))
+                        w[SpawnTypeId.GoiFifthistNormal] = 0;
+                    if (w.ContainsKey(SpawnTypeId.GoiChaosNormal))
+                        w[SpawnTypeId.GoiChaosNormal] = 100;
                 }
             }
 
@@ -89,23 +89,23 @@ public class SpawningHandler : IBootstrapHandler
         {
             if (ev.IsMiniWave)
             {
-                if (w.ContainsKey(SpawnTypeId.MTF_NtfBackup))
-                    w[SpawnTypeId.MTF_NtfBackup] = 40;
-                if (w.ContainsKey(SpawnTypeId.MTF_HDBackup))
-                    w[SpawnTypeId.MTF_HDBackup] = 20;
+                if (w.ContainsKey(SpawnTypeId.MtfNtfBackup))
+                    w[SpawnTypeId.MtfNtfBackup] = 40;
+                if (w.ContainsKey(SpawnTypeId.MtfHdBackup))
+                    w[SpawnTypeId.MtfHdBackup] = 20;
 
-                if (w.ContainsKey(SpawnTypeId.MTF_SneBackup))
-                    w[SpawnTypeId.MTF_SneBackup] = 40;
+                if (w.ContainsKey(SpawnTypeId.MtfSneBackup))
+                    w[SpawnTypeId.MtfSneBackup] = 40;
             }
             else
             {
-                if (w.ContainsKey(SpawnTypeId.MTF_NtfNormal))
-                    w[SpawnTypeId.MTF_NtfNormal] = 40;
-                if (w.ContainsKey(SpawnTypeId.MTF_HDNormal))
-                    w[SpawnTypeId.MTF_HDNormal] = 20;
+                if (w.ContainsKey(SpawnTypeId.MtfNtfNormal))
+                    w[SpawnTypeId.MtfNtfNormal] = 40;
+                if (w.ContainsKey(SpawnTypeId.MtfHdNormal))
+                    w[SpawnTypeId.MtfHdNormal] = 20;
 
-                if (w.ContainsKey(SpawnTypeId.MTF_SneNormal))
-                    w[SpawnTypeId.MTF_SneNormal] = 40;
+                if (w.ContainsKey(SpawnTypeId.MtfSneNormal))
+                    w[SpawnTypeId.MtfSneNormal] = 40;
             }
         }
     }
@@ -125,57 +125,57 @@ public class SpawningHandler : IBootstrapHandler
         switch (spawnType)
         {
             // Mobile Task Forces
-            case SpawnTypeId.MTF_NtfNormal:
+            case SpawnTypeId.MtfNtfNormal:
                 CreateAndPlayAudio("_w_ntf.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceNtfArrival();
                 break;
-            case SpawnTypeId.MTF_NtfBackup:
+            case SpawnTypeId.MtfNtfBackup:
                 CreateAndPlayAudio("_w_ntf.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceNtfBackup();
                 break;
 
-            case SpawnTypeId.MTF_HDNormal:
+            case SpawnTypeId.MtfHdNormal:
                 CreateAndPlayAudio("_w_hd.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceHdArrival();
                 break;
-            case SpawnTypeId.MTF_HDBackup:
+            case SpawnTypeId.MtfHdBackup:
                 CreateAndPlayAudio("_w_hd.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceHdBackup();
                 break;
             
-            case SpawnTypeId.MTF_LastOperationNormal:
+            case SpawnTypeId.MtfLastOperationNormal:
                 CreateAndPlayAudio("_w_lo.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceLastOperationArrival();
                 break;
-            case SpawnTypeId.MTF_LastOperationBackup:
+            case SpawnTypeId.MtfLastOperationBackup:
                 CreateAndPlayAudio("_w_lo.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceLastOperationBackup();
                 break;
             
-            case SpawnTypeId.MTF_SneNormal:
+            case SpawnTypeId.MtfSneNormal:
                 CreateAndPlayAudio("_w_sne.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceSneArrival();
                 break;
-            case SpawnTypeId.MTF_SneBackup:
+            case SpawnTypeId.MtfSneBackup:
                 CreateAndPlayAudio("_w_sne.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceSneBackup();
                 break;
 
             // ==== Groups of Interests ====
-            case SpawnTypeId.GOI_ChaosNormal:
-            case SpawnTypeId.GOI_ChaosBackup:
+            case SpawnTypeId.GoiChaosNormal:
+            case SpawnTypeId.GoiChaosBackup:
                 CreateAndPlayAudio("_w_chaos.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceChaos(spawnCount);
                 break;
 
-            case SpawnTypeId.GOI_FifthistNormal:
-            case SpawnTypeId.GOI_FifthistBackup:
+            case SpawnTypeId.GoiFifthistNormal:
+            case SpawnTypeId.GoiFifthistBackup:
                 CreateAndPlayAudio("_w_fifthists.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceFifthist(spawnCount);
                 break;
 
-            case SpawnTypeId.GOI_GoCNormal:
-            case SpawnTypeId.GOI_GoCBackup:
+            case SpawnTypeId.GoiGoCNormal:
+            case SpawnTypeId.GoiGoCBackup:
                 CreateAndPlayAudio("_w_ungoc.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceGoCEnter(spawnCount);
                 break;

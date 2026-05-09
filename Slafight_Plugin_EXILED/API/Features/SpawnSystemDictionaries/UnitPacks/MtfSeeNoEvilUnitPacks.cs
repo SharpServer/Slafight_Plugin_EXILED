@@ -12,7 +12,7 @@ public static class MtfSeeNoEvilUnitPacks
             new()
             {
                 {
-                    SpawnTypeId.MTF_SneNormal,
+                    SpawnTypeId.MtfSneNormal,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.SneOperator), (1f, true) },
@@ -28,7 +28,7 @@ public static class MtfSeeNoEvilUnitPacks
             new()
             {
                 {
-                    SpawnTypeId.MTF_SneBackup,
+                    SpawnTypeId.MtfSneBackup,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.SneGears), (1f, false) },

@@ -172,7 +172,7 @@ public class FacilityTermination : SpecialEvent
         if (IsEventCanceled()) yield break;
 
         CassieHelper.AnnounceLastOperationArrival();
-        SpawnSystem.ReplaceNextSpawn(SpawnTypeId.GOI_GoCNormal);
+        SpawnSystem.ReplaceNextSpawn(SpawnTypeId.GoiGoCNormal);
 
         // ===== 22分 待機（イベントのメイン猶予） =====
         yield return Timing.WaitForSeconds(1320f);

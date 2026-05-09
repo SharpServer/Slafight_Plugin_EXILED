@@ -14,14 +14,14 @@ public static class FacilityTerminationPacks
             new()
             {
                 {
-                    SpawnTypeId.MTF_LastOperationNormal,
+                    SpawnTypeId.MtfLastOperationNormal,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.Sculpture), (99f, true) }
                     }
                 },
                 {
-                    SpawnTypeId.MTF_LastOperationBackup,
+                    SpawnTypeId.MtfLastOperationBackup,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.Sculpture), (99f, true) }
@@ -37,7 +37,7 @@ public static class FacilityTerminationPacks
             new()
             {
                 {
-                    SpawnTypeId.GOI_GoCNormal,
+                    SpawnTypeId.GoiGoCNormal,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.GoCSquadLeader),   (1f, true)  },
@@ -50,7 +50,7 @@ public static class FacilityTerminationPacks
                     }
                 },
                 {
-                    SpawnTypeId.GOI_GoCBackup,
+                    SpawnTypeId.GoiGoCBackup,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.GoCSquadLeader),   (1f, true)  },
@@ -72,7 +72,7 @@ public static class FacilityTerminationPacks
             new()
             {
                 {
-                    SpawnTypeId.GOI_ChaosNormal,
+                    SpawnTypeId.GoiChaosNormal,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.ChaosCommando), (1f,  false) },
@@ -85,7 +85,7 @@ public static class FacilityTerminationPacks
                     }
                 },
                 {
-                    SpawnTypeId.GOI_ChaosBackup,
+                    SpawnTypeId.GoiChaosBackup,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.ChaosSignal),  (1f,  true)  },

@@ -12,7 +12,7 @@ public static class SnowWarriersPacks
             new()
             {
                 {
-                    SpawnTypeId.GOI_SnowNormal,
+                    SpawnTypeId.GoiSnowNormal,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.SnowWarrier), (99f, false) },
@@ -25,7 +25,7 @@ public static class SnowWarriersPacks
             new()
             {
                 {
-                    SpawnTypeId.GOI_SnowBackup,
+                    SpawnTypeId.GoiSnowBackup,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.SnowWarrier), (99f, false) },

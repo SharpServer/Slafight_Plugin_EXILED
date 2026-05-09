@@ -72,7 +72,7 @@ public class SergeyMakarovReturns : SpecialEvent
                 }
                 Timing.CallDelayed(0.5f, () =>
                 {
-                    SpawnSystem.ForceSpawnNow(SpawnTypeId.GOI_ChaosNormal);
+                    SpawnSystem.ForceSpawnNow(SpawnTypeId.GoiChaosNormal);
                     Round.IsLocked = false;
                 });
             });

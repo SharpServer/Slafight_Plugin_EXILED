@@ -51,19 +51,19 @@ public class SergeyMakarovRole : CRole
             "SM_VanillaOnly",
             new()
             {
-                { SpawnTypeId.MTF_NtfNormal, 100 }
+                { SpawnTypeId.MtfNtfNormal, 100 }
             },
             new ()
             {
-                { SpawnTypeId.GOI_ChaosNormal, 100 }
+                { SpawnTypeId.GoiChaosNormal, 100 }
             },
             new ()
             {
-                { SpawnTypeId.MTF_NtfBackup, 100 }
+                { SpawnTypeId.MtfNtfBackup, 100 }
             },
             new ()
             {
-                { SpawnTypeId.GOI_ChaosNormal, 100 }
+                { SpawnTypeId.GoiChaosNormal, 100 }
             },
             ntfpack,ntfbackupPack,chaospack,chaosbackupPack
         );
@@ -87,19 +87,19 @@ public class SergeyMakarovRole : CRole
             "SM_ChaosOnly",
             new()
             {
-                { SpawnTypeId.GOI_ChaosNormal, 100 }
+                { SpawnTypeId.GoiChaosNormal, 100 }
             },
             new ()
             {
-                { SpawnTypeId.GOI_ChaosNormal, 100 }
+                { SpawnTypeId.GoiChaosNormal, 100 }
             },
             new ()
             {
-                { SpawnTypeId.GOI_ChaosBackup, 100 }
+                { SpawnTypeId.GoiChaosBackup, 100 }
             },
             new ()
             {
-                { SpawnTypeId.GOI_ChaosBackup, 100 }
+                { SpawnTypeId.GoiChaosBackup, 100 }
             },
             pack,backupPack
         );

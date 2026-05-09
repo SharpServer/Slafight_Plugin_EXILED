@@ -319,6 +319,7 @@
         <Compile Include="CustomMaps\ObjectPrefabs\Tentacle.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Vent.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\WarheadBoomEffect.cs" />
+        <Compile Include="CustomRoles\ChaosInsurgency\ChaosIntruder.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosPenal.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosCommando.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosSignal.cs" />
@@ -348,6 +349,7 @@
         <Compile Include="CustomRoles\Guards\Chamber Guard.cs" />
         <Compile Include="CustomRoles\Guards\EvacuationGuard.cs" />
         <Compile Include="CustomRoles\Guards\SecurityChief.cs" />
+        <Compile Include="CustomRoles\Guards\SecurityTeamGuard.cs" />
         <Compile Include="CustomRoles\Others\CandyWarrierApril.cs" />
         <Compile Include="CustomRoles\Others\CandyWarrierHalloween.cs" />
         <Compile Include="CustomRoles\Others\HideAdmin.cs" />
@@ -391,6 +393,7 @@
         <Compile Include="MainHandlers\FirstRolesHandler.cs" />
         <Compile Include="MainHandlers\LabApiHandler.cs" />
         <Compile Include="MainHandlers\NewEventHandler.cs" />
+        <Compile Include="MainHandlers\RoundHandler.cs" />
         <Compile Include="MainHandlers\RPNameSetter.cs" />
         <Compile Include="MainHandlers\ServerSpecificsHandler.cs" />
         <Compile Include="MainHandlers\SpawningHandler.cs" />
