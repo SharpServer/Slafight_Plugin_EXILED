@@ -1014,7 +1014,7 @@ public abstract class CItem
                     if (ci.Remove1344Effect)
                     {
                         ev.Player.DisableEffect(EffectType.Scp1344);
-                        WearableSync.EnableWearables(ev.Player.ReferenceHub, WearableElements.Scp1344Goggles);
+                        ev.Player.ReferenceHub.EnableWearables(WearableElements.Scp1344Goggles);
                     }
                     ci.OnGogglesWorn(ev.Player, ev.Scp1344);
                     break;

@@ -286,7 +286,7 @@ public class CustomRolesHandler : IBootstrapHandler
                 ev.IsAllowed = false;
         }
     }
-
+    
     private static void CustomRoleRemover(ChangingRoleEventArgs ev)
     {
         if (!ev.IsAllowed) return;

@@ -125,6 +125,7 @@ public static class NetworkVisibilityManager
     {
         Exiled.Events.Handlers.Server.RoundStarted            += OnRoundStarted;
         Exiled.Events.Handlers.Player.Verified                += OnVerified;
+        Exiled.Events.Handlers.Player.Spawned                 += OnSpawned;
         Exiled.Events.Handlers.Player.ChangingSpectatedPlayer += OnChangingSpectatedPlayer;
     }
 
@@ -132,6 +133,7 @@ public static class NetworkVisibilityManager
     {
         Exiled.Events.Handlers.Server.RoundStarted            -= OnRoundStarted;
         Exiled.Events.Handlers.Player.Verified                -= OnVerified;
+        Exiled.Events.Handlers.Player.Spawned                 -= OnSpawned;
         Exiled.Events.Handlers.Player.ChangingSpectatedPlayer -= OnChangingSpectatedPlayer;
     }
 
@@ -155,6 +157,29 @@ public static class NetworkVisibilityManager
             if (!_states.TryGetValue(netId, out var state)) continue;
             SendVisibility(identity, ev.Player, state.ShouldShow(ev.Player, Player.List));
         }
+    }
+
+    /// <summary>
+    /// スポーン完了後に呼ばれる。ロール変更後に Mirror が全 NetworkIdentity を
+    /// 再送信するため、管理オブジェクトの表示状態を上書き補正する。
+    /// 観戦者が生者としてスポーンした場合も同様にリセットが必要。
+    /// </summary>
+    private static void OnSpawned(SpawnedEventArgs ev)
+    {
+        if (ev?.Player == null) return;
+
+        // スポーン直後は Mirror の再送信が走るため、1フレーム後に補正する
+        Timing.CallDelayed(0f, () =>
+        {
+            if (ev.Player == null || !ev.Player.IsConnected) return;
+
+            foreach (var (netId, identity) in _identityCache)
+            {
+                if (identity == null) continue;
+                if (!_states.TryGetValue(netId, out var state)) continue;
+                SendVisibility(identity, ev.Player, state.ShouldShow(ev.Player, Player.List));
+            }
+        });
     }
 
     private static void OnChangingSpectatedPlayer(ChangingSpectatedPlayerEventArgs ev)
