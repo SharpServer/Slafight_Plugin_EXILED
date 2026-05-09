@@ -179,6 +179,11 @@ public class SpawningHandler : IBootstrapHandler
                 CreateAndPlayAudio("_w_ungoc.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceGoCEnter(spawnCount);
                 break;
+            
+            // ==== EXPERIMENTAL FEATURES ==== //
+            case SpawnTypeId.SecurityTeam:
+                CassieHelper.AnnounceSecurityTeamEnter(spawnCount);
+                break;
         }
     }
 }

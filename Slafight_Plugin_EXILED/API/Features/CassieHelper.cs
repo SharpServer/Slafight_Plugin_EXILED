@@ -1,4 +1,5 @@
 using Exiled.Events.EventArgs.Player;
+using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.API.Features;
@@ -92,6 +93,15 @@ public static class CassieHelper
         Exiled.API.Features.Cassie.MessageTranslated(
             $"Attention All personnel . Detected {count} G o C Forces in Gate B . Please Terminate Them",
             $"全職員に通達。Gate Bに{count}人の<b><color=#0000c8>世界オカルト連合</color></b>部隊が検出されました。<split>見つけ次第終了してください。",
+            true);
+    }
+    
+    // =================================== //
+    public static void AnnounceSecurityTeamEnter(int count)
+    {
+        Exiled.API.Features.Cassie.MessageTranslated(
+            $"Attention All personnel . Security Team has entered the facility .",
+            $"全職員に通達。<color={CTeam.Guards.GetTeamColor()}>保安部隊</color>が施設に到着しました。",
             true);
     }
     

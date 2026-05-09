@@ -11,7 +11,7 @@ namespace Slafight_Plugin_EXILED.CustomRoles.Guards;
 
 public class SecurityTeamGuard : CRole
 {
-    protected override string RoleName { get; set; } = "治安維持警備隊員";
+    protected override string RoleName { get; set; } = "保安部隊員";
     protected override string Description { get; set; } = "職員たちを保護し、脱出を助ける。";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SecurityTeamGuard;
     protected override CTeam Team { get; set; } = CTeam.Guards;
