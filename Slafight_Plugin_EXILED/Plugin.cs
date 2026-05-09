@@ -14,10 +14,8 @@ using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Entities;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
-using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.Patches;
-using Slafight_Plugin_EXILED.ProximityChat;
 using UserSettings.ServerSpecific;
 
 namespace Slafight_Plugin_EXILED;
@@ -47,7 +45,7 @@ public class Plugin : Plugin<Config>
         Singleton = this;
         ProximityChat.Handler.RegisterEvents();
 
-        NetworkVisibilityExtensions.Register();
+        NetworkVisibilityManager.Register();
         NvgManager.Register();
         SpecificFlagsHandler.Register();
             
@@ -112,7 +110,7 @@ public class Plugin : Plugin<Config>
             
         ProximityChat.Handler.UnregisterEvents();
 
-        NetworkVisibilityExtensions.Unregister();
+        NetworkVisibilityManager.Unregister();
         NvgManager.Unregister();
         SpecificFlagsHandler.Unregister();
             

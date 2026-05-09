@@ -1,11 +1,8 @@
-using CustomPlayerEffects;
-using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Roles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
-using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.Abilities;
 

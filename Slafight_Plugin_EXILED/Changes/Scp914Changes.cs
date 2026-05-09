@@ -1,6 +1,5 @@
 using Exiled.API.Enums;
 using Exiled.API.Features.Pickups;
-using Exiled.API.Features.Pickups.Projectiles;
 using Exiled.Events.EventArgs.Scp914;
 using MEC;
 using PlayerRoles;
@@ -8,7 +7,6 @@ using Scp914;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Features.Scp914;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
-using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.ProximityChat;
 using UnityEngine;

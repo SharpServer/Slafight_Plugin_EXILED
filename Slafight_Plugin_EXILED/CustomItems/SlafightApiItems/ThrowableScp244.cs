@@ -1,24 +1,14 @@
 #nullable enable
-using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
 using Exiled.API.Enums;
-using Exiled.API.Extensions;
-using Exiled.API.Features;
 using Exiled.API.Features.Doors;
-using Exiled.API.Features.Lockers;
 using Exiled.API.Features.Pickups;
 using Exiled.API.Features.Pickups.Projectiles;
 using Exiled.Events.EventArgs.Map;
 using Exiled.Events.EventArgs.Player;
-using Exiled.Events.EventArgs.Scp914;
 using InventorySystem.Items.Usables.Scp244;
 using MEC;
-using PlayerRoles;
-using Scp914;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Random = UnityEngine.Random;
 

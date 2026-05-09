@@ -4,7 +4,6 @@ using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
-using JetBrains.Annotations;
 using MEC;
 using PlayerRoles;
 using ProjectMER.Features;

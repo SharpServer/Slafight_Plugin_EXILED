@@ -7,7 +7,6 @@ using Exiled.API.Features.Items;
 using MEC;
 using NetworkManagerUtils.Dummies;
 using PlayerRoles;
-using ProjectMER.Events.Arguments;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;

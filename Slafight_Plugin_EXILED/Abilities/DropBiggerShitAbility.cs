@@ -1,12 +1,9 @@
 using System;
 using System.Collections.Generic;
-using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Hazards;
 using MEC;
-using Mirror;
 using Slafight_Plugin_EXILED.API.Features;
-using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.Abilities;
 

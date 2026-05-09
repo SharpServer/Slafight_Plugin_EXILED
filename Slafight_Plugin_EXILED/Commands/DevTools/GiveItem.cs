@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using CommandSystem;
 using Exiled.API.Features;
-using Exiled.API.Features.Items;
 using Exiled.Permissions.Extensions;
 using Slafight_Plugin_EXILED.API.Features;
 

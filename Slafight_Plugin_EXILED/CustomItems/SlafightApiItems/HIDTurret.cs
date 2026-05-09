@@ -1,4 +1,3 @@
-using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using InventorySystem.Items.MicroHID.Modules;
 using Slafight_Plugin_EXILED.API.Features;

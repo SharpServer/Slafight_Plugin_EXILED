@@ -186,6 +186,7 @@
         <Compile Include="API\Features\CItemHybrid.cs" />
         <Compile Include="API\Features\CItemKeycard.cs" />
         <Compile Include="API\Features\CItemWeapon.cs" />
+        <Compile Include="API\Features\NetworkVisibilityManager.cs" />
         <Compile Include="API\Features\Scp914\Scp914Context.cs" />
         <Compile Include="API\Features\Scp914\Scp914Rule.cs" />
         <Compile Include="API\Features\Scp914\Scp914RuleSet.cs" />
@@ -374,7 +375,6 @@
         <Compile Include="Extensions\AbilityResetUtil.cs" />
         <Compile Include="Extensions\CustomTeamUtils.cs" />
         <Compile Include="Extensions\CustomItemExtensions.cs" />
-        <Compile Include="Extensions\NetworkVisibilityExtensions.cs" />
         <Compile Include="Extensions\OnlyChecker.cs" />
         <Compile Include="Extensions\PlayerAbilityExtensions.cs" />
         <Compile Include="Extensions\PlayerCItemBaseExtensions.cs" />

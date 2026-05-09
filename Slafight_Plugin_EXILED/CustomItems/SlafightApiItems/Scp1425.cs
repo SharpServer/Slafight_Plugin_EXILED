@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using CustomPlayerEffects;
-using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;

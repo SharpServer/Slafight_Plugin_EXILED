@@ -1,9 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Enums;
-using Exiled.API.Extensions;
 using Exiled.API.Features;
-using Exiled.API.Features.Toys;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;

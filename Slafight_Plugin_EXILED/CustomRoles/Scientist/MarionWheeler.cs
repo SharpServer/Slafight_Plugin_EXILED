@@ -1,14 +1,8 @@
 using System.Collections.Generic;
-using System.Linq;
 using CustomPlayerEffects;
 using Exiled.API.Enums;
-using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
-using Exiled.CustomItems.API.Features;
-using Exiled.Events.EventArgs.Map;
-using Exiled.Events.EventArgs.Player;
-using Exiled.Events.EventArgs.Warhead;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -16,8 +10,6 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
-using Random = System.Random;
-using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.Scientist;
 

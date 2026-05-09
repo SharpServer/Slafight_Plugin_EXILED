@@ -1,4 +1,3 @@
-using Exiled.API.Features.Pickups;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;

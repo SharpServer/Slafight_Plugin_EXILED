@@ -1,19 +1,6 @@
-using System.Collections.Generic;
-using System.Linq;
-using Exiled.API.Enums;
-using Exiled.API.Features;
-using Exiled.Events.EventArgs.Player;
-using InventorySystem.Items.Autosync;
-using InventorySystem.Items.Firearms;
-using InventorySystem.Items.Firearms.Modules;
-using LabApi.Features.Wrappers;
-using MEC;
-using Mirror;
-using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using Firearm = Exiled.API.Features.Items.Firearm;
-using FirearmPickup = Exiled.API.Features.Pickups.FirearmPickup;
 using Item = Exiled.API.Features.Items.Item;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;

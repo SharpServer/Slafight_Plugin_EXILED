@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
-using JetBrains.Annotations;
 using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
 using Utils.NonAllocLINQ;

@@ -1,4 +1,3 @@
-using Slafight.API.Strcuts;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.API.Structs;

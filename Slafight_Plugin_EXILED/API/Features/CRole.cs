@@ -5,7 +5,6 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Extension;
-using JetBrains.Annotations;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;

@@ -1,8 +1,6 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using Exiled.API.Features.Items;
-using Exiled.API.Features.Pickups;
 using Exiled.CustomItems.API.Features;
 using Slafight_Plugin_EXILED.Changes;
 

@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Exiled.API.Features;
 using Exiled.Permissions.Extensions;
-using Slafight_Plugin_EXILED.API.Enums;
 using UnityEngine;
 namespace Slafight_Plugin_EXILED.MainHandlers;
 

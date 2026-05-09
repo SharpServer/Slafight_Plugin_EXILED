@@ -7,7 +7,6 @@ using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
 using Exiled.CustomItems.API.Features;
-using JetBrains.Annotations;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;

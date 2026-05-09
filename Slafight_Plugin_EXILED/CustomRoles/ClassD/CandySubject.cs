@@ -2,7 +2,6 @@ using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
-using Exiled.CustomItems.API.Features;
 using InventorySystem.Items.Usables.Scp330;
 using MEC;
 using PlayerRoles;

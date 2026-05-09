@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using AdminToys;
@@ -6,10 +5,7 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Toys;
 using MEC;
-using ProjectMER.Features.Objects;
-using Slafight_Plugin_EXILED.API.Structs;
 using Slafight_Plugin_EXILED.Extensions;
-using Slafight.API.Strcuts;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;
