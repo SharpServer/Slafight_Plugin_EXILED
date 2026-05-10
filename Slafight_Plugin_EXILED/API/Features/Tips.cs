@@ -1,4 +1,6 @@
 using System.Collections.Generic;
+using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.CustomMaps;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.API.Features;
@@ -34,15 +36,24 @@ public static class Tips
         "上層通信室の文字は実は毎ラウンド変わっています！"
     ];
 
-    private static List<string> ActiveList => TipsList2;
+    private static List<string> ActiveList()
+    {
+        switch (MapFlags.GetSeason())
+        {
+            case SeasonTypeId.FifthFestival:
+                return TipsList2;
+            default:
+                return TipsList;
+        }
+    }
 
     public static string Get(int id)
     {
-        return ActiveList[id]; //TipsList[id];
+        return ActiveList()[id]; //TipsList[id];
     }
     public static string GetRandomTip()
     {
-        int tipsRandom = Random.Range(0,ActiveList.Count);
-        return ActiveList[tipsRandom];
+        int tipsRandom = Random.Range(0,ActiveList().Count);
+        return ActiveList()[tipsRandom];
     }
 }
