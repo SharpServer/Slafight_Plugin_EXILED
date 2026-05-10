@@ -3,6 +3,7 @@ using Exiled.API.Features;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
@@ -25,7 +26,7 @@ public class SecurityTeamGuard : CRole
         player.MaxHealth = 100;
         player.Health = player.MaxHealth;
         player.ClearInventory();
-        player.AddItem(ItemType.GunFSP9);
+        player.GiveCItem<GunFSP18>();
         player.AddItem(ItemType.KeycardGuard);
         player.AddItem(ItemType.Medkit);
         player.AddItem(ItemType.Painkillers);
