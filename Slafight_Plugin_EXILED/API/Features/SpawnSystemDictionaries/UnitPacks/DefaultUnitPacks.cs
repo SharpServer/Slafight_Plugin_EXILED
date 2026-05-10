@@ -168,6 +168,7 @@ public static class DefaultUnitPacks
                 }
             }
         );
+        UnitPackRegistry.Register(securityTeamPack);
 
         var chaosAgentPack = new UnitPack(
             "ChaosAgents",
@@ -182,5 +183,6 @@ public static class DefaultUnitPacks
                 }
             }
         );
+        UnitPackRegistry.Register(chaosAgentPack);
     }
 }

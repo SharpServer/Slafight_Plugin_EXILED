@@ -18,11 +18,21 @@ public static class TrainComing
     // 直近の列車オブジェクト参照（クリーンアップ用）
     private static SchematicObject _currentTrain;
 
+    // 最後に指定された座標（引数なし Start() 用）
+    private static Vector3 _lastStartPos;
+    private static Vector3 _lastCheckpointPos;
+    private static Vector3 _lastEndPos;
+
     /// <summary>
     /// メインループ開始。Plugin 側から 1 回だけ呼ぶ想定。
     /// </summary>
     public static void Start(Vector3 startPos, Vector3 checkpointPos, Vector3 endPos)
     {
+        // 座標を記録しておく（引数なし版で再利用）
+        _lastStartPos      = startPos;
+        _lastCheckpointPos = checkpointPos;
+        _lastEndPos        = endPos;
+
         // 既に走っていたら殺す
         StopAll();
 
@@ -31,6 +41,21 @@ public static class TrainComing
             Segment.Update,
             "TrainMainLoop"
         );
+    }
+
+    /// <summary>
+    /// 前回と同じ座標でメインループを再開する。
+    /// Start(Vector3...) を一度も呼んでいない場合は警告を出して何もしない。
+    /// </summary>
+    public static void Start()
+    {
+        if (_lastStartPos == default && _lastCheckpointPos == default && _lastEndPos == default)
+        {
+            Log.Warn("[Train] Start() called but no coordinates have been set yet. Call Start(Vector3, Vector3, Vector3) first.");
+            return;
+        }
+
+        Start(_lastStartPos, _lastCheckpointPos, _lastEndPos);
     }
 
     /// <summary>

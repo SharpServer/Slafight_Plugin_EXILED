@@ -24,30 +24,63 @@ public class RoundHandler : IBootstrapHandler
 
     private static void OnRoundStarted()
     {
+        IsAlreadySpawned = false;
+        WaitForSpawnTime = 240f;
         Timing.RunCoroutine(GuardsCoroutine());
+    }
+
+    public static float WaitForSpawnTime { get; private set; }
+    public static float ElapsedTime { get; private set; }
+    public static bool IsAlreadySpawned { get; private set; }
+
+    public static bool IsSecurityTeamExpected()
+    {
+        if (Player.List.Count(p => p.GetTeam() is CTeam.ChaosInsurgency or CTeam.ClassD) >= Player.List.Count(p => p.GetTeam() is CTeam.FoundationForces or CTeam.Scientists or CTeam.Guards))
+        {
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+
+    public static SpawnTypeId GetExpectedTeam()
+    {
+        if (IsSecurityTeamExpected())
+        {
+            return SpawnTypeId.SecurityTeam;
+        }
+        else
+        {
+            return SpawnTypeId.ChaosAgents;
+        }
     }
 
     private static IEnumerator<float> GuardsCoroutine()
     {
-        float elapsedTime = 0f;
+        ElapsedTime = 0f;
         while (true)
         {
             if (Round.IsLobby) yield break;
-            elapsedTime += 0.1f;
-            if (elapsedTime >= 235f)
+            ElapsedTime += 0.1f;
+            if (ElapsedTime >= WaitForSpawnTime)
             {
                 Faction faction;
-                if (Player.List.Count(p => p.GetTeam() is CTeam.ChaosInsurgency or CTeam.ClassD) >= Player.List.Count(p => p.GetTeam() is CTeam.FoundationForces or CTeam.Scientists or CTeam.Guards))
-                {
-                    faction = Faction.FoundationEnemy;
-                    SpawnSystem.ReplaceNextSpawn(SpawnTypeId.ChaosAgents);
-                }
-                else
+                if (IsSecurityTeamExpected())
                 {
                     faction = Faction.FoundationStaff;
                     SpawnSystem.ReplaceNextSpawn(SpawnTypeId.SecurityTeam);
                 }
+                else
+                {
+                    faction = Faction.FoundationEnemy;
+                    SpawnSystem.ReplaceNextSpawn(SpawnTypeId.ChaosAgents);
+                }
+
                 Respawn.AdvanceTimer(faction, 999);
+                IsAlreadySpawned = true;
+                yield break;
             }
             yield return Timing.WaitForSeconds(0.1f);
         }

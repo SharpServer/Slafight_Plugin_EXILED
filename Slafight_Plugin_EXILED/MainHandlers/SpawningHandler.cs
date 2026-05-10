@@ -8,6 +8,7 @@ using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 using Slafight_Plugin_EXILED.API.Interface;
+using Slafight_Plugin_EXILED.CustomMaps.Features;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -182,7 +183,12 @@ public class SpawningHandler : IBootstrapHandler
             
             // ==== EXPERIMENTAL FEATURES ==== //
             case SpawnTypeId.SecurityTeam:
+                TrainComing.Start();
                 CassieHelper.AnnounceSecurityTeamEnter(spawnCount);
+                break;
+            
+            case SpawnTypeId.ChaosAgents:
+                TrainComing.Start();
                 break;
         }
     }

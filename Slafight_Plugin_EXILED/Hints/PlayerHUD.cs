@@ -826,6 +826,30 @@ public class PlayerHUD : IBootstrapHandler
             }
         }
 
+        // ── EXPERIMENTAL FEATURES ───────────────────────────────────
+        var expectedTeam = RoundHandler.GetExpectedTeam();
+        float elapsed = RoundHandler.ElapsedTime;
+        float waitFor = RoundHandler.WaitForSpawnTime;
+        float remaining = waitFor - elapsed;
+
+        if (RoundHandler.IsAlreadySpawned)
+        {
+            sb.AppendLine(
+                $"<color=#666666>FirstTeam: {expectedTeam} already spawned.</color>"
+            );
+        }
+        else
+        {
+            string teamColor = RoundHandler.IsSecurityTeamExpected() ? "#00b7eb" : "#228b22";
+            string urgency = remaining <= 30f ? "<color=#ff4444>" : "<color=#ffcc00>";
+            sb.AppendLine(
+                $"{urgency}FirstTeam:</color> " +
+                $"<color={teamColor}>{expectedTeam}</color> spawns in " +
+                $"{urgency}{remaining:F1}s</color> " +
+                $"<color=#666666>({elapsed:F1} / {waitFor:F0})</color>"
+            );
+        }
+
         // ────────────────────────────────────────────────────────────
         // ★ 新しい項目はここに追加するだけでOK
         // 例:

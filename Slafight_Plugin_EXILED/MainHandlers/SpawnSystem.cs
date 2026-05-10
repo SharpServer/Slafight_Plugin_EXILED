@@ -241,16 +241,15 @@ public class SpawnSystem : IBootstrapHandler
 
     public void SpawnHandler(RespawningTeamEventArgs ev)
     {
+        // 常に最初に IsAllowed = false にする
+        ev.IsAllowed = false;
+
         if (Disable)
-        {
-            ev.IsAllowed = false;
             return;
-        }
 
         // 即時オーバーライド（NextWave）
         if (OverrideMode == SpawnOverrideMode.NextWave && PendingOverrideType.HasValue)
         {
-            ev.IsAllowed = false;
             SummonForces(PendingOverrideType.Value, PendingMiniWave);
             ResetOverride();
             return;
@@ -258,8 +257,6 @@ public class SpawnSystem : IBootstrapHandler
 
         if (!_isDefaultWave)
             return;
-
-        ev.IsAllowed = false;
 
         SpawnTypeId? decided = null;
 
@@ -270,7 +267,7 @@ public class SpawnSystem : IBootstrapHandler
 
         if (decided is null)
         {
-            Log.Warn($"SpawnSystem: No spawn type decided for {ev.NextKnownTeam} in context '{SpawnContextRegistry.ActiveContextName}'");
+            Log.Warn($"SpawnSystem: No spawn type decided for ...");
             return;
         }
 

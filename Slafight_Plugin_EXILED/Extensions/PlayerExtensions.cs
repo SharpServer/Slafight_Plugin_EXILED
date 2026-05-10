@@ -347,6 +347,13 @@ public static class PlayerExtensions
             case CRoleTypeId.GoCHoundDog:
                 new GoCHoundDog().SpawnRole(player, roleSpawnFlags);
                 break;
+            // ==== EXPERIMENTAL FEATURES ===== //
+            case CRoleTypeId.SecurityTeamGuard:
+                new SecurityTeamGuard().SpawnRole(player, roleSpawnFlags);
+                break;
+            case CRoleTypeId.ChaosIntruder:
+                new ChaosIntruder().SpawnRole(player, roleSpawnFlags);
+                break;
         }
     }
 
