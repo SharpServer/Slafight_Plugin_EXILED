@@ -32,6 +32,8 @@ public class NtfSpecialist : CRole
         player.AddItem(ItemType.GrenadeHE);
         player.AddItem(ItemType.ArmorHeavy);
         player.AddItem(ItemType.Radio);
+        
+        player.SetAmmo(AmmoType.Nato556, 180);
 
         player.SetCustomInfo("Nine-tailed Fox Specialist");
     }

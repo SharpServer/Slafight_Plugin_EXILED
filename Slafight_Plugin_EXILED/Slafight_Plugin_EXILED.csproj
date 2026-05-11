@@ -250,6 +250,7 @@
         <Compile Include="CustomItems\SlafightApiItems\DninoueMissile.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunM82.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunScp7381.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\GunSL8.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunSuppressiver.cs" />
         <Compile Include="CustomItems\SlafightApiItems\NvgBlue.cs" />
         <Compile Include="CustomItems\SlafightApiItems\NvgRed.cs" />
@@ -325,6 +326,7 @@
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosPenal.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosCommando.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosSignal.cs" />
+        <Compile Include="CustomRoles\ChaosInsurgency\ChaosSniper.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosTacticalUnit.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosUndercoverAgent.cs" />
         <Compile Include="CustomRoles\ClassD\CandySubject.cs" />

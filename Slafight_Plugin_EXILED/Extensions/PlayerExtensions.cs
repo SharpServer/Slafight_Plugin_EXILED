@@ -228,6 +228,9 @@ public static class PlayerExtensions
             case CRoleTypeId.ChaosUndercoverAgent:
                 new ChaosUndercoverAgent().SpawnRole(player, roleSpawnFlags);
                 break;
+            case CRoleTypeId.ChaosSniper:
+                new ChaosSniper().SpawnRole(player, roleSpawnFlags);
+                break;
             // ==== NTF ====
             case CRoleTypeId.NtfLieutenant:
                 new NtfAide().SpawnRole(player, roleSpawnFlags);

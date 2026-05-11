@@ -94,6 +94,7 @@ public static class DefaultUnitPacks
                         { new SpawnSystem.SpawnRoleKey(RoleTypeId.ChaosMarauder),  (2f,  false) },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.ChaosTacticalUnit), (2f, false) },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.ChaosPenal), (2f, false) },
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.ChaosSniper), (2f, false) },
                         { new SpawnSystem.SpawnRoleKey(RoleTypeId.ChaosRifleman),  (99f, false) },
                     }
                 }

@@ -33,6 +33,7 @@ public enum CRoleTypeId
     ChaosTacticalUnit,
     ChaosPenal,
     ChaosUndercoverAgent,
+    ChaosSniper,
     
     // ==== NTF ====
     NtfLieutenant,
