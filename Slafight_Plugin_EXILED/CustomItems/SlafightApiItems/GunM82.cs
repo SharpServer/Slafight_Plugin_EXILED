@@ -1,4 +1,5 @@
 using Exiled.API.Features.Items;
+using Exiled.Events.EventArgs.Item;
 using InventorySystem.Items.Firearms.Attachments;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
@@ -22,8 +23,27 @@ public class GunM82 : CItemWeapon
         if (item is Firearm firearm)
         {
             firearm.AmmoDrain = 30;
+            firearm.ClearAttachments();
             firearm.AddAttachment(AttachmentName.ScopeSight);
         }
         base.ApplyFirearmCustomization(item);
+    }
+
+    public override void RegisterEvents()
+    {
+        Exiled.Events.Handlers.Item.ChangingAttachments += OnAttachmentChanging;
+        base.RegisterEvents();
+    }
+
+    public override void UnregisterEvents()
+    {
+        Exiled.Events.Handlers.Item.ChangingAttachments -= OnAttachmentChanging;
+        base.UnregisterEvents();
+    }
+
+    private void OnAttachmentChanging(ChangingAttachmentsEventArgs ev)
+    {
+        if (!Check(ev.Item)) return;
+        ev.IsAllowed = false;
     }
 }
