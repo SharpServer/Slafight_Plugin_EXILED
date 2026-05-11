@@ -86,7 +86,7 @@ public static class PlayerExtensions
                 break;
 
             case RoleTypeId.NtfSpecialist:
-                player.Role.Set(RoleTypeId.NtfSpecialist, roleSpawnFlags);
+                player.SetRole(CRoleTypeId.NtfSpecialist, roleSpawnFlags);
                 break;
 
             // ==== Chaos ====
@@ -234,6 +234,9 @@ public static class PlayerExtensions
                 break;
             case CRoleTypeId.NtfGeneral:
                 new NtfGeneral().SpawnRole(player, roleSpawnFlags);
+                break;
+            case CRoleTypeId.NtfSpecialist:
+                new NtfSpecialist().SpawnRole(player, roleSpawnFlags);
                 break;
             // ==== Hammer Down ====
             case CRoleTypeId.HdInfantry:

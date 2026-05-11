@@ -335,6 +335,7 @@
         <Compile Include="CustomRoles\Fifthist\Scp3125Role.cs" />
         <Compile Include="CustomRoles\FoundationForces\HdMarshal.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfGeneral.cs" />
+        <Compile Include="CustomRoles\FoundationForces\NtfSpecialist.cs" />
         <Compile Include="CustomRoles\FoundationForces\Sculpture.cs" />
         <Compile Include="CustomRoles\FoundationForces\SneGears.cs" />
         <Compile Include="CustomRoles\FoundationForces\SneNeutralitist.cs" />
