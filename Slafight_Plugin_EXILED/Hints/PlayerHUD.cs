@@ -2,12 +2,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using HintServiceMeow.Core.Enum;
-using HintServiceMeow.Core.Models.HintContent;
-using HintServiceMeow.Core.Models.Hints;
 using HintServiceMeow.Core.Utilities;
 using MEC;
 using PlayerRoles;
@@ -18,524 +15,709 @@ using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
-using Slafight_Plugin_EXILED.API.Interface;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
+
+using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.Hints;
 
 public class PlayerHUD : IBootstrapHandler
 {
-    public static PlayerHUD Instance { get; private set; } = null!;
-    public static void Register()   { Instance = new(); }
-    public static void Unregister() { Instance = null!; }
+    public static PlayerHUD Instance { get; private set; }
+    public static void Register() { Instance = new(); }
+    public static void Unregister() { Instance = null; }
+
+    private CoroutineHandle _specificAbilityLoop;
+    private CoroutineHandle _abilityHudLoop;
+    private CoroutineHandle _taskSyncLoop;
+    private CoroutineHandle _debugHudLoop;
 
     // 観戦者ID → 現在見ているプレイヤー
     private readonly Dictionary<int, Player> _spectateTargets = new();
 
-    // =========================================================
-    // 定数
-    // =========================================================
-    private const int LeftX  = -350;
-    private const int RightX =    0;
-
-    // 左カラム固定Y
-    private const int Y_Role      = 870;
-    private const int Y_Team      = 900;
-    private const int Y_Objective = 930;
-    private const int Y_Event     = 120;
-    private const int Y_Debug     = 260;
-    private const int Y_Server    = 1050;
-
-    // 右カラム DynamicHint のターゲットY・境界
-    // Specific と Ability は互いを自動回避する
-    private const int Y_Specific_Target = 860;
-    private const int Y_Ability_Target  = 900;
-
-    // =========================================================
-    // コンストラクタ / デストラクタ
-    // =========================================================
     public PlayerHUD()
     {
-        Exiled.Events.Handlers.Player.Verified           += OnVerified;
-        Exiled.Events.Handlers.Server.RoundStarted       += OnRoundStarted;
-        Exiled.Events.Handlers.Player.ChangingRole        += OnChangingRole;
-        Exiled.Events.Handlers.Server.RestartingRound    += OnRestartingRound;
-        Exiled.Events.Handlers.Player.ChangingSpectatedPlayer += OnSpectate;
+        Exiled.Events.Handlers.Player.Verified += ServerInfoHint;
+        Exiled.Events.Handlers.Server.RoundStarted += PlayerHUDMain;
+        Exiled.Events.Handlers.Player.ChangingRole += AllSyncHUD;
+        Exiled.Events.Handlers.Server.RoundStarted += AllSyncHUD_;
+        Exiled.Events.Handlers.Server.RestartingRound += DestroyHints;
+        Exiled.Events.Handlers.Player.ChangingSpectatedPlayer += Spectate;
+
+        // 旧仕様と同じく、コルーチンはプラグイン生存中ずっと回す
+        _specificAbilityLoop = Timing.RunCoroutine(SpecificInfoHudLoop());
+        _abilityHudLoop = Timing.RunCoroutine(AbilityHudLoop());
+        _taskSyncLoop = Timing.RunCoroutine(TaskSync());
+        _debugHudLoop = Timing.RunCoroutine(DebugHudLoop());
     }
 
     ~PlayerHUD()
     {
-        Exiled.Events.Handlers.Player.Verified           -= OnVerified;
-        Exiled.Events.Handlers.Server.RoundStarted       -= OnRoundStarted;
-        Exiled.Events.Handlers.Player.ChangingRole        -= OnChangingRole;
-        Exiled.Events.Handlers.Server.RestartingRound    -= OnRestartingRound;
-        Exiled.Events.Handlers.Player.ChangingSpectatedPlayer -= OnSpectate;
+        Exiled.Events.Handlers.Player.Verified -= ServerInfoHint;
+        Exiled.Events.Handlers.Server.RoundStarted -= PlayerHUDMain;
+        Exiled.Events.Handlers.Player.ChangingRole -= AllSyncHUD;
+        Exiled.Events.Handlers.Server.RoundStarted -= AllSyncHUD_;
+        Exiled.Events.Handlers.Server.RestartingRound -= DestroyHints;
+        Exiled.Events.Handlers.Player.ChangingSpectatedPlayer -= Spectate;
+
+        if (_specificAbilityLoop.IsRunning)
+            Timing.KillCoroutines(_specificAbilityLoop);
+
+        if (_abilityHudLoop.IsRunning)
+            Timing.KillCoroutines(_abilityHudLoop);
+
+        if (_taskSyncLoop.IsRunning)
+            Timing.KillCoroutines(_taskSyncLoop);
+        
+        if (_debugHudLoop.IsRunning)
+            Timing.KillCoroutines(_debugHudLoop);
     }
+
 
     // =========================================================
     // ヘルパー
     // =========================================================
-    private static bool IsValid(Player? p)
+
+    /// <summary>プレイヤーが安全に操作できる状態かどうか確認する</summary>
+    private static bool IsPlayerValid(Player? p)
     {
-        try { return p != null && p.IsConnected && p.ReferenceHub != null; }
-        catch { return false; }
-    }
-
-    private static PlayerDisplay? GetDisplay(Player p)
-    {
-        try { return PlayerDisplay.Get(p.ReferenceHub); }
-        catch { return null; }
-    }
-
-    /// <summary>観戦者なら観戦対象を、そうでなければ自分を返す</summary>
-    private Player ResolveHudTarget(Player viewer)
-    {
-        if (viewer.Role?.Team == Team.Dead &&
-            _spectateTargets.TryGetValue(viewer.Id, out var t) &&
-            IsValid(t) && t.IsAlive)
-            return t;
-        return viewer;
-    }
-
-    // =========================================================
-    // HUD セットアップ（プレイヤー1人分）
-    // =========================================================
-    private void SetupHUD(Player player)
-    {
-        if (!IsValid(player)) return;
-        var display = GetDisplay(player);
-        if (display == null) return;
-
-        // 既にセットアップ済みなら再生成しない
-        if (display.HasHint("PHUD_Role")) return;
-
-        // ── 左カラム（固定 Hint）──────────────────────────────
-
-        // ServerInfo
-        display.AddHint(new Hint
-        {
-            Id        = "PHUD_ServerInfo",
-            Alignment = HintAlignment.Center,
-            SyncSpeed = HintSyncSpeed.UnSync,
-            FontSize  = 18,
-            YCoordinate = Y_Server,
-            Text = Plugin.Singleton.Config.IsBeta
-                ? "[<color=#008cff>Sharp Server</color> - <color=red>BETA</color>]"
-                : "[<color=#008cff>Sharp Server</color>]"
-        });
-
-        // Event（上部）
-        display.AddHint(new Hint
-        {
-            Id          = "PHUD_Event",
-            Alignment   = HintAlignment.Left,
-            SyncSpeed   = HintSyncSpeed.Fast,
-            FontSize    = 24,
-            XCoordinate = LeftX,
-            YCoordinate = Y_Event,
-            AutoText    = _ => BuildEventText(player)
-        });
-
-        // Debug（上部、デバッグ時のみ表示）
-        display.AddHint(new Hint
-        {
-            Id          = "PHUD_Debug",
-            Alignment   = HintAlignment.Left,
-            SyncSpeed   = HintSyncSpeed.Fast,
-            FontSize    = 24,
-            XCoordinate = LeftX,
-            YCoordinate = Y_Debug,
-            AutoText    = ev =>
-            {
-                ev.NextUpdateDelay = TimeSpan.FromSeconds(0.1);
-                if (!DebugModeHandler.IsDebugMode(player))
-                    return string.Empty;
-                return BuildDebugHud(player);
-            }
-        });
-
-        // Role
-        display.AddHint(new Hint
-        {
-            Id          = "PHUD_Role",
-            Alignment   = HintAlignment.Left,
-            SyncSpeed   = HintSyncSpeed.Fast,
-            FontSize    = 24,
-            XCoordinate = LeftX,
-            YCoordinate = Y_Role,
-            AutoText    = ev =>
-            {
-                ev.NextUpdateDelay = TimeSpan.FromSeconds(2);
-                var target = ResolveHudTarget(player);
-                return "Role: " + BuildRoleText(target);
-            }
-        });
-
-        // Team
-        display.AddHint(new Hint
-        {
-            Id          = "PHUD_Team",
-            Alignment   = HintAlignment.Left,
-            SyncSpeed   = HintSyncSpeed.Fast,
-            FontSize    = 24,
-            XCoordinate = LeftX,
-            YCoordinate = Y_Team,
-            AutoText    = ev =>
-            {
-                ev.NextUpdateDelay = TimeSpan.FromSeconds(2);
-                var target = ResolveHudTarget(player);
-                return "Team: " + BuildTeamText(target);
-            }
-        });
-
-        // Objective
-        display.AddHint(new Hint
-        {
-            Id          = "PHUD_Objective",
-            Alignment   = HintAlignment.Left,
-            SyncSpeed   = HintSyncSpeed.Fast,
-            FontSize    = 20,
-            XCoordinate = LeftX,
-            YCoordinate = Y_Objective,
-            AutoText    = ev =>
-            {
-                ev.NextUpdateDelay = TimeSpan.FromSeconds(2);
-                var target = ResolveHudTarget(player);
-                return "<size=18>Objective: " + BuildObjectiveText(target) + "</size>";
-            }
-        });
-
-        // ── 右カラム（DynamicHint：自動回避）─────────────────
-
-        // Specific：ロール固有情報（優先度高、上に来る）
-        display.AddHint(new DynamicHint
-        {
-            Id            = "PHUD_Specific",
-            SyncSpeed     = HintSyncSpeed.Fast,
-            FontSize       = 22,
-            TargetX        = RightX,
-            TargetY        = Y_Specific_Target,
-            TopBoundary    = 800,
-            BottomBoundary = 980,
-            LeftBoundary   = RightX - 50,
-            RightBoundary  = RightX + 600,
-            TopMargin      = 4,
-            BottomMargin   = 4,
-            Priority       = HintPriority.High,
-            Strategy       = DynamicHintStrategy.StayInPosition,
-            AutoText       = ev =>
-            {
-                ev.NextUpdateDelay = TimeSpan.FromSeconds(1);
-                var target = ResolveHudTarget(player);
-                if (!IsValid(target) || !target.IsAlive) return string.Empty;
-                return RoleSpecificTextProvider.GetFor(target);
-            }
-        });
-
-        // Ability：全スロット表示（Specificの下に自動配置）
-        display.AddHint(new DynamicHint
-        {
-            Id             = "PHUD_Ability",
-            SyncSpeed      = HintSyncSpeed.Fast,
-            FontSize        = 22,
-            TargetX         = RightX,
-            TargetY         = Y_Ability_Target,
-            TopBoundary     = 800,
-            BottomBoundary  = 1020,
-            LeftBoundary    = RightX - 50,
-            RightBoundary   = RightX + 600,
-            TopMargin       = 4,
-            BottomMargin    = 4,
-            Priority        = HintPriority.Medium,
-            Strategy        = DynamicHintStrategy.StayInPosition,
-            AutoText        = ev =>
-            {
-                ev.NextUpdateDelay = TimeSpan.FromSeconds(0.5);
-                var target = ResolveHudTarget(player);
-                return BuildAbilityHud(target);
-            }
-        });
-    }
-
-    // =========================================================
-    // HUD テキストビルダー群
-    // =========================================================
-
-    private string BuildEventText(Player viewer)
-    {
-        var target = ResolveHudTarget(viewer);
-        // チームが Dead で観戦対象不在なら空
-        if (!IsValid(target)) return string.Empty;
-        return "[Event]\n<size=26>" +
-               SpecialEventsHandler.Instance.LocalizedEventName +
-               "</size>";
-    }
-
-    private static string BuildRoleText(Player target)
-    {
-        if (!IsValid(target)) return string.Empty;
-        var custom = target.GetCustomRole();
-        if (custom != CRoleTypeId.None &&
-            RoleHintsDictionary.Table.TryGetValue(custom, out var data))
-            return data.Role;
-        return GetTeamFallbackRole(target);
-    }
-
-    private static string BuildTeamText(Player target)
-    {
-        if (!IsValid(target)) return string.Empty;
-        var custom = target.GetCustomRole();
-        if (custom != CRoleTypeId.None &&
-            RoleHintsDictionary.Table.TryGetValue(custom, out var data))
-            return data.Team;
-
-        // FacilityTermination 特殊処理
-        if (SpecialEventsHandler.Instance.NowEvent == SpecialEventType.FacilityTermination)
-        {
-            var cteam = target.GetTeam();
-            if (cteam is CTeam.FoundationForces or CTeam.Guards &&
-                target.GetCustomRole() != CRoleTypeId.Sculpture)
-                return "<color=#00b7eb>The Foundation</color>";
-        }
-
-        return GetTeamFallbackTeam(target);
-    }
-
-    private static string BuildObjectiveText(Player target)
-    {
-        if (!IsValid(target)) return string.Empty;
-        var custom = target.GetCustomRole();
-        if (custom != CRoleTypeId.None &&
-            RoleHintsDictionary.Table.TryGetValue(custom, out var data))
-            return data.Objective;
-
-        if (SpecialEventsHandler.Instance.NowEvent == SpecialEventType.FacilityTermination)
-        {
-            var cteam = target.GetTeam();
-            if (cteam is CTeam.FoundationForces or CTeam.Guards &&
-                target.GetCustomRole() != CRoleTypeId.Sculpture)
-                return "財団に従い、人類を根絶させよ。";
-        }
-
-        return GetTeamFallbackObjective(target);
-    }
-
-    private static string BuildAbilityHud(Player target)
-    {
-        if (!IsValid(target) || !target.IsAlive) return string.Empty;
-        if (!AbilityManager.TryGetLoadout(target, out var loadout)) return string.Empty;
-
-        bool hasAny = false;
-        for (int i = 0; i < AbilityLoadout.MaxSlots; i++)
-            if (loadout.Slots[i] != null) { hasAny = true; break; }
-        if (!hasAny) return string.Empty;
-
-        var sb = new StringBuilder();
-        for (int i = 0; i < AbilityLoadout.MaxSlots; i++)
-        {
-            var ability = loadout.Slots[i];
-            if (ability == null) continue;
-
-            bool isActive   = (i == loadout.ActiveIndex);
-            string key      = ability.GetType().Name;
-            string dispName = AbilityLocalization.GetDisplayName(key, target);
-
-            string cdText, usesText;
-            if (AbilityBase.TryGetAbilityState(target, ability,
-                    out bool canUse, out float cdRemain,
-                    out int usesLeft, out int maxUses))
-            {
-                cdText   = canUse ? "<color=green>READY</color>"
-                                  : $"<color=yellow>{(int)cdRemain}s</color>";
-                usesText = maxUses < 0 ? "∞" : usesLeft.ToString();
-            }
-            else
-            {
-                cdText   = "<color=#888888>--</color>";
-                usesText = "--";
-            }
-
-            sb.AppendLine(isActive
-                ? $"<color=#ffcc00>▶[{dispName}]</color> CD:{cdText} Uses:{usesText}"
-                : $"<color=#888888>  [{dispName}]</color> CD:{cdText} Uses:{usesText}");
-        }
-
-        return sb.ToString().TrimEnd();
-    }
-
-    // =========================================================
-    // チームフォールバック（static）
-    // =========================================================
-    private static string GetTeamFallbackRole(Player p)
-    {
-        string name = p.Role?.Name ?? "";
-        return p.Role?.Team switch
-        {
-            Team.ClassD           => $"<color=#ee7600>{name}</color>",
-            Team.Scientists       => $"<color=#faff86>{name}</color>",
-            Team.ChaosInsurgency  => $"<color=#228b22>{name}</color>",
-            Team.FoundationForces => $"<color=#00b7eb>{name}</color>",
-            Team.SCPs             => $"<color=#c50000>{name}</color>",
-            Team.Flamingos        => $"<color=#ff96de>{name}</color>",
-            _                     => $"<color=#ffffff>{name}</color>",
-        };
-    }
-
-    private static string GetTeamFallbackTeam(Player p) => p.Role?.Team switch
-    {
-        Team.ClassD           => "<color=#ee7600>Neutral - Side Chaos</color>",
-        Team.Scientists       => "<color=#faff86>Neutral - Side Foundation</color>",
-        Team.ChaosInsurgency  => "<color=#228b22>Chaos Insurgency</color>",
-        Team.FoundationForces => "<color=#00b7eb>The Foundation</color>",
-        Team.SCPs             => "<color=#c50000>The SCPs</color>",
-        Team.Flamingos        => "<color=#ff96de>The Flamingos</color>",
-        _                     => "<color=#ffffff>[Unknown]</color>",
-    };
-
-    private static string GetTeamFallbackObjective(Player p) => p.Role?.Team switch
-    {
-        Team.ClassD           => "施設から脱出せよ",
-        Team.Scientists       => "施設から脱出せよ",
-        Team.ChaosInsurgency  => "Dクラス職員を救出し、施設を略奪せよ。",
-        Team.FoundationForces => "研究員を救出し、施設の秩序を守護せよ。",
-        Team.SCPs             => "己の本能・復讐心と利益の為に動け",
-        Team.Flamingos        => "フラミンゴ！",
-        _                     => "[Unknown]",
-    };
-
-    // =========================================================
-    // イベントハンドラ
-    // =========================================================
-    private void OnVerified(VerifiedEventArgs ev)
-    {
-        if (!IsValid(ev?.Player)) return;
-        SetupHUD(ev.Player);
-    }
-
-    private void OnRoundStarted()
-    {
-        foreach (var player in Player.List.ToList())
-        {
-            if (!IsValid(player)) continue;
-            // HasHint で既存確認済みのため再SetupはHasHint内でガード
-            SetupHUD(player);
-        }
-    }
-
-    private void OnChangingRole(ChangingRoleEventArgs ev)
-    {
-        if (!IsValid(ev?.Player)) return;
-        // ロール変更後に AutoContent が自律更新するので追加処理は不要
-        // ただし Dead→生存時にHintが消えていた場合のリカバリ
-        Timing.CallDelayed(0.5f, () =>
-        {
-            if (!IsValid(ev.Player)) return;
-            SetupHUD(ev.Player);
-        });
-    }
-
-    private void OnRestartingRound()
-    {
-        _spectateTargets.Clear();
-        foreach (var player in Player.List.ToList())
-        {
-            if (!IsValid(player)) continue;
-            try { GetDisplay(player)?.ClearHint(); }
-            catch (Exception e) { Log.Debug($"[DestroyHints] {player.Nickname}: {e.Message}"); }
-        }
-    }
-
-    private void OnSpectate(ChangingSpectatedPlayerEventArgs ev)
-    {
-        if (!IsValid(ev?.Player)) return;
-        var spectator = ev.Player;
-
-        if (ev.NewTarget == null)
-        {
-            _spectateTargets.Remove(spectator.Id);
-        }
-        else if (IsValid(ev.NewTarget))
-        {
-            _spectateTargets[spectator.Id] = ev.NewTarget;
-        }
-        // AutoContent が次の更新サイクルで ResolveHudTarget を呼ぶので
-        // 即時反映させたい場合だけ ForceUpdate を叩く
-        Timing.CallDelayed(0.1f, () =>
-        {
-            if (!IsValid(spectator)) return;
-            GetDisplay(spectator)?.ForceUpdate(useFastUpdate: true);
-        });
-    }
-
-    // =========================================================
-    // 外部から即時更新したい場合（AbilityManager から呼ぶ用）
-    // =========================================================
-    public void ForceAbilityHudSync(Player player)
-    {
-        if (!IsValid(player)) return;
-        GetDisplay(player)?.ForceUpdate(useFastUpdate: true);
-    }
-    
-    /// <summary>特定プレイヤーのHintを全消去してHUDを再構築する</summary>
-    public void ResetHudForPlayer(Player player)
-    {
-        if (!IsValid(player)) return;
         try
         {
-            GetDisplay(player)?.ClearHint();
+            return p != null && p.IsConnected && p.ReferenceHub != null;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    /// <summary>PlayerDisplay を安全に取得する。失敗時は null を返す</summary>
+    private static PlayerDisplay? TryGetDisplay(Player p)
+    {
+        try
+        {
+            return PlayerDisplay.Get(p.ReferenceHub);
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    // =========================================================
+    // ServerInfoHint / Setup / Main
+    // =========================================================
+
+    public void ServerInfoHint(VerifiedEventArgs ev)
+    {
+        if (ev?.Player == null) return; // FIX: nullガード
+
+        var display = TryGetDisplay(ev.Player);
+        if (display == null) return;
+
+        Hint ServerInfo = null;
+        if (Plugin.Singleton.Config.IsBeta)
+        {
+            ServerInfo = new Hint
+            {
+                Id = "ServerInfo",
+                Text = "[<color=#008cff>Sharp Server</color> - <color=red>BETA</color>]",
+                Alignment = HintAlignment.Center,
+                SyncSpeed = HintSyncSpeed.UnSync,
+                FontSize = 18,
+                YCoordinate = 1050
+            };
+        }
+        else
+        {
+            ServerInfo = new Hint
+            {
+                Id = "ServerInfo",
+                Text = "[<color=#008cff>Sharp Server</color>]",
+                Alignment = HintAlignment.Center,
+                SyncSpeed = HintSyncSpeed.UnSync,
+                FontSize = 18,
+                YCoordinate = 1050
+            };
+        }
+        display.AddHint(ServerInfo);
+
+        // ラウンド中に途中参加した場合は HUD も作る + ロール同期
+        if (!Round.IsLobby)
+        {
+            PlayerHUDSetup(ev.Player);
+            ApplyRoleInfo(ev.Player, ev.Player);
+        }
+    }
+
+    private void PlayerHUDSetup(Player player)
+    {
+        if (!IsPlayerValid(player)) return; // FIX: nullガード
+
+        var display = TryGetDisplay(player);
+        if (display == null) return;
+
+        int XCordinate = -350;
+
+        Hint PlayerHUD_Role = new()
+        {
+            Id = "PlayerHUD_Role",
+            Text = "Role: " + player.CustomInfo,
+            Alignment = HintAlignment.Left,
+            SyncSpeed = HintSyncSpeed.Fastest,
+            FontSize = 24,
+            XCoordinate = XCordinate,
+            YCoordinate = 860
+        };
+        Hint PlayerHUD_Objective = new()
+        {
+            Id = "PlayerHUD_Objective",
+            Text = "Objective: " + "Undefined",
+            Alignment = HintAlignment.Left,
+            YCoordinate = 915,
+            XCoordinate = XCordinate,
+            SyncSpeed = HintSyncSpeed.Fastest,
+            FontSize = 30
+        };
+        Hint PlayerHUD_Team = new()
+        {
+            Id = "PlayerHUD_Team",
+            Text = "Team: " + "Undefined",
+            Alignment = HintAlignment.Left,
+            YCoordinate = 885,
+            XCoordinate = XCordinate,
+            SyncSpeed = HintSyncSpeed.Fastest,
+            FontSize = 24
+        };
+        Hint PlayerHUD_Event = new()
+        {
+            Id = "PlayerHUD_Event",
+            Text = "[Event]\n<size=28>Undefined</size>",
+            Alignment = HintAlignment.Left,
+            SyncSpeed = HintSyncSpeed.Fast,
+            FontSize = 26,
+            XCoordinate = XCordinate,
+            YCoordinate = 120
+        };
+        Hint PlayerHUD_Specific = new()
+        {
+            Id = "PlayerHUD_Specific",
+            Text = "",
+            Alignment = HintAlignment.Left,
+            SyncSpeed = HintSyncSpeed.Fastest,
+            FontSize = 24,
+            XCoordinate = XCordinate + 350,
+            YCoordinate = 885
+        };
+        Hint PlayerHUD_Ability = new()
+        {
+            Id = "PlayerHUD_Ability",
+            Text = "",
+            Alignment = HintAlignment.Left,
+            SyncSpeed = HintSyncSpeed.Fastest,
+            FontSize = 24,
+            XCoordinate = XCordinate + 350,
+            YCoordinate = 855
+        };
+        Hint PlayerHUD_Debug = new()
+        {
+            Id = "PlayerHUD_Debug",
+            Text = "",
+            Alignment = HintAlignment.Left,
+            SyncSpeed = HintSyncSpeed.Fast,
+            FontSize = 24,
+            XCoordinate = XCordinate,
+            YCoordinate = 345
+        };
+
+        display.AddHint(PlayerHUD_Role);
+        display.AddHint(PlayerHUD_Objective);
+        display.AddHint(PlayerHUD_Team);
+        display.AddHint(PlayerHUD_Event);
+        display.AddHint(PlayerHUD_Specific);
+        display.AddHint(PlayerHUD_Ability);
+        display.AddHint(PlayerHUD_Debug);
+    }
+
+    public void PlayerHUDMain()
+    {
+        // 旧仕様寄り：RoundStarted 時点で全員分 HUD 作成
+        foreach (Player player in Player.List.ToList()) // FIX: ToList()
+        {
+            if (!IsPlayerValid(player)) continue;
+            PlayerHUDSetup(player);
+            ApplyRoleInfo(player, player);
+        }
+    }
+
+    // =========================================================
+    // HintSync
+    // =========================================================
+
+    public void HintSync(SyncType syncType, string hintText, Player player)
+    {
+        if (!IsPlayerValid(player)) return; // FIX: nullガード
+
+        var display = TryGetDisplay(player);
+        if (display == null) return;
+
+        try
+        {
+            switch (syncType)
+            {
+                case SyncType.ServerInfo:
+                    var si = display.GetHint("ServerInfo");
+                    if (si != null) si.Text = hintText;
+                    break;
+                case SyncType.PHUD_Role:
+                    var role = display.GetHint("PlayerHUD_Role");
+                    if (role != null) role.Text = "Role: " + hintText;
+                    break;
+                case SyncType.PHUD_Objective:
+                    var obj = display.GetHint("PlayerHUD_Objective");
+                    if (obj != null) obj.Text = "Objective: " + hintText;
+                    break;
+                case SyncType.PHUD_Team:
+                    var team = display.GetHint("PlayerHUD_Team");
+                    if (team != null) team.Text = "Team: " + hintText;
+                    break;
+                case SyncType.PHUD_Event:
+                    var ev = display.GetHint("PlayerHUD_Event");
+                    if (ev != null) ev.Text = "[Event]\n<size=28>" + hintText + "</size>";
+                    break;
+                case SyncType.PHUD_Ability:
+                    var ab = display.GetHint("PlayerHUD_Ability");
+                    if (ab != null) ab.Text = hintText;
+                    break;
+                case SyncType.PHUD_Debug:
+                    var db = display.GetHint("PlayerHUD_Debug");
+                    if (db != null) db.Text = hintText;
+                    break;
+            }
         }
         catch (Exception e)
         {
-            Log.Debug($"[ResetHudForPlayer] {player.Nickname}: {e.Message}");
+            Log.Debug($"[HintSync] Exception for {player.Nickname}: {e.Message}");
+        }
+    }
+
+    // =========================================================
+    // ロール情報構築
+    // =========================================================
+
+    private void ApplyRoleInfo(Player sourcePlayer, Player targetForHint)
+    {
+        if (!IsPlayerValid(sourcePlayer)) return;
+        if (!IsPlayerValid(targetForHint)) return;
+
+        try
+        {
+            string roleText, teamText, objectiveText;
+
+            // FacilityTermination 中の財団側特殊処理
+            if (SpecialEventsHandler.Instance.NowEvent == SpecialEventType.FacilityTermination)
+            {
+                var cteam = sourcePlayer.GetTeam();
+                if (cteam is CTeam.FoundationForces or CTeam.Guards &&
+                    sourcePlayer.GetCustomRole() != CRoleTypeId.Sculpture)
+                {
+                    HintSync(SyncType.PHUD_Role,      $"<color=#00b7eb>{sourcePlayer.Role.Name}</color>", targetForHint);
+                    HintSync(SyncType.PHUD_Team,      "<color=#00b7eb>The Foundation</color>",            targetForHint);
+                    HintSync(SyncType.PHUD_Objective, "財団に従い、人類を根絶させよ。",                    targetForHint);
+                    HintSync(SyncType.PHUD_Event,     SpecialEventsHandler.Instance.LocalizedEventName,   targetForHint);
+                    return;
+                }
+            }
+
+            var custom = sourcePlayer.GetCustomRole();
+
+            if (custom != CRoleTypeId.None &&
+                RoleHintsDictionary.Table.TryGetValue(custom, out var data))
+            {
+                roleText      = data.Role;
+                teamText      = data.Team;
+                objectiveText = data.Objective;
+            }
+            else
+            {
+                (roleText, teamText, objectiveText) = GetTeamFallback(sourcePlayer);
+            }
+
+            HintSync(SyncType.PHUD_Role,      roleText,      targetForHint);
+            HintSync(SyncType.PHUD_Objective, objectiveText, targetForHint);
+            HintSync(SyncType.PHUD_Team,      teamText,      targetForHint);
+            HintSync(SyncType.PHUD_Event,     SpecialEventsHandler.Instance.LocalizedEventName, targetForHint);
+        }
+        catch (Exception e)
+        {
+            Log.Debug($"[ApplyRoleInfo] Exception for {sourcePlayer?.Nickname}: {e.Message}");
+        }
+    }
+
+    private static (string role, string team, string objective) GetTeamFallback(Player player)
+    {
+        if (!IsPlayerValid(player))
+            return ("<color=#ffffff></color>", "<color=#ffffff>[Unknown]</color>", "[Unknown]");
+
+        string name = player.Role?.Name ?? "";
+        return player.Role?.Team switch
+        {
+            Team.ClassD          => ($"<color=#ee7600>{name}</color>", "<color=#ee7600>Neutral - Side Chaos</color>",       "施設から脱出せよ"),
+            Team.Scientists      => ($"<color=#faff86>{name}</color>", "<color=#faff86>Neutral - Side Foundation</color>",  "施設から脱出せよ"),
+            Team.ChaosInsurgency => ($"<color=#228b22>{name}</color>", "<color=#228b22>Chaos Insurgency</color>",           "Dクラス職員を救出し、施設を略奪せよ。"),
+            Team.FoundationForces=> ($"<color=#00b7eb>{name}</color>", "<color=#00b7eb>The Foundation</color>",             "研究員を救出し、施設の秩序を守護せよ。"),
+            Team.SCPs            => ($"<color=#c50000>{name}</color>", "<color=#c50000>The SCPs</color>",                   "己の本能・復讐心と利益の為に動け"),
+            Team.Flamingos       => ($"<color=#ff96de>{name}</color>", "<color=#ff96de>The Flamingos</color>",              "フラミンゴ！"),
+            _                    => ($"<color=#ffffff>{name}</color>", "<color=#ffffff>[Unknown]</color>",                  "[Unknown]"),
+        };
+    }
+
+    // =========================================================
+    // 全体同期
+    // =========================================================
+
+    public void SyncTexts(Player? spectator = null, Player? spectatedTarget = null)
+    {
+        // 両方 null → 全員分を自分自身で同期
+        if (spectator is null && spectatedTarget is null)
+        {
+            foreach (Player player in Player.List.ToList()) // FIX: ToList()
+            {
+                if (!IsPlayerValid(player)) continue;
+                if (player.Role?.Team == Team.Dead) continue;
+
+                ApplyRoleInfo(player, player);
+            }
+        }
+        // 観戦者 + 対象が両方 not null → 対象の情報を観戦者に同期
+        else if (spectator is not null && spectatedTarget is not null)
+        {
+            if (!IsPlayerValid(spectatedTarget)) return; // FIX: IsPlayerValidで一括確認
+            if (spectatedTarget.Role?.Team == Team.Dead) return;
+
+            ApplyRoleInfo(spectatedTarget, spectator);
+        }
+    }
+
+    public void AllSyncHUD(ChangingRoleEventArgs ev)
+    {
+        var player = ev?.Player; // FIX: nullガード
+        if (player == null) return;
+
+        Timing.CallDelayed(0.5f, () =>
+        {
+            if (!IsPlayerValid(player)) return; // FIX: 遅延後の生存確認
+            if (player.Role?.Team == Team.Dead) return;
+            ApplyRoleInfo(player, player);
+        });
+    }
+
+    public void AllSyncHUD_()
+    {
+        SyncTexts();
+    }
+
+    public void ForceUpdateAll() => AllSyncHUD_();
+
+    // =========================================================
+    // 観戦時の同期
+    // =========================================================
+
+    public void Spectate(ChangingSpectatedPlayerEventArgs ev)
+    {
+        // FIX: ev・spectator の nullガード
+        if (ev?.Player == null) return;
+        var spectator = ev.Player;
+        if (!IsPlayerValid(spectator)) return;
+
+        // 観戦解除（NewTarget が null）
+        if (ev.NewTarget == null)
+        {
+            _spectateTargets.Remove(spectator.Id);
+
+            // 自分自身の HUD を戻す
+            if (IsPlayerValid(spectator) && spectator.Role?.Team != Team.Dead)
+                ApplyRoleInfo(spectator, spectator);
+
+            return;
+        }
+
+        var target = ev.NewTarget;
+
+        // FIX: ターゲットの安全確認
+        if (!IsPlayerValid(target)) return;
+
+        _spectateTargets[spectator.Id] = target;
+
+        // 1. ロール HUD 同期
+        SyncTexts(spectator, target);
+
+        // FIX: PlayerDisplay 取得を安全なヘルパーで実施
+        var display = TryGetDisplay(spectator);
+        if (display == null) return;
+
+        // 2. Specific HUD 即時同期
+        var specificHint = display.GetHint("PlayerHUD_Specific");
+        if (specificHint != null)
+        {
+            try
+            {
+                specificHint.Text = RoleSpecificTextProvider.GetFor(target);
+            }
+            catch (Exception e)
+            {
+                Log.Debug($"[Spectate] Specific hint error: {e.Message}");
+            }
+        }
+
+        // 3. Ability HUD 即時同期
+        var abilityHint = display.GetHint("PlayerHUD_Ability");
+        if (abilityHint != null)
+        {
+            try
+            {
+                abilityHint.Text = BuildAbilityHud(target);
+            }
+            catch (Exception e)
+            {
+                Log.Debug($"[Spectate] Ability hint error: {e.Message}");
+            }
+        }
+    }
+
+    // =========================================================
+    // DestroyHints
+    // =========================================================
+
+    public void DestroyHints()
+    {
+        foreach (Player player in Player.List.ToList()) // FIX: ToList()
+        {
+            if (!IsPlayerValid(player)) continue; // FIX: nullガード
+            try
+            {
+                var display = TryGetDisplay(player);
+                display?.ClearHint();
+            }
+            catch (Exception e)
+            {
+                Log.Debug($"[DestroyHints] Exception for {player?.Nickname}: {e.Message}");
+            }
+        }
+
+        _spectateTargets.Clear();
+
+        // ★ コルーチンは止めない（旧仕様の安定性維持）
+    }
+
+    // =========================================================
+    // Ability HUD
+    // =========================================================
+
+    private string BuildAbilityHud(Player target)
+    {
+        if (!IsPlayerValid(target)) return string.Empty; // FIX: nullガード
+        if (!target.IsAlive) return string.Empty;
+
+        if (!AbilityManager.TryGetLoadout(target, out var loadout))
+            return string.Empty;
+
+        var active = loadout.ActiveAbility;
+        if (active == null)
+            return string.Empty;
+
+        if (!AbilityBase.TryGetAbilityState(
+                target,
+                active,
+                out bool canUse,
+                out float cdRemain,
+                out int usesLeft,
+                out int maxUses))
+            return string.Empty;
+
+        string abilityKey = active.GetType().Name;
+        string abilityName = AbilityLocalization.GetDisplayName(abilityKey, target);
+
+        string cdText = canUse
+            ? "<color=green>READY</color>"
+            : $"<color=yellow>{(int)cdRemain}s</color>";
+
+        string usesText = (maxUses < 0) ? "∞" : usesLeft.ToString();
+
+        return $"<color=#ffcc00>[{abilityName}]</color> CD: {cdText} Uses: {usesText}";
+    }
+
+    // =========================================================
+    // コルーチン
+    // =========================================================
+
+    private IEnumerator<float> TaskSync()
+    {
+        yield return Timing.WaitForSeconds(2f);
+
+        for (;;)
+        {
+            if (Round.IsLobby)
+            {
+                yield return Timing.WaitForSeconds(1f);
+                continue;
+            }
+
+            SyncTexts();
+            yield return Timing.WaitForSeconds(3f);
+        }
+    }
+
+    private IEnumerator<float> AbilityHudLoop()
+    {
+        yield return Timing.WaitForSeconds(0.5f);
+
+        for (;;)
+        {
+            if (Round.IsLobby)
+            {
+                yield return Timing.WaitForSeconds(0.5f);
+                continue;
+            }
+
+            foreach (var player in Player.List.ToList()) // FIX: ToList()
+            {
+                // FIX: IsPlayerValid で一括確認
+                if (!IsPlayerValid(player)) continue;
+
+                var display = TryGetDisplay(player);
+                if (display == null) continue;
+
+                var abilityHint = display.GetHint("PlayerHUD_Ability");
+                if (abilityHint == null)
+                {
+                    PlayerHUDSetup(player);
+                    abilityHint = display.GetHint("PlayerHUD_Ability");
+                    if (abilityHint == null) continue;
+                }
+
+                // 観戦者ならターゲット側の Ability を見る
+                var hudTarget = player;
+                if (player.Role?.Team == Team.Dead &&
+                    _spectateTargets.TryGetValue(player.Id, out var t) &&
+                    IsPlayerValid(t) && t.IsAlive) // FIX: IsPlayerValid で一括確認
+                    hudTarget = t;
+
+                try
+                {
+                    abilityHint.Text = BuildAbilityHud(hudTarget);
+                }
+                catch (Exception e)
+                {
+                    Log.Debug($"[AbilityHudLoop] Exception for {player.Nickname}: {e.Message}");
+                }
+            }
+
+            yield return Timing.WaitForSeconds(0.5f);
+        }
+    }
+
+    private IEnumerator<float> SpecificInfoHudLoop()
+    {
+        yield return Timing.WaitForSeconds(1f);
+
+        for (;;)
+        {
+            if (Round.IsLobby)
+            {
+                yield return Timing.WaitForSeconds(1f);
+                continue;
+            }
+
+            foreach (var player in Player.List.ToList()) // FIX: ToList()
+            {
+                if (!IsPlayerValid(player)) continue; // FIX: IsPlayerValid で一括確認
+
+                // 観戦者ならターゲット側の情報を見る
+                var hudTarget = player;
+                if (player.Role?.Team == Team.Dead &&
+                    _spectateTargets.TryGetValue(player.Id, out var t) &&
+                    IsPlayerValid(t) && t.IsAlive) // FIX: IsPlayerValid で一括確認
+                    hudTarget = t;
+
+                var display = TryGetDisplay(player);
+                if (display == null) continue;
+
+                var specificHint = display.GetHint("PlayerHUD_Specific");
+                if (specificHint == null)
+                {
+                    PlayerHUDSetup(player);
+                    specificHint = display.GetHint("PlayerHUD_Specific");
+                    if (specificHint == null) continue;
+                }
+
+                try
+                {
+                    string roleSpecific = RoleSpecificTextProvider.GetFor(hudTarget);
+
+                    specificHint.Text = string.IsNullOrEmpty(roleSpecific)
+                        ? string.Empty
+                        : roleSpecific;
+                }
+                catch (Exception e)
+                {
+                    Log.Debug($"[SpecificInfoHudLoop] Exception for {player.Nickname}: {e.Message}");
+                }
+            }
+
+            yield return Timing.WaitForSeconds(1f);
         }
     }
     
-    /// <summary>全プレイヤーのHUDを即時強制更新する</summary>
-    public void ForceUpdateAll()
+    /// <summary>
+    /// デバッグモード ON のプレイヤーに対して 0.1 秒ごとに
+    /// PHUD_Debug ヒントを更新するループ。
+    /// </summary>
+    private IEnumerator<float> DebugHudLoop()
     {
-        foreach (var player in Player.List.ToList())
+        yield return Timing.WaitForSeconds(0.5f);
+ 
+        for (;;)
         {
-            if (!IsValid(player)) continue;
-            try { GetDisplay(player)?.ForceUpdate(useFastUpdate: true); }
-            catch (Exception e) { Log.Debug($"[ForceUpdateAll] {player.Nickname}: {e.Message}"); }
+            if (Round.IsLobby)
+            {
+                yield return Timing.WaitForSeconds(0.5f);
+                continue;
+            }
+ 
+            foreach (var player in Player.List.ToList())
+            {
+                if (!IsPlayerValid(player)) continue;
+                if (!DebugModeHandler.IsDebugMode(player)) continue;
+ 
+                var display = TryGetDisplay(player);
+                if (display == null) continue;
+ 
+                var hint = display.GetHint("PlayerHUD_Debug");
+                if (hint == null)
+                {
+                    PlayerHUDSetup(player);
+                    hint = display.GetHint("PlayerHUD_Debug");
+                    if (hint == null) continue;
+                }
+ 
+                try
+                {
+                    hint.Text = BuildDebugHud(player);
+                }
+                catch (Exception e)
+                {
+                    Log.Debug($"[DebugHudLoop] Exception for {player.Nickname}: {e.Message}");
+                }
+            }
+ 
+            yield return Timing.WaitForSeconds(0.1f);
         }
     }
-
-    // =========================================================
-    // HintSync（互換性維持、既存呼び出し箇所が残っている場合用）
-    // 新規コードではこれを使わず AutoContent に寄せること
-    // =========================================================
-    public void HintSync(SyncType syncType, string hintText, Player player)
-    {
-        // AutoContent 移行後は基本的に呼ばれなくなるが、
-        // 他箇所が残っている間のフォールバックとして残す
-        if (!IsValid(player)) return;
-        var display = GetDisplay(player);
-        if (display == null) return;
-
-        string id = syncType switch
-        {
-            SyncType.PHUD_Role      => "PHUD_Role",
-            SyncType.PHUD_Team      => "PHUD_Team",
-            SyncType.PHUD_Objective => "PHUD_Objective",
-            SyncType.PHUD_Event     => "PHUD_Event",
-            SyncType.PHUD_Ability   => "PHUD_Ability",
-            SyncType.PHUD_Debug     => "PHUD_Debug",
-            SyncType.ServerInfo     => "PHUD_ServerInfo",
-            _                       => string.Empty
-        };
-        if (string.IsNullOrEmpty(id)) return;
-
-        if (display.TryGetHint(id, out var hint))
-            hint.Text = hintText; // AutoContent を StringContent で上書き（一時的）
-    }
-
-    // =========================================================
-    // BuildDebugHud（元コードからそのまま移植）
-    // =========================================================
+    
     private static string BuildDebugHud(Player player)
     {
-        var sb = new StringBuilder();
+        var sb = new System.Text.StringBuilder();
         sb.AppendLine("<size=18><color=#ffff00>[DEBUG MODE]</color>");
 
         // ── ロール・チーム情報 ────────────────────────────────────────
@@ -556,8 +738,8 @@ public class PlayerHUD : IBootstrapHandler
         );
         if (room != null)
         {
-            var invRot   = Quaternion.Inverse(room.Rotation);
-            var localPos = invRot * (pos - room.Position);
+            var invRot     = Quaternion.Inverse(room.Rotation);
+            var localPos   = invRot * (pos - room.Position);
             var localEuler = invRot.eulerAngles;
             var roomEuler  = room.Rotation.eulerAngles;
             sb.AppendLine(
@@ -624,7 +806,7 @@ public class PlayerHUD : IBootstrapHandler
         {
             sb.AppendLine("<color=#666666>Warhead: Not active</color>");
         }
-
+        
         // ── 装備中アイテム情報 ─────────────────────────────────────────
         var currentItem = player.CurrentItem;
         if (currentItem == null)
@@ -678,6 +860,7 @@ public class PlayerHUD : IBootstrapHandler
                     $"<color=#aaaaaa>NV:</color> {Bool(firearm.NightVisionEnabled)}  " +
                     $"<color=#aaaaaa>Light:</color> {Bool(firearm.FlashlightEnabled)}"
                 );
+                // アタッチメント一覧
                 var attachments = firearm.AttachmentIdentifiers.ToList();
                 if (attachments.Count == 0)
                 {
@@ -710,13 +893,13 @@ public class PlayerHUD : IBootstrapHandler
             {
                 bool isCurrent = it.Serial == currentItem.Serial;
                 bool isCItem   = CItem.TryGet(it, out var itCi);
-                string tag     = isCItem ? "<color=#88ffcc>[C]</color>" : "";
+                string tag     = isCItem ? $"<color=#88ffcc>[C]</color>" : "";
                 string cur     = isCurrent ? "<color=yellow>▶</color>" : "  ";
                 sb.Append($" {cur}{tag}{it.Type}");
             }
             sb.AppendLine();
         }
-
+        
         // ── 有効なエフェクト一覧 ─────────────────────────────────────
         var activeEffects = player.ActiveEffects.ToList();
         if (activeEffects.Count == 0)
@@ -740,9 +923,9 @@ public class PlayerHUD : IBootstrapHandler
 
         // ── EXPERIMENTAL FEATURES ───────────────────────────────────
         var expectedTeam = RoundHandler.GetExpectedTeam();
-        float elapsed    = RoundHandler.ElapsedTime;
-        float waitFor    = RoundHandler.WaitForSpawnTime;
-        float remaining  = waitFor - elapsed;
+        float elapsed = RoundHandler.ElapsedTime;
+        float waitFor = RoundHandler.WaitForSpawnTime;
+        float remaining = waitFor - elapsed;
 
         if (RoundHandler.IsAlreadySpawned)
         {
@@ -753,7 +936,7 @@ public class PlayerHUD : IBootstrapHandler
         else
         {
             string teamColor = RoundHandler.IsSecurityTeamExpected() ? "#00b7eb" : "#228b22";
-            string urgency   = remaining <= 30f ? "<color=#ff4444>" : "<color=#ffcc00>";
+            string urgency = remaining <= 30f ? "<color=#ff4444>" : "<color=#ffcc00>";
             sb.AppendLine(
                 $"{urgency}FirstTeam:</color> " +
                 $"<color={teamColor}>{expectedTeam}</color> spawns in " +
@@ -762,7 +945,13 @@ public class PlayerHUD : IBootstrapHandler
             );
         }
 
+        // ────────────────────────────────────────────────────────────
+        // ★ 新しい項目はここに追加するだけでOK
+        // 例:
+        // sb.AppendLine($"<color=#aaaaaa>HP:</color> {player.Health:F0}/{player.MaxHealth:F0}");
+        // ────────────────────────────────────────────────────────────
+
         sb.Append("</size>");
         return sb.ToString();
-    }
+}
 }

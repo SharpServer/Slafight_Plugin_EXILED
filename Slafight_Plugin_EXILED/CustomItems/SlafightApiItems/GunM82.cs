@@ -1,5 +1,6 @@
 using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Item;
+using Exiled.Events.EventArgs.Player;
 using InventorySystem.Items.Firearms.Attachments;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
@@ -25,19 +26,31 @@ public class GunM82 : CItemWeapon
             firearm.AmmoDrain = 30;
             firearm.ClearAttachments();
             firearm.AddAttachment(AttachmentName.ScopeSight);
+            firearm.AddAttachment(AttachmentName.LowcapMagAP);
+            firearm.AddAttachment(AttachmentName.RifleBody);
+            firearm.AddAttachment(AttachmentName.RecoilReducingStock);
+            firearm.AddAttachment(AttachmentName.SoundSuppressor);
         }
         base.ApplyFirearmCustomization(item);
+    }
+
+    protected override void OnShot(ShotEventArgs ev)
+    {
+        ev.Firearm.MagazineAmmo -= 29;
+        base.OnShot(ev);
     }
 
     public override void RegisterEvents()
     {
         Exiled.Events.Handlers.Item.ChangingAttachments += OnAttachmentChanging;
+        Exiled.Events.Handlers.Player.SendingGunSound += OnSound;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
         Exiled.Events.Handlers.Item.ChangingAttachments -= OnAttachmentChanging;
+        Exiled.Events.Handlers.Player.SendingGunSound -= OnSound;
         base.UnregisterEvents();
     }
 
@@ -45,5 +58,11 @@ public class GunM82 : CItemWeapon
     {
         if (!Check(ev.Item)) return;
         ev.IsAllowed = false;
+    }
+
+    private void OnSound(SendingGunSoundEventArgs ev)
+    {
+        if (!Check(ev.Firearm)) return;
+        ev.Pitch = 999;
     }
 }

@@ -82,7 +82,7 @@ public class SpawnUniversal : ICommand
         if (roleId.Equals("mp", StringComparison.OrdinalIgnoreCase))
         {
             executor.UniqueRole = "MapEditor";
-            PlayerHUD.Instance.ResetHudForPlayer(executor);
+            // PlayerHUD.Instance.ResetHudForPlayer(executor);
             response = $"{executor.Nickname} → MapEditor";
             return true;
         }

@@ -61,7 +61,7 @@ public static class AbilityManager
     public static void UpdateAbilityHint(Player player, AbilityLoadout loadout)
     {
         // 表示はPlayerHUDのループに任せる。即時反映が必要な場合のみ呼ぶ
-        PlayerHUD.Instance?.ForceAbilityHudSync(player);
+        // PlayerHUD.Instance?.ForceAbilityHudSync(player);
     }
 
     // プレイヤー全クリア

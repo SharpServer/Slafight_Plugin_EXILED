@@ -29,7 +29,7 @@ public class SpawnMapEditRole : ICommand
         }
 
         player.UniqueRole = "MapEditor";
-        PlayerHUD.Instance.ResetHudForPlayer(player);
+        // PlayerHUD.Instance.ResetHudForPlayer(player);
         response = "Entered Map Editor Mode.";
         return true;
     }
