@@ -311,6 +311,8 @@ public class CustomRolesHandler : IBootstrapHandler
         var display = player.GetPlayerDisplay();
         display.TryGetHint("CRoleSpawnedHint", out var oldHint);
         if (oldHint != null) player.RemoveHint(oldHint);
+        
+        CItem.RebuildHybridStateFor(player);
 
         Timing.CallDelayed(1f, () =>
         {

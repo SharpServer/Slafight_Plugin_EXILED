@@ -65,8 +65,29 @@ public static class ServerSpecificsHandler
         if (settingId == 5)
         {
             var item = player.CurrentItem;
-            if (item != null && CItem.TryGet(item.Serial, out var ci) && ci is CItemHybrid hybrid)
+            if (item == null)
+            {
+                Log.Debug($"[Input] G: no CurrentItem for {player.Nickname}");
+                return;
+            }
+
+            if (!CItem.TryGet(item.Serial, out var ci))
+            {
+                Log.Debug($"[Input] G: TryGet fail serial={item.Serial} player={player.Nickname}");
+                return;
+            }
+
+            Log.Debug($"[Input] G: serial={item.Serial} ci={ci.GetType().Name} player={player.Nickname}");
+
+            if (ci is CItemHybrid hybrid)
+            {
                 hybrid.SwitchMode(item.Serial, player);
+            }
+            else
+            {
+                Log.Debug($"[Input] G: ci is not Hybrid ({ci.GetType().Name})");
+            }
+
             return;
         }
 

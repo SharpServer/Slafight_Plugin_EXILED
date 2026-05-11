@@ -5,6 +5,7 @@ using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Item;
 using Exiled.Events.EventArgs.Player;
 using InventorySystem.Items.Firearms.Attachments;
+using MEC;
 using PlayerRoles;
 using PlayerStatsSystem;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -34,17 +35,8 @@ public class GunSL8 : CItemWeapon
             firearm.ClearAttachments();
             firearm.AddAttachment(AttachmentName.ScopeSight);
             firearm.AddAttachment(AttachmentName.SoundSuppressor);
-            firearm.TryUnload();
         }
         base.ApplyFirearmCustomization(item);
-    }
-
-    protected override void OnReloaded(ReloadedWeaponEventArgs ev)
-    {
-        var ammo = ev.Firearm.MagazineAmmo;
-        ev.Firearm.Unload();
-        ev.Firearm.MagazineAmmo = ammo;
-        base.OnReloaded(ev);
     }
 
     protected override void OnHurtingOthers(HurtingEventArgs ev)

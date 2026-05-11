@@ -834,6 +834,19 @@ public class PlayerHUD : IBootstrapHandler
                 string desc = cItem.Description;
                 if (!string.IsNullOrEmpty(desc))
                     sb.AppendLine($"  <color=#aaaaaa>Desc:</color> {desc}");
+
+                // ★ Hybrid なら内部トラッキング状態も出す
+                if (cItem is CItemHybrid hybrid)
+                {
+                    try
+                    {
+                        sb.AppendLine(hybrid.GetDebugStateFor(player, currentItem.Serial));
+                    }
+                    catch (Exception e)
+                    {
+                        sb.AppendLine($"<color=#ff4444>[Hybrid Debug Error]</color> {e.Message}");
+                    }
+                }
             }
 
             // ── Firearm 情報 ───────────────────────────────────────────

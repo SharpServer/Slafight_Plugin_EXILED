@@ -566,6 +566,20 @@ public abstract class CItem
 
         return PickupLights.Remove(serial);
     }
+    
+    public static void RebuildHybridStateFor(Player player)
+    {
+        if (player == null) return;
+
+        foreach (var item in player.Items)
+        {
+            if (item == null) continue;
+            if (!TryGet(item, out var ci) || ci == null) continue;
+            if (ci is not CItemHybrid hybrid) continue;
+
+            hybrid.RebindSerialFor(item, player);
+        }
+    }
 
     /// <summary>プレイヤーの所持品から一致する最初のインスタンスを消す。見つからなければ false。</summary>
     public bool RemoveFrom(Player? player, bool destroy = true)
@@ -725,23 +739,27 @@ public abstract class CItem
         CItem? ci;
         bool displayMessage;
 
-        // 1. Give() からの呼び出し: pending marker で CItem を決定し、即 tracking
         if (_pendingGiveCItem != null)
         {
             ci = _pendingGiveCItem;
             displayMessage = _pendingGiveDisplayMessage;
             SerialToItem[ev.Item.Serial] = ci;
+
+            Log.Debug($"[CItem] ItemAdded(pendingGive): serial={ev.Item.Serial}, ci={ci.GetType().Name}");
+
             _pendingGiveCItem = null;
             _pendingGiveDisplayMessage = false;
         }
-        // 2. それ以外 (床拾い / 914 / 他プラグインの AddItem): 既にシリアル追跡済みなら CItem
         else if (SerialToItem.TryGetValue(ev.Item.Serial, out var existing) && existing != null)
         {
             ci = existing;
             displayMessage = true;
+
+            Log.Debug($"[CItem] ItemAdded(existing): serial={ev.Item.Serial}, ci={ci.GetType().Name}");
         }
         else
         {
+            Log.Debug($"[CItem] ItemAdded(no ci): serial={ev.Item.Serial}");
             return;
         }
 

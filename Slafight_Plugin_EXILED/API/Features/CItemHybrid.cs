@@ -1,4 +1,5 @@
 #nullable enable
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
@@ -39,12 +40,81 @@ public abstract class CItemHybrid : CItem
     protected abstract List<CItemHybridMode> BuildSubModes();
 
     protected override ItemType BaseItem => SubModes[0].TargetItem.GetBaseItem();
+
     // ==== Give ====
 
     public override Item? Give(Player? player, bool displayMessage = false)
     {
         _pendingModeIndex = 0;
-        return base.Give(player, displayMessage);
+        // CItem.Give が _pendingGiveCItem をセットしてくれるのでそのまま使う
+        var item = base.Give(player, displayMessage);
+
+        // 念のため modeIndex を初期化（ItemAdded が来る前に serial は分からないのでここでは触らない）
+        return item;
+    }
+
+    // ==== Debug HUD 用 ====
+
+    public string GetDebugStateFor(Player player, ushort currentSerial)
+    {
+        var sb = new System.Text.StringBuilder();
+
+        sb.AppendLine("<color=#88ffcc>[Hybrid]</color>");
+
+        if (_serialModeIndex.TryGetValue(currentSerial, out var value))
+        {
+            string modeName = (value >= 0 && value < SubModes.Count)
+                ? SubModes[value]?.ModeName ?? SubModes[value]?.TargetItem.DisplayName ?? $"Mode#{value}"
+                : $"(out of range: {value})";
+
+            sb.AppendLine(
+                $"  <color=#aaaaaa>CurrentSerial:</color> {currentSerial}  " +
+                $"<color=#aaaaaa>ModeIndex:</color> {value}  " +
+                $"<color=#aaaaaa>Name:</color> {modeName}"
+            );
+        }
+        else
+        {
+            sb.AppendLine(
+                $"  <color=#ff4444>CurrentSerial {currentSerial} has no mode index.</color>"
+            );
+        }
+
+        if (_serialModeIndex.Count == 0)
+        {
+            sb.AppendLine("  <color=#666666>SerialMap: (empty)</color>");
+        }
+        else
+        {
+            sb.AppendLine("  <color=#aaaaaa>SerialMap:</color>");
+            foreach (var kv in _serialModeIndex.OrderBy(kv => kv.Key))
+            {
+                ushort serial = kv.Key;
+                int idx = kv.Value;
+
+                string modeName = (idx >= 0 && idx < SubModes.Count)
+                    ? SubModes[idx]?.ModeName ?? SubModes[idx]?.TargetItem.DisplayName ?? $"Mode#{idx}"
+                    : $"(out of range: {idx})";
+
+                sb.AppendLine(
+                    $"    - Serial={serial}  Index={idx}  Name={modeName}"
+                );
+            }
+        }
+
+        return sb.ToString();
+    }
+    
+    public void RebindSerialFor(Item item, Player owner)
+    {
+        // すでにモードが付いていれば何もしない
+        if (_serialModeIndex.ContainsKey(item.Serial))
+            return;
+
+        // ここでは「初期モード 0」に戻すシンプルな挙動にする
+        _serialModeIndex[item.Serial] = 0;
+
+        Log.Debug($"[Hybrid] RebindSerialFor: owner={owner.Nickname}, serial={item.Serial}, modeIndex=0");
     }
 
     // ==== モード切替 ====
@@ -56,13 +126,23 @@ public abstract class CItemHybrid : CItem
     /// </summary>
     public void SwitchMode(ushort oldSerial, Player player)
     {
-        if (!_serialModeIndex.TryGetValue(oldSerial, out var currentIndex)) return;
+        if (!_serialModeIndex.TryGetValue(oldSerial, out var currentIndex))
+        {
+            Log.Debug($"[Hybrid] SwitchMode: no mode index for serial={oldSerial}");
+            return;
+        }
 
         var oldItem = player.Items.FirstOrDefault(i => i?.Serial == oldSerial);
-        if (oldItem == null) return;
+        if (oldItem == null)
+        {
+            Log.Debug($"[Hybrid] SwitchMode: player has no item with serial={oldSerial}");
+            return;
+        }
 
         int nextIndex = (currentIndex + 1) % SubModes.Count;
         var nextSub = SubModes[nextIndex];
+
+        Log.Debug($"[Hybrid] SwitchMode: {oldSerial} mode {currentIndex} -> {nextIndex}");
 
         // AddItem 前に pending を設定することで、ItemAdded が Hybrid singleton を追跡する
         _pendingModeIndex = nextIndex;
@@ -72,18 +152,26 @@ public abstract class CItemHybrid : CItem
         {
             newItem = player.AddItem(nextSub.TargetItem.GetBaseItem());
         }
+        catch (Exception e)
+        {
+            Log.Error($"[Hybrid] SwitchMode AddItem error: {e}");
+            newItem = null;
+        }
         finally
         {
             ClearPendingGive();
             _pendingModeIndex = 0;
         }
 
-        if (newItem == null) return; // インベントリ満杯
+        if (newItem == null)
+        {
+            Log.Debug("[Hybrid] SwitchMode: AddItem returned null (inventory full?)");
+            return; // インベントリ満杯
+        }
+
+        // CItem 側の ItemAdded で SerialToItem は既に this に差し替わっているはず
 
         // CurrentItem を切り替える時点では oldSerial がまだ SerialToItem に残っている。
-        // これにより ChangingItem 発火時に旧 sub の OnChangingOther 系 cleanup が
-        // Check() / CheckHeld() を通過して正しく動く（Burned 解除など）。
-        // _isSwitching を立てることで切り替え起因の selected hint を抑制する。
         _isSwitching = true;
         try { player.CurrentItem = newItem; }
         finally { _isSwitching = false; }
@@ -95,8 +183,10 @@ public abstract class CItemHybrid : CItem
         // serial 解除後に RemoveItem → ItemRemoved の dispatch をスキップ
         player.RemoveItem(oldItem, destroy: true);
 
-        player.ShowHint($"<size=24>モード切替: {nextSub.ModeName.OrDefault($"{nextSub.TargetItem.DisplayName}")}</size>\n" +
-                        $"<size=23>{nextSub.ModeDescription.OrDefault($"{nextSub.TargetItem.Description}")}</size>", 2f);
+        player.ShowHint(
+            $"<size=24>モード切替: {nextSub.ModeName.OrDefault($"{nextSub.TargetItem.DisplayName}")}</size>\n" +
+            $"<size=23>{nextSub.ModeDescription.OrDefault($"{nextSub.TargetItem.Description}")}</size>",
+            2f);
     }
 
     // ==== sub 解決 ====
@@ -108,10 +198,6 @@ public abstract class CItemHybrid : CItem
         return SubModes[idx].TargetItem;
     }
 
-    /// <summary>
-    /// 指定 serial の現在アクティブな sub が <paramref name="sub"/> と同一インスタンスか。
-    /// CItem.Check() が Hybrid 管理下の serial でも sub 視点で true を返せるようにするために使う。
-    /// </summary>
     internal bool IsCurrentSub(ushort serial, CItem sub)
     {
         var current = GetCurrentSub(serial);
@@ -122,9 +208,22 @@ public abstract class CItemHybrid : CItem
 
     protected override void OnAcquired(PlayerEvents.ItemAddedEventArgs ev, bool displayMessage)
     {
-        // Give/Spawn 初回なら _pendingModeIndex、床拾い等の再取得なら既存インデックスを保持
+        Log.Debug($"[Hybrid] OnAcquired: ci={GetType().Name} owner={ev.Player.Nickname} serial={ev.Item.Serial} pending={_pendingModeIndex}");
+
         if (!_serialModeIndex.ContainsKey(ev.Item.Serial))
-            _serialModeIndex[ev.Item.Serial] = _pendingModeIndex;
+        {
+            int idx = _pendingModeIndex;
+            if (idx < 0 || idx >= SubModes.Count)
+                idx = 0;
+
+            _serialModeIndex[ev.Item.Serial] = idx;
+            Log.Debug($"[Hybrid] OnAcquired: set modeIndex={idx} for serial={ev.Item.Serial}");
+        }
+        else
+        {
+            Log.Debug($"[Hybrid] OnAcquired: keep modeIndex={_serialModeIndex[ev.Item.Serial]} for serial={ev.Item.Serial}");
+        }
+
         GetCurrentSub(ev.Item.Serial)?.CallOnAcquired(ev, displayMessage);
     }
 
@@ -134,7 +233,11 @@ public abstract class CItemHybrid : CItem
     protected override void OnSpawned(Pickup pickup)
     {
         if (!_serialModeIndex.ContainsKey(pickup.Serial))
+        {
             _serialModeIndex[pickup.Serial] = 0;
+            Log.Debug($"[Hybrid] OnSpawned: pickup serial={pickup.Serial}, modeIndex=0");
+        }
+
         GetCurrentSub(pickup.Serial)?.CallOnSpawned(pickup);
     }
 
@@ -173,7 +276,6 @@ public abstract class CItemHybrid : CItem
 
     protected override void OnOwnerDying(PlayerEvents.DyingEventArgs ev)
     {
-        // 同一 ev に対して複数 serial が同じ Hybrid singleton を参照する場合の重複防止
         if (ReferenceEquals(_lastDyingEv, ev)) return;
         _lastDyingEv = ev;
 
@@ -239,17 +341,16 @@ public abstract class CItemHybrid : CItem
         base.CustomizeItem(item);
     }
 
-    // 拾ったとき: Hybrid 自身の hint を表示（mode switch 時は displayMessage=false なので呼ばれない）
     protected override void ShowPickedUpMessage(Player player)
         => base.ShowPickedUpMessage(player);
 
-    // 選択したとき: mode switch 起因の ChangingItem では抑制、それ以外は通常表示
     protected override void ShowSelectedMessage(Player player)
     {
         if (_isSwitching) return;
         base.ShowSelectedMessage(player);
     }
 }
+
 public class CItemHybridMode(CItem targetItem, string modeName = "", string modeDescription = "")
 {
     public CItem TargetItem { get; set; } = targetItem;
