@@ -50,9 +50,9 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler
     private Vector3 FBCP;
     private Vector3 OWB;
     public static Vector3 OWJoin;
-    private Vector3 STS;
-    private Vector3 STC;
-    private Vector3 STE;
+    public static Vector3 STS;
+    public static Vector3 STC;
+    public static Vector3 STE;
     public static SchematicObject Scp012_t;
 
     // ドア位置 → DoorConfig のマッピング

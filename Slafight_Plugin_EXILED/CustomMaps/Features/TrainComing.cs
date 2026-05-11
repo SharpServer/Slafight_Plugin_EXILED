@@ -49,7 +49,7 @@ public static class TrainComing
     /// </summary>
     public static void Start()
     {
-        if (_lastStartPos == default && _lastCheckpointPos == default && _lastEndPos == default)
+        if (CustomMapMainHandler.STS == default && CustomMapMainHandler.STC == default && CustomMapMainHandler.STE == default)
         {
             Log.Warn("[Train] Start() called but no coordinates have been set yet. Call Start(Vector3, Vector3, Vector3) first.");
             return;
