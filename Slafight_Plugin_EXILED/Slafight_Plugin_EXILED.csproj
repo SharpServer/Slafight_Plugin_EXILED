@@ -248,6 +248,7 @@
         <Compile Include="CustomItems\SlafightApiItems\CloakGenerator.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CUA_SpyKit.cs" />
         <Compile Include="CustomItems\SlafightApiItems\DninoueMissile.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\GunM82.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunScp7381.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunSuppressiver.cs" />
         <Compile Include="CustomItems\SlafightApiItems\NvgBlue.cs" />

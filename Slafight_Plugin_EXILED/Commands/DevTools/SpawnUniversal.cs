@@ -9,18 +9,18 @@ using Slafight_Plugin_EXILED.Hints;
 
 namespace Slafight_Plugin_EXILED.Commands.DevTools;
 
+[CommandHandler(typeof(RemoteAdminCommandHandler))]
 public class SpawnUniversal : ICommand
 {
-    public string Command => "spawn";
-    public string[] Aliases { get; } = ["spawn", "us"];
+    public string Command     => "spawn";
+    public string[] Aliases   => ["us"];   // "spawn"自体はCommandに使うのでAliasesから除去
     public string Description => "Universal CustomRole Spawner";
 
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
     {
-        // パーミッションチェック
         if (!sender.CheckPermission($"slperm.{Command}"))
         {
-            response = $"You don't have permission to execute this command. Required permission: slperm.{Command}";
+            response = $"Permission denied. Required: slperm.{Command}";
             return false;
         }
 
@@ -31,76 +31,96 @@ public class SpawnUniversal : ICommand
             return false;
         }
 
-        // 引数なし → 使い方
         if (arguments.Count == 0)
         {
-            var names = RoleParseHelper.GetAllRoleNames();
-            response = "Usage: spawn <roleId> [targetPlayerId]\nAvailable roles:\n" + string.Join(", ", names);
+            response = "Usage: spawn <roleId> [targetPlayerId]\nAvailable roles:\n"
+                     + string.Join(", ", RoleParseHelper.GetAllRoleNames());
             return false;
         }
 
-        var roleId = arguments.At(0); // 1番目の引数（roleId）
+        var roleId = arguments.At(0);
 
-        // 特殊系だけ個別処理
-        if (roleId.Equals("mp", StringComparison.OrdinalIgnoreCase))
-        {
-            executor.UniqueRole = "MapEditor";
-            PlayerHUD.Instance.DestroyHints();
-            response = $"{executor.Nickname} is now {executor.UniqueRole}";
+        // ── 特殊ロール ────────────────────────────────────────────
+        if (TryHandleSpecialRole(roleId, executor, out response))
             return true;
-        }
 
-        if (roleId.Equals("debug", StringComparison.OrdinalIgnoreCase))
-        {
-            executor.UniqueRole = "Debug";
-            response = $"{executor.Nickname} is now {executor.UniqueRole}";
-            return true;
-        }
-
-        // 共通パーサに投げて RoleTypeId / CRoleTypeId を自動判定
+        // ── 汎用ロールパース ──────────────────────────────────────
         if (!RoleParseHelper.TryParseRole(roleId, out var vanilla, out var custom))
         {
-            var names = RoleParseHelper.GetAllRoleNames();
-            response = $"Unknown role: {roleId}\nAvailable roles:\n" + string.Join(", ", names);
+            response = $"Unknown role: {roleId}\nAvailable roles:\n"
+                     + string.Join(", ", RoleParseHelper.GetAllRoleNames());
             return false;
         }
 
-        // ターゲットプレイヤー判定（2番目の引数）
-        Player target = executor;
-        if (arguments.Count >= 2)
-        {
-            if (int.TryParse(arguments.At(1), out int targetId))
-            {
-                target = Player.Get(targetId);
-                if (target == null)
-                {
-                    response = $"Player with ID {targetId} not found.";
-                    return false;
-                }
-            }
-            else
-            {
-                response = $"Invalid player ID: {arguments.At(1)}. Use numeric ID.";
-                return false;
-            }
-        }
+        // ── ターゲット解決 ────────────────────────────────────────
+        if (!TryResolveTarget(arguments, executor, out var target, out response))
+            return false;
 
-        // ロール付与
+        // ── ロール付与 ────────────────────────────────────────────
         if (vanilla.HasValue)
         {
             target.SetRole(vanilla.Value, RoleSpawnFlags.All);
-            response = $"{target.Nickname} is now {vanilla.Value}";
+            response = $"{target.Nickname} → {vanilla.Value}";
             return true;
         }
 
         if (custom.HasValue)
         {
             target.SetRole(custom.Value, RoleSpawnFlags.All);
-            response = $"{target.Nickname} is now {target.UniqueRole}";
+            response = $"{target.Nickname} → {target.UniqueRole}";
             return true;
         }
 
         response = "Failed to assign role.";
+        return false;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+
+    private static bool TryHandleSpecialRole(string roleId, Player executor, out string response)
+    {
+        if (roleId.Equals("mp", StringComparison.OrdinalIgnoreCase))
+        {
+            executor.UniqueRole = "MapEditor";
+            PlayerHUD.Instance.ResetHudForPlayer(executor);
+            response = $"{executor.Nickname} → MapEditor";
+            return true;
+        }
+
+        if (roleId.Equals("debug", StringComparison.OrdinalIgnoreCase))
+        {
+            executor.UniqueRole = "Debug";
+            response = $"{executor.Nickname} → Debug";
+            return true;
+        }
+
+        response = string.Empty;
+        return false;
+    }
+
+    private static bool TryResolveTarget(
+        ArraySegment<string> arguments,
+        Player executor,
+        out Player target,
+        out string response)
+    {
+        target   = executor;
+        response = string.Empty;
+
+        if (arguments.Count < 2)
+            return true;
+
+        if (!int.TryParse(arguments.At(1), out int targetId))
+        {
+            response = $"Invalid player ID: {arguments.At(1)}. Use numeric ID.";
+            return false;
+        }
+
+        target = Player.Get(targetId);
+        if (target != null)
+            return true;
+
+        response = $"Player with ID {targetId} not found.";
         return false;
     }
 }

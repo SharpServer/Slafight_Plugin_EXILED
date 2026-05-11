@@ -42,7 +42,7 @@ public static class AbilityManager
             return false;
 
         loadout.ActiveIndex = slotIndex;
-        UpdateAbilityHint(player, loadout);
+        // UpdateAbilityHint(player, loadout);
         return true;
     }
 
@@ -53,38 +53,15 @@ public static class AbilityManager
             return false;
 
         loadout.CycleNext();
-        UpdateAbilityHint(player, loadout);
+        // UpdateAbilityHint(player, loadout);
         return true;
     }
 
     // ★公開メソッド：HUD更新のみ
     public static void UpdateAbilityHint(Player player, AbilityLoadout loadout)
     {
-        if (player == null || !player.IsConnected) return;
-
-        var sb = new StringBuilder();
-        for (int i = 0; i < AbilityLoadout.MaxSlots; i++)
-        {
-            var ability = loadout.Slots[i];
-            if (ability == null) continue;
-
-            string name = ability.GetType().Name;
-            string marker = (i == loadout.ActiveIndex) ? "<color=#ffff00>▶</color>" : "　";
-            string status = AbilityBase.CanUseNow(player.Id, ability.GetType()) ?
-                "<color=green>OK</color>" : "<color=red>CD</color>";
-            sb.AppendLine($"{marker} {name} [{status}]");
-        }
-
-        string text = sb.Length > 0 ? sb.ToString() : "アビリティ無し";
-
-        try
-        {
-            PlayerHUD.Instance.HintSync(SyncType.PHUD_Ability, text, player);
-        }
-        catch (Exception ex)
-        {
-            Log.Warn($"[Ability] Hint failed for {player.Nickname}: {ex.Message}");
-        }
+        // 表示はPlayerHUDのループに任せる。即時反映が必要な場合のみ呼ぶ
+        PlayerHUD.Instance?.ForceAbilityHudSync(player);
     }
 
     // プレイヤー全クリア

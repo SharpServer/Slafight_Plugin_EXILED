@@ -153,7 +153,7 @@ public class FacilityTermination : SpecialEvent
         if (IsEventCanceled()) yield break;
 
         // ブロードキャスト
-        PlayerHUD.Instance.AllSyncHUD_();
+        PlayerHUD.Instance.ForceUpdateAll();
         foreach (var player in Player.List)
         {
             if (player == null) continue;
