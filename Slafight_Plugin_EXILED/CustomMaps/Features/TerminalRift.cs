@@ -4,6 +4,7 @@ using System.Linq;
 using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.API.Features.Toys;
 using Exiled.Events.EventArgs.Player;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.CustomHandlers;
@@ -29,6 +30,9 @@ public static class TerminalRift
     public static SchematicObject RiftObject;
     public static Vector3 RiftObjectPosition;
     public static readonly List<SchematicObject> ControlObjects = [];
+
+    // ★追加
+    private static Waypoint? _riftWaypoint;
 
     public static bool Invoking { get; private set; } = false;
     private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
@@ -101,6 +105,16 @@ public static class TerminalRift
                         {
                             RiftObject = schematic;
                             RiftObjectPosition = schematic.Position;
+
+                            // ★RiftObjectの子としてWaypointToyを生成
+                            // BoundsSizeはRiftプラットフォームの大きさに合わせて調整してください
+                            _riftWaypoint = Waypoint.Create(
+                                parent: RiftObject.transform,
+                                position: Vector3.up * 1.05f,
+                                scale: new Vector3(4.5f, 3.5f, 3.5f),
+                                visualizeBounds: true
+                            );
+                            Log.Debug("[TerminalRift] WaypointToy created on Rift.");
                         }
                         else if (schematic.Name == "TerminalControl")
                         {
@@ -119,6 +133,14 @@ public static class TerminalRift
         KillAllCoroutines();
         RiftObject = null;
         RiftObjectPosition = Vector3.zero;
+
+        // ★Waypointを破棄
+        if (_riftWaypoint != null)
+        {
+            try { _riftWaypoint.Destroy(); } catch { /* ignored */ }
+            _riftWaypoint = null;
+            Log.Debug("[TerminalRift] WaypointToy destroyed.");
+        }
     }
 
     public static void TryInvoke()
@@ -284,6 +306,9 @@ public static class TerminalRift
             Vector3 targetPos = Vector3.Lerp(startPos, endPos, progress);
             
             RiftObject.gameObject.transform.position = targetPos;
+            // ★プレイヤーをWaypointに追従させる
+            _riftWaypoint?.Base.UpdateWaypointChildren();
+
             yield return 0f;
         }
         
@@ -314,6 +339,9 @@ public static class TerminalRift
             Vector3 targetPos = Vector3.Lerp(startpos, endpos, progress);
             
             RiftObject.gameObject.transform.position = targetPos;
+            // ★プレイヤーをWaypointに追従させる
+            _riftWaypoint?.Base.UpdateWaypointChildren();
+
             yield return 0f;
         }
         
