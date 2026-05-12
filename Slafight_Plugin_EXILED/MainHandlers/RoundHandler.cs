@@ -1,9 +1,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Enums;
+using Exiled.API.Extensions;
 using Exiled.API.Features;
 using MEC;
 using PlayerRoles;
+using Respawning.Waves;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.Extensions;
@@ -78,6 +80,7 @@ public class RoundHandler : IBootstrapHandler
                     SpawnSystem.ReplaceNextSpawn(SpawnTypeId.ChaosAgents);
                 }
 
+                Respawn.GrantTokens(faction, 1);
                 Respawn.AdvanceTimer(faction, 999);
                 IsAlreadySpawned = true;
                 yield break;
