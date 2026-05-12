@@ -123,7 +123,7 @@ public class EventHandler : IBootstrapHandler
         if (ev?.Player == null) return;
         DebugModeHandler.RemovePlayer(ev.Player);
 
-        if (ev.Player.GetTeam() != CTeam.SCPs) return;
+        if (ev.Player.GetTeam() != CTeam.SCPs || ev.Player.IsVanillaOrCustom(RoleTypeId.Scp0492, CRoleTypeId.Zombified)) return;
         if (Round.ElapsedTime.TotalSeconds > 179) return;
 
         int scpAlive = Player.List.Count(p => p != ev.Player && p.IsAlive && p.GetTeam() == CTeam.SCPs);

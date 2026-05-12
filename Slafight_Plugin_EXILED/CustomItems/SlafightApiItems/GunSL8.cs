@@ -23,7 +23,7 @@ public class GunSL8 : CItemWeapon
     protected override ItemType BaseItem => ItemType.GunFRMG0;
     protected override float Damage => 40f;
     protected override byte MagazineSize => 5;
-    protected override Vector3 Scale => new(1f, 1f, 1.45f);
+    protected override Vector3 Scale => new(1f, 1f, 1.75f);
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor => CustomColor.ChaoticGreen.ToUnityColor();
 
