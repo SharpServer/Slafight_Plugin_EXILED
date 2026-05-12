@@ -21,7 +21,7 @@ public class GunDisarmerRifle : CItemWeapon
     public override string Description => "当たった対象を拘束出来るスナイパーライフル";
     protected override string UniqueKey => "GunDisarmerRifle";
     protected override ItemType BaseItem => ItemType.GunE11SR;
-    protected override float Damage => 0f;
+    protected override float Damage => 1f;
     protected override byte MagazineSize => 1;
     protected override Vector3 Scale => new(1f, 1f, 1.045f);
     protected override bool  PickupLightEnabled => true;
@@ -47,7 +47,7 @@ public class GunDisarmerRifle : CItemWeapon
 
     protected override void OnShot(ShotEventArgs ev)
     {
-        Timing.CallDelayed(60f, () => ev.Firearm?.MagazineAmmo = 1);
+        Timing.CallDelayed(20f, () => ev.Firearm?.TryReload());
         base.OnShot(ev);
     }
 
