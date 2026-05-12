@@ -31,7 +31,7 @@ public class ChaosSniper : CRole
         player.AddItem(ItemType.Adrenaline);
         player.AddItem(ItemType.ArmorCombat);
         
-        player.SetAmmo(AmmoType.Nato556, 180);
+        player.SetAmmo(AmmoType.Nato556, 100);
             
         player.SetCustomInfo("Chaos Insurgency Sniper");
     }
