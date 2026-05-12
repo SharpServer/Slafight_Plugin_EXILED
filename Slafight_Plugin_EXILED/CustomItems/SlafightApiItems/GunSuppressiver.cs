@@ -21,22 +21,21 @@ public class GunSuppressiver : CItemWeapon
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor => CustomColor.ChaoticGreen.ToUnityColor();
 
-    /// <summary>
-    /// 元実装は床から拾った瞬間にプレイヤーへ Nato9=200 / Firearm/Grenade=3 の
-    /// インベントリ枠拡張を被せていた。CItem では OnAcquired が同じタイミング。
-    /// </summary>
-    protected override void OnAcquired(ItemAddedEventArgs ev, bool displayMessage)
+    public override void RegisterEvents()
     {
-        ev.Player.SetAmmoLimit(AmmoType.Nato9, 200);
-        ev.Player.SetCategoryLimit(ItemCategory.Firearm, 3);
-        ev.Player.SetCategoryLimit(ItemCategory.Grenade, 3);
+        Exiled.Events.Handlers.Player.SendingGunSound += OnSendingGunSound;
+        base.RegisterEvents();
     }
 
-    /// <summary>手放した瞬間に枠拡張を解除。</summary>
-    protected override void OnDropping(DroppingItemEventArgs ev)
+    public override void UnregisterEvents()
     {
-        ev.Player.ResetAmmoLimit(AmmoType.Nato9);
-        ev.Player.ResetCategoryLimit(ItemCategory.Firearm);
-        ev.Player.ResetCategoryLimit(ItemCategory.Grenade);
+        Exiled.Events.Handlers.Player.SendingGunSound -= OnSendingGunSound;
+        base.UnregisterEvents();
+    }
+
+    private void OnSendingGunSound(SendingGunSoundEventArgs ev)
+    {
+        if (!Check(ev.Item) || ev.AudioIndex is not (0 or 1 or 2)) return;
+        ev.Pitch = 1;
     }
 }

@@ -19,23 +19,4 @@ public class GunFSP18 : CItemWeapon
 
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor   => Color.white;
-
-    /// <summary>
-    /// 元実装は床から拾った瞬間にプレイヤーへ Nato9=200 / Firearm/Grenade=3 の
-    /// インベントリ枠拡張を被せていた。CItem では OnAcquired が同じタイミング。
-    /// </summary>
-    protected override void OnAcquired(ItemAddedEventArgs ev, bool displayMessage)
-    {
-        ev.Player.SetAmmoLimit(AmmoType.Nato9, 200);
-        ev.Player.SetCategoryLimit(ItemCategory.Firearm, 3);
-        ev.Player.SetCategoryLimit(ItemCategory.Grenade, 3);
-    }
-
-    /// <summary>手放した瞬間に枠拡張を解除。</summary>
-    protected override void OnDropping(DroppingItemEventArgs ev)
-    {
-        ev.Player.ResetAmmoLimit(AmmoType.Nato9);
-        ev.Player.ResetCategoryLimit(ItemCategory.Firearm);
-        ev.Player.ResetCategoryLimit(ItemCategory.Grenade);
-    }
 }

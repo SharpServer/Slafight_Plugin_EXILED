@@ -245,6 +245,7 @@
         <Compile Include="CustomItems\SlafightApiItems\CapybaraMissile.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ArmorInfantry.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ArmorVip.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\KeycardChaosIntruder.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CloakGenerator.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CUA_SpyKit.cs" />
         <Compile Include="CustomItems\SlafightApiItems\DninoueMissile.cs" />
