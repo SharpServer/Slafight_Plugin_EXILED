@@ -57,7 +57,7 @@ public class GunM82 : CItemWeapon
 
         if (ev.Player.IsVanillaOrCustom(RoleTypeId.Scp173, CRoleTypeId.Scp173))
         {
-            ev.Amount *= 2f;
+            ev.Amount *= 2.5f;
         }
 
         base.OnHurtingOthers(ev);
