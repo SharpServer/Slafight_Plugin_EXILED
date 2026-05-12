@@ -22,7 +22,7 @@ public class GunM82 : CItemWeapon
     protected override ItemType BaseItem => ItemType.GunE11SR;
     protected override float Damage => 80f;
     protected override byte MagazineSize => 30;
-    protected override Vector3 Scale => new(1f, 1f, 1.15f);
+    protected override Vector3 Scale => new(1f, 1f, 1.725f);
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor   => Color.cyan;
 

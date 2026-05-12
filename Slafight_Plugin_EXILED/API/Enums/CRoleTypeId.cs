@@ -44,6 +44,8 @@ public enum CRoleTypeId
     HdInfantry,
     HdCommander,
     HdMarshal,
+    HdShotgunner,
+    HdDisarmer,
     
     // ==== See No Evil ===
     SneOperator,

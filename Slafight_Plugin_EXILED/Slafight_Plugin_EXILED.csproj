@@ -245,6 +245,7 @@
         <Compile Include="CustomItems\SlafightApiItems\CapybaraMissile.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ArmorInfantry.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ArmorVip.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\GunDisarmerRifle.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardChaosIntruder.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CloakGenerator.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CUA_SpyKit.cs" />
@@ -336,7 +337,9 @@
         <Compile Include="CustomRoles\Fifthist\FifthistGuidance.cs" />
         <Compile Include="CustomRoles\Fifthist\FifthistMarionetteRole.cs" />
         <Compile Include="CustomRoles\Fifthist\Scp3125Role.cs" />
+        <Compile Include="CustomRoles\FoundationForces\HdDisarmer.cs" />
         <Compile Include="CustomRoles\FoundationForces\HdMarshal.cs" />
+        <Compile Include="CustomRoles\FoundationForces\HdShotgunner.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfGeneral.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfSpecialist.cs" />
         <Compile Include="CustomRoles\FoundationForces\Sculpture.cs" />

@@ -15,17 +15,17 @@ using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
-public class GunSL8 : CItemWeapon
+public class GunDisarmerRifle : CItemWeapon
 {
-    public override string DisplayName => "SL-8G";
-    public override string Description => "カオスが所有するスナイパーライフル。質はそこそこ";
-    protected override string UniqueKey => "GunSL8";
-    protected override ItemType BaseItem => ItemType.GunFRMG0;
-    protected override float Damage => 40f;
-    protected override byte MagazineSize => 5;
-    protected override Vector3 Scale => new(1f, 1f, 1.45f);
+    public override string DisplayName => "Disarmer Rifle";
+    public override string Description => "当たった対象を拘束出来るスナイパーライフル";
+    protected override string UniqueKey => "GunDisarmerRifle";
+    protected override ItemType BaseItem => ItemType.GunE11SR;
+    protected override float Damage => 0f;
+    protected override byte MagazineSize => 1;
+    protected override Vector3 Scale => new(1f, 1f, 1.045f);
     protected override bool  PickupLightEnabled => true;
-    protected override Color PickupLightColor => CustomColor.ChaoticGreen.ToUnityColor();
+    protected override Color PickupLightColor => Color.grey;
 
     protected override void ApplyFirearmCustomization(Item item)
     {
@@ -34,32 +34,38 @@ public class GunSL8 : CItemWeapon
             firearm.MaxMagazineAmmo = MagazineSize;
             firearm.ClearAttachments();
             firearm.AddAttachment(AttachmentName.ScopeSight);
-            firearm.AddAttachment(AttachmentName.SoundSuppressor);
         }
         base.ApplyFirearmCustomization(item);
     }
 
     protected override void OnHurtingOthers(HurtingEventArgs ev)
     {
-        ev.DamageHandler.StartVelocity *= 1.025f;
-        if (ev.DamageHandler.Base is StandardDamageHandler { Hitbox: HitboxType.Headshot })
-        {
-            ev.Amount += 15f;
-        }
+        if (ev.Attacker is null) return;
+        ev.Player?.Handcuff(ev.Attacker);
         base.OnHurtingOthers(ev);
+    }
+
+    protected override void OnShot(ShotEventArgs ev)
+    {
+        Timing.CallDelayed(60f, () => ev.Firearm?.MagazineAmmo = 1);
+        base.OnShot(ev);
+    }
+
+    protected override void OnReloading(ReloadingWeaponEventArgs ev)
+    {
+        ev.IsAllowed = false;
+        base.OnReloading(ev);
     }
 
     public override void RegisterEvents()
     {
         Exiled.Events.Handlers.Item.ChangingAttachments += OnAttachmentChanging;
-        Exiled.Events.Handlers.Player.SendingGunSound += OnSound;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
         Exiled.Events.Handlers.Item.ChangingAttachments -= OnAttachmentChanging;
-        Exiled.Events.Handlers.Player.SendingGunSound -= OnSound;
         base.UnregisterEvents();
     }
 
@@ -67,13 +73,5 @@ public class GunSL8 : CItemWeapon
     {
         if (!Check(ev.Item)) return;
         ev.IsAllowed = false;
-    }
-
-    private void OnSound(SendingGunSoundEventArgs ev)
-    {
-        return;
-        if (!Check(ev.Firearm) || ev.AudioIndex is not (0 or 1 or 2)) return;
-        ev.IsAllowed = false;
-        Map.ExplodeEffect(ev.SendingPosition, ProjectileType.FragGrenade);
     }
 }
