@@ -66,7 +66,6 @@ public class Scp079Role : CRole
 
     private static void OnGenerated(GeneratorActivatingEventArgs ev)
     {
-        return;
         Timing.CallDelayed(1f, () =>
         {
             if (Generator.List.Where(g => !g.IsEngaged).ToList().Count is 0)
