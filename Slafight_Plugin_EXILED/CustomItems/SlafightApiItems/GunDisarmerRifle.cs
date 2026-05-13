@@ -49,7 +49,7 @@ public class GunDisarmerRifle : CItemWeapon
 
     protected override void OnHurtingOthers(HurtingEventArgs ev)
     {
-        if (ev.Attacker is null) return;
+        if (ev.Attacker is null || ev.Player.GetTeam() is CTeam.SCPs || ev.Player.IsScp) return;
         ev.Player?.Handcuff(ev.Attacker);
         base.OnHurtingOthers(ev);
     }
