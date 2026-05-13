@@ -306,7 +306,7 @@ public abstract class CRole
                         player.AddItem(item);
 
                     foreach (var ammo in ammos)
-                        player.AddAmmo((AmmoType)ammo.Key, ammo.Value);
+                        player.SetAmmo((AmmoType)ammo.Key, ammo.Value);
                 });
                 break;
             }
@@ -332,7 +332,7 @@ public abstract class CRole
                         player.AddItem(item);
 
                     foreach (var ammo in ammos)
-                        player.AddAmmo((AmmoType)ammo.Key, ammo.Value);
+                        player.SetAmmo((AmmoType)ammo.Key, ammo.Value);
                 });
                 break;
             }

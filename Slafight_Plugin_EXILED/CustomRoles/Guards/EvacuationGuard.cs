@@ -30,7 +30,7 @@ public class EvacuationGuard : CRole
         player.AddItem(ItemType.Painkillers);
         player.AddItem(ItemType.ArmorCombat);
         player.AddItem(ItemType.Radio);
-        player.AddAmmo(AmmoType.Nato9,150);
+        player.SetAmmo(AmmoType.Nato9,150);
         var pos = Room.Get(RoomType.LczArmory).WorldPosition(new Vector3(0f,1f,0f));
         player.Position = pos;
         Log.Debug($"RoomPos: {pos},EvacuationManager pos: {player.Position}");

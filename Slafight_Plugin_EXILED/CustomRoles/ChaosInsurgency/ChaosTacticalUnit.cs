@@ -32,7 +32,7 @@ public class ChaosTacticalUnit : CRole
         player.AddItem(ItemType.ArmorCombat);
         player.AddItem(ItemType.GrenadeFlash);
         
-        player.AddAmmo(AmmoType.Ammo44Cal, 40);
+        player.SetAmmo(AmmoType.Ammo44Cal, 40);
             
         player.SetCustomInfo("Chaos Insurgency Tactical Unit");
     }

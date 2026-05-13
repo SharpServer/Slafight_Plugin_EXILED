@@ -43,6 +43,6 @@ public class FifthistConvert : CRole
         player.AddItem(ItemType.ArmorCombat);
         CItem.Get<KeycardFifthist>()?.Give(player);
         CItem.Get<Scp1425>()?.Give(player);
-        player.AddAmmo(AmmoType.Nato762,170);
+        player.SetAmmo(AmmoType.Nato762,170);
     }
 }

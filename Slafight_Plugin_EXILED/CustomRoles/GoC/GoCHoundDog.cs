@@ -53,7 +53,7 @@ public class GoCHoundDog : CRole
         player.AddItem(ItemType.Medkit);
         player.IsBypassModeEnabled = true;
             
-        player.AddAmmo(AmmoType.Nato762,140);
+        player.SetAmmo(AmmoType.Nato762,140);
 
         player.SetCustomInfo("Global Occult Collision: Hound Dog Mark II Combat Garment White Suit");
         Timing.RunCoroutine(Coroutine(player));

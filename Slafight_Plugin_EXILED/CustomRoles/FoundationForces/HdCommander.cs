@@ -33,7 +33,7 @@ public class HdCommander : CRole
         CItem.Get<ArmorVip>()?.Give(player);
         CItem.Get<GunN7CR>()?.Give(player);
             
-        player.AddAmmo(AmmoType.Nato556,200);
+        player.SetAmmo(AmmoType.Nato556,200);
 
         //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Commander");
         player.CustomInfo = "<color=#727472>Hammer Down Commander</color>";

@@ -32,7 +32,7 @@ public class SecurityTeamGuard : CRole
         player.AddItem(ItemType.Painkillers);
         player.AddItem(ItemType.ArmorCombat);
         player.AddItem(ItemType.Radio);
-        player.AddAmmo(AmmoType.Nato9,110);
+        player.SetAmmo(AmmoType.Nato9,110);
 
         player.Position = MapFlags.FirstTeamSpawnPoint;
             

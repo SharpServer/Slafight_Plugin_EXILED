@@ -36,7 +36,7 @@ public class ChaosCommando : CRole
         CItem.Get<ArmorInfantry>()?.Give(player);
         CItem.Get<GunSuperLogicer>()?.Give(player);
         
-        player.AddAmmo(AmmoType.Nato762, 300);
+        player.SetAmmo(AmmoType.Nato762, 300);
             
         player.SetCustomInfo("Chaos Insurgency Commando");
     }

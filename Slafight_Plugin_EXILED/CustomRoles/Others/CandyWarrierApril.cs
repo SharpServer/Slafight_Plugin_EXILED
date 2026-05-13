@@ -56,7 +56,7 @@ public class CandyWarrierApril : CRole
                 }
             });
 
-            player.AddAmmo(AmmoType.Nato9, 50);
+            player.SetAmmo(AmmoType.Nato9, 50);
             LabApiHandler.SchemCandyWarrier(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
         });
     }

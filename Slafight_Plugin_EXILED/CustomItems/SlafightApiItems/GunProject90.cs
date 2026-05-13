@@ -19,18 +19,4 @@ public class GunProject90 : CItemWeapon
 
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor   => Color.cyan;
-
-    protected override void OnAcquired(ItemAddedEventArgs ev, bool displayMessage)
-    {
-        ev.Player.SetAmmoLimit(AmmoType.Nato9, 200);
-        ev.Player.SetCategoryLimit(ItemCategory.Firearm, 3);
-        ev.Player.SetCategoryLimit(ItemCategory.Grenade, 3);
-    }
-
-    protected override void OnDropping(DroppingItemEventArgs ev)
-    {
-        ev.Player.ResetAmmoLimit(AmmoType.Nato9);
-        ev.Player.ResetCategoryLimit(ItemCategory.Firearm);
-        ev.Player.ResetCategoryLimit(ItemCategory.Grenade);
-    }
 }

@@ -33,7 +33,7 @@ public class NtfGeneral : CRole
         CItem.Get<ArmorVip>()?.Give(player);
         CItem.Get<GunFRMGX>()?.Give(player);
             
-        player.AddAmmo(AmmoType.Nato556,320);
+        player.SetAmmo(AmmoType.Nato556,320);
 
         //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Commander");
         player.CustomInfo = "Nine-tailed Fox General";

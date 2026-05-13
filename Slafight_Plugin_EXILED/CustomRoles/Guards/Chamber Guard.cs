@@ -31,7 +31,7 @@ public class ChamberGuard : CRole
         player.AddItem(ItemType.Medkit);
         player.AddItem(ItemType.ArmorLight);
         player.AddItem(ItemType.Radio);
-        player.AddAmmo(AmmoType.Nato9,100);
+        player.SetAmmo(AmmoType.Nato9,100);
         var pos = Door.Get(DoorType.Scp173Connector).Position;
         pos += new Vector3(0f,0.35f,0f);
         player.Position = pos;

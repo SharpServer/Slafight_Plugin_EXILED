@@ -277,14 +277,6 @@ public abstract class CItem
     protected virtual void OnGogglesRemoved(Player player, Scp1344 goggles) { }
 
     // ======================================================
-    // Armor カスタマイズ設定
-    // ======================================================
-
-    protected virtual int   VestEfficacy          => -1;
-    protected virtual int   HelmetEfficacy         => -1;
-    protected virtual float StaminaUseMultiplier   => -1f;
-
-    // ======================================================
     // Hint メッセージ
     // ======================================================
 
@@ -442,18 +434,10 @@ public abstract class CItem
 
     /// <summary>
     /// Give / Spawn 後にアイテムへ追加カスタマイズを適用するフック。
-    /// Armor 系の Efficacy 等をここで焼き付ける。
-    /// override する派生は必ず base.CustomizeItem(item) を呼ぶこと。
+    /// 派生クラスは必ず base.CustomizeItem(item) を呼ぶこと。
+    /// Armor 固有ロジック（VestEfficacy 等）は <see cref="CItemArmor"/> 側に移管済み。
     /// </summary>
-    protected virtual void CustomizeItem(Item item)
-    {
-        if (item is Armor armor)
-        {
-            if (VestEfficacy >= 0)       armor.VestEfficacy        = VestEfficacy;
-            if (HelmetEfficacy >= 0)     armor.HelmetEfficacy      = HelmetEfficacy;
-            if (StaminaUseMultiplier >= 0f) armor.StaminaUseMultiplier = StaminaUseMultiplier;
-        }
-    }
+    protected virtual void CustomizeItem(Item item) { }
 
     // ======================================================
     // Pickup ライト制御

@@ -35,7 +35,7 @@ public class GoCOperative : CRole
         player.AddItem(ItemType.Radio);
         player.AddItem(ItemType.ArmorCombat);
             
-        player.AddAmmo(AmmoType.Nato9,140);
+        player.SetAmmo(AmmoType.Nato9,140);
 
         //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
         player.SetCustomInfo("Global Occult Collision: Broken Dagger Operative");

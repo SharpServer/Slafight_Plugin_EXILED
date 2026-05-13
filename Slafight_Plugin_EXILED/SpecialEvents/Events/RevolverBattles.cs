@@ -37,7 +37,7 @@ public class RevolverBattles : SpecialEvent
             if (player.HasItem(ItemType.GunRevolver)) continue;
             player.SetAmmoLimit(AmmoType.Ammo44Cal, 80);
             player.GiveOrDrop(ItemType.GunRevolver);
-            player.AddAmmo(AmmoType.Ammo44Cal, 80);
+            player.SetAmmo(AmmoType.Ammo44Cal, 80);
         }
     }
 

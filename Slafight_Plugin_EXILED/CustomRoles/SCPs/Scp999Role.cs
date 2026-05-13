@@ -43,7 +43,7 @@ public class Scp999Role : CRole
         player.ClearInventory();
         player.AddItem(ItemType.GunCOM15);
         player.SetAmmoLimit(AmmoType.Nato9, 500);
-        player.AddAmmo(AmmoType.Nato9, 500);
+        player.SetAmmo(AmmoType.Nato9, 500);
 
         player.SetCustomInfo("SCP-999");
 

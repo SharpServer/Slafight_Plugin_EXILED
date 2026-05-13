@@ -32,7 +32,7 @@ public class SnePurify : CRole
         player.AddItem(ItemType.Radio);
         player.AddItem(ItemType.ArmorCombat);
             
-        player.AddAmmo(AmmoType.Nato9,140);
+        player.SetAmmo(AmmoType.Nato9,140);
 
         //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
         player.SetCustomInfo("<color=#FF1493>See No Evil Purify</color>");

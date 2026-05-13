@@ -37,7 +37,7 @@ public class GoCSquadLeader : CRole
 
         CItem.Get<ArmorVip>()?.Give(player);
             
-        player.AddAmmo(AmmoType.Nato556,140);
+        player.SetAmmo(AmmoType.Nato556,140);
 
         //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
         player.SetCustomInfo("Global Occult Collision: Broken Dagger Squad Leader");

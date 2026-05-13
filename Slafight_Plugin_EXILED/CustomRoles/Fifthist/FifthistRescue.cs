@@ -43,6 +43,6 @@ public class FifthistRescure : CRole
         player.AddItem(ItemType.Adrenaline);
         player.AddItem(ItemType.SCP500);
         player.AddItem(ItemType.GrenadeHE);
-        player.AddAmmo(AmmoType.Nato762,180);
+        player.SetAmmo(AmmoType.Nato762,180);
     }
 }

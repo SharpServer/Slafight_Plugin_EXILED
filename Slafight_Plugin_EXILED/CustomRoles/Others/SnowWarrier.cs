@@ -44,7 +44,7 @@ public class SnowWarrier : CRole
             player.AddItem(ItemType.SCP500);
             player.AddItem(ItemType.KeycardO5);
 
-            player.AddAmmo(AmmoType.Nato9, 50);
+            player.SetAmmo(AmmoType.Nato9, 50);
         });
     }
 }

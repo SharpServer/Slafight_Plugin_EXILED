@@ -37,7 +37,7 @@ public class GoCDeputy : CRole
         
         CItem.Get<ArmorInfantry>()?.Give(player);
             
-        player.AddAmmo(AmmoType.Nato556,140);
+        player.SetAmmo(AmmoType.Nato556,140);
 
         //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
         player.SetCustomInfo("Global Occult Collision: Broken Dagger Deputy");

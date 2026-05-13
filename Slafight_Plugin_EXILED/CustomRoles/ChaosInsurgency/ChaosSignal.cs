@@ -33,7 +33,7 @@ public class ChaosSignal : CRole
         player.AddItem(ItemType.GunAK);
         CItem.Get<SNAV300>()?.Give(player);
         
-        player.AddAmmo(AmmoType.Nato762, 150);
+        player.SetAmmo(AmmoType.Nato762, 150);
             
         player.SetCustomInfo("Chaos Insurgency Signal");
     }

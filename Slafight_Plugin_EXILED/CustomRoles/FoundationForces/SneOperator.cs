@@ -33,7 +33,7 @@ public class SneOperator : CRole
         player.AddItem(ItemType.Radio);
         player.AddItem(ItemType.ArmorHeavy);
             
-        player.AddAmmo(AmmoType.Nato556,220);
+        player.SetAmmo(AmmoType.Nato556,220);
 
         //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
         player.SetCustomInfo("<color=#FF1493>See No Evil Operator</color>");

@@ -35,7 +35,7 @@ public class ChaosIntruder : CRole
         player.GiveCItem<GunSuppressiver>();
         player.GiveCItem<KeycardChaosIntruder>();
         
-        player.AddAmmo(AmmoType.Nato9, 130);
+        player.SetAmmo(AmmoType.Nato9, 130);
 
         player.Position = MapFlags.FirstTeamSpawnPoint;
             
