@@ -60,7 +60,7 @@ public class GunDisarmerRifle : CItemWeapon
         {
             if (ev.Item is null) return;
             ev.Player?.CurrentItem = ev.Item;
-            ev.Firearm?.TryReload();
+            Timing.CallDelayed(1f, () => ev.Firearm?.TryReload());
         });
         base.OnShot(ev);
     }
