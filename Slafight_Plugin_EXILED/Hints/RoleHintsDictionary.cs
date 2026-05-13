@@ -46,11 +46,15 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.ChaosTacticalUnit]    = ("<color=#228b22>Chaos Insurgency Tactical Unit</color>",   ChaosTeam, ChaosObj),
         [CRoleTypeId.ChaosPenal]           = ("<color=#228b22>Chaos Insurgency Breaker</color>",         ChaosTeam, ChaosObj),
         [CRoleTypeId.ChaosUndercoverAgent] = ("<color=#228b22>Chaos Insurgency Undercover Agent</color>",ChaosTeam, ChaosObj),
+        [CRoleTypeId.ChaosSniper] = ("<color=#228b22>Chaos Insurgency Sniper</color>",ChaosTeam, ChaosObj),
 
         // ── Foundation Forces ─────────────────────────────────────────────
         [CRoleTypeId.NtfLieutenant]  = ("<color=#00b7eb>MTF E-11: Lieutenant</color>",     FoundTeam, FoundObj),
         [CRoleTypeId.NtfGeneral]     = ("<color=blue>MTF E-11: General</color>",           FoundTeam, FoundObj),
+        [CRoleTypeId.NtfSpecialist]  = ("<color=#00b7eb>MTF E-11: Specialist</color>",     FoundTeam, FoundObj),
         [CRoleTypeId.HdInfantry]     = ("<color=#353535>MTF Nu-7: Infantry</color>",       FoundTeam, FoundObj),
+        [CRoleTypeId.HdShotgunner]     = ("<color=#353535>MTF Nu-7: Shotgunner</color>",       FoundTeam, FoundObj),
+        [CRoleTypeId.HdDisarmer]     = ("<color=#353535>MTF Nu-7: Disarmer</color>",       FoundTeam, FoundObj),
         [CRoleTypeId.HdCommander]    = ("<color=#252525>MTF Nu-7: Commander</color>",      FoundTeam, FoundObj),
         [CRoleTypeId.HdMarshal]      = ("<color=#151515>MTF Nu-7: Marshal</color>",        FoundTeam, FoundObj),
         [CRoleTypeId.SnePurify]      = ("<color=#FF1493>MTF Eta-10: Purify</color>",       FoundTeam, FoundObj),

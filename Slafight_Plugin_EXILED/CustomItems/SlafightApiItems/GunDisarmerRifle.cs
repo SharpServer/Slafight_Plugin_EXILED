@@ -38,6 +38,15 @@ public class GunDisarmerRifle : CItemWeapon
         base.ApplyFirearmCustomization(item);
     }
 
+    protected override void OnAcquired(ItemAddedEventArgs ev, bool displayMessage)
+    {
+        if (ev.Player != ev.Pickup.PreviousOwner)
+        {
+            ev.Item.Cast<Firearm>()?.TryReload();
+        }
+        base.OnAcquired(ev, displayMessage);
+    }
+
     protected override void OnHurtingOthers(HurtingEventArgs ev)
     {
         if (ev.Attacker is null) return;
@@ -47,7 +56,12 @@ public class GunDisarmerRifle : CItemWeapon
 
     protected override void OnShot(ShotEventArgs ev)
     {
-        Timing.CallDelayed(20f, () => ev.Firearm?.TryReload());
+        Timing.CallDelayed(20f, () =>
+        {
+            if (ev.Item is null) return;
+            ev.Player?.CurrentItem = ev.Item;
+            ev.Firearm?.TryReload();
+        });
         base.OnShot(ev);
     }
 
