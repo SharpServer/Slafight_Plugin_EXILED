@@ -26,6 +26,8 @@ public class ArmorVip : CItemArmor
     {
         ev.Player.SetAmmoLimit(AmmoType.Nato9, 400);
         ev.Player.SetAmmoLimit(AmmoType.Nato556, 400);
+        ev.Player.SetAmmoLimit(AmmoType.Ammo12Gauge, 100);
+        ev.Player.SetAmmoLimit(AmmoType.Ammo44Cal, 50);
         ev.Player.SetCategoryLimit(ItemCategory.Firearm, 3);
         ev.Player.SetCategoryLimit(ItemCategory.Grenade, 3);
     }
@@ -35,6 +37,8 @@ public class ArmorVip : CItemArmor
     {
         ev.Player.ResetAmmoLimit(AmmoType.Nato9);
         ev.Player.ResetAmmoLimit(AmmoType.Nato556);
+        ev.Player.ResetAmmoLimit(AmmoType.Ammo12Gauge);
+        ev.Player.ResetAmmoLimit(AmmoType.Ammo44Cal);
         ev.Player.ResetCategoryLimit(ItemCategory.Firearm);
         ev.Player.ResetCategoryLimit(ItemCategory.Grenade);
     }

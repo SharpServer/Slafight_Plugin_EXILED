@@ -23,7 +23,8 @@ public class ArmorInfantry : CItemArmor
     /// <summary>装備時に Nato9 弾持ち上限と Firearm/Grenade 枠を増やす。</summary>
     protected override void OnAcquired(ItemAddedEventArgs ev, bool displayMessage)
     {
-        ev.Player.SetAmmoLimit(AmmoType.Nato9, 200);
+        ev.Player.SetAmmoLimit(AmmoType.Nato9, 220);
+        ev.Player.SetAmmoLimit(AmmoType.Ammo12Gauge, 80);
         ev.Player.SetCategoryLimit(ItemCategory.Firearm, 3);
         ev.Player.SetCategoryLimit(ItemCategory.Grenade, 3);
     }
@@ -32,6 +33,7 @@ public class ArmorInfantry : CItemArmor
     protected override void OnDropping(DroppingItemEventArgs ev)
     {
         ev.Player.ResetAmmoLimit(AmmoType.Nato9);
+        ev.Player.ResetAmmoLimit(AmmoType.Ammo12Gauge);
         ev.Player.ResetCategoryLimit(ItemCategory.Firearm);
         ev.Player.ResetCategoryLimit(ItemCategory.Grenade);
     }
