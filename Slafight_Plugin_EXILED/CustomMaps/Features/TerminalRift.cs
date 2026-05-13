@@ -111,8 +111,8 @@ public static class TerminalRift
                             _riftWaypoint = Waypoint.Create(
                                 parent: RiftObject.transform,
                                 position: Vector3.up * 1.05f,
-                                scale: new Vector3(4.5f, 3.5f, 3.5f),
-                                visualizeBounds: true
+                                scale: new Vector3(4.5f, 3.5f, 3.5f)//,
+                                //visualizeBounds: true
                             );
                             Log.Debug("[TerminalRift] WaypointToy created on Rift.");
                         }
