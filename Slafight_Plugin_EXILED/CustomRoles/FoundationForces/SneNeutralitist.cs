@@ -33,7 +33,7 @@ public class SneNeutralitist : CRole
         player.AddItem(ItemType.Radio);
         player.AddItem(ItemType.ArmorCombat);
             
-        player.SetAmmo(AmmoType.Nato556,140);
+        player.SetAmmo(AmmoType.Nato556,120);
 
         //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
         player.SetCustomInfo("<color=#FF1493>See No Evil Neutralitist</color>");

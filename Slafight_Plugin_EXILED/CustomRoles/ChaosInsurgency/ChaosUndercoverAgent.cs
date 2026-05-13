@@ -36,7 +36,7 @@ public class ChaosUndercoverAgent : CRole
         CItem.Get<KeycardConscripts>()?.Give(player); // Conscripts Card
         CItem.Get<CUA_SpyKit>()?.Give(player);
         
-        player.SetAmmo(AmmoType.Ammo44Cal, 6);
+        player.SetAmmo(AmmoType.Ammo44Cal, 24);
             
         player.SetCustomInfo("Chaos Insurgency Undercover Agent");
         Timing.CallDelayed(0.05f, () =>

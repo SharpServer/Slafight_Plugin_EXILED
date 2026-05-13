@@ -1,3 +1,4 @@
+using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -30,6 +31,8 @@ public class NtfAide : CRole
         player.AddItem(ItemType.GrenadeFlash);
         player.AddItem(ItemType.ArmorHeavy);
         player.AddItem(ItemType.Radio);
+        
+        player.SetAmmo(AmmoType.Nato9, 130);
 
         //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Nine-tailed Fox Aide");
         player.CustomInfo = "Nine-tailed Fox Lieutenant";
