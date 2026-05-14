@@ -36,10 +36,10 @@ public class Scp035Role : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp035;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "Scp035";
+    protected override RoleTypeId? TeamNpcRoleTypeId { get; set; } = RoleTypeId.Scp0492;
 
-    // 全SCP-035共有状態/NPC
+    // 全SCP-035共有状態
     private static readonly Dictionary<int, Scp035State> GlobalStates = new();
-    private static readonly Dictionary<int, int> GlobalScpTeamSystemNpc = new();
 
     // 完全覚醒などで「自動遷移させない」プレイヤー
     private static readonly HashSet<int> FrozenPlayers = [];
@@ -100,9 +100,6 @@ public class Scp035Role : CRole
         schematicObject.Scale *= 1.185f;
         LabApi.Features.Wrappers.Player.Get(player.NetId)!.DestroySchematic(schematicObject);
 
-        // NPC生成（ここで一回だけ）
-        CreateNpc(player);
-
         Timing.RunCoroutine(Coroutine(player));
     }
 
@@ -151,36 +148,6 @@ public class Scp035Role : CRole
     private bool IsScp035(Player player) =>
         player.IsAlive && player.UniqueRole == UniqueRoleKey;
 
-    private static void CreateNpc(Player player)
-    {
-        // 既に登録されている場合は一旦破壊して作り直し
-        if (GlobalScpTeamSystemNpc.TryGetValue(player.Id, out var oldId))
-        {
-            Npc.Get(oldId)?.Destroy();
-            GlobalScpTeamSystemNpc.Remove(player.Id);
-        }
-
-        try
-        {
-            var npc = Npc.Spawn("Scp035-SCPTeamNpc", RoleTypeId.Scp0492);
-    
-            Timing.CallDelayed(0.6f, () =>  // 👇 0.2f → 0.6f
-            {
-                if (npc?.ReferenceHub == null) return;
-        
-                npc.IsGodModeEnabled = true;
-                npc.IsSpectatable = false;
-                npc.EnableEffect(EffectType.Invisible, 255);
-            });
-    
-            GlobalScpTeamSystemNpc[player.Id] = npc.Id;
-        }
-        catch (Exception e)
-        {
-            Log.Error($"SCP-035 NPC spawn failed for {player?.Nickname}: {e}");
-        }
-    }
-
     public void Cleanup(Player player)
     {
         states.Remove(player.Id, out _);
@@ -191,9 +158,7 @@ public class Scp035Role : CRole
         if (AbilityBase.HasAbility<Scp035TentacleAbility>(player))
             player.RemoveAbility<Scp035TentacleAbility>();
 
-        if (!GlobalScpTeamSystemNpc.TryGetValue(player.Id, out var npcId)) return;
-        Npc.Get(npcId)?.Destroy();
-        GlobalScpTeamSystemNpc.Remove(player.Id);
+        CleanupTeamNpc(player);
     }
 
     public bool TryChangeState(Player player, Scp035StateType newState)
@@ -394,11 +359,6 @@ public class Scp035Role : CRole
     // プラグイン終了時用
     public static void CleanupAllScp035()
     {
-        foreach (var kvp in GlobalScpTeamSystemNpc.ToList())
-        {
-            Npc.Get(kvp.Value)?.Destroy();
-        }
-        GlobalScpTeamSystemNpc.Clear();
         GlobalStates.Clear();
         FrozenPlayers.Clear();
     }

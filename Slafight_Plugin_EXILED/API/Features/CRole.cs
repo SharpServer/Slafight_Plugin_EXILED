@@ -30,8 +30,21 @@ public abstract class CRole
 
     // UniqueRole 文字列 → CRole インスタンス（バリアント含む）
     private static readonly Dictionary<string, CRole> UniqueRoleToRole = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<int, TeamNpcInfo> TeamNpcs = new();
 
     private static bool _eventsSubscribed;
+
+    private readonly struct TeamNpcInfo
+    {
+        public TeamNpcInfo(int npcId, string uniqueRole)
+        {
+            NpcId = npcId;
+            UniqueRole = uniqueRole;
+        }
+
+        public int NpcId { get; }
+        public string UniqueRole { get; }
+    }
 
     static CRole()
     {
@@ -62,6 +75,8 @@ public abstract class CRole
         if (!_eventsSubscribed)
         {
             PlayerHandlers.Dying += OnAnyPlayerDying;
+            PlayerHandlers.ChangingRole += OnAnyPlayerChangingRole;
+            PlayerHandlers.Left += OnAnyPlayerLeft;
             MapHandlers.AnnouncingScpTermination += OnAnyAnnouncingScpTermination;
             _eventsSubscribed = true;
         }
@@ -101,10 +116,13 @@ public abstract class CRole
 
         RegisteredInstances.Clear();
         UniqueRoleToRole.Clear();
+        CleanupAllTeamNpcs();
 
         if (_eventsSubscribed)
         {
             PlayerHandlers.Dying -= OnAnyPlayerDying;
+            PlayerHandlers.ChangingRole -= OnAnyPlayerChangingRole;
+            PlayerHandlers.Left -= OnAnyPlayerLeft;
             MapHandlers.AnnouncingScpTermination -= OnAnyAnnouncingScpTermination;
             _eventsSubscribed = false;
         }
@@ -153,6 +171,27 @@ public abstract class CRole
         {
             Log.Error($"CRole.OnDying error in {role.GetType().Name}: {ex}");
         }
+    }
+
+    private static void OnAnyPlayerChangingRole(PlayerEvents.ChangingRoleEventArgs ev)
+    {
+        if (ev?.Player == null) return;
+        if (!TeamNpcs.TryGetValue(ev.Player.Id, out var oldInfo)) return;
+
+        Timing.CallDelayed(1f, () =>
+        {
+            if (!TeamNpcs.TryGetValue(ev.Player.Id, out var current)) return;
+            if (current.NpcId != oldInfo.NpcId) return;
+
+            CleanupTeamNpc(ev.Player);
+        });
+    }
+
+    private static void OnAnyPlayerLeft(PlayerEvents.LeftEventArgs ev)
+    {
+        if (ev?.Player == null) return;
+
+        CleanupTeamNpc(ev.Player);
     }
 
     private static void OnAnyAnnouncingScpTermination(MapEvents.AnnouncingScpTerminationEventArgs ev)
@@ -205,6 +244,7 @@ public abstract class CRole
             }
 
             UnregisterEvents();
+            CleanupTeamNpcs(UniqueRoleKey);
             Log.Debug($"CRole unregistered: {GetType().Name}");
         }
     }
@@ -220,6 +260,8 @@ public abstract class CRole
     protected abstract string Description { get; set; }
     protected virtual float DescriptionDuration { get; set; } = 8f;
     protected virtual bool DescriptionShowRoleName { get; set; } = true;
+    protected virtual string DisplayName => RoleName;
+    protected virtual RoleTypeId? TeamNpcRoleTypeId { get; set; } = null;
 
     protected abstract CRoleTypeId CRoleTypeId { get; set; }
 
@@ -271,6 +313,7 @@ public abstract class CRole
 
         ev.IsAllowed = false;
         RoleSpecificTextProvider.Clear(ev.Player);
+        CleanupTeamNpc(ev.Player);
         Exiled.API.Features.Cassie.MessageTranslated(cassieString, localizedString);
     }
 
@@ -280,6 +323,7 @@ public abstract class CRole
         if (!Check(ev.Player)) return;
 
         RoleSpecificTextProvider.Clear(ev.Player);
+        CleanupTeamNpc(ev.Player);
     }
 
     public virtual void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
@@ -368,5 +412,71 @@ public abstract class CRole
                 player.RemoveHint(hint);
             });
         });
+
+        Timing.CallDelayed(0.6f, () =>
+        {
+            TryCreateTeamNpc(player);
+        });
+    }
+
+    private void TryCreateTeamNpc(Player player)
+    {
+        if (TeamNpcRoleTypeId == null) return;
+        if (player == null || !player.IsConnected) return;
+        if (!Check(player)) return;
+
+        CleanupTeamNpc(player);
+
+        try
+        {
+            var npc = Npc.Spawn($"{DisplayName}-TeamNpc", TeamNpcRoleTypeId.Value);
+
+            Timing.CallDelayed(0.6f, () =>
+            {
+                if (npc?.ReferenceHub == null) return;
+
+                npc.IsGodModeEnabled = true;
+                npc.IsSpectatable = false;
+                npc.EnableEffect(EffectType.Invisible, 255);
+            });
+
+            TeamNpcs[player.Id] = new TeamNpcInfo(npc.Id, UniqueRoleKey);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"{DisplayName} team NPC spawn failed for {player?.Nickname}: {e}");
+        }
+    }
+
+    protected static void CleanupTeamNpc(Player player)
+    {
+        if (player == null) return;
+        if (!TeamNpcs.TryGetValue(player.Id, out var info)) return;
+
+        Npc.Get(info.NpcId)?.Destroy();
+        TeamNpcs.Remove(player.Id);
+    }
+
+    private static void CleanupTeamNpcs(string uniqueRole)
+    {
+        if (string.IsNullOrEmpty(uniqueRole)) return;
+
+        foreach (var kvp in TeamNpcs.ToList())
+        {
+            if (!string.Equals(kvp.Value.UniqueRole, uniqueRole, StringComparison.OrdinalIgnoreCase)) continue;
+
+            Npc.Get(kvp.Value.NpcId)?.Destroy();
+            TeamNpcs.Remove(kvp.Key);
+        }
+    }
+
+    private static void CleanupAllTeamNpcs()
+    {
+        foreach (var kvp in TeamNpcs.ToList())
+        {
+            Npc.Get(kvp.Value.NpcId)?.Destroy();
+        }
+
+        TeamNpcs.Clear();
     }
 }
