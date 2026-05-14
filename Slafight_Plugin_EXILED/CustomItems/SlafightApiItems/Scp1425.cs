@@ -1,8 +1,11 @@
 using System.Collections.Generic;
 using CustomPlayerEffects;
+using Exiled.Events.EventArgs.Map;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
+using ProjectMER.Features;
+using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
@@ -14,10 +17,8 @@ public class Scp1425 : CItem
 {
     public override string DisplayName => "SCP-1425";
     public override string Description => "第五的な力を感じる・・・";
-
     protected override string UniqueKey => "Scp1425";
     protected override ItemType BaseItem => ItemType.Medkit;
-
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor   => Color.magenta;
 
@@ -26,6 +27,22 @@ public class Scp1425 : CItem
     protected override void OnWaitingForPlayers()
     {
         _readCount.Clear();
+    }
+    
+    protected override void OnPickupAdded(PickupAddedEventArgs ev)
+    {
+        var schem = ObjectSpawner.SpawnSchematic("Scp1425Model", ev.Pickup.Position, ev.Pickup.Rotation);
+        schem.transform.SetParent(ev.Pickup.Transform);
+        schem.transform.localPosition = Vector3.zero;
+        schem.transform.localRotation = Quaternion.identity;
+        base.OnPickupAdded(ev);
+    }
+
+    protected override void OnPickupDestroyed(PickupDestroyedEventArgs ev)
+    {
+        var schem = ev.Pickup.GameObject.GetComponentInChildren<SchematicObject>();
+        schem.Destroy();
+        base.OnPickupDestroyed(ev);
     }
 
     protected override void OnOwnerDying(DyingEventArgs ev)
