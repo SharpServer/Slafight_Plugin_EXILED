@@ -67,6 +67,7 @@ public class Scp3125Role : CRole
                 Handler.ActivatedPlayers.Add(player);
             }
             Timing.RunCoroutine(Scp3125HintSyncCoroutine(player));
+            Timing.RunCoroutine(Scp3125Coroutine(player));
         });
     }
     
@@ -120,7 +121,7 @@ public class Scp3125Role : CRole
         }
     }
 
-    private static IEnumerator<float> Scp3005Coroutine(Player player)
+    private static IEnumerator<float> Scp3125Coroutine(Player player)
     {
         for (;;)
         {

@@ -18,6 +18,7 @@ using Light = LabApi.Features.Wrappers.LightSourceToy;
 using Logger = LabApi.Features.Console.Logger;
 using Player = LabApi.Features.Wrappers.Player;
 using Slafight_Plugin_EXILED.API.Interface;
+using Slafight_Plugin_EXILED.CustomMaps;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -54,14 +55,18 @@ public class LabApiHandler : CustomEventsHandler, IBootstrapHandler
 
     private void InteractionEvent(PlayerSearchedToyEventArgs ev)
     {
-        if (ev.Interactable.Position != new Vector3(107.921f, 296.313f, -68.748f))
+        var antiMemeButton = MapFlags.AntiMemeButton == Vector3.zero
+            ? new Vector3(107.921f, 296.313f, -68.748f)
+            : MapFlags.AntiMemeButton;
+
+        if (ev.Interactable == null || Vector3.Distance(ev.Interactable.Position, antiMemeButton) >= 3f)
             return;
 
         if (!ActivatedAntiMemeProtocol)
         {
             foreach (var player in Exiled.API.Features.Player.List)
             {
-                if (player.GetCustomRole() != CRoleTypeId.Scp3005) continue;
+                if (!IsAntiMemeProtocolTarget(player)) continue;
                 if (!ActivatedAntiMemeProtocolInPast)
                     player.Health = 10000;
 
@@ -70,7 +75,7 @@ public class LabApiHandler : CustomEventsHandler, IBootstrapHandler
             }
 
             var count = 0;
-            if (Exiled.API.Features.Player.List.Any(player => player.GetCustomRole() == CRoleTypeId.Scp3005))
+            if (Exiled.API.Features.Player.List.Any(IsAntiMemeProtocolTarget))
             {
                 count++;
                 if (!ActivatedAntiMemeProtocolInPast)
@@ -101,7 +106,7 @@ public class LabApiHandler : CustomEventsHandler, IBootstrapHandler
         {
             foreach (var player in Exiled.API.Features.Player.List)
             {
-                if (player.GetCustomRole() != CRoleTypeId.Scp3005) continue;
+                if (!IsAntiMemeProtocolTarget(player)) continue;
                 player.DisableEffect(EffectType.Poisoned);
                 player.DisableEffect(EffectType.Decontaminating);
             }
@@ -116,13 +121,18 @@ public class LabApiHandler : CustomEventsHandler, IBootstrapHandler
         }
     }
 
+    private static bool IsAntiMemeProtocolTarget(Exiled.API.Features.Player player)
+    {
+        return player.GetCustomRole() is CRoleTypeId.Scp3005 or CRoleTypeId.Scp3125;
+    }
+
     private void PickupSetup()
     {
         Logger.Info("LabApi Loader: Green");
 
         Timing.CallDelayed(1.05f, () =>
         {
-            CItem.Get<HIDTurret>()?.Spawn(new Vector3(134.94f, 300.65f, -65f));
+            //CItem.Get<HIDTurret>()?.Spawn(new Vector3(134.94f, 300.65f, -65f));
             CItem.Get<NvgNormal>()?.Spawn(Room.Get(RoomType.Hcz939).WorldPosition(Vector3.up * 1.5f));
         });
         Timing.CallDelayed(2.0f, PickupSetupTriggerPoints);
@@ -171,6 +181,9 @@ public class LabApiHandler : CustomEventsHandler, IBootstrapHandler
                         CItem.Get<NeutralizeGrenade>()?.Spawn(pos);
                         CItem.Get<NeutralizeGrenade>()?.Spawn(pos);
                         CItem.Get<NeutralizeGrenade>()?.Spawn(pos);
+                        break;
+                    case "AntiMemeButton":
+                        MapFlags.AntiMemeButton = pos;
                         break;
                 }
             }

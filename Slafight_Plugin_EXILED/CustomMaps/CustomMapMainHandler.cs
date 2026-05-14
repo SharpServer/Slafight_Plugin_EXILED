@@ -5,6 +5,7 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
 using Exiled.Events.EventArgs.Map;
+using Exiled.Events.EventArgs.Player;
 using Interactables.Interobjects.DoorUtils;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.CustomHandlers;
@@ -25,6 +26,7 @@ using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
 using ServerHandler = Exiled.Events.Handlers.Server;
 using MapHandler = Exiled.Events.Handlers.Map;
+using PlayerHandler = Exiled.Events.Handlers.Player;
 using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
@@ -146,7 +148,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler
         ServerHandler.RestartingRound                    += ResetInRestart;
         MapHandler.SpawningTeamVehicle                   += ChaosAnimation;
         LabApi.Events.Handlers.PlayerEvents.SearchedToy  += InteractionButton;
-        LabApi.Events.Handlers.PlayerEvents.InteractedDoor += DoorInteracted;
+        PlayerHandler.InteractingDoor                    += DoorInteracted;
     }
 
     ~CustomMapMainHandler()
@@ -156,7 +158,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler
         ServerHandler.RestartingRound                      -= ResetInRestart;
         MapHandler.SpawningTeamVehicle                     -= ChaosAnimation;
         LabApi.Events.Handlers.PlayerEvents.SearchedToy    -= InteractionButton;
-        LabApi.Events.Handlers.PlayerEvents.InteractedDoor -= DoorInteracted;
+        PlayerHandler.InteractingDoor                      -= DoorInteracted;
 
         if (femurCoroutine.IsRunning) Timing.KillCoroutines(femurCoroutine);
         if (trainCoroutine.IsRunning) Timing.KillCoroutines(trainCoroutine);
@@ -404,6 +406,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler
                 case "ST_E":                       STE       = pos; break;
                 case "AntiAntiMemeDoc":            MapFlags.AntiAntiMemeDocPoint = pos; break;
                 case "SQ_Door":                    MapFlags.SqDoorPoint          = pos; break;
+                case "AntiMemeButton":             MapFlags.AntiMemeButton = pos; break;
             }
         }
     }
@@ -569,21 +572,24 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler
     //  ★ CItem.HasIn で CItem 型チェックを行う
     // ──────────────────────────────────────────────────────
 
-    private void DoorInteracted(PlayerInteractedDoorEventArgs ev)
+    private void DoorInteracted(InteractingDoorEventArgs ev)
     {
-        var player = Player.Get(ev.Player.NetworkId);
-        if (player == null || specialDoors.Count == 0) return;
+        if (ev.Player == null || ev.Door == null || specialDoors.Count == 0) return;
 
         var config = FindDoorConfig(ev.Door.Position);
         if (config == null) return;
 
-        if (config.CanOpen(player))
+        ev.IsAllowed = false;
+
+        if (config.CanOpen(ev.Player))
         {
-            ev.Door.IsOpened = !ev.Door.IsOpened;
+            ev.Door.Unlock();
+            ev.Door.IsOpen = !ev.Door.IsOpen;
+            ev.Door.Lock(DoorLockType.AdminCommand);
         }
         else
         {
-            ev.Player.SendHint(config.HintMessage);
+            ev.Player.ShowHint(config.HintMessage);
         }
     }
 
