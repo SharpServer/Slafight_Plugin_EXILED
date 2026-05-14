@@ -30,7 +30,7 @@ public class LabApiHandler : CustomEventsHandler, IBootstrapHandler
     public LabApiHandler()
     {
         LabApi.Events.Handlers.ServerEvents.RoundStarted += PickupSetup;
-        Exiled.Events.Handlers.Player.Dying += DiedCassie;
+        Exiled.Events.Handlers.Player.Dying += ModelRolesRagdoll;
         LabApi.Events.Handlers.PlayerEvents.SearchedToy += InteractionEvent;
         LabApi.Events.Handlers.ServerEvents.RoundStarted += Init;
     }
@@ -38,7 +38,7 @@ public class LabApiHandler : CustomEventsHandler, IBootstrapHandler
     ~LabApiHandler()
     {
         LabApi.Events.Handlers.ServerEvents.RoundStarted -= PickupSetup;
-        Exiled.Events.Handlers.Player.Dying -= DiedCassie;
+        Exiled.Events.Handlers.Player.Dying -= ModelRolesRagdoll;
         LabApi.Events.Handlers.PlayerEvents.SearchedToy -= InteractionEvent;
         LabApi.Events.Handlers.ServerEvents.RoundStarted -= Init;
     }
@@ -364,11 +364,11 @@ public class LabApiHandler : CustomEventsHandler, IBootstrapHandler
         });
     }
 
-    private static void DiedCassie(Exiled.Events.EventArgs.Player.DyingEventArgs ev)
+    private static void ModelRolesRagdoll(Exiled.Events.EventArgs.Player.DyingEventArgs ev)
     {
         if (ev.Player.GetCustomRole() == CRoleTypeId.Scp3005)
         {
-            ObjectSpawner.SpawnSchematic("SCP3005", ev.Player.Position, ev.Player.Rotation, Vector3.one);
+            ObjectSpawner.SpawnSchematic("SCP3005_N", ev.Player.Position, ev.Player.Rotation, Vector3.one);
         }
         if (ev.Player.GetCustomRole() == CRoleTypeId.Scp999)
         {

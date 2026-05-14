@@ -40,8 +40,8 @@
         <Reference Include="0Harmony">
             <HintPath>$(SL_References)\0Harmony.dll</HintPath>
         </Reference>
-        <Reference Include="AdvancedMERTools">
-            <HintPath>$(SL_References)\AdvancedMERTools.dll</HintPath>
+        <Reference Include="ZAMERT">
+            <HintPath>$(SL_References)\ZAMERT.dll</HintPath>
         </Reference>
         <Reference Include="Assembly-CSharp-firstpass">
             <HintPath>$(SL_References)\Assembly-CSharp-firstpass.dll</HintPath>
