@@ -381,6 +381,7 @@
         <Compile Include="CustomRoles\SCPs\Scp106Role.cs" />
         <Compile Include="CustomRoles\SCPs\Scp173Role.cs" />
         <Compile Include="CustomRoles\SCPs\Scp3005Role.cs" />
+        <Compile Include="CustomRoles\SCPs\Scp610Role.cs" />
         <Compile Include="CustomRoles\SCPs\Scp999Role.cs" />
         <Compile Include="CustomRoles\SCPs\ZombifiedRole.cs" />
         <Compile Include="Extensions\AbilityResetUtil.cs" />

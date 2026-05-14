@@ -383,13 +383,21 @@ public class EventHandler : IBootstrapHandler
         if (ev.Player == null || ev.Item == null) return;
         if (ev.Player.HasFlag(SpecificFlagType.AntiMemeEffectDisabled))
         {
-            if (ev.Item.Type == ItemType.SCP500 && !ev.Item.TryGetCustomItem(out _))
+            if (ev.Item.Type == ItemType.SCP500 && !ev.Item.TryGetCustomItem(out _) && !CItem.TryGet(ev.Item, out _))
             {
                 if (ev.Player.HasFlag(SpecificFlagType.Scp207Level4))
                 {
                     ev.Player.EnableEffect(EffectType.Scp207, 4);
                     ev.Player.EnableEffect(EffectType.Invigorated, 60);
                 }
+            }
+        }
+
+        if (ev.Player.HasFlag(SpecificFlagType.Infecting610))
+        {
+            if (ev.Item.Type == ItemType.SCP500 && !ev.Item.TryGetCustomItem(out _) && !CItem.TryGet(ev.Item, out _))
+            {
+                ev.Player.TryRemoveFlag(SpecificFlagType.Infecting610);
             }
         }
     }

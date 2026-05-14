@@ -1,0 +1,104 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using CustomPlayerEffects;
+using Exiled.API.Enums;
+using Exiled.API.Extensions;
+using Exiled.API.Features;
+using Exiled.Events.EventArgs.Player;
+using Exiled.Events.EventArgs.Warhead;
+using MEC;
+using PlayerRoles;
+using ProjectMER.Features.Extensions;
+using Slafight_Plugin_EXILED.Abilities;
+using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomMaps.Features;
+using Slafight_Plugin_EXILED.Extensions;
+using Slafight_Plugin_EXILED.MainHandlers;
+using UnityEngine;
+
+namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
+
+public class Scp610Role : CRole
+{
+    protected override string RoleName { get; set; } = "SCP-610";
+    protected override string Description { get; set; } = "";
+    protected override float DescriptionDuration { get; set; } = 15f;
+    protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp610;
+    protected override CTeam Team { get; set; } = CTeam.SCPs;
+    protected override string UniqueRoleKey { get; set; } = "Scp610";
+    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    {
+        base.SpawnRole(player, roleSpawnFlags);
+
+        player!.Role.Set(RoleTypeId.Tutorial);
+        player.MaxHealth = 800f;
+        player.Health = player.MaxHealth;
+        player.UniqueRole = UniqueRoleKey;
+        player.ClearInventory();
+        player.AddItem(ItemType.SCP1509);
+        player.SetCustomInfo("<color=#C50000>SCP-610</color>");
+        player.TryAddFlag(SpecificFlagType.PickingDisabled);
+        player.TryAddFlag(SpecificFlagType.DroppingDisabled);
+
+        player.Position = Room.Get(RoomType.Hcz939).WorldPosition(Vector3.up * 0.65f);
+        player.EnableEffect<Fade>(255);
+
+        player.TryWear("scp-610", player.Transform, out var schematicObject, (Vector3.down * 0.5f));
+        //schematicObject.Scale *= 1.185f;
+        LabApi.Features.Wrappers.Player.Get(player.NetId)!.DestroySchematic(schematicObject);
+    }
+
+    protected override void OnDying(DyingEventArgs ev)
+    {
+        CassieHelper.AnnounceTermination(ev, "SCP 6 1 0", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
+        base.OnDying(ev);
+    }
+
+    public override void RegisterEvents()
+    {
+        Exiled.Events.Handlers.Player.Hurting += OnHurtingOthers;
+        base.RegisterEvents();
+    }
+
+    public override void UnregisterEvents()
+    {
+        Exiled.Events.Handlers.Player.Hurting -= OnHurtingOthers;
+        base.UnregisterEvents();
+    }
+
+    private void OnHurtingOthers(HurtingEventArgs ev)
+    {
+        if (!Check(ev.Attacker)) return;
+        ev.Amount /= 1.25f;
+        if (ev.Player.Health <= 40f)
+        {
+            ev.Attacker.ShowHint("<size=22><color=yellow><b>相手を感染させる事に成功した！3分後には貴方と同じになっているであろう！</b></color></size>", 5);
+            ev.Player.TryAddFlag(SpecificFlagType.Infecting610);
+            ev.Player.EnableEffect<Concussed>(255);
+            Timing.RunCoroutine(InfectionCoroutine(ev.Player));
+        }
+    }
+
+    private IEnumerator<float> InfectionCoroutine(Player player)
+    {
+        float elapsedTime = 0f;
+        while (true)
+        {
+            if (Round.IsLobby || player.GetTeam() is CTeam.SCPs || !player.IsAlive || !player.HasFlag(SpecificFlagType.Infecting610))
+            {
+                yield break;
+            }
+
+            if (elapsedTime >= 200f)
+            {
+                player.TryRemoveFlag(SpecificFlagType.Infecting610);
+                player.SetRole(CRoleTypeId.Scp610, RoleSpawnFlags.AssignInventory);
+            }
+
+            elapsedTime += 1f;
+            yield return Timing.WaitForSeconds(1f);
+        }
+    }
+}

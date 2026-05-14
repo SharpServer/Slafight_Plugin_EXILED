@@ -11,4 +11,5 @@ public enum SpecificFlagType
     MedicalsDisabled,
     DroppingDisabled,
     PickingDisabled,
+    Infecting610
 }

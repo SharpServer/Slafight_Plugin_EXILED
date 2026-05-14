@@ -190,6 +190,9 @@ public static class PlayerExtensions
             case CRoleTypeId.Scp079:
                 new Scp079Role().SpawnRole(player, roleSpawnFlags);
                 break;
+            case CRoleTypeId.Scp610:
+                new Scp610Role().SpawnRole(player, roleSpawnFlags);
+                break;
             case CRoleTypeId.Zombified:
                 new ZombifiedRole().SpawnRole(player, roleSpawnFlags);
                 break;
