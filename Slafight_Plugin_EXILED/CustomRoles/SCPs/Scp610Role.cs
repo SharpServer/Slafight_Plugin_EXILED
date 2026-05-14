@@ -45,7 +45,7 @@ public class Scp610Role : CRole
         player.Position = Room.Get(RoomType.Hcz939).WorldPosition(Vector3.up * 0.65f);
         player.EnableEffect<Fade>(255);
 
-        player.TryWear("scp-610", player.Transform, out var schematicObject, (Vector3.down * 0.5f));
+        player.TryWear("scp-610", player.Transform, out var schematicObject, (Vector3.down * 1f));
         //schematicObject.Scale *= 1.185f;
         LabApi.Features.Wrappers.Player.Get(player.NetId)!.DestroySchematic(schematicObject);
     }
@@ -71,7 +71,7 @@ public class Scp610Role : CRole
     private void OnHurtingOthers(HurtingEventArgs ev)
     {
         if (!Check(ev.Attacker)) return;
-        ev.Amount /= 1.25f;
+        ev.Amount /= 2.5f;
         if (ev.Player.Health <= 40f)
         {
             ev.Attacker.ShowHint("<size=22><color=yellow><b>相手を感染させる事に成功した！3分後には貴方と同じになっているであろう！</b></color></size>", 5);
