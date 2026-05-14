@@ -93,7 +93,8 @@ namespace Slafight_Plugin_EXILED.API.Objects
             W(CRoleTypeId.Scp966, 1.05f),
             W(CRoleTypeId.Scp682, 0.8f),
             W(CRoleTypeId.Scp035, 0.8f),
-            W(CRoleTypeId.Scp999, 0.88f)
+            W(CRoleTypeId.Scp999, 0.77f),
+            W(CRoleTypeId.Scp610, 1.0264f)
         ];
 
         // Scientist
