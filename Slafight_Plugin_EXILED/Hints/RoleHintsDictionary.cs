@@ -30,7 +30,7 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.Scp106]       = ("<color=#c50000>SCP-106</color>",            ScpTeam, "自身の欲求に従い、財団職員共を弄べ！"),
         [CRoleTypeId.Scp999]       = ("<color=#ff1493>SCP-999</color>",            ScpTeam, "可愛いペットとして施設を歩き回れ！　※勝敗に影響しません。良い感じに遊んでね！"),
         [CRoleTypeId.Scp035]       = ("<color=#c50000>SCP-035</color>",            ScpTeam, "あなたは仮面に乗っ取られ、精神が不安定になっている。<color=red>核弾頭を起動しろ</color>"),
-        [CRoleTypeId.Scp610]       = ("<color=#c50000>SCP-610</color>",            ScpTeam, "W.I.P"),
+        [CRoleTypeId.Scp610]       = ("<color=#c50000>SCP-610</color>",            ScpTeam, "生存者を探し出し、施設をにくで埋め尽くせ"),
 
         // ── Fifthists ─────────────────────────────────────────────────────
         [CRoleTypeId.Scp3005]            = ("<color=#ff00fa>SCP-3005</color>",              ScpTeam + " - " + FifthTeam, "第五教会に道を示し、施設を占領せよ"),
