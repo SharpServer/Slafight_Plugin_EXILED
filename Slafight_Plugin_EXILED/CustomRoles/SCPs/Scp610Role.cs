@@ -23,7 +23,8 @@ namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 public class Scp610Role : CRole
 {
     protected override string RoleName { get; set; } = "SCP-610";
-    protected override string Description { get; set; } = "";
+    protected override string Description { get; set; } = "SCP-610に哀れにも感染し、変異してしまった人間の成れの果て。\n" +
+                                                          "生存者を攻撃すると感染させ、仲間を増やすことができる。";
     protected override float DescriptionDuration { get; set; } = 15f;
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp610;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
