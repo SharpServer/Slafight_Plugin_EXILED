@@ -103,13 +103,67 @@ public static class SpeakerApi
         return new Playback(audioPlayer, speaker, clipName);
     }
 
+    public static Playback PlayLoop(
+        string fileName,
+        string audioPlayerName,
+        Vector3 position,
+        Transform? parent = null,
+        bool isSpatial = false,
+        float maxDistance = 5f,
+        float minDistance = 5f,
+        bool loadClip = true,
+        string? speakerName = null,
+        string? clipName = null,
+        bool restartIfAlreadyPlaying = true)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new ArgumentException("Audio file name cannot be empty.", nameof(fileName));
+
+        if (string.IsNullOrWhiteSpace(audioPlayerName))
+            throw new ArgumentException("Audio player name cannot be empty.", nameof(audioPlayerName));
+
+        clipName ??= fileName;
+
+        var audioPlayer = AudioPlayer.CreateOrGet(audioPlayerName);
+        var speaker = CreateOrGetSpeaker(
+            audioPlayer,
+            speakerName ?? audioPlayerName,
+            position,
+            parent,
+            isSpatial,
+            maxDistance,
+            minDistance);
+
+        if (loadClip)
+            LoadClip(fileName, clipName);
+
+        if (restartIfAlreadyPlaying)
+            audioPlayer.RemoveClipByName(clipName);
+
+        audioPlayer.AddClip(clipName, loop: true, destroyOnEnd: false);
+        return new Playback(audioPlayer, speaker, clipName);
+    }
+
     public static void LoadClip(string fileName, string? clipName = null)
     {
         if (string.IsNullOrWhiteSpace(fileName))
             throw new ArgumentException("Audio file name cannot be empty.", nameof(fileName));
 
         clipName ??= fileName;
+        if (AudioClipStorage.AudioClips.ContainsKey(clipName))
+            return;
+
         AudioClipStorage.LoadClip(Path.Combine(AudioDirectory, fileName), clipName);
+    }
+
+    public static bool StopClip(string audioPlayerName, string clipName)
+    {
+        if (string.IsNullOrWhiteSpace(audioPlayerName) || string.IsNullOrWhiteSpace(clipName))
+            return false;
+
+        return AudioPlayer.TryGet(audioPlayerName, out AudioPlayer audioPlayer) &&
+               audioPlayer != null &&
+               audioPlayer.RemoveClipByName(clipName);
     }
 
     public static bool TryDestroy(string audioPlayerName)

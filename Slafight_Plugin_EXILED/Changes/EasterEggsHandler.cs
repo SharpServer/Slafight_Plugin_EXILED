@@ -1,7 +1,5 @@
-using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
-using MEC;
 using UnityEngine;
 
 using Slafight_Plugin_EXILED.API.Features;
@@ -11,48 +9,54 @@ namespace Slafight_Plugin_EXILED.Changes;
 
 public class EasterEggsHandler : IBootstrapHandler
 {
+    private const string MelancholyClip = "ee_melancholy.ogg";
+    private const string MelancholyAudioPlayer = "EE_Melancholy";
+
     public static EasterEggsHandler Instance { get; private set; }
-    public static void Register() { Instance = new(); Instance.loadClips(); }
-    public static void Unregister() { Instance = null; }
+    public static void Register() { Instance = new(); Instance.LoadClips(); }
+    public static void Unregister()
+    {
+        if (Instance != null)
+        {
+            Exiled.Events.Handlers.Server.RoundStarted -= Instance.MelancholyNuke;
+            Exiled.Events.Handlers.Server.RestartingRound -= Instance.ClearSpeakers;
+        }
+
+        Instance = null;
+    }
 
     public EasterEggsHandler()
     {
         Exiled.Events.Handlers.Server.RoundStarted += MelancholyNuke;
-        Exiled.Events.Handlers.Server.RestartingRound += clearSpeakers;
+        Exiled.Events.Handlers.Server.RestartingRound += ClearSpeakers;
     }
 
     ~EasterEggsHandler()
     {
         Exiled.Events.Handlers.Server.RoundStarted -= MelancholyNuke;
-        Exiled.Events.Handlers.Server.RestartingRound -= clearSpeakers;
+        Exiled.Events.Handlers.Server.RestartingRound -= ClearSpeakers;
     }
     public static void CreateAndPlayAudio(string fileName, string audioPlayerName, Vector3 position, bool destroyOnEnd = false, Transform parent = null, bool isSpatial = false, float maxDistance = 5, float minDistance = 5, bool loadClip = true)
         => SpeakerApi.Play(fileName, audioPlayerName, position, destroyOnEnd, parent, isSpatial, maxDistance, minDistance, loadClip);
 
-    public void clearSpeakers()
+    public static void CreateAndLoopAudio(string fileName, string audioPlayerName, Vector3 position, Transform parent = null, bool isSpatial = false, float maxDistance = 5, float minDistance = 5, bool loadClip = true)
+        => SpeakerApi.PlayLoop(fileName, audioPlayerName, position, parent, isSpatial, maxDistance, minDistance, loadClip);
+
+    public void ClearSpeakers()
         => SpeakerApi.DestroyAll();
 
-    public void loadClips()
+    public void LoadClips()
     {
-        SpeakerApi.LoadClip("ee_melancholy.ogg");
+        SpeakerApi.LoadClip(MelancholyClip);
     }
     public void MelancholyNuke()
     {
-        Room SpawnRoom = Room.Get(RoomType.HczNuke);
-        Log.Debug(SpawnRoom.Position);
-        Vector3 offset = new Vector3(-2.25f,-5.65f,0f);
-        Vector3 Position = SpawnRoom.Position + SpawnRoom.Rotation * offset;
-        Timing.RunCoroutine(MelancholyPlay(Position));
-    }
+        Room spawnRoom = Room.Get(RoomType.HczNuke);
+        if (spawnRoom == null) return;
 
-    private IEnumerator<float> MelancholyPlay(Vector3 position)
-    {
-        int i = 0;
-        for (;;)
-        {
-            CreateAndPlayAudio("ee_melancholy.ogg",("EE_Melancholy"+i),position,true,null,false,5.99999f,0,false);
-            i++;
-            yield return Timing.WaitForSeconds(420f);
-        }
+        Log.Debug(spawnRoom.Position);
+        Vector3 offset = new Vector3(-2.25f,-5.65f,0f);
+        Vector3 position = spawnRoom.Position + spawnRoom.Rotation * offset;
+        CreateAndLoopAudio(MelancholyClip, MelancholyAudioPlayer, position, null, false, 5.99999f, 0, false);
     }
 }
