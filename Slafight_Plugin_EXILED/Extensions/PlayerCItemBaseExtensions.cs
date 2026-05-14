@@ -20,7 +20,7 @@ public static class PlayerCItemBaseExtensions
 public class PlayerCItemBase
 {
     public Player Player { get; init; } = null!;
-    public List<CItem> OwnItemInstances { get => GetOwnItemInstances(); init; } = [];
+    public List<CItem> OwnItemInstances => GetOwnItemInstances();
 
     // ===== [PUBLIC APIs] ===== //
     public bool HasItem<T>() where T : CItem

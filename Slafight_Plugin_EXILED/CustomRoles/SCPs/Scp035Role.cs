@@ -290,8 +290,6 @@ public class Scp035Role : CRole
             default:
                 throw new ArgumentOutOfRangeException(nameof(stateType), stateType, null);
         }
-
-        return false;
     }
 
     private IEnumerator<float> Coroutine(Player player)

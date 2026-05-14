@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -52,14 +51,14 @@ public class TeleportRandomAbility : AbilityBase
             RoomType.HczTestRoom
         };
 
-        var candidates = new List<Vector3?>
-            {
-                Room.Random(player.Zone)?.WorldPosition(Vector3.zero),
-                Player.Get(Random.Range(0, Player.List.Count))?.Position
-            }
-            .Where(pos => pos.HasValue)
-            .Select(pos => pos.Value)
-            .ToList();
+        var candidates = new List<Vector3>(2);
+        var randomRoom = Room.Random(player.Zone);
+        if (randomRoom != null)
+            candidates.Add(randomRoom.WorldPosition(Vector3.zero));
+
+        var randomPlayer = Player.Get(Random.Range(0, Player.List.Count));
+        if (randomPlayer != null)
+            candidates.Add(randomPlayer.Position);
 
         if (candidates.Count == 0)
         {
@@ -91,11 +90,12 @@ public class TeleportRandomAbility : AbilityBase
         var room = Room.Get(pos);
         if (room == null || excludeTypes.Contains(room.Type)) return false;
 
-        var occupants = room.Players.Where(p =>
-            p.Role.Type != RoleTypeId.Spectator &&
-            p.GetTeam() != CTeam.SCPs
-        ).ToList();
+        foreach (var occupant in room.Players)
+        {
+            if (occupant.Role.Type != RoleTypeId.Spectator && occupant.GetTeam() != CTeam.SCPs)
+                return false;
+        }
 
-        return occupants.Count == 0;
+        return true;
     }
 }

@@ -8,9 +8,9 @@ namespace Slafight_Plugin_EXILED.Extensions;
 
 public static class OnlyChecker
 {
-    private const bool IsDebug = false;
+    private static readonly bool IsDebug = false;
 
-    public static bool IsOnlyTeam(this List<Player> checkPlayers, CTeam team, string specificTrigger = null)
+    public static bool IsOnlyTeam(this List<Player> checkPlayers, CTeam team, string? specificTrigger = null)
     {
         // 生きている非スペクテイターが0人なら勝利なし
         if (!checkPlayers.Any(p => p != null && p.IsAlive && p.Role.Type != RoleTypeId.Spectator))

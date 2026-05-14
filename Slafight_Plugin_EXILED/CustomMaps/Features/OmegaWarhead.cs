@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
@@ -103,11 +102,14 @@ public static class OmegaWarhead
         if (!Round.InProgress) yield break;
 
         AlphaWarheadController.Singleton.RpcShake(false);
-        Player.List.Where(p => p.IsAlive).ToList().ForEach(p =>
+        foreach (var player in Player.List)
         {
-            p.ExplodeEffect(ProjectileType.FragGrenade);
-            p.Kill("OMEGA WARHEADに爆破された");
-        });
+            if (!player.IsAlive)
+                continue;
+
+            player.ExplodeEffect(ProjectileType.FragGrenade);
+            player.Kill("OMEGA WARHEADに爆破された");
+        }
     }
 
     public static void Reset()

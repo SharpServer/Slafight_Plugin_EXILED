@@ -23,7 +23,7 @@ namespace Slafight_Plugin_EXILED.Hints;
 
 public class PlayerHUD : IBootstrapHandler
 {
-    public static PlayerHUD Instance { get; private set; }
+    public static PlayerHUD? Instance { get; private set; }
     public static void Register() { Instance = new(); }
     public static void Unregister() { Instance = null; }
 
@@ -115,7 +115,7 @@ public class PlayerHUD : IBootstrapHandler
         var display = TryGetDisplay(ev.Player);
         if (display == null) return;
 
-        Hint ServerInfo = null;
+        Hint ServerInfo;
         if (Plugin.Singleton.Config.IsBeta)
         {
             ServerInfo = new Hint

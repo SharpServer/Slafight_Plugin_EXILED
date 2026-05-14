@@ -14,7 +14,9 @@ namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 public class DeltaWarheadEvent : SpecialEvent
 {
     // ===== メタ情報 =====
+#pragma warning disable CS0618
     public override SpecialEventType EventType => SpecialEventType.OldDeltaWarhead;
+#pragma warning restore CS0618
     public override int MinPlayersRequired => 0;
     public override string LocalizedName => "DELTA WARHEAD";
     public override string TriggerRequirement => "無し";

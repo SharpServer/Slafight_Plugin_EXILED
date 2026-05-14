@@ -1,10 +1,10 @@
 using System.Collections.Generic;
-using System.IO;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using MEC;
 using UnityEngine;
 
+using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.Changes;
@@ -27,48 +27,14 @@ public class EasterEggsHandler : IBootstrapHandler
         Exiled.Events.Handlers.Server.RestartingRound -= clearSpeakers;
     }
     public static void CreateAndPlayAudio(string fileName, string audioPlayerName, Vector3 position, bool destroyOnEnd = false, Transform parent = null, bool isSpatial = false, float maxDistance = 5, float minDistance = 5, bool loadClip = true)
-    {
-            
-        var audioPlayer = AudioPlayer.CreateOrGet(audioPlayerName);
-            
-
-        if (!audioPlayer.TryGetSpeaker(audioPlayerName, out Speaker speaker))
-        {
-            speaker = audioPlayer.AddSpeaker(audioPlayerName, isSpatial: isSpatial, maxDistance: maxDistance, minDistance: minDistance);
-        }
-
-        if (parent)
-        {
-            speaker.transform.SetParent(parent);
-            speaker.transform.localPosition = Vector3.zero;
-            speaker.transform.localRotation = Quaternion.identity;
-        }
-        else
-        {
-            speaker.Position = position;
-        }
-
-        if (loadClip)
-        {
-            AudioClipStorage.LoadClip(Path.Combine(Plugin.Singleton.Config.AudioReferences, fileName), fileName);
-        }
-
-        audioPlayer.AddClip(fileName, destroyOnEnd: destroyOnEnd);
-    }
+        => SpeakerApi.Play(fileName, audioPlayerName, position, destroyOnEnd, parent, isSpatial, maxDistance, minDistance, loadClip);
 
     public void clearSpeakers()
-    {
-        foreach (string ap in AudioPlayer.AudioPlayerByName.Keys)
-        {
-            if (ap == null) continue;
-            AudioPlayer.TryGet(ap, out AudioPlayer speaker);
-            speaker.Destroy();
-        }
-    }
+        => SpeakerApi.DestroyAll();
 
     public void loadClips()
     {
-        AudioClipStorage.LoadClip(Path.Combine(Plugin.Singleton.Config.AudioReferences, "ee_melancholy.ogg"), "ee_melancholy.ogg");
+        SpeakerApi.LoadClip("ee_melancholy.ogg");
     }
     public void MelancholyNuke()
     {

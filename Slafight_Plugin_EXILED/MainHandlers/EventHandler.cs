@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using Exiled.API.Enums;
@@ -324,28 +323,7 @@ public class EventHandler : IBootstrapHandler
     }
 
     public static void CreateAndPlayAudio(string fileName, string audioPlayerName, Vector3 position, bool destroyOnEnd = false, Transform parent = null, bool isSpatial = false, float maxDistance = 5, float minDistance = 5)
-    {
-        var audioPlayer = AudioPlayer.CreateOrGet(audioPlayerName);
-
-        if (!audioPlayer.TryGetSpeaker(audioPlayerName, out var speaker))
-        {
-            speaker = audioPlayer.AddSpeaker(audioPlayerName, isSpatial: isSpatial, maxDistance: maxDistance, minDistance: minDistance);
-        }
-
-        if (parent)
-        {
-            speaker.transform.SetParent(parent);
-            speaker.transform.localPosition = Vector3.zero;
-            speaker.transform.localRotation = Quaternion.identity;
-        }
-        else
-        {
-            speaker.Position = position;
-        }
-
-        AudioClipStorage.LoadClip(Path.Combine(Plugin.Singleton.Config.AudioReferences, fileName), fileName);
-        audioPlayer.AddClip(fileName, destroyOnEnd: destroyOnEnd);
-    }
+        => SpeakerApi.Play(fileName, audioPlayerName, position, destroyOnEnd, parent, isSpatial, maxDistance, minDistance);
 
     private void DeadmanCancel(DeadmanSwitchInitiatingEventArgs? ev)
     {

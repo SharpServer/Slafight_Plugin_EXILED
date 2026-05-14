@@ -1,4 +1,3 @@
-using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Warhead;
@@ -35,52 +34,37 @@ public static class FacilityLightHandler
 
     private static void InitLight()
     {
-        var Surface = new RoomColorData() { ColorCode = "#c1eaff" };
-        var Entrance = new RoomColorData() { ColorCode = "#9bddff" };
-        var Hcz = new RoomColorData() { ColorCode = "#9bddff" };
-        var Lcz = new RoomColorData() { ColorCode = "#fcd4b0" };
-    
-        var Intercom = new RoomColorData() { ColorCode = "#FFBCBC" };
-        var Lockroom = new RoomColorData() { ColorCode = "#FF0000" };
-        var Endroom = new RoomColorData() { ColorCode = "#FF0000" };
-    
-        // Zone処理（特定ルーム優先）
-        foreach (var room in Room.List.Where(r => r != null && r.Zone == ZoneType.Surface))
-        {
-            ColorUtility.TryParseHtmlString(Surface.ColorCode, out var color);
-            room.Color = color;
-        }
-    
-        foreach (var room in Room.List.Where(r => r != null && r.Zone == ZoneType.Entrance))
-        {
-            ColorUtility.TryParseHtmlString(Entrance.ColorCode, out var color);
-            switch (room.Type)
-            {
-                case RoomType.EzIntercom:
-                    ColorUtility.TryParseHtmlString(Intercom.ColorCode, out color);
-                    break;
-                case RoomType.EzVent or RoomType.EzShelter:
-                    ColorUtility.TryParseHtmlString(Endroom.ColorCode, out color);
-                    break;
-            }
+        ColorUtility.TryParseHtmlString("#c1eaff", out var surface);
+        ColorUtility.TryParseHtmlString("#9bddff", out var facility);
+        ColorUtility.TryParseHtmlString("#fcd4b0", out var lightContainment);
+        ColorUtility.TryParseHtmlString("#FFBCBC", out var intercom);
+        ColorUtility.TryParseHtmlString("#FF0000", out var alert);
 
-            room.Color = color;
-        }
-    
-        foreach (var room in Room.List.Where(r => r != null && r.Zone == ZoneType.HeavyContainment))
+        foreach (var room in Room.List)
         {
-            ColorUtility.TryParseHtmlString(Hcz.ColorCode, out var color);
-            room.Color = color;
-        }
-    
-        foreach (var room in Room.List.Where(r => r != null && r.Zone == ZoneType.LightContainment))
-        {
-            ColorUtility.TryParseHtmlString(Lcz.ColorCode, out var color);
-            if (room.Type == RoomType.LczAirlock)
+            if (room == null)
+                continue;
+
+            switch (room.Zone)
             {
-                ColorUtility.TryParseHtmlString(Lockroom.ColorCode, out color);
+                case ZoneType.Surface:
+                    room.Color = surface;
+                    break;
+                case ZoneType.Entrance:
+                    room.Color = room.Type switch
+                    {
+                        RoomType.EzIntercom => intercom,
+                        RoomType.EzVent or RoomType.EzShelter => alert,
+                        _ => facility
+                    };
+                    break;
+                case ZoneType.HeavyContainment:
+                    room.Color = facility;
+                    break;
+                case ZoneType.LightContainment:
+                    room.Color = room.Type == RoomType.LczAirlock ? alert : lightContainment;
+                    break;
             }
-            room.Color = color;
         }
     }
 
@@ -90,7 +74,8 @@ public static class FacilityLightHandler
     {
         if (!ev.IsAllowed) return;
         ColorUtility.TryParseHtmlString("#ff1500", out var color);
-        Room.List.ToList().ForEach(room => room.Color = color);
+        foreach (var room in Room.List)
+            room.Color = color;
     }
 
     public static void OnStopping(StoppingEventArgs ev)

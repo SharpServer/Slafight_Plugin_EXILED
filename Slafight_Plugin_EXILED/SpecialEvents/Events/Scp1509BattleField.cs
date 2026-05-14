@@ -46,7 +46,7 @@ public class Scp1509BattleFieldEvent : SpecialEvent
     public override void RegisterEvents() { }
     public override void UnregisterEvents() { }
 
-    private bool CancelIfOutdated()
+    private new bool CancelIfOutdated()
         => _eventPid != SpecialEventsHandler.Instance.EventPID;
 
     // ===== メイン処理 =====

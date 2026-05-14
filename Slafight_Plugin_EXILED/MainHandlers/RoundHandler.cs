@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Extensions;
 using Exiled.API.Features;
@@ -37,14 +36,26 @@ public class RoundHandler : IBootstrapHandler
 
     public static bool IsSecurityTeamExpected()
     {
-        if (Player.List.Count(p => p.GetTeam() is CTeam.ChaosInsurgency or CTeam.ClassD) >= Player.List.Count(p => p.GetTeam() is CTeam.FoundationForces or CTeam.Scientists or CTeam.Guards))
+        var chaosSideCount = 0;
+        var foundationSideCount = 0;
+
+        foreach (var player in Player.List)
         {
-            return false;
+            switch (player.GetTeam())
+            {
+                case CTeam.ChaosInsurgency:
+                case CTeam.ClassD:
+                    chaosSideCount++;
+                    break;
+                case CTeam.FoundationForces:
+                case CTeam.Scientists:
+                case CTeam.Guards:
+                    foundationSideCount++;
+                    break;
+            }
         }
-        else
-        {
-            return true;
-        }
+
+        return chaosSideCount < foundationSideCount;
     }
 
     public static SpawnTypeId GetExpectedTeam()

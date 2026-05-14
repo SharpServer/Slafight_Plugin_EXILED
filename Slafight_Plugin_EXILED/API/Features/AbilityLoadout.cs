@@ -26,7 +26,7 @@ public class AbilityLoadout
 
     public void CycleNext()
     {
-        if (MaxSlots <= 1) return;
+        if (Slots.Length <= 1) return;
 
         for (int i = 1; i <= MaxSlots; i++)
         {

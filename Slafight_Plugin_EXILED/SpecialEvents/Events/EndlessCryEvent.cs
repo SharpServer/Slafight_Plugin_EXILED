@@ -46,7 +46,7 @@ public class EndlessCryEvent : SpecialEvent
     public override void UnregisterEvents() { }
 
     // ==== 共通キャンセル判定 ====
-    private bool CancelIfOutdated()
+    private new bool CancelIfOutdated()
     {
         if (_eventPid != SpecialEventsHandler.Instance.EventPID)
             return true;

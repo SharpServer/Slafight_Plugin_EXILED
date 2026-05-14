@@ -12,11 +12,12 @@
         <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
         <FileAlignment>512</FileAlignment>
         <LangVersion>default</LangVersion>
-        <Nullable>enable</Nullable>
+        <Nullable>annotations</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
+        <PlatformTarget>x64</PlatformTarget>
+        <Prefer32Bit>false</Prefer32Bit>
         <DebugSymbols>true</DebugSymbols>
         <DebugType>full</DebugType>
         <Optimize>false</Optimize>
@@ -26,7 +27,8 @@
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <PlatformTarget>AnyCPU</PlatformTarget>
+        <PlatformTarget>x64</PlatformTarget>
+        <Prefer32Bit>false</Prefer32Bit>
         <DebugType>pdbonly</DebugType>
         <Optimize>true</Optimize>
         <OutputPath>bin\Release\</OutputPath>
@@ -189,6 +191,7 @@
         <Compile Include="API\Features\Scp914\Scp914RuleSet.cs" />
         <Compile Include="API\Features\Scp914\Scp914Dispatcher.cs" />
         <Compile Include="API\Features\Scp914\Scp914Registry.cs" />
+        <Compile Include="API\Features\SpeakerApi.cs" />
         <Compile Include="API\Features\CRole.cs" />
         <Compile Include="API\Features\CRoom.cs" />
         <Compile Include="API\Features\CustomBooleans.cs" />

@@ -71,9 +71,5 @@ public class GunSL8 : CItemWeapon
 
     private void OnSound(SendingGunSoundEventArgs ev)
     {
-        return;
-        if (!Check(ev.Firearm) || ev.AudioIndex is not (0 or 1 or 2)) return;
-        ev.IsAllowed = false;
-        Map.ExplodeEffect(ev.SendingPosition, ProjectileType.FragGrenade);
     }
 }

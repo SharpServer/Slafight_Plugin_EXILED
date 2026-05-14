@@ -417,6 +417,7 @@ public class SpecialEventsHandler : IBootstrapHandler
     public static bool IsWarheadable()
     {
         var nowEvent = Instance?.NowEvent ?? SpecialEventType.None;
+#pragma warning disable CS0618
         return nowEvent switch
         {
             SpecialEventType.OmegaWarhead or
@@ -429,6 +430,7 @@ public class SpecialEventsHandler : IBootstrapHandler
                 SpecialEventType.FacilityTermination => false,
             _ => true
         };
+#pragma warning restore CS0618
     }
 
     // =====================

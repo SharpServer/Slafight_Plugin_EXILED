@@ -137,7 +137,6 @@ public static class Handler
     }
 
     
-    private static int _resendId = 1;
     private static readonly HashSet<int> ResentIds = [];
 
     private static void SendProximityMessage(VoiceMessage msg, float maxRange = 5f)

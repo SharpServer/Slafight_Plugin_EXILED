@@ -33,7 +33,6 @@ public class LabApiHandler : CustomEventsHandler, IBootstrapHandler
         Exiled.Events.Handlers.Player.Dying += DiedCassie;
         LabApi.Events.Handlers.PlayerEvents.SearchedToy += InteractionEvent;
         LabApi.Events.Handlers.ServerEvents.RoundStarted += Init;
-        LabApi.Events.Handlers.ServerEvents.RoundStarted += Init;
     }
 
     ~LabApiHandler()
@@ -41,7 +40,6 @@ public class LabApiHandler : CustomEventsHandler, IBootstrapHandler
         LabApi.Events.Handlers.ServerEvents.RoundStarted -= PickupSetup;
         Exiled.Events.Handlers.Player.Dying -= DiedCassie;
         LabApi.Events.Handlers.PlayerEvents.SearchedToy -= InteractionEvent;
-        LabApi.Events.Handlers.ServerEvents.RoundStarted -= Init;
         LabApi.Events.Handlers.ServerEvents.RoundStarted -= Init;
     }
 
