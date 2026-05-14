@@ -44,6 +44,7 @@ public class Scp610Role : CRole
 
         player.Position = Room.Get(RoomType.Hcz939).WorldPosition(Vector3.up * 0.65f);
         player.EnableEffect<Fade>(255);
+        player.EnableEffect<DamageReduction>(80);
 
         player.TryWear("scp-610", player.Transform, out var schematicObject, (Vector3.down * 1f));
         //schematicObject.Scale *= 1.185f;
@@ -71,13 +72,19 @@ public class Scp610Role : CRole
     private void OnHurtingOthers(HurtingEventArgs ev)
     {
         if (!Check(ev.Attacker)) return;
-        ev.Amount /= 2.5f;
-        if (ev.Player.Health <= 40f)
+        ev.Amount /= 3.5f;
+        if (ev.Player.Health <= 40f && !ev.Player.HasFlag(SpecificFlagType.Infecting610))
         {
-            ev.Attacker.ShowHint("<size=22><color=yellow><b>相手を感染させる事に成功した！3分後には貴方と同じになっているであろう！</b></color></size>", 5);
+            ev.Attacker.ShowHint("<size=22><color=yellow><b>相手を感染させる事に成功した！3分後には同胞になっているであろう！</b></color></size>", 5);
             ev.Player.TryAddFlag(SpecificFlagType.Infecting610);
             ev.Player.EnableEffect<Concussed>(255);
+            ev.Player.EnableEffect<DamageReduction>(60);
             Timing.RunCoroutine(InfectionCoroutine(ev.Player));
+        }
+        else if (ev.Player.HasFlag(SpecificFlagType.Infecting610))
+        {
+            ev.Amount /= 10f;
+            ev.Attacker.ShowHint("<size=24>相手はもうすでに感染しています！</size>");
         }
     }
 
