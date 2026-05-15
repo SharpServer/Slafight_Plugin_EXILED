@@ -12,8 +12,8 @@ namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 public class S41MedicalPistol : CItemWeapon
 {
     private const byte MedicalPistolMagazineSize = 6;
-    private const byte VitalityIntensity = 1;
-    private const float VitalityDuration = 15f;
+    private const byte VitalityIntensity = 20;
+    private const float VitalityDuration = 2.5f;
 
     public override string DisplayName => "S-41 MEDICAL PISTOL";
     public override string Description =>
