@@ -25,6 +25,7 @@ public class ArmorInfantry : CItemArmor
     protected override IReadOnlyList<ArmorAmmoLimit> AmmoLimits =>
     [
         new() { AmmoType = AmmoType.Nato9,   Limit = 220 },
+        new() { AmmoType = AmmoType.Nato556, Limit = 200 },
         new() { AmmoType = AmmoType.Nato762, Limit = 130 },
         new() { AmmoType = AmmoType.Ammo12Gauge, Limit = 80  },
     ];
