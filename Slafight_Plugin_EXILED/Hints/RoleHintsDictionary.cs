@@ -30,6 +30,8 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.Scp106]       = ("<color=#c50000>SCP-106</color>",            ScpTeam, "自身の欲求に従い、財団職員共を弄べ！"),
         [CRoleTypeId.Scp999]       = ("<color=#ff1493>SCP-999</color>",            ScpTeam, "可愛いペットとして施設を歩き回れ！　※勝敗に影響しません。良い感じに遊んでね！"),
         [CRoleTypeId.Scp035]       = ("<color=#c50000>SCP-035</color>",            ScpTeam, "あなたは仮面に乗っ取られ、精神が不安定になっている。<color=red>核弾頭を起動しろ</color>"),
+        [CRoleTypeId.Scp079]       = ("<color=#c50000>SCP-079</color>",            ScpTeam, "施設制御システムを操り、施設に混沌を引き起こせ。"),
+        [CRoleTypeId.Scp173]       = ("<color=#c50000>SCP-173</color>",            ScpTeam, "一瞬の隙を突き、財団職員共をへし折れ！"),
         [CRoleTypeId.Scp610]       = ("<color=#c50000>SCP-610</color>",            ScpTeam, "生存者を探し出し、施設をにくで埋め尽くせ"),
 
         // ── Fifthists ─────────────────────────────────────────────────────
@@ -53,9 +55,12 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.NtfLieutenant]  = ("<color=#00b7eb>MTF E-11: Lieutenant</color>",     FoundTeam, FoundObj),
         [CRoleTypeId.NtfGeneral]     = ("<color=blue>MTF E-11: General</color>",           FoundTeam, FoundObj),
         [CRoleTypeId.NtfSpecialist]  = ("<color=#00b7eb>MTF E-11: Specialist</color>",     FoundTeam, FoundObj),
+        [CRoleTypeId.NtfDetainer]    = ("<color=#00b7eb>MTF E-11: Detainer</color>",       FoundTeam, FoundObj),
+        [CRoleTypeId.NtfFieldMedic]  = ("<color=#00b7eb>MTF E-11: Field Medic</color>",    FoundTeam, FoundObj),
         [CRoleTypeId.HdInfantry]     = ("<color=#353535>MTF Nu-7: Infantry</color>",       FoundTeam, FoundObj),
-        [CRoleTypeId.HdShotgunner]     = ("<color=#353535>MTF Nu-7: Shotgunner</color>",       FoundTeam, FoundObj),
+        [CRoleTypeId.HdShotgunner]   = ("<color=#353535>MTF Nu-7: Shotgunner</color>",     FoundTeam, FoundObj),
         [CRoleTypeId.HdDisarmer]     = ("<color=#353535>MTF Nu-7: Disarmer</color>",       FoundTeam, FoundObj),
+        [CRoleTypeId.HdShielder]     = ("<color=#353535>MTF Nu-7: Shielder</color>",       FoundTeam, FoundObj),
         [CRoleTypeId.HdCommander]    = ("<color=#252525>MTF Nu-7: Commander</color>",      FoundTeam, FoundObj),
         [CRoleTypeId.HdMarshal]      = ("<color=#151515>MTF Nu-7: Marshal</color>",        FoundTeam, FoundObj),
         [CRoleTypeId.SnePurify]      = ("<color=#FF1493>MTF Eta-10: Purify</color>",       FoundTeam, FoundObj),
@@ -74,10 +79,13 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.FacilityManager]= ("<color=#dc143c>Facility Manager</color>",  NeutFoundTeam, "施設からの脱出を目指しながら、サイトの行く末を監督せよ"),
         [CRoleTypeId.Engineer]       = ("<color=#faff86>Engineer</color>",          NeutFoundTeam, "様々なタスクをこなし、最強の弾頭を起動せよ！"),
         [CRoleTypeId.ObjectObserver] = ("<color=#faff86>Object Observer</color>",   NeutFoundTeam, "オブジェクトに注意しながら、施設から脱出せよ。"),
+        [CRoleTypeId.Surveillance]   = ("<color=#faff86>Surveillance</color>",      NeutFoundTeam, "施設の状況を監視し、脱出の機会を見極めよ。"),
+        [CRoleTypeId.CandyResearcher]= ("<color=#faff86>Candy Researcher</color>",  NeutFoundTeam, "キャンディーを活用しながら、施設から脱出せよ。"),
         [CRoleTypeId.MarionWheeler]  = ("<color=#ffa500>Marion Wheeler</color>",    NeutFoundTeam, "第五の目を搔い潜り、反ミーム爆弾を起爆しろ！"),
 
         // ── Class-D / Neutral-Chaos ───────────────────────────────────────
-        [CRoleTypeId.Janitor] = ("<color=#ee7600>Janitor</color>", NeutChaosTeam, "施設から脱出せよ。また、汚物をグレネードで清掃せよ。"),
+        [CRoleTypeId.Janitor]      = ("<color=#ee7600>Janitor</color>",       NeutChaosTeam, "施設から脱出せよ。また、汚物をグレネードで清掃せよ。"),
+        [CRoleTypeId.CandySubject] = ("<color=#ee7600>Candy Subject</color>", NeutChaosTeam, "キャンディーを活用しながら、施設から脱出せよ。"),
 
         // ── GoC ───────────────────────────────────────────────────────────
         [CRoleTypeId.GoCOperative]      = ("<color=#0000c8>Broken Dagger: Operative</color>",     GoCTeam, GoCObj),
@@ -114,6 +122,10 @@ internal static class RoleHintsDictionary
             "<color=red>Cursemaster - Sergey Makarov</color>",
             "<color=#a0a0a0>Alone</color>",
             "<color=red><b>邪魔者を滅ぼし、サイト-02から毒を浄化せよ</b></color>"),
+        [CRoleTypeId.HideAdmin] = (
+            "<color=#FF1493><b>THE ADMINISTRATOR</b></color>",
+            "<color=#FF1493>THE ADMINISTRATOR</color>",
+            "なぁ～んでもできる！"),
         
         // ── Experimental Features ─────────────────────────────────────────
         [CRoleTypeId.SecurityTeamGuard] = ("<color=#00b7eb>Security Team Guard</color>", FoundTeam, FoundObj),

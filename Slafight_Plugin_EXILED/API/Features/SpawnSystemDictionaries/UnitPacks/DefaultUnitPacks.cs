@@ -21,6 +21,7 @@ public static class DefaultUnitPacks
                         { new SpawnSystem.SpawnRoleKey(RoleTypeId.NtfCaptain),     (1f,  true)   },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.NtfLieutenant), (2f,  false)  },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.NtfDetainer),   (1f,  false)  },
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.NtfFieldMedic), (1f,  false)  },
                         { new SpawnSystem.SpawnRoleKey(RoleTypeId.NtfSergeant),    (2f,  false)  },
                         { new SpawnSystem.SpawnRoleKey(RoleTypeId.NtfPrivate),     (99f, true)   },
                     }
@@ -40,6 +41,7 @@ public static class DefaultUnitPacks
                     {
                         { new SpawnSystem.SpawnRoleKey(RoleTypeId.NtfSergeant), (1f,  true) },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.NtfDetainer), (1f,  false) },
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.NtfFieldMedic), (1f,  false) },
                         { new SpawnSystem.SpawnRoleKey(RoleTypeId.NtfPrivate),  (99f, true) },
                     }
                 }
@@ -60,6 +62,7 @@ public static class DefaultUnitPacks
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.HdCommander), (2f,  true)   },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.HdShotgunner),  (2f, false)  },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.HdDisarmer),  (2f, false)  },
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.HdShielder),  (2f, false)  },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.HdInfantry),  (99f, false)  },
                     }
                 }
@@ -78,6 +81,7 @@ public static class DefaultUnitPacks
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.HdCommander), (1f,  true)  },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.HdShotgunner),  (2f, false)  },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.HdDisarmer),  (2f, false)  },
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.HdShielder),  (2f, false)  },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.HdInfantry),  (99f, false) },
                     }
                 }

@@ -257,6 +257,7 @@
         <Compile Include="CustomItems\SlafightApiItems\ArmorVip.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunDisarmerRifle.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunAnomalyDetainer.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\S41MedicalPistol.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardChaosIntruder.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CloakGenerator.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CUA_SpyKit.cs" />
@@ -354,6 +355,7 @@
         <Compile Include="CustomRoles\FoundationForces\HdShielder.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfGeneral.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfDetainer.cs" />
+        <Compile Include="CustomRoles\FoundationForces\NtfFieldMedic.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfSpecialist.cs" />
         <Compile Include="CustomRoles\FoundationForces\Sculpture.cs" />
         <Compile Include="CustomRoles\FoundationForces\SneGears.cs" />

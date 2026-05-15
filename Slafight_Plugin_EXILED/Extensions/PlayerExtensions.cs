@@ -247,6 +247,9 @@ public static class PlayerExtensions
             case CRoleTypeId.NtfDetainer:
                 new NtfDetainer().SpawnRole(player, roleSpawnFlags);
                 break;
+            case CRoleTypeId.NtfFieldMedic:
+                new NtfFieldMedic().SpawnRole(player, roleSpawnFlags);
+                break;
             // ==== Hammer Down ====
             case CRoleTypeId.HdInfantry:
                 new HdInfantry().SpawnRole(player, roleSpawnFlags);
