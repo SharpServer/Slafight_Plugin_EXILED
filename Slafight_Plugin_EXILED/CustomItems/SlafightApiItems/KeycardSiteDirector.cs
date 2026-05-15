@@ -10,7 +10,7 @@ public class KeycardSiteDirector : CItemKeycard
     public override string Description => "施設長用の管理カード。Facility Manager相当の権限を持つ。";
 
     protected override string UniqueKey => "KeycardSiteDirector";
-    protected override ItemType BaseItem => ItemType.KeycardCustomMetalCase;
+    protected override ItemType BaseItem => ItemType.KeycardCustomManagement;
 
     protected override string KeycardLabel => "SITE DIRECTOR";
     protected override Color32? KeycardLabelColor => new Color32(255, 255, 255, 255);
@@ -29,7 +29,8 @@ public class KeycardSiteDirector : CItemKeycard
         KeycardPermissions.ArmoryLevelThree |
         KeycardPermissions.Checkpoints |
         KeycardPermissions.ExitGates |
-        KeycardPermissions.Intercom;
+        KeycardPermissions.Intercom |
+        KeycardPermissions.AlphaWarhead;
 
     protected override bool PickupLightEnabled => true;
     protected override Color PickupLightColor => new(1f, 0.25f, 0.35f);
