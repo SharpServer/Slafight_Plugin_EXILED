@@ -18,6 +18,7 @@ public static class Scp914Registry
     /// これに当選した場合、通常の変換ルールは評価されない。
     /// </summary>
     public static Scp914Rule? WildcardRule { get; set; }
+    public static Scp914Rule? O5WildcardRule;
 
     private static readonly Dictionary<ItemType, Scp914RuleSet> VanillaTable = new();
     private static readonly Dictionary<Type, Scp914RuleSet> CustomItemTable = new();

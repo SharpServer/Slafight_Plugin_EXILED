@@ -2,286 +2,507 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>SCP-914 Keycard Flow</title>
+  <title>SCP-914 Keycard Flow (Draft)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
     :root {
       color-scheme: dark;
-      --bg: #101315;
-      --panel: #181d21;
-      --panel2: #20272d;
-      --line: #39444d;
-      --text: #edf3f5;
-      --muted: #aeb9bf;
-      --bad: #d95c4f;
-      --mid: #d09342;
-      --same: #61a7d9;
-      --good: #69b56e;
-      --best: #b57edc;
-      --rare: #f0cc59;
+      --bg: #0b0e10;
+      --panel: #14191f;
+      --panel2: #1b2229;
+      --line: #333c46;
+      --text: #edf3f7;
+      --muted: #a8b4c0;
+      --red: #e16d6d;
+      --amber: #e6b35c;
+      --green: #7fd27a;
+      --cyan: #68b6e8;
+      --purple: #c69cf5;
     }
-
-    * { box-sizing: border-box; }
-
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--text);
-      font-family: "Segoe UI", "Yu Gothic UI", Meiryo, sans-serif;
-      line-height: 1.5;
+    *{box-sizing:border-box;}
+    body{
+      margin:0;
+      background:var(--bg);
+      color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Yu Gothic UI",Meiryo,sans-serif;
+      line-height:1.5;
     }
-
-    header {
-      padding: 28px 32px 18px;
-      border-bottom: 1px solid var(--line);
-      background: #151a1e;
+    header{
+      padding:20px 24px 14px;
+      border-bottom:1px solid var(--line);
+      background:#10151a;
     }
-
-    h1 {
-      margin: 0 0 8px;
-      font-size: 28px;
-      letter-spacing: 0;
+    h1{
+      margin:0 0 6px;
+      font-size:24px;
     }
-
-    header p, .note, footer {
-      color: var(--muted);
+    header p{
+      margin:0;
+      color:var(--muted);
+      font-size:13px;
     }
-
-    main {
-      padding: 24px 32px 40px;
+    main{
+      padding:20px 24px 32px;
+      display:flex;
+      flex-direction:column;
+      gap:24px;
     }
-
-    .notes {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 12px;
-      margin-bottom: 24px;
+    h2{
+      margin:0 0 10px;
+      font-size:18px;
     }
-
-    .note {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-      padding: 13px 15px;
-      font-size: 14px;
+    section{
+      background:var(--panel);
+      border-radius:10px;
+      border:1px solid var(--line);
+      padding:14px 14px 16px;
     }
-
-    .note strong {
-      display: block;
-      margin-bottom: 4px;
-      color: var(--text);
+    .grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:12px;
     }
-
-    h2 {
-      margin: 26px 0 12px;
-      font-size: 18px;
+    .note{
+      background:var(--panel2);
+      border-radius:8px;
+      padding:10px 11px;
+      font-size:13px;
+      color:var(--muted);
+      border:1px solid var(--line);
     }
-
-    .paths {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 14px;
+    .note strong{
+      display:block;
+      margin-bottom:2px;
+      color:var(--text);
+      font-size:13px;
     }
-
-    .path {
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
-      padding: 14px;
+    .paths{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(260px,1fr));
+      gap:14px;
     }
-
-    .path h3 {
-      margin: 0 0 11px;
-      font-size: 15px;
+    .path{
+      background:var(--panel2);
+      border-radius:8px;
+      border:1px solid var(--line);
+      padding:11px 12px 12px;
+      font-size:13px;
     }
-
-    .steps {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 8px;
+    .path h3{
+      margin:0 0 8px;
+      font-size:14px;
+      color:var(--cyan);
     }
-
-    .step {
-      padding: 7px 9px;
-      border: 1px solid var(--line);
-      border-radius: 6px;
-      background: var(--panel2);
-      font-size: 13px;
-      font-weight: 650;
+    .steps{
+      display:flex;
+      flex-wrap:wrap;
+      align-items:center;
+      gap:6px;
     }
-
-    .arrow { color: var(--muted); }
-
-    .table-wrap {
-      overflow-x: auto;
-      border: 1px solid var(--line);
-      border-radius: 8px;
-      background: var(--panel);
+    .step{
+      padding:6px 8px;
+      font-size:13px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#151b22;
+      font-weight:600;
+      white-space:nowrap;
     }
-
-    table {
-      width: 100%;
-      min-width: 1200px;
-      border-collapse: collapse;
+    .arrow{
+      color:var(--muted);
+      font-size:13px;
     }
-
-    th, td {
-      padding: 10px 11px;
-      border-right: 1px solid var(--line);
-      border-bottom: 1px solid var(--line);
-      vertical-align: top;
-      text-align: left;
+    .badge{
+      font-size:11px;
+      margin-left:4px;
+      padding:1px 6px;
+      border-radius:999px;
+      border:1px solid var(--line);
+      background:#12171c;
+      color:var(--muted);
+      font-weight:500;
     }
+    .step.good{border-color:var(--green);color:var(--green);}
+    .step.bad{border-color:var(--red);color:var(--red);}
+    .step.rare{border-color:var(--amber);color:var(--amber);}
+    .step.top{border-color:var(--purple);color:var(--purple);}
 
-    th:last-child, td:last-child { border-right: 0; }
-    tr:last-child td { border-bottom: 0; }
-
-    th {
-      position: sticky;
-      top: 0;
-      background: #20272d;
-      z-index: 1;
-      color: var(--muted);
-      font-size: 13px;
+    .table-wrap{
+      margin-top:6px;
+      border-radius:8px;
+      border:1px solid var(--line);
+      overflow:auto;
+      background:var(--panel2);
     }
-
-    .source {
-      width: 205px;
-      background: #151a1e;
-      font-weight: 700;
+    table{
+      border-collapse:collapse;
+      min-width:980px;
+      width:100%;
+      font-size:12px;
     }
-
-    .perm {
-      display: block;
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 500;
-      margin-top: 2px;
+    th,td{
+      border-bottom:1px solid var(--line);
+      border-right:1px solid var(--line);
+      padding:6px 8px;
+      text-align:left;
+      vertical-align:top;
     }
-
-    .result {
-      display: block;
-      font-weight: 650;
+    th:last-child,td:last-child{border-right:0;}
+    tr:last-child td{border-bottom:0;}
+    th{
+      background:#1c232b;
+      color:var(--muted);
+      position:sticky;
+      top:0;
+      z-index:1;
     }
-
-    .bad { color: var(--bad); }
-    .rare { color: var(--rare); }
-
-    footer {
-      margin-top: 24px;
-      font-size: 13px;
+    .src{
+      font-weight:600;
+      white-space:nowrap;
     }
-
-    @media (max-width: 720px) {
-      header, main {
-        padding-left: 16px;
-        padding-right: 16px;
-      }
-      h1 { font-size: 23px; }
+    .perm{
+      display:block;
+      font-size:11px;
+      color:var(--muted);
+      margin-top:1px;
+    }
+    .bad{color:var(--red);}
+    .good{color:var(--green);}
+    .rare{color:var(--amber);}
+    .top{color:var(--purple);}
+    .small{font-size:11px;color:var(--muted);}
+    footer{
+      margin-top:8px;
+      font-size:11px;
+      color:var(--muted);
+    }
+    @media(max-width:720px){
+      header,main{padding-left:14px;padding-right:14px;}
+      h1{font-size:21px;}
     }
   </style>
 </head>
 <body>
-  <header>
-    <h1>SCP-914 Keycard Flow</h1>
-    <p>研究系は指定どおり RC &lt; Zone Manager &lt; Scientist の順に整理。SCP:SL公式Wikiの Containment / Security / Administrative Access の考え方に寄せ、武器アクセス I-II-III とSite Director分岐を追加。</p>
-  </header>
+<header>
+  <h1>SCP-914 Keycard Flow (新仕様ドラフト)</h1>
+  <p>Janitor &lt; Scientist &lt; Zone Manager &lt; Research Coord. &lt; Containment Eng. &lt; Facility Manager &lt; Site Director &lt; O5、軍系は Armory1 &lt; Guard = Chaos Intruder &lt; Armory2 &lt; Security Chief &lt; MTF Private &lt; MTF Operative &lt; MTF Captain = Chaos Device &lt; Site Director &lt; O5 という階段をベースにした概要表。</p>
+</header>
 
-  <main>
-    <section class="notes">
-      <div class="note"><strong>共通事故</strong>床Pickupは最初に1/12でワイルドカード判定。成功時はSCP-513が1/10、CapybaraMissileが9/10。</div>
-      <div class="note"><strong>O5</strong>SCPCBのOMNI相当として最終段。公式WikiでもO5は全権限カード枠として扱われる。</div>
-      <div class="note"><strong>Site Director</strong>Facility Managerから50%で分岐する横道。権限はFacility Manager相当で、O5ほど万能ではない。</div>
-      <div class="note"><strong>Chaos Intruder</strong>Chaos側の低位侵入デバイスとして914表に追加。ConscriptsとChaos Insurgency Deviceの間に入る。</div>
-    </section>
+<main>
+  <section>
+    <h2>メモ・前提</h2>
+    <div class="grid">
+      <div class="note">
+        <strong>共通 O5 ロール</strong>
+        全ての入力に対して、処理の最初に 0.2% 程度で O5 に変換される超低確率ロールが走る想定（床ピックアップ/インベントリ共通）。
+      </div>
+      <div class="note">
+        <strong>研究・管理系階層</strong>
+        Janitor &lt; Scientist &lt; Zone Manager &lt; Research Coordinator &lt; Containment Engineer &lt; Facility Manager &lt; Site Director &lt; O5 の順で上がっていく。
+      </div>
+      <div class="note">
+        <strong>軍・武器系階層</strong>
+        Armory 1 &lt; Guard = Chaos Intruder &lt; Armory 2 &lt; Security Chief &lt; MTF Private &lt; MTF Operative &lt; MTF Captain = Chaos Insurgency Device &lt; Site Director &lt; O5 のイメージ。
+      </div>
+      <div class="note">
+        <strong>O5 / OMNI 的立ち位置</strong>
+        Site Director と同格以上の最終カード。OMNI のようにほぼ全権限を持ち、914 からは上位層やギャンブル用カード（MasterCard / Chaos ルート）経由でのみ到達する。
+      </div>
+    </div>
+  </section>
 
-    <h2>主要ルート</h2>
-    <section class="paths">
+  <section>
+    <h2>大まかなフローチャート</h2>
+    <div class="paths">
       <article class="path">
-        <h3>研究/管理</h3>
+        <h3>研究 / 管理ルート</h3>
         <div class="steps">
           <span class="step">Janitor</span><span class="arrow">→</span>
-          <span class="step">Research Coord.</span><span class="arrow">→</span>
-          <span class="step">Zone Manager</span><span class="arrow">→</span>
           <span class="step">Scientist</span><span class="arrow">→</span>
+          <span class="step">Zone Manager</span><span class="arrow">→</span>
+          <span class="step">Research Coord.</span><span class="arrow">→</span>
           <span class="step">Containment Eng.</span><span class="arrow">→</span>
           <span class="step">Facility Manager</span><span class="arrow">→</span>
-          <span class="step">Site Director / O5</span>
+          <span class="step top">Site Director</span><span class="arrow">→</span>
+          <span class="step top">O5</span>
         </div>
+        <p class="small">Fine で基本 1 段階アップ、Very Fine で 1～2 段アップ＋一部 Destroy / ギャンブル（O5 抽選）。</p>
       </article>
 
       <article class="path">
-        <h3>武器アクセス</h3>
+        <h3>軍 / 武器アクセスルート</h3>
         <div class="steps">
-          <span class="step">Guard</span><span class="arrow">→</span>
-          <span class="step">Armory I</span><span class="arrow">→</span>
-          <span class="step">Armory II</span><span class="arrow">→</span>
-          <span class="step">Armory III</span><span class="arrow">→</span>
-          <span class="step">Captain / O5</span>
-        </div>
-      </article>
-
-      <article class="path">
-        <h3>Chaos</h3>
-        <div class="steps">
-          <span class="step">Conscripts</span><span class="arrow">→</span>
+          <span class="step">Armory 1</span><span class="arrow">→</span>
+          <span class="step">Guard</span><span class="arrow">⇄</span>
           <span class="step">Chaos Intruder</span><span class="arrow">→</span>
-          <span class="step">Chaos Device</span><span class="arrow">→</span>
-          <span class="step">Armory III</span><span class="arrow">→</span>
-          <span class="step">O5</span>
+          <span class="step">Armory 2</span><span class="arrow">→</span>
+          <span class="step">Security Chief</span><span class="arrow">→</span>
+          <span class="step">MTF Private</span><span class="arrow">→</span>
+          <span class="step">MTF Operative</span><span class="arrow">→</span>
+          <span class="step">MTF Captain / Chaos Device</span><span class="arrow">→</span>
+          <span class="step top">Site Director</span><span class="arrow">→</span>
+          <span class="step top">O5</span>
         </div>
+        <p class="small">軍系は武器アクセス段階とセキュリティ段階が混在。Fine で Armory / MTF が順に強化され、Very Fine で Captain / Chaos Device / O5 など上位へ。</p>
       </article>
-    </section>
 
-    <h2>詳細変換表</h2>
+      <article class="path">
+        <h3>Chaos / ギャンブルルート</h3>
+        <div class="steps">
+          <span class="step">Quarter</span><span class="arrow">⇄</span>
+          <span class="step">MasterCard</span><span class="arrow">⇄</span>
+          <span class="step">PlayingCard</span><span class="arrow">→</span>
+          <span class="step">Site Navigator</span><span class="arrow">→</span>
+          <span class="step">Surveillance</span><span class="arrow">→</span>
+          <span class="step">Chaos Intruder</span><span class="arrow">→</span>
+          <span class="step">Conscripts</span><span class="arrow">→</span>
+          <span class="step">Chaos Device</span><span class="arrow">→</span>
+          <span class="step rare">O5</span>
+        </div>
+        <p class="small">MasterCard の Very Fine や Conscripts / Chaos Device の Very Fine から、低～中確率で O5 / Site Director / 高位 Chaos カードへ飛ぶギャンブル枠。</p>
+      </article>
+    </div>
+  </section>
+
+  <section>
+    <h2>研究 / 管理系カードの代表的変換</h2>
     <div class="table-wrap">
       <table>
         <thead>
-          <tr>
-            <th>Input</th>
-            <th>Rough</th>
-            <th>Coarse</th>
-            <th>1:1</th>
-            <th>Fine</th>
-            <th>Very Fine</th>
-          </tr>
+        <tr>
+          <th>Input</th>
+          <th>Rough</th>
+          <th>Coarse</th>
+          <th>1:1</th>
+          <th>Fine</th>
+          <th>Very Fine</th>
+        </tr>
         </thead>
         <tbody>
-          <tr><td class="source">Janitor<span class="perm">C1相当</span></td><td class="bad">Destroy</td><td>Quarter x2</td><td>Research Coordinator</td><td>Zone Manager</td><td>Scientist 75% / Site Navigator 25%</td></tr>
-          <tr><td class="source">Research Coordinator<span class="perm">RC低位</span></td><td class="bad">Destroy</td><td>Janitor</td><td>Surveillance 66.7% / Keep 33.3%</td><td>Zone Manager</td><td>Scientist</td></tr>
-          <tr><td class="source">Surveillance<span class="perm">RC互換</span></td><td class="bad">Destroy</td><td>Janitor</td><td>Research Coordinator</td><td>Zone Manager</td><td>Scientist</td></tr>
-          <tr><td class="source">Zone Manager<span class="perm">Admin 1</span></td><td class="bad">Destroy</td><td>Research Coordinator</td><td>Guard</td><td>Scientist</td><td>Containment Engineer 75% / Armory I 25%</td></tr>
-          <tr><td class="source">Scientist<span class="perm">C2 + Admin 1</span></td><td class="bad">Destroy</td><td>Zone Manager</td><td>Site Navigator 50% / Keep 50%</td><td>Containment Engineer</td><td>Facility Manager 75% / Site Director 25%</td></tr>
-          <tr><td class="source">Site Navigator<span class="perm">Scientist互換</span></td><td class="bad">Destroy</td><td>Research Coordinator</td><td>Scientist</td><td>Containment Engineer</td><td>Facility Manager</td></tr>
-          <tr><td class="source">Containment Engineer<span class="perm">C2上位</span></td><td class="bad">Destroy</td><td>Scientist</td><td>Toolbox</td><td>Facility Manager</td><td>Site Director 50% / O5 50%</td></tr>
-          <tr><td class="source">Facility Manager<span class="perm">Admin 2</span></td><td>Scientist</td><td>Containment Engineer</td><td>Keep</td><td>Site Director 50% / O5 50%</td><td>O5 75% / Omega Warhead Access 25%</td></tr>
-          <tr><td class="source">Site Director<span class="perm">Facility Manager互換</span></td><td>Facility Manager</td><td>Containment Engineer</td><td>Keep</td><td>O5</td><td>O5</td></tr>
-
-          <tr><td class="source">Guard<span class="perm">Security 1</span></td><td class="bad">Destroy</td><td>Janitor</td><td>Armory I</td><td>MTF Private</td><td>Security Chief</td></tr>
-          <tr><td class="source">MTF Private<span class="perm">Security低位</span></td><td>Guard</td><td class="bad">Destroy</td><td>Armory I</td><td>Armory II</td><td>Security Chief</td></tr>
-          <tr><td class="source">Security Chief<span class="perm">Security/Armory II</span></td><td class="bad">Destroy</td><td>Armory I</td><td>Keep</td><td>Armory II</td><td>MTF Captain</td></tr>
-          <tr><td class="source">Armory I<span class="perm">Weapon Level 1</span></td><td class="bad">Destroy</td><td>Guard</td><td>MTF Private</td><td>Armory II</td><td>Security Chief</td></tr>
-          <tr><td class="source">Armory II<span class="perm">Weapon Level 2</span></td><td>Guard</td><td>Armory I</td><td>Security Chief</td><td>Armory III</td><td>MTF Captain</td></tr>
-          <tr><td class="source">Armory III<span class="perm">Weapon Level 3</span></td><td>Armory II</td><td>MTF Operative</td><td>MTF Captain</td><td>O5 66.7% / Chaos Device 33.3%</td><td>O5 75% / MasterCard 25%</td></tr>
-          <tr><td class="source">MTF Operative<span class="perm">Security 3</span></td><td>Armory I</td><td>Armory II 83.3% / Conscripts 16.7%</td><td>Keep</td><td>Armory III</td><td>MTF Captain 66.7% / O5 33.3%</td></tr>
-          <tr><td class="source">MTF Captain<span class="perm">Security 4</span></td><td>Armory II</td><td>MTF Operative</td><td>Keep</td><td>O5</td><td>O5 75% / MasterCard 25%</td></tr>
-
-          <tr><td class="source">Conscripts<span class="perm">Chaos低位</span></td><td class="bad">Destroy</td><td>Chaos Intruder</td><td>Keep</td><td>Chaos Device</td><td>O5 20% / Destroy 80%</td></tr>
-          <tr><td class="source">Chaos Intruder<span class="perm">C1 + W1 + Admin 1</span></td><td class="bad">Destroy</td><td>Conscripts</td><td>Keep</td><td>Chaos Device</td><td>Armory III</td></tr>
-          <tr><td class="source">Chaos Device<span class="perm">Captain相当</span></td><td>Conscripts</td><td>Chaos Intruder</td><td>Keep</td><td>Armory III</td><td>O5 66.7% / MasterCard 33.3%</td></tr>
-
-          <tr><td class="source">O5<span class="perm">OMNI / All permissions</span></td><td>未変更</td><td>未変更</td><td>未変更</td><td>未変更</td><td>Omega Warhead Access 50%</td></tr>
-          <tr><td class="source">MasterCard<span class="perm">Joke</span></td><td class="bad">Destroy</td><td>Quarter x8</td><td>PlayingCard</td><td>Scientist 50% / Site Navigator 50%</td><td>Research Coordinator 50% / Surveillance 50%</td></tr>
-          <tr><td class="source">PlayingCard<span class="perm">Joke</span></td><td class="bad">Destroy</td><td>Quarter x8</td><td>MasterCard</td><td>Site Navigator</td><td>Surveillance</td></tr>
-          <tr><td class="source">Quarter<span class="perm">Joke</span></td><td class="bad">Destroy</td><td class="bad">Destroy</td><td class="bad">Destroy</td><td>Coin</td><td>Scientist 75% / Site Navigator 25%</td></tr>
+        <tr>
+          <td><span class="src">Janitor</span><span class="perm">最低権限</span></td>
+          <td class="bad">Destroy</td>
+          <td>Quarter ×2</td>
+          <td>Keep</td>
+          <td class="good">Scientist 70% / Armory 1 30%</td>
+          <td class="rare">O5 5% / Destroy 95%</td>
+        </tr>
+        <tr>
+          <td><span class="src">Scientist</span><span class="perm">研究者</span></td>
+          <td>Quarter ×2</td>
+          <td>Janitor</td>
+          <td>Keep</td>
+          <td class="good">Zone Manager</td>
+          <td>Zone Manager 50% / Site Navigator 50%</td>
+        </tr>
+        <tr>
+          <td><span class="src">Zone Manager</span><span class="perm">管理 1</span></td>
+          <td>Janitor 50% / Scientist 50%</td>
+          <td>Scientist</td>
+          <td>Keep</td>
+          <td class="good">Research Coordinator</td>
+          <td>Research Coordinator 40% / Surveillance 40% / Chaos Intruder 20%</td>
+        </tr>
+        <tr>
+          <td><span class="src">Research Coordinator</span><span class="perm">研究管理</span></td>
+          <td>Scientist 50% / Janitor 50%</td>
+          <td>Scientist</td>
+          <td>Keep</td>
+          <td class="good">Containment Engineer</td>
+          <td>Containment Engineer 25% / Destroy 75%</td>
+        </tr>
+        <tr>
+          <td><span class="src">Containment Engineer</span><span class="perm">収容技師</span></td>
+          <td>Scientist 50% / Research Coord. 50%</td>
+          <td>Research Coordinator</td>
+          <td>Keep</td>
+          <td class="good">Facility Manager</td>
+          <td class="rare">O5 50% / Destroy 50%</td>
+        </tr>
+        <tr>
+          <td><span class="src">Facility Manager</span><span class="perm">管理 2</span></td>
+          <td>Scientist 50% / Research Coord. 50%</td>
+          <td>Containment Engineer</td>
+          <td>Keep</td>
+          <td class="good">Site Director</td>
+          <td class="rare">O5 25% / Destroy 75%</td>
+        </tr>
+        <tr>
+          <td><span class="src">Site Director (CItem)</span><span class="perm">最上位管理</span></td>
+          <td>Facility Manager</td>
+          <td>Containment Engineer</td>
+          <td>Keep</td>
+          <td class="top">O5</td>
+          <td class="top">O5 66% / Janitor 34%</td>
+        </tr>
+        <tr>
+          <td><span class="src">O5</span><span class="perm">OMNI 相当</span></td>
+          <td>Scientist / Zone Manager へダウングレード</td>
+          <td>Facility Manager</td>
+          <td>Keep</td>
+          <td>MasterCard</td>
+          <td>MasterCard (50%) / Keep (50%)</td>
+        </tr>
         </tbody>
       </table>
     </div>
+  </section>
 
-    <footer>
-      Source: Slafight_Plugin_EXILED/Changes/Scp914Changes.cs. SCP:SL公式WikiのKeycardページは2026-05-14更新版を参照。
-    </footer>
-  </main>
+  <section>
+    <h2>軍 / 武器系カードの代表的変換</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+        <tr>
+          <th>Input</th>
+          <th>Rough</th>
+          <th>Coarse</th>
+          <th>1:1</th>
+          <th>Fine</th>
+          <th>Very Fine</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td><span class="src">Armory 1</span><span class="perm">武器 Lv1</span></td>
+          <td class="bad">Destroy</td>
+          <td class="bad">Destroy</td>
+          <td>Guard</td>
+          <td class="good">Chaos Intruder</td>
+          <td>Conscripts</td>
+        </tr>
+        <tr>
+          <td><span class="src">Guard</span><span class="perm">Security 1</span></td>
+          <td class="bad">Destroy</td>
+          <td>Quarter ×2</td>
+          <td>Keep</td>
+          <td class="good">Armory 2</td>
+          <td>Security Chief / Chaos Intruder</td>
+        </tr>
+        <tr>
+          <td><span class="src">Armory 2</span><span class="perm">武器 Lv2</span></td>
+          <td>Guard</td>
+          <td>Armory 1</td>
+          <td>Conscripts</td>
+          <td class="good">Armory 3</td>
+          <td class="good">MTF Operative</td>
+        </tr>
+        <tr>
+          <td><span class="src">Security Chief</span><span class="perm">武器/警備中位</span></td>
+          <td class="bad">Destroy</td>
+          <td>Armory 1</td>
+          <td>Keep</td>
+          <td>Armory 2</td>
+          <td class="good">MTF Captain</td>
+        </tr>
+        <tr>
+          <td><span class="src">MTF Private</span><span class="perm">Security 低位</span></td>
+          <td>Guard / Scientist などへダウン</td>
+          <td>Research Coord.</td>
+          <td>Containment Engineer</td>
+          <td class="good">MTF Operative</td>
+          <td>MTF Operative / Armory 3</td>
+        </tr>
+        <tr>
+          <td><span class="src">MTF Operative</span><span class="perm">Security 3</span></td>
+          <td>Guard / Destroy</td>
+          <td>Guard</td>
+          <td>Keep</td>
+          <td class="good">Armory 3</td>
+          <td>MTF Captain / O5 など上位へ</td>
+        </tr>
+        <tr>
+          <td><span class="src">MTF Captain</span><span class="perm">Security 4</span></td>
+          <td>MTF Operative</td>
+          <td>MTF Operative</td>
+          <td>Chaos Device</td>
+          <td class="top">O5</td>
+          <td class="top">O5 高確率 / MasterCard など</td>
+        </tr>
+        <tr>
+          <td><span class="src">Armory 3</span><span class="perm">武器 Lv3</span></td>
+          <td>Armory 2</td>
+          <td>MTF Operative</td>
+          <td>MTF Captain</td>
+          <td class="top">O5 / Chaos Device</td>
+          <td class="top">O5 高確率 / MasterCard</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section>
+    <h2>Chaos / ジョークカードの代表的変換</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+        <tr>
+          <th>Input</th>
+          <th>Rough</th>
+          <th>Coarse</th>
+          <th>1:1</th>
+          <th>Fine</th>
+          <th>Very Fine</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td><span class="src">Conscripts</span><span class="perm">Chaos 低位</span></td>
+          <td class="bad">Destroy</td>
+          <td>Chaos Intruder</td>
+          <td>Keep</td>
+          <td class="good">Chaos Device</td>
+          <td class="rare">O5 約 20% / Destroy 80%</td>
+        </tr>
+        <tr>
+          <td><span class="src">Chaos Intruder</span><span class="perm">Chaos 侵入</span></td>
+          <td class="bad">Destroy</td>
+          <td>Conscripts</td>
+          <td>Keep</td>
+          <td class="good">Chaos Device</td>
+          <td class="good">Armory 3</td>
+        </tr>
+        <tr>
+          <td><span class="src">Chaos Device (Chaos Insurgency keycard)</span><span class="perm">Captain 相当</span></td>
+          <td>Conscripts</td>
+          <td>Chaos Intruder</td>
+          <td>Keep</td>
+          <td class="good">Armory 3</td>
+          <td class="rare">O5 高確率 / Destroy / MasterCard など</td>
+        </tr>
+        <tr>
+          <td><span class="src">Quarter</span><span class="perm">小銭</span></td>
+          <td class="bad">Destroy</td>
+          <td class="bad">Destroy</td>
+          <td class="bad">Destroy</td>
+          <td class="good">Coin</td>
+          <td class="good">Janitor / Scientist など低位キー</td>
+        </tr>
+        <tr>
+          <td><span class="src">MasterCard</span><span class="perm">ギャンブルキー</span></td>
+          <td class="bad">Destroy</td>
+          <td>Quarter ×8</td>
+          <td>PlayingCard</td>
+          <td>Scientist / Site Navigator / Armory 2 など中位</td>
+          <td class="rare">O5 5% / Site Director 25% / Janitor 20% / Destroy 50%</td>
+        </tr>
+        <tr>
+          <td><span class="src">PlayingCard</span><span class="perm">ジョーク</span></td>
+          <td class="bad">Destroy</td>
+          <td>Quarter ×8</td>
+          <td>MasterCard</td>
+          <td class="good">Site Navigator</td>
+          <td class="good">Surveillance</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <footer>
+    この HTML は、新仕様のイメージをまとめたドラフトです。実際の確率・細かい流れはプラグイン内 C# 実装（Scp914Changes.cs / Scp914Registry）を優先してください。SCP:SL 公式 Wiki の Keycard / SCP-914 Outputs、SCPCB の Keycard / SCP-914 出力表を参考に構成しています。[web:21][web:6][web:1][web:3]
+  </footer>
+</main>
 </body>
 </html>
