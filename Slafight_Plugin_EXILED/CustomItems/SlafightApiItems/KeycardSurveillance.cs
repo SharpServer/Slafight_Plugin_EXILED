@@ -21,7 +21,8 @@ public class KeycardSurveillance : CItemKeycard
     protected override KeycardPermissions Permissions =>
         KeycardPermissions.ContainmentLevelOne |
         KeycardPermissions.ContainmentLevelTwo |
-        KeycardPermissions.Checkpoints;
+        KeycardPermissions.Checkpoints |
+        KeycardPermissions.Intercom;
 
     protected override bool PickupLightEnabled => true;
     protected override Color PickupLightColor => new(0.45f, 0.65f, 1f);

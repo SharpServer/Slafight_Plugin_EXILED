@@ -26,6 +26,7 @@ public class KeycardArmoryLevel3 : CItemKeycard
         KeycardPermissions.ArmoryLevelTwo |
         KeycardPermissions.ArmoryLevelThree |
         KeycardPermissions.Checkpoints |
+        KeycardPermissions.Intercom |
         KeycardPermissions.ExitGates;
 
     protected override bool PickupLightEnabled => true;

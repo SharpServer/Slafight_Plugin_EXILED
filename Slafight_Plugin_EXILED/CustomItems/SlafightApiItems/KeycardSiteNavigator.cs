@@ -19,8 +19,9 @@ public class KeycardSiteNavigator : CItemKeycard
     protected override Color32? KeycardPermissionsColor => new Color32(9, 42, 46, 255);
 
     protected override KeycardPermissions Permissions =>
-        KeycardPermissions.ContainmentLevelTwo |
-        KeycardPermissions.Checkpoints;
+        KeycardPermissions.ContainmentLevelOne |
+        KeycardPermissions.Checkpoints |
+        KeycardPermissions.Intercom;
 
     protected override bool PickupLightEnabled => true;
     protected override Color PickupLightColor => new(0.35f, 0.95f, 0.85f);

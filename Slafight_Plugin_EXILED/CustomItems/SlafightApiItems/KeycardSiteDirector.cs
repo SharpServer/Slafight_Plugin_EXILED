@@ -21,7 +21,12 @@ public class KeycardSiteDirector : CItemKeycard
     protected override string SerialNumber => "SD-02";
 
     protected override KeycardPermissions Permissions =>
+        KeycardPermissions.ContainmentLevelOne |
         KeycardPermissions.ContainmentLevelTwo |
+        KeycardPermissions.ContainmentLevelThree |
+        KeycardPermissions.ArmoryLevelOne |
+        KeycardPermissions.ArmoryLevelTwo |
+        KeycardPermissions.ArmoryLevelThree |
         KeycardPermissions.Checkpoints |
         KeycardPermissions.ExitGates |
         KeycardPermissions.Intercom;

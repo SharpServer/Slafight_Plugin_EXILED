@@ -24,6 +24,7 @@ public class KeycardArmoryLevel2 : CItemKeycard
     protected override KeycardPermissions Permissions =>
         KeycardPermissions.ArmoryLevelOne |
         KeycardPermissions.ArmoryLevelTwo |
+        KeycardPermissions.Intercom |
         KeycardPermissions.Checkpoints;
 
     protected override bool PickupLightEnabled => true;
