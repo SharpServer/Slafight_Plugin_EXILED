@@ -1,0 +1,113 @@
+using System;
+using Exiled.API.Enums;
+using Exiled.API.Features;
+using Exiled.Events.EventArgs.Player;
+using Exiled.Events.EventArgs.Scp049;
+using PlayerRoles;
+using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
+using Slafight_Plugin_EXILED.Extensions;
+
+namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces;
+
+public class HdShielder : CRole
+{
+    private const float ShieldMaxValue = 100f;
+    private const float BulletReduction = 0.75f;
+    private const float Scp049ShieldDamage = 50f;
+
+    protected override string RoleName { get; set; } = "<color=#353535>ハンマーダウン シールド兵</color>";
+    protected override string Description { get; set; } = "大型シールドで部隊を先導し、シールドが破損するまで敵の攻撃を防ぐ。";
+    protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.HdShielder;
+    protected override CTeam Team { get; set; } = CTeam.FoundationForces;
+    protected override string UniqueRoleKey { get; set; } = "HdShielder";
+
+    public override void RegisterEvents()
+    {
+        CustomShieldState.AbsorbingDamage += OnShieldAbsorbingDamage;
+        Exiled.Events.Handlers.Scp049.Attacking += OnScp049Attacking;
+        base.RegisterEvents();
+    }
+
+    public override void UnregisterEvents()
+    {
+        CustomShieldState.AbsorbingDamage -= OnShieldAbsorbingDamage;
+        Exiled.Events.Handlers.Scp049.Attacking -= OnScp049Attacking;
+        base.UnregisterEvents();
+    }
+
+    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    {
+        base.SpawnRole(player, roleSpawnFlags);
+        if (player == null) return;
+
+        player.Role.Set(RoleTypeId.NtfPrivate);
+        player.UniqueRole = UniqueRoleKey;
+        player.MaxHealth = 120f;
+        player.Health = player.MaxHealth;
+        player.ClearInventory();
+
+        CItem.Get<GunFSP18>()?.Give(player);
+        player.AddItem(ItemType.KeycardMTFOperative);
+        CItem.Get<ArmorInfantry>()?.Give(player);
+        player.AddItem(ItemType.Medkit);
+        player.AddItem(ItemType.Radio);
+        player.AddItem(ItemType.Flashlight);
+        player.SetAmmo(AmmoType.Nato9, 120);
+
+        CustomShieldState.GetOrCreate(player).Configure(
+            ShieldMaxValue,
+            ShieldMaxValue,
+            damageReduction: 0f,
+            damageAcceptingThreshold: 0.01f,
+            autoDecay: false);
+
+        player.SetCustomInfo("<color=#727472>Hammer Down Shielder</color>");
+    }
+
+    private void OnShieldAbsorbingDamage(CustomShieldAbsorbingDamageEventArgs ev)
+    {
+        if (!Check(ev.Player)) return;
+        if (!ev.State.CanAcceptDamage) return;
+
+        if (ev.HurtingEvent.IsInstantKill && ev.Attacker != null && ev.Attacker.IsScp)
+        {
+            ev.HurtingEvent.IsAllowed = false;
+            ev.State.ConsumeAll();
+            ev.ShieldDamage = 0f;
+            ev.HealthDamage = 0f;
+            ev.IsAllowed = false;
+            return;
+        }
+
+        if (ev.HurtingEvent.DamageHandler.Type != DamageType.Firearm)
+        {
+            ev.ShieldDamage = 0f;
+            ev.HealthDamage = ev.OriginalAmount;
+            return;
+        }
+
+        float requestedShieldDamage = ev.OriginalAmount * BulletReduction;
+        float actualShieldDamage = Math.Min(ev.State.Value, requestedShieldDamage);
+
+        ev.ShieldDamage = actualShieldDamage;
+        ev.HealthDamage = ev.OriginalAmount - actualShieldDamage;
+    }
+
+    private void OnScp049Attacking(AttackingEventArgs ev)
+    {
+        if (ev?.Target == null || !ev.IsAllowed) return;
+        if (!Check(ev.Target)) return;
+        if (!CustomShieldState.TryGet(ev.Target, out var state) || !state.CanAcceptDamage) return;
+
+        ev.IsAllowed = false;
+        state.Damage(Scp049ShieldDamage);
+    }
+
+    protected override void OnDying(DyingEventArgs ev)
+    {
+        CustomShieldState.Clear(ev.Player);
+        base.OnDying(ev);
+    }
+}
