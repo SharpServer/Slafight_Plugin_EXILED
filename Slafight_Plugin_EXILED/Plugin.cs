@@ -72,6 +72,7 @@ public class Plugin : Plugin<Config>
             
         AutoHandlerBootstrapRegister.Register();
         ServerSpecificsHandler.Register();
+        CustomShieldState.RegisterEvents();
 
         var Settings = ServerSpecifics.Settings();
         var a = Settings.ToList();
@@ -137,6 +138,7 @@ public class Plugin : Plugin<Config>
         
         AutoHandlerBootstrapRegister.Unregister();
         ServerSpecificsHandler.Unregister();
+        CustomShieldState.UnregisterEvents();
             
         HarmonyInstance.UnpatchAll(this.Name);
         HarmonyInstance = null;

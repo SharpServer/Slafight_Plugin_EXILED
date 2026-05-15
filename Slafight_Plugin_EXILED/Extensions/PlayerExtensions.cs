@@ -260,6 +260,9 @@ public static class PlayerExtensions
             case CRoleTypeId.HdDisarmer:
                 new HdDisarmer().SpawnRole(player, roleSpawnFlags);
                 break;
+            case CRoleTypeId.HdShielder:
+                new HdShielder().SpawnRole(player, roleSpawnFlags);
+                break;
             // ==== See No Evil ====
             case CRoleTypeId.SnePurify:
                 new SnePurify().SpawnRole(player, roleSpawnFlags);

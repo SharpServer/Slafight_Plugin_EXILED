@@ -184,6 +184,8 @@
         <Compile Include="API\Features\CItemArmor.cs" />
         <Compile Include="API\Features\CItemKeycard.cs" />
         <Compile Include="API\Features\CItemWeapon.cs" />
+        <Compile Include="API\Features\CustomShieldEvents.cs" />
+        <Compile Include="API\Features\CustomShieldState.cs" />
         <Compile Include="API\Features\GeneratorPrefab.cs" />
         <Compile Include="API\Features\NetworkVisibilityManager.cs" />
         <Compile Include="API\Features\Scp914\Scp914Context.cs" />
@@ -343,6 +345,7 @@
         <Compile Include="CustomRoles\FoundationForces\HdDisarmer.cs" />
         <Compile Include="CustomRoles\FoundationForces\HdMarshal.cs" />
         <Compile Include="CustomRoles\FoundationForces\HdShotgunner.cs" />
+        <Compile Include="CustomRoles\FoundationForces\HdShielder.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfGeneral.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfSpecialist.cs" />
         <Compile Include="CustomRoles\FoundationForces\Sculpture.cs" />

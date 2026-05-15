@@ -307,6 +307,7 @@ public class CustomRolesHandler : IBootstrapHandler
         player.Clear();
         AbilityManager.ClearSlots(player);
         AbilityBase.RevokeAbility(player.Id);
+        CustomShieldState.Clear(player);
         
         var display = player.GetPlayerDisplay();
         display.TryGetHint("CRoleSpawnedHint", out var oldHint);
