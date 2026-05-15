@@ -180,6 +180,7 @@
         <Compile Include="API\Features\AbilityManager.cs" />
         <Compile Include="API\Features\AbilityParseHelper.cs" />
         <Compile Include="API\Features\CassieHelper.cs" />
+        <Compile Include="API\Features\EventSubscriptionScope.cs" />
         <Compile Include="API\Features\CItem.cs" />
         <Compile Include="API\Features\CItemHybrid.cs" />
         <Compile Include="API\Features\CItemArmor.cs" />
@@ -189,6 +190,7 @@
         <Compile Include="API\Features\CustomShieldState.cs" />
         <Compile Include="API\Features\CustomInfoDisplay.cs" />
         <Compile Include="API\Features\GeneratorPrefab.cs" />
+        <Compile Include="API\Features\LabApiHandlerRegistry.cs" />
         <Compile Include="API\Features\NetworkVisibilityManager.cs" />
         <Compile Include="API\Features\Scp914\Scp914Context.cs" />
         <Compile Include="API\Features\Scp914\Scp914Rule.cs" />
@@ -209,6 +211,7 @@
         <Compile Include="API\Features\ServerSpecifics.cs" />
         <Compile Include="API\Features\SpawnContext.cs" />
         <Compile Include="API\Features\SpawnContextRegistry.cs" />
+        <Compile Include="API\Features\SlafightLabApiHandler.cs" />
         <Compile Include="API\Features\SpawnSystemDictionaries\Contexts\DefaultContexts.cs" />
         <Compile Include="API\Features\SpawnSystemDictionaries\Contexts\FacilityTerminationContexts.cs" />
         <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\DefaultUnitPacks.cs" />
@@ -405,6 +408,7 @@
         <Compile Include="Extensions\SchematicHelpers.cs" />
         <Compile Include="Extensions\StaticUtils.cs" />
         <Compile Include="Extensions\StringExtensions.cs" />
+        <Compile Include="LabApiBridgeHandlers\CustomItemTriggerPointLabHandler.cs" />
         <Compile Include="LabApiBridgeHandlers\ObjectPrefabHandlers.cs" />
         <Compile Include="MainHandlers\AutoHandlerBootstrapRegister.cs" />
         <Compile Include="MainHandlers\BadgeHandler.cs" />

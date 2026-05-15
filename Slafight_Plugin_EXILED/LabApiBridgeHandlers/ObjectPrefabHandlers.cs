@@ -1,6 +1,5 @@
 using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
-using LabApi.Events.CustomHandlers;
 using LabApi.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
@@ -11,28 +10,19 @@ namespace Slafight_Plugin_EXILED.LabApiBridgeHandlers;
 /// <summary>
 /// This Handler is wrapper for ObjectPrefabs event receiving.
 /// </summary>
-public class ObjectPrefabHandler : CustomEventsHandler, IBootstrapHandler
+public class ObjectPrefabHandler : SlafightLabApiHandler, IBootstrapHandler
 {
-    public static ObjectPrefabHandler Instance { get; private set; }
-    public static void Register() { Instance = new(); CustomHandlersManager.RegisterEventsHandler(Instance); }
-    public static void Unregister() { CustomHandlersManager.UnregisterEventsHandler(Instance); Instance = null; }
+    private static ObjectPrefabHandler _instance;
+    public static ObjectPrefabHandler Instance => _instance;
+    public static void Register() => _instance = LabApiHandlerRegistry.Register(_instance);
+    public static void Unregister() => LabApiHandlerRegistry.Unregister(ref _instance);
 
-    public ObjectPrefabHandler()
+    protected override void RegisterEvents(EventSubscriptionScope subscriptions)
     {
-        PlayerEvents.SearchingToy += OnSearchingToy;
-        PlayerEvents.SearchedToy += OnSearchedToy;
-
-        ServerEvents.RoundStarted += OnRoundStarted;
-        ServerEvents.RoundRestarted += OnRoundRestarting;
-    }
-
-    ~ObjectPrefabHandler()
-    {
-        PlayerEvents.SearchingToy -= OnSearchingToy;
-        PlayerEvents.SearchedToy -= OnSearchedToy;
-        
-        ServerEvents.RoundStarted -= OnRoundStarted;
-        ServerEvents.RoundRestarted -= OnRoundRestarting;
+        subscriptions.Add(() => PlayerEvents.SearchingToy += OnSearchingToy, () => PlayerEvents.SearchingToy -= OnSearchingToy);
+        subscriptions.Add(() => PlayerEvents.SearchedToy += OnSearchedToy, () => PlayerEvents.SearchedToy -= OnSearchedToy);
+        subscriptions.Add(() => ServerEvents.RoundStarted += OnRoundStarted, () => ServerEvents.RoundStarted -= OnRoundStarted);
+        subscriptions.Add(() => ServerEvents.RoundRestarted += OnRoundRestarting, () => ServerEvents.RoundRestarted -= OnRoundRestarting);
     }
     
     /// <summary>

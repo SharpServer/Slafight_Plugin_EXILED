@@ -7,11 +7,11 @@ using Exiled.API.Features;
 using Exiled.API.Features.Toys;
 using Exiled.Events.EventArgs.Player;
 using LabApi.Events.Arguments.PlayerEvents;
-using LabApi.Events.CustomHandlers;
 using MapGeneration;
 using MEC;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
+using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
@@ -50,8 +50,7 @@ public static class TerminalRift
         Exiled.Events.Handlers.Player.ChangingRole += OnChanging;
         Exiled.Events.Handlers.Player.Dying += CancelDeathForDying;
 
-        _labHandler = new TerminalRiftLabHandler();
-        CustomHandlersManager.RegisterEventsHandler(_labHandler);
+        _labHandler = LabApiHandlerRegistry.Register(_labHandler);
         _registered = true;
 
         Log.Debug("[TerminalRift] Registered OK");
@@ -71,8 +70,7 @@ public static class TerminalRift
         Exiled.Events.Handlers.Player.ChangingRole -= OnChanging;
         Exiled.Events.Handlers.Player.Dying -= CancelDeathForDying;
 
-        CustomHandlersManager.UnregisterEventsHandler(_labHandler);
-        _labHandler = null;
+        LabApiHandlerRegistry.Unregister(ref _labHandler);
         _registered = false;
 
         Log.Debug("[TerminalRift] Unregistered OK");
@@ -350,18 +348,14 @@ public static class TerminalRift
     }
 }
 
-public class TerminalRiftLabHandler : CustomEventsHandler
+public class TerminalRiftLabHandler : SlafightLabApiHandler
 {
-    public TerminalRiftLabHandler()
+    protected override void RegisterEvents(EventSubscriptionScope subscriptions)
     {
-        Log.Debug("[TerminalRiftLabHandler] Ctor");
-        LabApi.Events.Handlers.PlayerEvents.SearchedToy += OnSearchedToy;
-    }
-
-    ~TerminalRiftLabHandler()
-    {
-        Log.Debug("[TerminalRiftLabHandler] Finalizer");
-        LabApi.Events.Handlers.PlayerEvents.SearchedToy -= OnSearchedToy;
+        Log.Debug("[TerminalRiftLabHandler] Register");
+        subscriptions.Add(
+            () => LabApi.Events.Handlers.PlayerEvents.SearchedToy += OnSearchedToy,
+            () => LabApi.Events.Handlers.PlayerEvents.SearchedToy -= OnSearchedToy);
     }
 
     private void OnSearchedToy(PlayerSearchedToyEventArgs ev)

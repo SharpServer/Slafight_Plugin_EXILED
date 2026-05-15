@@ -3,45 +3,46 @@ using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
-using LabApi.Events.CustomHandlers;
 using MEC;
 using ProjectMER.Features;
 using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Objects;
-using ProjectMER.Features.Serializable;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Light = LabApi.Features.Wrappers.LightSourceToy;
-using Logger = LabApi.Features.Console.Logger;
 using Player = LabApi.Features.Wrappers.Player;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps;
+using Slafight_Plugin_EXILED.LabApiBridgeHandlers;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
-public class LabApiHandler : CustomEventsHandler, IBootstrapHandler
+public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
 {
-    public static LabApiHandler Instance { get; private set; }
-    public static void Register() { Instance = new(); CustomHandlersManager.RegisterEventsHandler(Instance); }
-    public static void Unregister() { CustomHandlersManager.UnregisterEventsHandler(Instance); Instance = null; }
+    private static LabApiHandler _instance;
+    private static CustomItemTriggerPointLabHandler _customItemTriggerPointHandler;
 
-    public LabApiHandler()
+    public static LabApiHandler Instance => _instance;
+
+    public static void Register()
     {
-        LabApi.Events.Handlers.ServerEvents.RoundStarted += PickupSetup;
-        Exiled.Events.Handlers.Player.Dying += ModelRolesRagdoll;
-        LabApi.Events.Handlers.PlayerEvents.SearchedToy += InteractionEvent;
-        LabApi.Events.Handlers.ServerEvents.RoundStarted += Init;
+        _instance = LabApiHandlerRegistry.Register(_instance);
+        _customItemTriggerPointHandler = LabApiHandlerRegistry.Register(_customItemTriggerPointHandler);
     }
 
-    ~LabApiHandler()
+    public static void Unregister()
     {
-        LabApi.Events.Handlers.ServerEvents.RoundStarted -= PickupSetup;
-        Exiled.Events.Handlers.Player.Dying -= ModelRolesRagdoll;
-        LabApi.Events.Handlers.PlayerEvents.SearchedToy -= InteractionEvent;
-        LabApi.Events.Handlers.ServerEvents.RoundStarted -= Init;
+        LabApiHandlerRegistry.Unregister(ref _customItemTriggerPointHandler);
+        LabApiHandlerRegistry.Unregister(ref _instance);
+    }
+
+    protected override void RegisterEvents(EventSubscriptionScope subscriptions)
+    {
+        subscriptions.Add(() => Exiled.Events.Handlers.Player.Dying += ModelRolesRagdoll, () => Exiled.Events.Handlers.Player.Dying -= ModelRolesRagdoll);
+        subscriptions.Add(() => LabApi.Events.Handlers.PlayerEvents.SearchedToy += InteractionEvent, () => LabApi.Events.Handlers.PlayerEvents.SearchedToy -= InteractionEvent);
+        subscriptions.Add(() => LabApi.Events.Handlers.ServerEvents.RoundStarted += Init, () => LabApi.Events.Handlers.ServerEvents.RoundStarted -= Init);
     }
 
     public bool ActivatedAntiMemeProtocol;
@@ -126,255 +127,125 @@ public class LabApiHandler : CustomEventsHandler, IBootstrapHandler
         return player.GetCustomRole() is CRoleTypeId.Scp3005 or CRoleTypeId.Scp3125;
     }
 
-    private void PickupSetup()
-    {
-        Logger.Info("LabApi Loader: Green");
-
-        Timing.CallDelayed(1.05f, () =>
-        {
-            //CItem.Get<HIDTurret>()?.Spawn(new Vector3(134.94f, 300.65f, -65f));
-            CItem.Get<NvgNormal>()?.Spawn(Room.Get(RoomType.Hcz939).WorldPosition(Vector3.up * 1.5f));
-        });
-        Timing.CallDelayed(2.0f, PickupSetupTriggerPoints);
-    }
-
-    private static void PickupSetupTriggerPoints()
-    {
-        var points = TriggerPointManager.GetAll();
-        foreach (var point in points)
-        {
-            if (point.Base is not SerializableCustomTriggerPoint trig || string.IsNullOrEmpty(trig.Tag))
-                continue;
-
-            var pos = TriggerPointManager.GetWorldPosition(point);
-
-            try
-            {
-                switch (trig.Tag)
-                {
-                    case "CISR_GoCRailgun":
-                        CItem.Get<GunGoCRailgun>()?.Spawn(pos);
-                        break;
-                    case "CISR_Scp1425":
-                        var scp1425Pickup = CItem.Get<Scp1425>()?.Spawn(pos);
-                        scp1425Pickup?.Rotation *= Quaternion.Euler(180f, 0f, 0f);
-                        break;
-                    case "CISR_SNAV300":
-                        CItem.Get<SNAV300>()?.Spawn(pos);
-                        break;
-                    case "CISR_MFP":
-                        CItem.Get<ClassXMemoryForcePil>()?.Spawn(pos);
-                        break;
-                    case "Scp682SpawnPoint":
-                        CItem.Get<OmegaWarheadAccess>()?.Spawn(pos);
-                        break;
-                    case "CISR_SCP513":
-                        CItem.Get<Scp513Item>()?.Spawn(pos);
-                        break;
-                    case "CISR_SQ":
-                        var sq = CItem.Get<SchwarzschildQuasar>()?.Spawn(pos);
-                        sq?.Transform.localEulerAngles = new Vector3(0f, 0f, 90f);
-                        break;
-                    case "CISR_AntiMemeGrenade":
-                        CItem.Get<NeutralizeGrenade>()?.Spawn(pos);
-                        CItem.Get<NeutralizeGrenade>()?.Spawn(pos);
-                        CItem.Get<NeutralizeGrenade>()?.Spawn(pos);
-                        CItem.Get<NeutralizeGrenade>()?.Spawn(pos);
-                        CItem.Get<NeutralizeGrenade>()?.Spawn(pos);
-                        break;
-                    case "AntiMemeButton":
-                        MapFlags.AntiMemeButton = pos;
-                        break;
-                }
-            }
-            catch (Exception e)
-            {
-                Log.Error($"[PickupSetupTriggerPoints] Error while spawning CustomItem at trigger point {trig.Tag}: {e}");
-            }
-        }
-    }
-
     /// <summary>
     /// SCP-3005 用 schematic 生成（見た目は昔のまま、ロール監視は WearsHandler に任せる）
     /// </summary>
     public static void Schem3005(Player labPlayer)
-    {
-        Timing.CallDelayed(1.5f, () =>
-        {
-            var exiledPlayer = Exiled.API.Features.Player.Get(labPlayer.NetworkId);
-            Logger.Info($"[DEBUG] Schem3005 ExiledPlayer={(exiledPlayer != null ? exiledPlayer.Nickname : "null")}");
-            if (exiledPlayer == null)
+        => WearRoleSchematic(
+            labPlayer,
+            "SCP3005",
+            nameof(Schem3005),
+            playerScale: new Vector3(0.01f, 1f, 0.01f),
+            afterAttach: (player, schem) =>
             {
-                Logger.Warn("[LabApiHandler] Schem3005: Exiled player not found.");
-                return;
-            }
+                if (schem.transform.childCount > 0)
+                    schem.transform.GetChild(0).localScale = Vector3.one;
+                if (player.GameObject != null)
+                    schem.transform.position = player.GameObject.transform.position;
 
-            SchematicObject schem;
-            try
-            {
-                schem = ObjectSpawner.SpawnSchematic("SCP3005", Vector3.zero);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("[LabApiHandler] Schem3005: Spawn error " + ex);
-                return;
-            }
-
-            labPlayer.Scale = new Vector3(0.01f, 1f, 0.01f);
-            schem.transform.SetParent(labPlayer.GameObject?.transform);
-
-            // ロール監視用に WearsHandler に登録
-            WearsHandler.RegisterExternal(exiledPlayer, schem);
-
-            Timing.CallDelayed(0.5f, () =>
-            {
-                if (schem == null || schem.transform == null)
-                    return;
-
-                schem.transform.GetChild(0).localScale = Vector3.one;
-                if (labPlayer.GameObject != null) schem.transform.position = labPlayer.GameObject.transform.position;
-
-                var light = Light.Create(Vector3.zero);
-                light.Position = schem.transform.position + new Vector3(0f, -0.08f, 0f);
-                light.Transform.parent = schem.transform;
-                light.Scale = Vector3.one;
-                light.Range = 10f;
-                light.Intensity = 1.25f;
-                light.Color = Color.magenta;
+                AttachRoleSchematicLight(schem, Color.magenta);
             });
-        });
-    }
 
     public static void Schem999(Player labPlayer)
-    {
-        Timing.CallDelayed(1.5f, () =>
-        {
-            var exiledPlayer = Exiled.API.Features.Player.Get(labPlayer.NetworkId);
-            Logger.Info($"[DEBUG] S999 ExiledPlayer={(exiledPlayer != null ? exiledPlayer.Nickname : "null")}");
-            if (exiledPlayer == null)
+        => WearRoleSchematic(
+            labPlayer,
+            "Scp999Model",
+            nameof(Schem999),
+            playerScale: new Vector3(0.35f, 0.2f, 0.35f),
+            offset: new Vector3(0f, 0f, 0.05f),
+            afterAttach: (player, schem) =>
             {
-                Logger.Warn("[LabApiHandler] Schem999: Exiled player not found.");
-                return;
-            }
+                if (player.GameObject != null)
+                    schem.transform.position = player.GameObject.transform.position + new Vector3(0f, 0f, 0.05f);
 
-            SchematicObject schem;
-            try
-            {
-                schem = ObjectSpawner.SpawnSchematic("Scp999Model", Vector3.zero);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("[LabApiHandler] Schem999: Spawn error " + ex);
-                return;
-            }
-
-            labPlayer.Scale = new Vector3(0.35f, 0.2f, 0.35f);
-            schem.transform.SetParent(labPlayer.GameObject?.transform);
-
-            WearsHandler.RegisterExternal(exiledPlayer, schem);
-
-            Timing.CallDelayed(0.5f, () =>
-            {
-                if (schem == null || schem.transform == null)
-                    return;
-
-                if (labPlayer.GameObject != null)
-                    schem.transform.position = labPlayer.GameObject.transform.position + new Vector3(0f, 0f, 0.05f);
-
-                for (var i = 0; i < schem.transform.childCount; i++)
-                {
-                    var child = schem.transform.GetChild(i);
-                    Logger.Info($"[Scp999Model] Child {i}: {child.name}, localScale={child.localScale}");
-                }
-                    
-                labPlayer.DestroySchematic(schem);
+                player.DestroySchematic(schem);
             });
-        });
-    }
 
     public static void SchemSnowWarrier(Player labPlayer)
+        => WearRoleSchematic(
+            labPlayer,
+            "SnowWarrier",
+            nameof(SchemSnowWarrier),
+            afterAttach: (player, schem) =>
+            {
+                if (player.GameObject != null)
+                    schem.transform.position = player.GameObject.transform.position;
+
+                AttachRoleSchematicLight(schem, Color.white);
+            });
+
+    public static void SchemCandyWarrier(Player labPlayer)
+        => WearRoleSchematic(
+            labPlayer,
+            "CandyWarrier",
+            nameof(SchemCandyWarrier),
+            playerScale: Vector3.one,
+            afterAttach: (player, schem) =>
+            {
+                schem.AnimationController.Play("candy");
+
+                if (player.GameObject != null)
+                    schem.transform.position = player.GameObject.transform.position;
+            });
+
+    private static void WearRoleSchematic(
+        Player labPlayer,
+        string schematicName,
+        string logName,
+        Vector3? playerScale = null,
+        Vector3? offset = null,
+        Action<Player, SchematicObject> afterAttach = null)
     {
         Timing.CallDelayed(1.5f, () =>
         {
+            if (labPlayer == null)
+                return;
+
             var exiledPlayer = Exiled.API.Features.Player.Get(labPlayer.NetworkId);
-            Logger.Info($"[DEBUG] SSW ExiledPlayer={(exiledPlayer != null ? exiledPlayer.Nickname : "null")}");
             if (exiledPlayer == null)
             {
-                Logger.Warn("[LabApiHandler] SchemSnowWarrier: Exiled player not found.");
+                Log.Warn($"[LabApiHandler] {logName}: Exiled player not found.");
                 return;
             }
 
             SchematicObject schem;
             try
             {
-                schem = ObjectSpawner.SpawnSchematic("SnowWarrier", Vector3.zero);
+                schem = ObjectSpawner.SpawnSchematic(schematicName, Vector3.zero);
             }
             catch (Exception ex)
             {
-                Logger.Error("[LabApiHandler] SchemSnowWarrier: Spawn error " + ex);
+                Log.Error($"[LabApiHandler] {logName}: Spawn error {ex}");
                 return;
             }
 
-            schem.transform.SetParent(labPlayer.GameObject?.transform);
+            if (playerScale.HasValue)
+                labPlayer.Scale = playerScale.Value;
 
-            WearsHandler.RegisterExternal(exiledPlayer, schem);
+            WearsHandler.RegisterExternal(exiledPlayer, schem, offset);
 
             Timing.CallDelayed(0.5f, () =>
             {
                 if (schem == null || schem.transform == null)
                     return;
 
-                if (labPlayer.GameObject != null) schem.transform.position = labPlayer.GameObject.transform.position;
-
-                var light = Light.Create(Vector3.zero);
-                light.Position = schem.transform.position + new Vector3(0f, -0.08f, 0f);
-                light.Transform.parent = schem.transform;
-                light.Scale = Vector3.one;
-                light.Range = 10f;
-                light.Intensity = 1.25f;
-                light.Color = Color.white;
+                afterAttach?.Invoke(labPlayer, schem);
             });
         });
     }
-    
-    public static void SchemCandyWarrier(Player labPlayer)
+
+    private static void AttachRoleSchematicLight(SchematicObject schem, Color color)
     {
-        Timing.CallDelayed(1.5f, () =>
-        {
-            var exiledPlayer = Exiled.API.Features.Player.Get(labPlayer.NetworkId);
-            Logger.Info($"[DEBUG] SCW ExiledPlayer={(exiledPlayer != null ? exiledPlayer.Nickname : "null")}");
-            if (exiledPlayer == null)
-            {
-                Logger.Warn("[LabApiHandler] SchemCandyWarrier: Exiled player not found.");
-                return;
-            }
+        if (schem == null || schem.transform == null)
+            return;
 
-            SchematicObject schem;
-            try
-            {
-                schem = ObjectSpawner.SpawnSchematic("CandyWarrier", Vector3.zero);
-            }
-            catch (Exception ex)
-            {
-                Logger.Error("[LabApiHandler] SchemCandyWarrier: Spawn error " + ex);
-                return;
-            }
-
-            labPlayer.Scale = Vector3.one;
-            schem.transform.SetParent(labPlayer.GameObject?.transform);
-
-            WearsHandler.RegisterExternal(exiledPlayer, schem);
-
-            Timing.CallDelayed(0.5f, () =>
-            {
-                if (schem == null || schem.transform == null)
-                    return;
-                
-                schem.AnimationController.Play("candy");
-
-                if (labPlayer.GameObject != null) schem.transform.position = labPlayer.GameObject.transform.position;
-            });
-        });
+        var light = Light.Create(Vector3.zero);
+        light.Position = schem.transform.position + new Vector3(0f, -0.08f, 0f);
+        light.Transform.parent = schem.transform;
+        light.Scale = Vector3.one;
+        light.Range = 10f;
+        light.Intensity = 1.25f;
+        light.Color = color;
     }
 
     private static void ModelRolesRagdoll(Exiled.Events.EventArgs.Player.DyingEventArgs ev)
