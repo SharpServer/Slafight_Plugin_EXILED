@@ -12,7 +12,9 @@ public class NtfFieldMedic : CRole
 {
     protected override string RoleName { get; set; } = "NTF FIELD MEDIC";
     protected override string Description { get; set; } =
-        "Nine-Tailed-Foxの野戦衛生兵。S-41 MEDICAL PISTOLで遠距離から味方を治療できる。敵勢力も回復してしまうため射線に注意。";
+        "Nine-Tailed-Foxの野戦衛生兵。\n" +
+        "S-41 MEDICAL PISTOLで遠距離から味方を治療できる。\n" +
+        "敵勢力も回復してしまうため射線に注意。";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.NtfFieldMedic;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "NtfFieldMedic";
