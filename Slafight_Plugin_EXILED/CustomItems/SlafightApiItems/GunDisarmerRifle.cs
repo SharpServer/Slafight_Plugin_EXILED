@@ -2,7 +2,6 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.DamageHandlers;
 using Exiled.API.Features.Items;
-using Exiled.Events.EventArgs.Item;
 using Exiled.Events.EventArgs.Player;
 using InventorySystem.Items.Firearms.Attachments;
 using MEC;
@@ -26,17 +25,8 @@ public class GunDisarmerRifle : CItemWeapon
     protected override Vector3 Scale => new(1f, 1f, 1.045f);
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor => Color.grey;
-
-    protected override void ApplyFirearmCustomization(Item item)
-    {
-        if (item is Firearm firearm)
-        {
-            firearm.MaxMagazineAmmo = MagazineSize;
-            firearm.ClearAttachments();
-            firearm.AddAttachment(AttachmentName.ScopeSight);
-        }
-        base.ApplyFirearmCustomization(item);
-    }
+    protected override AttachmentName[] Attachments => [AttachmentName.ScopeSight];
+    protected override bool AllowAttachmentChanges => false;
 
     protected override void OnAcquired(ItemAddedEventArgs ev, bool displayMessage)
     {
@@ -71,21 +61,4 @@ public class GunDisarmerRifle : CItemWeapon
         base.OnReloading(ev);
     }
 
-    public override void RegisterEvents()
-    {
-        Exiled.Events.Handlers.Item.ChangingAttachments += OnAttachmentChanging;
-        base.RegisterEvents();
-    }
-
-    public override void UnregisterEvents()
-    {
-        Exiled.Events.Handlers.Item.ChangingAttachments -= OnAttachmentChanging;
-        base.UnregisterEvents();
-    }
-
-    private void OnAttachmentChanging(ChangingAttachmentsEventArgs ev)
-    {
-        if (!Check(ev.Item)) return;
-        ev.IsAllowed = false;
-    }
 }

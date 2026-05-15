@@ -29,4 +29,6 @@ public class GunCOM77 : CItemWeapon
         ev.Firearm.MagazineAmmo = MagazineSize;
         ev.IsAllowed = true;
     }
+
+    protected override bool ShouldBlockReloading(ReloadingWeaponEventArgs ev) => false;
 }

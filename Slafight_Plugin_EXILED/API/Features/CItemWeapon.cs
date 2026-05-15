@@ -3,7 +3,9 @@ using System.Linq;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
+using Exiled.Events.EventArgs.Item;
 using Exiled.Events.EventArgs.Player;
+using InventorySystem.Items.Firearms.Attachments;
 using InventorySystem.Items.Firearms.Modules;
 using UnityEngine;
 
@@ -29,8 +31,26 @@ public abstract class CItemWeapon : CItem
     /// <summary>マガジン容量。0 なら override 無し (バニラ MagazineSize)。</summary>
     protected virtual byte MagazineSize => 0;
 
+    /// <summary>最大装弾数。0 なら override 無し。デフォルトでは MagazineSize と同じ値を使う。</summary>
+    protected virtual ushort MaxMagazineAmmo => MagazineSize;
+
+    /// <summary>生成 / 付与直後の装填数。0 なら override 無し。デフォルトでは MagazineSize と同じ値を使う。</summary>
+    protected virtual ushort InitialMagazineAmmo => MagazineSize;
+
+    /// <summary>1 発射あたりの消費弾数。0 なら override 無し。</summary>
+    protected virtual byte AmmoDrain => 0;
+
     /// <summary>Pickup の見た目スケール。Vector3.one ならバニラサイズ。</summary>
     protected virtual Vector3 Scale => Vector3.one;
+
+    /// <summary>固定したいアタッチメント一覧。空ならアタッチメントは変更しない。</summary>
+    protected virtual AttachmentName[] Attachments => [];
+
+    /// <summary>Attachments 適用前に既存アタッチメントを消すか。</summary>
+    protected virtual bool ClearAttachmentsBeforeApplying => Attachments.Length > 0;
+
+    /// <summary>プレイヤーによるアタッチメント変更を許可するか。</summary>
+    protected virtual bool AllowAttachmentChanges => true;
 
     // ==== Spawn / Give 経路: Item を作って MagazineSize / Scale を焼き付ける ====
 
@@ -53,13 +73,43 @@ public abstract class CItemWeapon : CItem
     }
 
     /// <summary>
-    /// Item ベースで適用できるカスタマイズ (現状は MagazineSize のみ)。
-    /// 派生で attachments など追加したい場合は override する。
+    /// Item ベースで適用できる Firearm カスタマイズ。
+    /// さらに特殊な処理が必要な場合だけ override する。
     /// </summary>
     protected virtual void ApplyFirearmCustomization(Item item)
     {
-        if (item is Firearm firearm && MagazineSize > 0)
-            firearm.MagazineAmmo = MagazineSize;
+        if (item is not Firearm firearm)
+            return;
+
+        ApplyFirearmStats(firearm);
+        ApplyFirearmAttachments(firearm);
+    }
+
+    /// <summary>最大装弾数 / 初期装填数 / 弾薬消費を Firearm に適用する。</summary>
+    protected virtual void ApplyFirearmStats(Firearm firearm)
+    {
+        if (MaxMagazineAmmo > 0)
+            firearm.MaxMagazineAmmo = MaxMagazineAmmo;
+
+        if (InitialMagazineAmmo > 0)
+            firearm.MagazineAmmo = InitialMagazineAmmo;
+
+        if (AmmoDrain > 0)
+            firearm.AmmoDrain = AmmoDrain;
+    }
+
+    /// <summary>アタッチメント設定を Firearm に適用する。</summary>
+    protected virtual void ApplyFirearmAttachments(Firearm firearm)
+    {
+        var attachments = Attachments;
+        if (attachments.Length == 0)
+            return;
+
+        if (ClearAttachmentsBeforeApplying)
+            firearm.ClearAttachments();
+
+        foreach (var attachment in attachments)
+            firearm.AddAttachment(attachment);
     }
 
     // ==== ダメージ override ====
@@ -77,6 +127,7 @@ public abstract class CItemWeapon : CItem
     {
         Exiled.Events.Handlers.Player.ReloadingWeapon += OnInternalReloading;
         Exiled.Events.Handlers.Player.ReloadedWeapon  += OnInternalReloaded;
+        Exiled.Events.Handlers.Item.ChangingAttachments += OnInternalChangingAttachments;
         base.RegisterEvents();
     }
 
@@ -84,14 +135,22 @@ public abstract class CItemWeapon : CItem
     {
         Exiled.Events.Handlers.Player.ReloadingWeapon -= OnInternalReloading;
         Exiled.Events.Handlers.Player.ReloadedWeapon  -= OnInternalReloaded;
+        Exiled.Events.Handlers.Item.ChangingAttachments -= OnInternalChangingAttachments;
         base.UnregisterEvents();
+    }
+
+    private void OnInternalChangingAttachments(ChangingAttachmentsEventArgs ev)
+    {
+        if (AllowAttachmentChanges) return;
+        if (!Check(ev.Item)) return;
+        ev.IsAllowed = false;
     }
 
     private void OnInternalReloading(ReloadingWeaponEventArgs ev)
     {
         if (!Check(ev.Item)) return;
 
-        if (MagazineSize > 0 && ev.Firearm.TotalAmmo >= MagazineSize)
+        if (ShouldBlockReloading(ev))
         {
             // 既に MagazineSize 分弾を抱えていればリロード不可。
             ev.IsAllowed = false;
@@ -141,4 +200,8 @@ public abstract class CItemWeapon : CItem
 
     /// <summary>派生がリロード完了タイミングをフックしたい場合用。</summary>
     protected virtual void OnReloaded(ReloadedWeaponEventArgs ev) { }
+
+    /// <summary>MagazineSize 到達時に基底側でリロードを止めるか。</summary>
+    protected virtual bool ShouldBlockReloading(ReloadingWeaponEventArgs ev)
+        => MagazineSize > 0 && ev.Firearm.TotalAmmo >= MagazineSize;
 }

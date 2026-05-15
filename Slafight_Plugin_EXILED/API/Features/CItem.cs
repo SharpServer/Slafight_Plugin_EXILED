@@ -262,6 +262,9 @@ public abstract class CItem
     // ======================================================
 
     protected virtual string? PickupSchematicName => null;
+    protected virtual Vector3 PickupSchematicOffset => Vector3.zero;
+    protected virtual Vector3 PickupSchematicRotationOffset => Vector3.zero;
+    protected virtual Vector3 PickupSchematicScale => Vector3.one;
 
     // ======================================================
     // Goggles (Scp1344) 設定
@@ -411,6 +414,7 @@ public abstract class CItem
                 Log.Warn($"[CItem] Spawn: PickupAdded missed for serial={pickup.Serial}, force-registered.");
             }
 
+            CustomizePickup(pickup);
             OnSpawned(pickup);
             return pickup;
         }
@@ -438,6 +442,12 @@ public abstract class CItem
     /// Armor 固有ロジック（VestEfficacy 等）は <see cref="CItemArmor"/> 側に移管済み。
     /// </summary>
     protected virtual void CustomizeItem(Item item) { }
+
+    /// <summary>
+    /// Spawn 後に Pickup へ追加カスタマイズを適用するフック。
+    /// Pickup の生成方法そのものを変えたい場合は <see cref="CreatePickupForSpawn"/> を override する。
+    /// </summary>
+    protected virtual void CustomizePickup(Pickup pickup) { }
 
     // ======================================================
     // Pickup ライト制御
@@ -514,18 +524,28 @@ public abstract class CItem
     // Pickup Schematic 追従
     // ======================================================
 
-    private static void AttachPickupSchematic(Pickup pickup, string schematicName)
+    private static void AttachPickupSchematic(
+        Pickup pickup,
+        string schematicName,
+        Vector3 offset,
+        Vector3 rotationOffset,
+        Vector3 scale)
     {
         if (PickupSchematics.ContainsKey(pickup.Serial)) return;
 
         try
         {
-            var schem = ObjectSpawner.SpawnSchematic(schematicName, pickup.Position, pickup.Rotation);
+            var rotation = pickup.Rotation * Quaternion.Euler(rotationOffset);
+            var schem = ObjectSpawner.SpawnSchematic(
+                schematicName,
+                pickup.Position + pickup.Rotation * offset,
+                rotation,
+                scale);
             if (schem == null) return;
 
             PickupSchematics[pickup.Serial]          = schem;
             PickupSchematicCoroutines[pickup.Serial] = Timing.RunCoroutine(
-                TrackPickupSchematic(pickup, schem));
+                TrackPickupSchematic(pickup, schem, offset, rotationOffset));
         }
         catch (Exception ex)
         {
@@ -533,12 +553,16 @@ public abstract class CItem
         }
     }
 
-    private static IEnumerator<float> TrackPickupSchematic(Pickup pickup, SchematicObject schem)
+    private static IEnumerator<float> TrackPickupSchematic(
+        Pickup pickup,
+        SchematicObject schem,
+        Vector3 offset,
+        Vector3 rotationOffset)
     {
         while (pickup?.Base?.gameObject != null && schem?.gameObject != null)
         {
-            schem.transform.position = pickup.Position;
-            schem.transform.rotation = pickup.Rotation;
+            schem.transform.position = pickup.Position + pickup.Rotation * offset;
+            schem.transform.rotation = pickup.Rotation * Quaternion.Euler(rotationOffset);
             yield return Timing.WaitForOneFrame;
         }
     }
@@ -886,7 +910,14 @@ public abstract class CItem
             ci.AddPickupLight(ev.Pickup);
 
         if (!string.IsNullOrEmpty(ci.PickupSchematicName))
-            AttachPickupSchematic(ev.Pickup, ci.PickupSchematicName!);
+        {
+            AttachPickupSchematic(
+                ev.Pickup,
+                ci.PickupSchematicName!,
+                ci.PickupSchematicOffset,
+                ci.PickupSchematicRotationOffset,
+                ci.PickupSchematicScale);
+        }
     }
 
     private static void OnAnyPickupDestroyed(MapEvents.PickupDestroyedEventArgs ev)
@@ -1060,6 +1091,7 @@ public abstract class CItem
     internal void CallOnUpgradingPickup(Scp914Events.UpgradingPickupEventArgs ev)         => OnUpgradingPickup(ev);
     internal void CallOnUpgradingInventoryItem(Scp914Events.UpgradingInventoryItemEventArgs ev) => OnUpgradingInventoryItem(ev);
     internal void CallCustomizeItem(Item item)                                            => CustomizeItem(item);
+    internal void CallCustomizePickup(Pickup pickup)                                      => CustomizePickup(pickup);
 
     // Give() ペンディング状態を CItemHybrid から制御するための内部 API
     internal static void SetPendingGive(CItem ci, bool displayMessage)

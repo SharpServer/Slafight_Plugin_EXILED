@@ -4,11 +4,8 @@ using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
-using Exiled.Events.EventArgs.Map;
 using Exiled.Events.EventArgs.Player;
 using MEC;
-using ProjectMER.Features;
-using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 
@@ -22,6 +19,7 @@ public class Toolbox : CItem
     protected override ItemType BaseItem => ItemType.Coin;
     protected override bool PickupLightEnabled => true;
     protected override Color PickupLightColor => Color.yellow;
+    protected override string PickupSchematicName => "ToolboxModel";
 
     public enum UtilType
     {
@@ -59,22 +57,6 @@ public class Toolbox : CItem
         foreach (var h in HintLoopHandles.Values) Timing.KillCoroutines(h);
         HintLoopHandles.Clear();
         ToolboxStatsMap.Clear();
-    }
-
-    protected override void OnPickupAdded(PickupAddedEventArgs ev)
-    {
-        var schem = ObjectSpawner.SpawnSchematic("ToolboxModel", ev.Pickup.Position, ev.Pickup.Rotation);
-        schem.transform.SetParent(ev.Pickup.Transform);
-        schem.transform.localPosition = Vector3.zero;
-        schem.transform.localRotation = Quaternion.identity;
-        base.OnPickupAdded(ev);
-    }
-
-    protected override void OnPickupDestroyed(PickupDestroyedEventArgs ev)
-    {
-        var schem = ev.Pickup.GameObject.GetComponentInChildren<SchematicObject>();
-        schem.Destroy();
-        base.OnPickupDestroyed(ev);
     }
 
     private static void OnPlayerLeft(LeftEventArgs ev)

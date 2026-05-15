@@ -361,6 +361,14 @@ public abstract class CItemHybrid : CItem
         base.CustomizeItem(item);
     }
 
+    protected override void CustomizePickup(Pickup pickup)
+    {
+        var idx = _serialModeIndex.TryGetValue(pickup.Serial, out var i) ? i : _pendingModeIndex;
+        if (idx >= 0 && idx < SubModes.Count)
+            SubModes[idx]?.TargetItem.CallCustomizePickup(pickup);
+        base.CustomizePickup(pickup);
+    }
+
     protected override void ShowSelectedMessage(Player player)
     {
         // SwitchMode 実行中はモード切替 Hint を優先するので Selected Hint を抑制

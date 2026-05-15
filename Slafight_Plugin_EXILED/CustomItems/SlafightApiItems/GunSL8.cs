@@ -1,8 +1,6 @@
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.DamageHandlers;
-using Exiled.API.Features.Items;
-using Exiled.Events.EventArgs.Item;
 using Exiled.Events.EventArgs.Player;
 using InventorySystem.Items.Firearms.Attachments;
 using MEC;
@@ -26,18 +24,12 @@ public class GunSL8 : CItemWeapon
     protected override Vector3 Scale => new(1f, 1f, 1.75f);
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor => CustomColor.ChaoticGreen.ToUnityColor();
-
-    protected override void ApplyFirearmCustomization(Item item)
-    {
-        if (item is Firearm firearm)
-        {
-            firearm.MaxMagazineAmmo = MagazineSize;
-            firearm.ClearAttachments();
-            firearm.AddAttachment(AttachmentName.ScopeSight);
-            firearm.AddAttachment(AttachmentName.SoundSuppressor);
-        }
-        base.ApplyFirearmCustomization(item);
-    }
+    protected override AttachmentName[] Attachments =>
+    [
+        AttachmentName.ScopeSight,
+        AttachmentName.SoundSuppressor,
+    ];
+    protected override bool AllowAttachmentChanges => false;
 
     protected override void OnHurtingOthers(HurtingEventArgs ev)
     {
@@ -51,22 +43,14 @@ public class GunSL8 : CItemWeapon
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Item.ChangingAttachments += OnAttachmentChanging;
         Exiled.Events.Handlers.Player.SendingGunSound += OnSound;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Item.ChangingAttachments -= OnAttachmentChanging;
         Exiled.Events.Handlers.Player.SendingGunSound -= OnSound;
         base.UnregisterEvents();
-    }
-
-    private void OnAttachmentChanging(ChangingAttachmentsEventArgs ev)
-    {
-        if (!Check(ev.Item)) return;
-        ev.IsAllowed = false;
     }
 
     private void OnSound(SendingGunSoundEventArgs ev)

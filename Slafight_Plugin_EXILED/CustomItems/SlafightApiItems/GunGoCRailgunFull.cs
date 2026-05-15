@@ -4,7 +4,6 @@ using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
-using Firearm = Exiled.API.Features.Items.Firearm;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
@@ -22,6 +21,9 @@ public class GunGoCRailgunFull : CItemWeapon
     protected override string UniqueKey => "GunGoCRailgunFull";
     protected override ItemType BaseItem => ItemType.ParticleDisruptor;
     protected override Vector3 Scale        => new(1.15f, 1f, 1.15f);
+    protected override ushort MaxMagazineAmmo => 20;
+    protected override ushort InitialMagazineAmmo => 20;
+    protected override byte AmmoDrain => 5;
 
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor   => CustomColor.Gold.ToUnityColor();
@@ -46,16 +48,5 @@ public class GunGoCRailgunFull : CItemWeapon
         {
             _isProcessing = false;
         }
-    }
-
-    protected override void ApplyFirearmCustomization(Item item)
-    {
-        if (item is Firearm pickup)
-        {
-            pickup.MaxMagazineAmmo = 20;
-            pickup.MagazineAmmo    = 20;
-            pickup.AmmoDrain = 5;
-        }
-        base.ApplyFirearmCustomization(item);
     }
 }

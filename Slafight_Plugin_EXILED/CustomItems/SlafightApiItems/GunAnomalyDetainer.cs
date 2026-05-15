@@ -1,6 +1,4 @@
 using Exiled.API.Enums;
-using Exiled.API.Features.Items;
-using Exiled.Events.EventArgs.Item;
 using Exiled.Events.EventArgs.Player;
 using InventorySystem.Items.Firearms.Attachments;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -25,28 +23,15 @@ public class GunAnomalyDetainer : CItemWeapon
     protected override Vector3 Scale => new(1f, 1f, 1.1f);
     protected override bool PickupLightEnabled => true;
     protected override Color PickupLightColor => new(0.35f, 0.8f, 1f);
-
-    protected override void ApplyFirearmCustomization(Item item)
-    {
-        if (item is Firearm firearm)
-        {
-            firearm.MaxMagazineAmmo = MagazineSize;
-            firearm.ClearAttachments();
-            firearm.AddAttachment(AttachmentName.RifleBody);
-            firearm.AddAttachment(AttachmentName.NightVisionSight);
-            firearm.AddAttachment(AttachmentName.Foregrip);
-            firearm.AddAttachment(AttachmentName.StandardMagJHP);
-            firearm.AddAttachment(AttachmentName.FlashHider);
-        }
-
-        base.ApplyFirearmCustomization(item);
-    }
-
-    protected override void OnAcquired(ItemAddedEventArgs ev, bool displayMessage)
-    {
-        ev.Item.Cast<Firearm>()?.TryReload();
-        base.OnAcquired(ev, displayMessage);
-    }
+    protected override AttachmentName[] Attachments =>
+    [
+        AttachmentName.RifleBody,
+        AttachmentName.NightVisionSight,
+        AttachmentName.Foregrip,
+        AttachmentName.StandardMagJHP,
+        AttachmentName.FlashHider,
+    ];
+    protected override bool AllowAttachmentChanges => false;
 
     protected override void OnHurtingOthers(HurtingEventArgs ev)
     {
@@ -59,27 +44,4 @@ public class GunAnomalyDetainer : CItemWeapon
         base.OnHurtingOthers(ev);
     }
 
-    protected override void OnReloading(ReloadingWeaponEventArgs ev)
-    {
-        ev.IsAllowed = false;
-        base.OnReloading(ev);
-    }
-
-    public override void RegisterEvents()
-    {
-        Exiled.Events.Handlers.Item.ChangingAttachments += OnAttachmentChanging;
-        base.RegisterEvents();
-    }
-
-    public override void UnregisterEvents()
-    {
-        Exiled.Events.Handlers.Item.ChangingAttachments -= OnAttachmentChanging;
-        base.UnregisterEvents();
-    }
-
-    private void OnAttachmentChanging(ChangingAttachmentsEventArgs ev)
-    {
-        if (!Check(ev.Item)) return;
-        ev.IsAllowed = false;
-    }
 }

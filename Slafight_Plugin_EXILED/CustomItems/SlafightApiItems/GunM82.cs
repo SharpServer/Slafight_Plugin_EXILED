@@ -1,8 +1,6 @@
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.DamageHandlers;
-using Exiled.API.Features.Items;
-using Exiled.Events.EventArgs.Item;
 using Exiled.Events.EventArgs.Player;
 using InventorySystem.Items.Firearms.Attachments;
 using PlayerRoles;
@@ -25,21 +23,16 @@ public class GunM82 : CItemWeapon
     protected override Vector3 Scale => new(1f, 1f, 2.25f);
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor   => Color.cyan;
-
-    protected override void ApplyFirearmCustomization(Item item)
-    {
-        if (item is Firearm firearm)
-        {
-            firearm.AmmoDrain = 30;
-            firearm.ClearAttachments();
-            firearm.AddAttachment(AttachmentName.ScopeSight);
-            firearm.AddAttachment(AttachmentName.LowcapMagAP);
-            firearm.AddAttachment(AttachmentName.RifleBody);
-            firearm.AddAttachment(AttachmentName.RecoilReducingStock);
-            firearm.AddAttachment(AttachmentName.SoundSuppressor);
-        }
-        base.ApplyFirearmCustomization(item);
-    }
+    protected override byte AmmoDrain => 30;
+    protected override AttachmentName[] Attachments =>
+    [
+        AttachmentName.ScopeSight,
+        AttachmentName.LowcapMagAP,
+        AttachmentName.RifleBody,
+        AttachmentName.RecoilReducingStock,
+        AttachmentName.SoundSuppressor,
+    ];
+    protected override bool AllowAttachmentChanges => false;
 
     protected override void OnShot(ShotEventArgs ev)
     {
@@ -65,22 +58,14 @@ public class GunM82 : CItemWeapon
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Item.ChangingAttachments += OnAttachmentChanging;
         Exiled.Events.Handlers.Player.SendingGunSound += OnSound;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Item.ChangingAttachments -= OnAttachmentChanging;
         Exiled.Events.Handlers.Player.SendingGunSound -= OnSound;
         base.UnregisterEvents();
-    }
-
-    private void OnAttachmentChanging(ChangingAttachmentsEventArgs ev)
-    {
-        if (!Check(ev.Item)) return;
-        ev.IsAllowed = false;
     }
 
     private void OnSound(SendingGunSoundEventArgs ev)
