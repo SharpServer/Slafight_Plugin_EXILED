@@ -78,6 +78,7 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.ZoneManager]    = ("<color=#00ffff>Zone Manager</color>",      NeutFoundTeam, "施設からの脱出を目指しながら、警備職員達を監督せよ"),
         [CRoleTypeId.FacilityManager]= ("<color=#dc143c>Facility Manager</color>",  NeutFoundTeam, "施設からの脱出を目指しながら、サイトの行く末を監督せよ"),
         [CRoleTypeId.Engineer]       = ("<color=#faff86>Engineer</color>",          NeutFoundTeam, "様々なタスクをこなし、最強の弾頭を起動せよ！"),
+        [CRoleTypeId.SiteNavigator]  = ("<color=#faff86>Site Navigator</color>",    NeutFoundTeam, "S-NAVを活用し、施設から脱出せよ。"),
         [CRoleTypeId.ObjectObserver] = ("<color=#faff86>Object Observer</color>",   NeutFoundTeam, "オブジェクトに注意しながら、施設から脱出せよ。"),
         [CRoleTypeId.Surveillance]   = ("<color=#faff86>Surveillance</color>",      NeutFoundTeam, "施設の状況を監視し、脱出の機会を見極めよ。"),
         [CRoleTypeId.CandyResearcher]= ("<color=#faff86>Candy Researcher</color>",  NeutFoundTeam, "キャンディーを活用しながら、施設から脱出せよ。"),

@@ -1,0 +1,287 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>SCP-914 Keycard Flow</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #101315;
+      --panel: #181d21;
+      --panel2: #20272d;
+      --line: #39444d;
+      --text: #edf3f5;
+      --muted: #aeb9bf;
+      --bad: #d95c4f;
+      --mid: #d09342;
+      --same: #61a7d9;
+      --good: #69b56e;
+      --best: #b57edc;
+      --rare: #f0cc59;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: "Segoe UI", "Yu Gothic UI", Meiryo, sans-serif;
+      line-height: 1.5;
+    }
+
+    header {
+      padding: 28px 32px 18px;
+      border-bottom: 1px solid var(--line);
+      background: #151a1e;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: 0;
+    }
+
+    header p, .note, footer {
+      color: var(--muted);
+    }
+
+    main {
+      padding: 24px 32px 40px;
+    }
+
+    .notes {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .note {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 13px 15px;
+      font-size: 14px;
+    }
+
+    .note strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    h2 {
+      margin: 26px 0 12px;
+      font-size: 18px;
+    }
+
+    .paths {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 14px;
+    }
+
+    .path {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 14px;
+    }
+
+    .path h3 {
+      margin: 0 0 11px;
+      font-size: 15px;
+    }
+
+    .steps {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .step {
+      padding: 7px 9px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel2);
+      font-size: 13px;
+      font-weight: 650;
+    }
+
+    .arrow { color: var(--muted); }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    table {
+      width: 100%;
+      min-width: 1200px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 10px 11px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+      text-align: left;
+    }
+
+    th:last-child, td:last-child { border-right: 0; }
+    tr:last-child td { border-bottom: 0; }
+
+    th {
+      position: sticky;
+      top: 0;
+      background: #20272d;
+      z-index: 1;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .source {
+      width: 205px;
+      background: #151a1e;
+      font-weight: 700;
+    }
+
+    .perm {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    .result {
+      display: block;
+      font-weight: 650;
+    }
+
+    .bad { color: var(--bad); }
+    .rare { color: var(--rare); }
+
+    footer {
+      margin-top: 24px;
+      font-size: 13px;
+    }
+
+    @media (max-width: 720px) {
+      header, main {
+        padding-left: 16px;
+        padding-right: 16px;
+      }
+      h1 { font-size: 23px; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>SCP-914 Keycard Flow</h1>
+    <p>研究系は指定どおり RC &lt; Zone Manager &lt; Scientist の順に整理。SCP:SL公式Wikiの Containment / Security / Administrative Access の考え方に寄せ、武器アクセス I-II-III とSite Director分岐を追加。</p>
+  </header>
+
+  <main>
+    <section class="notes">
+      <div class="note"><strong>共通事故</strong>床Pickupは最初に1/12でワイルドカード判定。成功時はSCP-513が1/10、CapybaraMissileが9/10。</div>
+      <div class="note"><strong>O5</strong>SCPCBのOMNI相当として最終段。公式WikiでもO5は全権限カード枠として扱われる。</div>
+      <div class="note"><strong>Site Director</strong>Facility Managerから50%で分岐する横道。権限はFacility Manager相当で、O5ほど万能ではない。</div>
+      <div class="note"><strong>Chaos Intruder</strong>Chaos側の低位侵入デバイスとして914表に追加。ConscriptsとChaos Insurgency Deviceの間に入る。</div>
+    </section>
+
+    <h2>主要ルート</h2>
+    <section class="paths">
+      <article class="path">
+        <h3>研究/管理</h3>
+        <div class="steps">
+          <span class="step">Janitor</span><span class="arrow">→</span>
+          <span class="step">Research Coord.</span><span class="arrow">→</span>
+          <span class="step">Zone Manager</span><span class="arrow">→</span>
+          <span class="step">Scientist</span><span class="arrow">→</span>
+          <span class="step">Containment Eng.</span><span class="arrow">→</span>
+          <span class="step">Facility Manager</span><span class="arrow">→</span>
+          <span class="step">Site Director / O5</span>
+        </div>
+      </article>
+
+      <article class="path">
+        <h3>武器アクセス</h3>
+        <div class="steps">
+          <span class="step">Guard</span><span class="arrow">→</span>
+          <span class="step">Armory I</span><span class="arrow">→</span>
+          <span class="step">Armory II</span><span class="arrow">→</span>
+          <span class="step">Armory III</span><span class="arrow">→</span>
+          <span class="step">Captain / O5</span>
+        </div>
+      </article>
+
+      <article class="path">
+        <h3>Chaos</h3>
+        <div class="steps">
+          <span class="step">Conscripts</span><span class="arrow">→</span>
+          <span class="step">Chaos Intruder</span><span class="arrow">→</span>
+          <span class="step">Chaos Device</span><span class="arrow">→</span>
+          <span class="step">Armory III</span><span class="arrow">→</span>
+          <span class="step">O5</span>
+        </div>
+      </article>
+    </section>
+
+    <h2>詳細変換表</h2>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Input</th>
+            <th>Rough</th>
+            <th>Coarse</th>
+            <th>1:1</th>
+            <th>Fine</th>
+            <th>Very Fine</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td class="source">Janitor<span class="perm">C1相当</span></td><td class="bad">Destroy</td><td>Quarter x2</td><td>Research Coordinator</td><td>Zone Manager</td><td>Scientist 75% / Site Navigator 25%</td></tr>
+          <tr><td class="source">Research Coordinator<span class="perm">RC低位</span></td><td class="bad">Destroy</td><td>Janitor</td><td>Surveillance 66.7% / Keep 33.3%</td><td>Zone Manager</td><td>Scientist</td></tr>
+          <tr><td class="source">Surveillance<span class="perm">RC互換</span></td><td class="bad">Destroy</td><td>Janitor</td><td>Research Coordinator</td><td>Zone Manager</td><td>Scientist</td></tr>
+          <tr><td class="source">Zone Manager<span class="perm">Admin 1</span></td><td class="bad">Destroy</td><td>Research Coordinator</td><td>Guard</td><td>Scientist</td><td>Containment Engineer 75% / Armory I 25%</td></tr>
+          <tr><td class="source">Scientist<span class="perm">C2 + Admin 1</span></td><td class="bad">Destroy</td><td>Zone Manager</td><td>Site Navigator 50% / Keep 50%</td><td>Containment Engineer</td><td>Facility Manager 75% / Site Director 25%</td></tr>
+          <tr><td class="source">Site Navigator<span class="perm">Scientist互換</span></td><td class="bad">Destroy</td><td>Research Coordinator</td><td>Scientist</td><td>Containment Engineer</td><td>Facility Manager</td></tr>
+          <tr><td class="source">Containment Engineer<span class="perm">C2上位</span></td><td class="bad">Destroy</td><td>Scientist</td><td>Toolbox</td><td>Facility Manager</td><td>Site Director 50% / O5 50%</td></tr>
+          <tr><td class="source">Facility Manager<span class="perm">Admin 2</span></td><td>Scientist</td><td>Containment Engineer</td><td>Keep</td><td>Site Director 50% / O5 50%</td><td>O5 75% / Omega Warhead Access 25%</td></tr>
+          <tr><td class="source">Site Director<span class="perm">Facility Manager互換</span></td><td>Facility Manager</td><td>Containment Engineer</td><td>Keep</td><td>O5</td><td>O5</td></tr>
+
+          <tr><td class="source">Guard<span class="perm">Security 1</span></td><td class="bad">Destroy</td><td>Janitor</td><td>Armory I</td><td>MTF Private</td><td>Security Chief</td></tr>
+          <tr><td class="source">MTF Private<span class="perm">Security低位</span></td><td>Guard</td><td class="bad">Destroy</td><td>Armory I</td><td>Armory II</td><td>Security Chief</td></tr>
+          <tr><td class="source">Security Chief<span class="perm">Security/Armory II</span></td><td class="bad">Destroy</td><td>Armory I</td><td>Keep</td><td>Armory II</td><td>MTF Captain</td></tr>
+          <tr><td class="source">Armory I<span class="perm">Weapon Level 1</span></td><td class="bad">Destroy</td><td>Guard</td><td>MTF Private</td><td>Armory II</td><td>Security Chief</td></tr>
+          <tr><td class="source">Armory II<span class="perm">Weapon Level 2</span></td><td>Guard</td><td>Armory I</td><td>Security Chief</td><td>Armory III</td><td>MTF Captain</td></tr>
+          <tr><td class="source">Armory III<span class="perm">Weapon Level 3</span></td><td>Armory II</td><td>MTF Operative</td><td>MTF Captain</td><td>O5 66.7% / Chaos Device 33.3%</td><td>O5 75% / MasterCard 25%</td></tr>
+          <tr><td class="source">MTF Operative<span class="perm">Security 3</span></td><td>Armory I</td><td>Armory II 83.3% / Conscripts 16.7%</td><td>Keep</td><td>Armory III</td><td>MTF Captain 66.7% / O5 33.3%</td></tr>
+          <tr><td class="source">MTF Captain<span class="perm">Security 4</span></td><td>Armory II</td><td>MTF Operative</td><td>Keep</td><td>O5</td><td>O5 75% / MasterCard 25%</td></tr>
+
+          <tr><td class="source">Conscripts<span class="perm">Chaos低位</span></td><td class="bad">Destroy</td><td>Chaos Intruder</td><td>Keep</td><td>Chaos Device</td><td>O5 20% / Destroy 80%</td></tr>
+          <tr><td class="source">Chaos Intruder<span class="perm">C1 + W1 + Admin 1</span></td><td class="bad">Destroy</td><td>Conscripts</td><td>Keep</td><td>Chaos Device</td><td>Armory III</td></tr>
+          <tr><td class="source">Chaos Device<span class="perm">Captain相当</span></td><td>Conscripts</td><td>Chaos Intruder</td><td>Keep</td><td>Armory III</td><td>O5 66.7% / MasterCard 33.3%</td></tr>
+
+          <tr><td class="source">O5<span class="perm">OMNI / All permissions</span></td><td>未変更</td><td>未変更</td><td>未変更</td><td>未変更</td><td>Omega Warhead Access 50%</td></tr>
+          <tr><td class="source">MasterCard<span class="perm">Joke</span></td><td class="bad">Destroy</td><td>Quarter x8</td><td>PlayingCard</td><td>Scientist 50% / Site Navigator 50%</td><td>Research Coordinator 50% / Surveillance 50%</td></tr>
+          <tr><td class="source">PlayingCard<span class="perm">Joke</span></td><td class="bad">Destroy</td><td>Quarter x8</td><td>MasterCard</td><td>Site Navigator</td><td>Surveillance</td></tr>
+          <tr><td class="source">Quarter<span class="perm">Joke</span></td><td class="bad">Destroy</td><td class="bad">Destroy</td><td class="bad">Destroy</td><td>Coin</td><td>Scientist 75% / Site Navigator 25%</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer>
+      Source: Slafight_Plugin_EXILED/Changes/Scp914Changes.cs. SCP:SL公式WikiのKeycardページは2026-05-14更新版を参照。
+    </footer>
+  </main>
+</body>
+</html>

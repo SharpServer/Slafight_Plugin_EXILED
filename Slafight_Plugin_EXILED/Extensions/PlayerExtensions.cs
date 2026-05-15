@@ -306,6 +306,9 @@ public static class PlayerExtensions
             case CRoleTypeId.Engineer:
                 new Engineer().SpawnRole(player, roleSpawnFlags);
                 break;
+            case CRoleTypeId.SiteNavigator:
+                new SiteNavigator().SpawnRole(player, roleSpawnFlags);
+                break;
             case CRoleTypeId.ObjectObserver:
                 new ObjectObserver().SpawnRole(player, roleSpawnFlags);
                 break;

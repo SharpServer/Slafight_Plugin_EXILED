@@ -66,6 +66,7 @@ public enum CRoleTypeId
     ZoneManager,
     FacilityManager,
     Engineer,
+    SiteNavigator,
     ObjectObserver,
     Surveillance,
     CandyResearcher,

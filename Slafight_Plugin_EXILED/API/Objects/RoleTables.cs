@@ -104,6 +104,7 @@ namespace Slafight_Plugin_EXILED.API.Objects
             W(CRoleTypeId.ZoneManager, 1.0f),
             W(CRoleTypeId.FacilityManager, 1.0f),
             W(CRoleTypeId.Engineer, 1.0f),
+            W(CRoleTypeId.SiteNavigator, 1.0f),
             W(CRoleTypeId.ObjectObserver, 1.0f)
         ];
         
@@ -113,6 +114,7 @@ namespace Slafight_Plugin_EXILED.API.Objects
             W(CRoleTypeId.ZoneManager, 1.0f),
             W(CRoleTypeId.FacilityManager, 1.0f),
             W(CRoleTypeId.Engineer, 1.0f),
+            W(CRoleTypeId.SiteNavigator, 1.0f),
             W(CRoleTypeId.ObjectObserver, 1.0f),
             
             W(CRoleTypeId.CandyResearcher, 1.05f),
@@ -153,6 +155,7 @@ namespace Slafight_Plugin_EXILED.API.Objects
 
                 new(CRoleTypeId.ZoneManager, 2),
                 new(CRoleTypeId.FacilityManager, 1),
+                new(CRoleTypeId.SiteNavigator, 1),
                 new(CRoleTypeId.ObjectObserver, 1),
 
                 new(CRoleTypeId.EvacuationGuard, 1),
@@ -173,6 +176,7 @@ namespace Slafight_Plugin_EXILED.API.Objects
                 new(CRoleTypeId.ZoneManager, 2),
                 new(CRoleTypeId.FacilityManager, 1),
                 new(CRoleTypeId.ObjectObserver, 1),
+                new(CRoleTypeId.SiteNavigator, 1),
                 new(CRoleTypeId.CandyResearcher, 2),
 
                 new(CRoleTypeId.EvacuationGuard, 1),

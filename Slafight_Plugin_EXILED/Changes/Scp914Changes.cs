@@ -83,63 +83,115 @@ public static class Scp914Changes
 
         Scp914Registry.RegisterVanilla(ItemType.KeycardJanitor, new()
         {
-            All = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 6f),
+            Rough    = Scp914Rule.Destroy,
+            Coarse   = Scp914Rule.ToCItem<Quarter>().Times(2),
+            OneToOne = Scp914Rule.ToVanilla(ItemType.KeycardResearchCoordinator),
+            Fine     = Scp914Rule.ToVanilla(ItemType.KeycardZoneManager),
+            VeryFine = Scp914Rule.Weighted(
+                (3f / 4f, Scp914Rule.ToVanilla(ItemType.KeycardScientist)),
+                (1f / 4f, Scp914Rule.ToCItem<KeycardSiteNavigator>())),
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardScientist, new()
         {
-            All = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 5f),
+            Rough    = Scp914Rule.Destroy,
+            Coarse   = Scp914Rule.ToVanilla(ItemType.KeycardZoneManager),
+            OneToOne = Scp914Rule.Weighted(
+                (1f / 2f, Scp914Rule.ToCItem<KeycardSiteNavigator>()),
+                (1f / 2f, Scp914Rule.Keep)),
+            Fine     = Scp914Rule.ToVanilla(ItemType.KeycardContainmentEngineer),
+            VeryFine = Scp914Rule.Weighted(
+                (3f / 4f, Scp914Rule.ToVanilla(ItemType.KeycardFacilityManager)),
+                (1f / 4f, Scp914Rule.ToCItem<KeycardSiteDirector>())),
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardResearchCoordinator, new()
         {
-            All = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 4f),
+            Rough    = Scp914Rule.Destroy,
+            Coarse   = Scp914Rule.ToVanilla(ItemType.KeycardJanitor),
+            OneToOne = Scp914Rule.Weighted(
+                (2f / 3f, Scp914Rule.ToCItem<KeycardSurveillance>()),
+                (1f / 3f, Scp914Rule.Keep)),
+            Fine     = Scp914Rule.ToVanilla(ItemType.KeycardZoneManager),
+            VeryFine = Scp914Rule.ToVanilla(ItemType.KeycardScientist),
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardZoneManager, new()
         {
-            All = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 4f),
+            Rough    = Scp914Rule.Destroy,
+            Coarse   = Scp914Rule.ToVanilla(ItemType.KeycardResearchCoordinator),
+            OneToOne = Scp914Rule.ToVanilla(ItemType.KeycardGuard),
+            Fine     = Scp914Rule.ToVanilla(ItemType.KeycardScientist),
+            VeryFine = Scp914Rule.Weighted(
+                (3f / 4f, Scp914Rule.ToVanilla(ItemType.KeycardContainmentEngineer)),
+                (1f / 4f, Scp914Rule.ToCItem<KeycardArmoryLevel1>())),
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardGuard, new()
         {
-            All = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 4f),
+            Rough    = Scp914Rule.Destroy,
+            Coarse   = Scp914Rule.ToVanilla(ItemType.KeycardJanitor),
+            OneToOne = Scp914Rule.ToCItem<KeycardArmoryLevel1>(),
+            Fine     = Scp914Rule.ToVanilla(ItemType.KeycardMTFPrivate),
+            VeryFine = Scp914Rule.ToCItem<KeycardSecurityChief>(),
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardContainmentEngineer, new()
         {
             OneToOne = Scp914Rule.ToCItem<Toolbox>(),
-            Rough    = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 3f),
-            Coarse   = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 3f),
-            Fine     = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 3f),
-            VeryFine = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 3f),
+            Rough    = Scp914Rule.Destroy,
+            Coarse   = Scp914Rule.ToVanilla(ItemType.KeycardScientist),
+            Fine     = Scp914Rule.ToVanilla(ItemType.KeycardFacilityManager),
+            VeryFine = Scp914Rule.Weighted(
+                (1f / 2f, Scp914Rule.ToCItem<KeycardSiteDirector>()),
+                (1f / 2f, Scp914Rule.ToVanilla(ItemType.KeycardO5))),
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardMTFPrivate, new()
         {
             Coarse   = Scp914Rule.Destroy,
             Rough    = Scp914Rule.ToVanilla(ItemType.KeycardGuard),
-            OneToOne = Scp914Rule.ToCItem<KeycardSecurityChief>(),
-            Fine     = Scp914Rule.Weighted((1f / 2f, Scp914Rule.ToVanilla(ItemType.KeycardMTFCaptain)), (1f / 2f, Scp914Rule.ToCItem<MasterCard>())),
-            VeryFine = Scp914Rule.ToCItem<MasterCard>()
+            OneToOne = Scp914Rule.ToCItem<KeycardArmoryLevel1>(),
+            Fine     = Scp914Rule.ToCItem<KeycardArmoryLevel2>(),
+            VeryFine = Scp914Rule.ToCItem<KeycardSecurityChief>()
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardMTFOperative, new()
         {
-            Coarse   = Scp914Rule.ToCItem<KeycardConscripts>().WithChance(1f / 6f),
-            Rough    = Scp914Rule.ToVanilla(ItemType.KeycardMTFPrivate),
+            Coarse   = Scp914Rule.Weighted(
+                (5f / 6f, Scp914Rule.ToCItem<KeycardArmoryLevel2>()),
+                (1f / 6f, Scp914Rule.ToCItem<KeycardConscripts>())),
+            Rough    = Scp914Rule.ToCItem<KeycardArmoryLevel1>(),
             OneToOne = Scp914Rule.Keep,
-            Fine     = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 3f),
-            VeryFine = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 2f),
+            Fine     = Scp914Rule.ToCItem<KeycardArmoryLevel3>(),
+            VeryFine = Scp914Rule.Weighted(
+                (2f / 3f, Scp914Rule.ToVanilla(ItemType.KeycardMTFCaptain)),
+                (1f / 3f, Scp914Rule.ToVanilla(ItemType.KeycardO5))),
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardMTFCaptain, new()
         {
-            All = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 4f),
+            Rough    = Scp914Rule.ToCItem<KeycardArmoryLevel2>(),
+            Coarse   = Scp914Rule.ToVanilla(ItemType.KeycardMTFOperative),
+            OneToOne = Scp914Rule.Keep,
+            Fine     = Scp914Rule.ToVanilla(ItemType.KeycardO5),
+            VeryFine = Scp914Rule.Weighted(
+                (3f / 4f, Scp914Rule.ToVanilla(ItemType.KeycardO5)),
+                (1f / 4f, Scp914Rule.ToCItem<MasterCard>())),
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardFacilityManager, new()
         {
-            All = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 4f),
+            Rough    = Scp914Rule.ToVanilla(ItemType.KeycardScientist),
+            Coarse   = Scp914Rule.ToVanilla(ItemType.KeycardContainmentEngineer),
+            OneToOne = Scp914Rule.Keep,
+            Fine     = Scp914Rule.Weighted(
+                (1f / 2f, Scp914Rule.ToCItem<KeycardSiteDirector>()),
+                (1f / 2f, Scp914Rule.ToVanilla(ItemType.KeycardO5))),
+            VeryFine = Scp914Rule.Weighted(
+                (3f / 4f, Scp914Rule.ToVanilla(ItemType.KeycardO5)),
+                (1f / 4f, Scp914Rule.ToCItem<OmegaWarheadAccess>())),
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardChaosInsurgency, new()
         {
-            Coarse   = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 6f),
             Rough    = Scp914Rule.ToCItem<KeycardConscripts>(),
+            Coarse   = Scp914Rule.ToCItem<KeycardChaosIntruder>(),
             OneToOne = Scp914Rule.Keep,
-            Fine     = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 3f),
-            VeryFine = Scp914Rule.ToCItem<MasterCard>().WithChance(1f / 2f),
+            Fine     = Scp914Rule.ToCItem<KeycardArmoryLevel3>(),
+            VeryFine = Scp914Rule.Weighted(
+                (2f / 3f, Scp914Rule.ToVanilla(ItemType.KeycardO5)),
+                (1f / 3f, Scp914Rule.ToCItem<MasterCard>())),
         });
         Scp914Registry.RegisterVanilla(ItemType.KeycardO5, new()
         {
@@ -301,13 +353,84 @@ public static class Scp914Changes
             VeryFine = Scp914Rule.ToCItem<SNAVUltimate>(),
         });
 
+        Scp914Registry.RegisterCItem<KeycardSiteNavigator>(new()
+        {
+            Rough    = Scp914Rule.Destroy,
+            Coarse   = Scp914Rule.ToVanilla(ItemType.KeycardResearchCoordinator),
+            OneToOne = Scp914Rule.ToVanilla(ItemType.KeycardScientist),
+            Fine     = Scp914Rule.ToVanilla(ItemType.KeycardContainmentEngineer),
+            VeryFine = Scp914Rule.ToVanilla(ItemType.KeycardFacilityManager),
+        });
+
+        Scp914Registry.RegisterCItem<KeycardSurveillance>(new()
+        {
+            Rough    = Scp914Rule.Destroy,
+            Coarse   = Scp914Rule.ToVanilla(ItemType.KeycardJanitor),
+            OneToOne = Scp914Rule.ToVanilla(ItemType.KeycardResearchCoordinator),
+            Fine     = Scp914Rule.ToVanilla(ItemType.KeycardZoneManager),
+            VeryFine = Scp914Rule.ToVanilla(ItemType.KeycardScientist),
+        });
+
+        Scp914Registry.RegisterCItem<KeycardSiteDirector>(new()
+        {
+            Rough    = Scp914Rule.ToVanilla(ItemType.KeycardFacilityManager),
+            Coarse   = Scp914Rule.ToVanilla(ItemType.KeycardContainmentEngineer),
+            OneToOne = Scp914Rule.Keep,
+            Fine     = Scp914Rule.ToVanilla(ItemType.KeycardO5),
+            VeryFine = Scp914Rule.ToVanilla(ItemType.KeycardO5),
+        });
+
+        Scp914Registry.RegisterCItem<KeycardArmoryLevel1>(new()
+        {
+            Rough    = Scp914Rule.Destroy,
+            Coarse   = Scp914Rule.ToVanilla(ItemType.KeycardGuard),
+            OneToOne = Scp914Rule.ToVanilla(ItemType.KeycardMTFPrivate),
+            Fine     = Scp914Rule.ToCItem<KeycardArmoryLevel2>(),
+            VeryFine = Scp914Rule.ToCItem<KeycardSecurityChief>(),
+        });
+
+        Scp914Registry.RegisterCItem<KeycardArmoryLevel2>(new()
+        {
+            Rough    = Scp914Rule.ToVanilla(ItemType.KeycardGuard),
+            Coarse   = Scp914Rule.ToCItem<KeycardArmoryLevel1>(),
+            OneToOne = Scp914Rule.ToCItem<KeycardSecurityChief>(),
+            Fine     = Scp914Rule.ToCItem<KeycardArmoryLevel3>(),
+            VeryFine = Scp914Rule.ToVanilla(ItemType.KeycardMTFCaptain),
+        });
+
+        Scp914Registry.RegisterCItem<KeycardArmoryLevel3>(new()
+        {
+            Rough    = Scp914Rule.ToCItem<KeycardArmoryLevel2>(),
+            Coarse   = Scp914Rule.ToVanilla(ItemType.KeycardMTFOperative),
+            OneToOne = Scp914Rule.ToVanilla(ItemType.KeycardMTFCaptain),
+            Fine     = Scp914Rule.Weighted(
+                (2f / 3f, Scp914Rule.ToVanilla(ItemType.KeycardO5)),
+                (1f / 3f, Scp914Rule.ToVanilla(ItemType.KeycardChaosInsurgency))),
+            VeryFine = Scp914Rule.Weighted(
+                (3f / 4f, Scp914Rule.ToVanilla(ItemType.KeycardO5)),
+                (1f / 4f, Scp914Rule.ToCItem<MasterCard>())),
+        });
+
+        Scp914Registry.RegisterCItem<KeycardChaosIntruder>(new()
+        {
+            Rough    = Scp914Rule.Destroy,
+            Coarse   = Scp914Rule.ToCItem<KeycardConscripts>(),
+            OneToOne = Scp914Rule.Keep,
+            Fine     = Scp914Rule.ToVanilla(ItemType.KeycardChaosInsurgency),
+            VeryFine = Scp914Rule.ToCItem<KeycardArmoryLevel3>(),
+        });
+
         Scp914Registry.RegisterCItem<MasterCard>(new()
         {
             Rough    = Scp914Rule.Destroy,
             Coarse   = Scp914Rule.ToCItem<Quarter>().Times(8),
             OneToOne = Scp914Rule.ToCItem<PlayingCard>(),
-            Fine     = Scp914Rule.ToVanilla(ItemType.KeycardScientist),
-            VeryFine = Scp914Rule.ToVanilla(ItemType.KeycardResearchCoordinator),
+            Fine     = Scp914Rule.Weighted(
+                (1f / 2f, Scp914Rule.ToVanilla(ItemType.KeycardScientist)),
+                (1f / 2f, Scp914Rule.ToCItem<KeycardSiteNavigator>())),
+            VeryFine = Scp914Rule.Weighted(
+                (1f / 2f, Scp914Rule.ToVanilla(ItemType.KeycardResearchCoordinator)),
+                (1f / 2f, Scp914Rule.ToCItem<KeycardSurveillance>())),
         });
 
         Scp914Registry.RegisterCItem<PlayingCard>(new()
@@ -315,8 +438,8 @@ public static class Scp914Changes
             Rough    = Scp914Rule.Destroy,
             Coarse   = Scp914Rule.ToCItem<Quarter>().Times(8),
             OneToOne = Scp914Rule.ToCItem<MasterCard>(),
-            Fine     = Scp914Rule.ToVanilla(ItemType.KeycardScientist),
-            VeryFine = Scp914Rule.ToVanilla(ItemType.KeycardResearchCoordinator),
+            Fine     = Scp914Rule.ToCItem<KeycardSiteNavigator>(),
+            VeryFine = Scp914Rule.ToCItem<KeycardSurveillance>(),
         });
 
         Scp914Registry.RegisterCItem<Quarter>(new()
@@ -325,13 +448,15 @@ public static class Scp914Changes
             Coarse   = Scp914Rule.Destroy,
             OneToOne = Scp914Rule.Destroy,
             Fine     = Scp914Rule.ToVanilla(ItemType.Coin),
-            VeryFine = Scp914Rule.ToVanilla(ItemType.KeycardScientist),
+            VeryFine = Scp914Rule.Weighted(
+                (3f / 4f, Scp914Rule.ToVanilla(ItemType.KeycardScientist)),
+                (1f / 4f, Scp914Rule.ToCItem<KeycardSiteNavigator>())),
         });
 
         Scp914Registry.RegisterCItem<KeycardConscripts>(new()
         {
             Rough    = Scp914Rule.Destroy, 
-            Coarse   = Scp914Rule.ToCItem<KeycardSecurityChief>(), 
+            Coarse   = Scp914Rule.ToCItem<KeycardChaosIntruder>(),
             OneToOne = Scp914Rule.Keep,
             Fine     = Scp914Rule.ToVanilla(ItemType.KeycardChaosInsurgency),
             // 1/5 で KeycardO5、残り 4/5 は Destroy（入力消すだけ）
@@ -344,9 +469,9 @@ public static class Scp914Changes
         Scp914Registry.RegisterCItem<KeycardSecurityChief>(new()
         {
             Rough    = Scp914Rule.Destroy,
-            Coarse   = Scp914Rule.ToVanilla(ItemType.KeycardGuard),
+            Coarse   = Scp914Rule.ToCItem<KeycardArmoryLevel1>(),
             OneToOne = Scp914Rule.ToCItem<KeycardSecurityChief>(),
-            Fine     = Scp914Rule.ToVanilla(ItemType.KeycardMTFOperative),
+            Fine     = Scp914Rule.ToCItem<KeycardArmoryLevel2>(),
             VeryFine = Scp914Rule.ToVanilla(ItemType.KeycardMTFCaptain),
         });
 

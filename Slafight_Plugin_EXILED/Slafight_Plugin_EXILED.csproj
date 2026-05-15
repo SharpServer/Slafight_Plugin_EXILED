@@ -292,10 +292,16 @@
         <Compile Include="CustomItems\SlafightApiItems\GunSuperLogicer.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunTacticalRevolver.cs" />
         <Compile Include="CustomItems\SlafightApiItems\HIDTurret.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\KeycardArmoryLevel1.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\KeycardArmoryLevel2.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\KeycardArmoryLevel3.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardConscripts.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardFifthist.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardFifthistPriest.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardSecurityChief.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\KeycardSiteNavigator.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\KeycardSiteDirector.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\KeycardSurveillance.cs" />
         <Compile Include="CustomItems\SlafightApiItems\MagicMissile.cs" />
         <Compile Include="CustomItems\SlafightApiItems\MasterCard.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ClassXMemoryForcePil.cs" />
@@ -383,6 +389,7 @@
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeySharedContents.cs" />
         <Compile Include="CustomRoles\Others\SnowWarrier.cs" />
         <Compile Include="CustomRoles\Scientist\CandyResearcher.cs" />
+        <Compile Include="CustomRoles\Scientist\SiteNavigator.cs" />
         <Compile Include="CustomRoles\Scientist\MarionWheeler.cs" />
         <Compile Include="CustomRoles\Scientist\Object Observer.cs" />
         <Compile Include="CustomRoles\Scientist\Engineer.cs" />
