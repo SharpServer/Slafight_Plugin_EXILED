@@ -34,8 +34,6 @@ public class HdShotgunner : CRole
         player.SetAmmo(AmmoType.Ammo12Gauge,200);
 
         //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
-        player.CustomInfo = "<color=#727472>Hammer Down Shotgunner</color>";
-        player.InfoArea |= PlayerInfoArea.Nickname;
-        player.InfoArea &= ~PlayerInfoArea.Role;
+        CustomInfoDisplay.Apply(player, "<color=#727472>Hammer Down Shotgunner</color>");
     }
 }

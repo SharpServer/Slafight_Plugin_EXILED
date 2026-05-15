@@ -244,6 +244,9 @@ public static class PlayerExtensions
             case CRoleTypeId.NtfSpecialist:
                 new NtfSpecialist().SpawnRole(player, roleSpawnFlags);
                 break;
+            case CRoleTypeId.NtfDetainer:
+                new NtfDetainer().SpawnRole(player, roleSpawnFlags);
+                break;
             // ==== Hammer Down ====
             case CRoleTypeId.HdInfantry:
                 new HdInfantry().SpawnRole(player, roleSpawnFlags);
@@ -375,21 +378,18 @@ public static class PlayerExtensions
         }
     }
 
-    public static void SetCustomInfo(this Player player,string Info)
-    {
-        player.CustomInfo = Info;
-        player.InfoArea |= PlayerInfoArea.Nickname;
-        player.InfoArea &= ~PlayerInfoArea.Role;
-    }
+    public static void SetCustomInfo(this Player player, string Info)
+        => CustomInfoDisplay.Apply(player, Info);
+
+    public static void SetCustomInfo(this Player player, string Info, CustomInfoDisplayOptions options)
+        => CustomInfoDisplay.Apply(player, Info, options);
+
+    public static void SetCustomInfo(this Player player, string Info, CustomInfoUnitNameMode unitNameMode)
+        => CustomInfoDisplay.Apply(player, Info, new CustomInfoDisplayOptions { UnitNameMode = unitNameMode });
+
+    public static void RefreshCustomInfo(this Player player)
+        => CustomInfoDisplay.Refresh(player);
 
     public static void ClearCustomInfo(this Player player)
-    {
-        player.CustomInfo = null;
-        player.InfoArea |= PlayerInfoArea.Nickname;
-        player.InfoArea |= PlayerInfoArea.Badge;
-        player.InfoArea |= PlayerInfoArea.CustomInfo;
-        player.InfoArea |= PlayerInfoArea.UnitName;
-        player.InfoArea |= PlayerInfoArea.PowerStatus;
-        player.InfoArea |= PlayerInfoArea.Role;
-    }
+        => CustomInfoDisplay.Clear(player);
 }

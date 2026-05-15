@@ -24,9 +24,7 @@ public class FifthistRescure : CRole
         int maxHealth = 150;
 
         player.UniqueRole = UniqueRoleKey;
-        player.CustomInfo = "<color=#FF0090>Fifthist Rescure</color>";
-        player.InfoArea |= PlayerInfoArea.Nickname;
-        player.InfoArea &= ~PlayerInfoArea.Role;
+        CustomInfoDisplay.Apply(player, "<color=#FF0090>Fifthist Rescure</color>");
         player.MaxHealth = maxHealth;
         player.Health = maxHealth;
 

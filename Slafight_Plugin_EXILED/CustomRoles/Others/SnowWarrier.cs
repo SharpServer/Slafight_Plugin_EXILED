@@ -30,9 +30,7 @@ public class SnowWarrier : CRole
         Timing.CallDelayed(0.05f, () =>
         {
             player.TryAddFlag(SpecificFlagType.SpecialWeaponsDisabled);
-            player.CustomInfo = "<color=#FFFFFF>SNOW WARRIER</color>";
-            player.InfoArea |= PlayerInfoArea.Nickname;
-            player.InfoArea &= ~PlayerInfoArea.Role;
+            CustomInfoDisplay.Apply(player, "<color=#FFFFFF>SNOW WARRIER</color>");
             player.MaxHealth = maxHealth;
             player.Health = maxHealth;
             player.EnableEffect(EffectType.Slowness, 10);

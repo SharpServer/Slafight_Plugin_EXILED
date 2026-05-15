@@ -35,8 +35,6 @@ public class NtfAide : CRole
         player.SetAmmo(AmmoType.Nato9, 130);
 
         //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Nine-tailed Fox Aide");
-        player.CustomInfo = "Nine-tailed Fox Lieutenant";
-        player.InfoArea |= PlayerInfoArea.Nickname;
-        player.InfoArea &= ~PlayerInfoArea.Role;
+        CustomInfoDisplay.Apply(player, "Nine-tailed Fox Lieutenant");
     }
 }

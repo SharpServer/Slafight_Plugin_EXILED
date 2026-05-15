@@ -168,6 +168,7 @@
         <Compile Include="Abilities\TeleprotRandomAbility.cs" />
         <Compile Include="API\Enums\CTeam.cs" />
         <Compile Include="API\Enums\CustomColor.cs" />
+        <Compile Include="API\Enums\ServerColors.cs" />
         <Compile Include="API\Enums\Scp035StateType.cs" />
         <Compile Include="API\Enums\SeasonTypeId.cs" />
         <Compile Include="API\Enums\SpecificFlagType.cs" />
@@ -186,6 +187,7 @@
         <Compile Include="API\Features\CItemWeapon.cs" />
         <Compile Include="API\Features\CustomShieldEvents.cs" />
         <Compile Include="API\Features\CustomShieldState.cs" />
+        <Compile Include="API\Features\CustomInfoDisplay.cs" />
         <Compile Include="API\Features\GeneratorPrefab.cs" />
         <Compile Include="API\Features\NetworkVisibilityManager.cs" />
         <Compile Include="API\Features\Scp914\Scp914Context.cs" />
@@ -251,6 +253,7 @@
         <Compile Include="CustomItems\SlafightApiItems\ArmorInfantry.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ArmorVip.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunDisarmerRifle.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\GunAnomalyDetainer.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardChaosIntruder.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CloakGenerator.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CUA_SpyKit.cs" />
@@ -347,6 +350,7 @@
         <Compile Include="CustomRoles\FoundationForces\HdShotgunner.cs" />
         <Compile Include="CustomRoles\FoundationForces\HdShielder.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfGeneral.cs" />
+        <Compile Include="CustomRoles\FoundationForces\NtfDetainer.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfSpecialist.cs" />
         <Compile Include="CustomRoles\FoundationForces\Sculpture.cs" />
         <Compile Include="CustomRoles\FoundationForces\SneGears.cs" />

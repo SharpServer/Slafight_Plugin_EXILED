@@ -35,9 +35,7 @@ public class FifthistPriest : CRole
 
         player.UniqueRole = UniqueRoleKey;
         player.Scale = new Vector3(1.1f, 1.1f, 1.1f);
-        player.CustomInfo = "<color=#FF0090>Fifthist Priest</color>";
-        player.InfoArea |= PlayerInfoArea.Nickname;
-        player.InfoArea &= ~PlayerInfoArea.Role;
+        CustomInfoDisplay.Apply(player, "<color=#FF0090>Fifthist Priest</color>");
         player.MaxHealth = maxHealth;
         player.Health = maxHealth;
 

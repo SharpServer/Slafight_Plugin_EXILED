@@ -36,8 +36,6 @@ public class HdInfantry : CRole
         player.SetAmmo(AmmoType.Nato9,140);
 
         //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
-        player.CustomInfo = "<color=#727472>Hammer Down Infantry</color>";
-        player.InfoArea |= PlayerInfoArea.Nickname;
-        player.InfoArea &= ~PlayerInfoArea.Role;
+        CustomInfoDisplay.Apply(player, "<color=#727472>Hammer Down Infantry</color>");
     }
 }

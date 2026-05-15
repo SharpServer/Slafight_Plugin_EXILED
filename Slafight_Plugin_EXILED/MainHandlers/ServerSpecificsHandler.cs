@@ -129,6 +129,8 @@ public static class ServerSpecificsHandler
                 player.CustomName = !string.IsNullOrEmpty(text)
                     ? $"{text} ({player.Nickname})"
                     : player.Nickname;
+
+                CustomInfoDisplay.Refresh(player);
             }
 
             RPNameSetter.PlayerInputNames[player] = player.CustomName;

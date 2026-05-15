@@ -36,8 +36,6 @@ public class HdMarshal : CRole
         player.SetAmmo(AmmoType.Nato556,250);
 
         //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Commander");
-        player.CustomInfo = "<color=#727472>Hammer Down Marshal</color>";
-        player.InfoArea |= PlayerInfoArea.Nickname;
-        player.InfoArea &= ~PlayerInfoArea.Role;
+        CustomInfoDisplay.Apply(player, "<color=#727472>Hammer Down Marshal</color>");
     }
 }

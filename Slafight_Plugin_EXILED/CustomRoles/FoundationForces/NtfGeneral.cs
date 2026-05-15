@@ -36,8 +36,6 @@ public class NtfGeneral : CRole
         player.SetAmmo(AmmoType.Nato556,320);
 
         //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Commander");
-        player.CustomInfo = "Nine-tailed Fox General";
-        player.InfoArea |= PlayerInfoArea.Nickname;
-        player.InfoArea &= ~PlayerInfoArea.Role;
+        CustomInfoDisplay.Apply(player, "Nine-tailed Fox General");
     }
 }

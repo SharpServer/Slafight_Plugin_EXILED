@@ -50,7 +50,7 @@ public static class SpyKitRecords
             PlayerId = player.Id,
             PlayerBaseRole = player.Role.Type,
             PlayerBaseCRole = player.GetRoleInfo().Custom,
-            PlayerBaseCustomInfo = player.CustomInfo,
+            PlayerBaseCustomInfo = CustomInfoDisplay.GetAssignedCustomInfo(player),
             NowMorphData = morphData
         };
 
@@ -59,6 +59,7 @@ public static class SpyKitRecords
         {
             player.TryAddFlag(SpecificFlagType.RPNameDisabled);
             player.CustomName = data.MorphCustomName!;
+            CustomInfoDisplay.Refresh(player);
         }
         if (!string.IsNullOrEmpty(data.MorphCustomInfo))
             player.SetCustomInfo(data.MorphCustomInfo!);
@@ -78,6 +79,7 @@ public static class SpyKitRecords
                 player.CustomName = RPNameSetter.PlayerInputNames.ContainsKey(player) 
                     ? RPNameSetter.PlayerInputNames[player] 
                     : playerSpyData.PlayerBaseRole.ToString();
+                CustomInfoDisplay.Refresh(player);
             }
             if (!string.IsNullOrEmpty(data.MorphCustomInfo))
                 player.SetCustomInfo(playerSpyData.PlayerBaseCustomInfo);

@@ -39,8 +39,6 @@ public class Janitor : CRole
         player.Position = pos;
         Log.Debug($"RoomPos: {pos},Janitor pos: {player.Position}");
             
-        player.CustomInfo = "Janitor";
-        player.InfoArea |= PlayerInfoArea.Nickname;
-        player.InfoArea &= ~PlayerInfoArea.Role;
+        CustomInfoDisplay.Apply(player, "Janitor");
     }
 }

@@ -40,6 +40,7 @@ public enum CRoleTypeId
     NtfLieutenant,
     NtfGeneral,
     NtfSpecialist,
+    NtfDetainer,
     
     // ==== Hammer Down ====
     HdInfantry,

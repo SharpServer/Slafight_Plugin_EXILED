@@ -47,6 +47,7 @@ public class SergeyMakarovAwakenRole : CRole
         Timing.CallDelayed(0.05f, () =>
         {
             player.CustomName = $"セルゲイ・マカロフ ({player.Nickname})";
+            CustomInfoDisplay.Refresh(player);
         });
     }
 

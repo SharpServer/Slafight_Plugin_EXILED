@@ -35,8 +35,6 @@ public class EvacuationGuard : CRole
         player.Position = pos;
         Log.Debug($"RoomPos: {pos},EvacuationManager pos: {player.Position}");
             
-        player.CustomInfo = "Emergency Evacuation Guard";
-        player.InfoArea |= PlayerInfoArea.Nickname;
-        player.InfoArea &= ~PlayerInfoArea.Role;
+        CustomInfoDisplay.Apply(player, "Emergency Evacuation Guard");
     }
 }

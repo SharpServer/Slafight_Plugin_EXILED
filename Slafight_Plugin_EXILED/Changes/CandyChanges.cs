@@ -8,6 +8,7 @@ using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.CustomMaps;
+using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.ProximityChat;
 using UnityEngine;
 
@@ -167,9 +168,7 @@ public static class CandyChanges
             {
                 ev.Player?.EnableEffect(EffectType.Scp207, 2);
                 ev.Player?.UniqueRole = "Zombified";
-                ev.Player?.CustomInfo = "<color=#C50000>Zombified Subject</color>";
-                ev.Player?.InfoArea |= PlayerInfoArea.Nickname;
-                ev.Player?.InfoArea &= ~PlayerInfoArea.Role;
+                ev.Player?.SetCustomInfo("<color=#C50000>Zombified Subject</color>");
                 ev.Player?.SetScale(new Vector3(1.08f, 1.08f, 1.08f));
                 if (!Handler.CanUsePlayers.Contains(ev.Player))
                 {

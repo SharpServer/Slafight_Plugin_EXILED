@@ -73,6 +73,7 @@ public class SergeyMakarovRole : CRole
         Timing.CallDelayed(0.05f, () =>
         {
             player.CustomName = $"セルゲイ・マカロフ ({player.Nickname})";
+            CustomInfoDisplay.Refresh(player);
         });
         Timing.RunCoroutine(SergeySharedContents.SergeySharedCoroutine(player));
     }
