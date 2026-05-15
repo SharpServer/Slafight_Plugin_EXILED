@@ -39,7 +39,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler
     public static void Register() { Instance = new(); CustomHandlersManager.RegisterEventsHandler(Instance); }
     public static void Unregister() { CustomHandlersManager.UnregisterEventsHandler(Instance); Instance = null; }
 
-    private const float PositionToleranceSq = 1.25f * 1.25f; // SqrMagnitude 比較用に二乗済み
+    private const float PositionToleranceSq = 1.45f * 1.45f; // SqrMagnitude 比較用に二乗済み
     private const float FemurJoinRadiusSq   = 1.005f * 1.005f;
 
     private SchematicObject ChaosBar;
@@ -183,12 +183,12 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler
 
         if (femurCoroutine.IsRunning) Timing.KillCoroutines(femurCoroutine);
         if (trainCoroutine.IsRunning) Timing.KillCoroutines(trainCoroutine);
-
-        SetupSpecialDoors();
+        
         SetDoorState();
         SetupMaps();
         HolidaySeasonMapLoader();
         SetCandyState();
+        Timing.CallDelayed(1.5f, SetupSpecialDoors);
     }
 
     private static void SetCandyState()
@@ -574,23 +574,21 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler
 
     private void DoorInteracted(InteractingDoorEventArgs ev)
     {
-        if (ev.Player == null || ev.Door == null || specialDoors.Count == 0) return;
+        if (ev.Player == null || ev.Door == null || specialDoors.Count == 0)
+            return;
 
         var config = FindDoorConfig(ev.Door.Position);
-        if (config == null) return;
-
-        ev.IsAllowed = false;
+        if (config == null)
+            return;
 
         if (config.CanOpen(ev.Player))
         {
-            ev.Door.Unlock();
-            ev.Door.IsOpen = !ev.Door.IsOpen;
-            ev.Door.Lock(DoorLockType.AdminCommand);
+            ev.IsAllowed = true;
+            return;
         }
-        else
-        {
-            ev.Player.ShowHint(config.HintMessage);
-        }
+
+        ev.IsAllowed = false;
+        ev.Player.ShowHint(config.HintMessage);
     }
 
     // ──────────────────────────────────────────────────────
