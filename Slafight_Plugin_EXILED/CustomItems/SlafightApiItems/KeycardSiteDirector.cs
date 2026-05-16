@@ -6,8 +6,8 @@ namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
 public class KeycardSiteDirector : CItemKeycard
 {
-    public override string DisplayName => "Site Director Keycard";
-    public override string Description => "施設長用の管理カード。Facility Manager相当の権限を持つ。";
+    public override string DisplayName => "施設管理長キーカード";
+    public override string Description => "施設管理長用の管理カード。ほぼ全てにアクセスできる。";
 
     protected override string UniqueKey => "KeycardSiteDirector";
     protected override ItemType BaseItem => ItemType.KeycardCustomManagement;

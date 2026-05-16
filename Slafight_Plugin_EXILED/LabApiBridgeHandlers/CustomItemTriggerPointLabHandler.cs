@@ -88,6 +88,18 @@ public class CustomItemTriggerPointLabHandler : SlafightLabApiHandler
             case "AntiMemeButton":
                 MapFlags.AntiMemeButton = pos;
                 break;
+            case "CISR_KeycardArmory1":
+                CItem.Get<KeycardArmoryLevel1>()?.Spawn(pos);
+                break;
+            case "CISR_KeycardArmory2":
+                CItem.Get<KeycardArmoryLevel2>()?.Spawn(pos);
+                break;
+            case "CISR_KeycardArmory3":
+                CItem.Get<KeycardArmoryLevel3>()?.Spawn(pos);
+                break;
+            case "CISR_KeycardSurveillance":
+                CItem.Get<KeycardSurveillance>()?.Spawn(pos);
+                break;
         }
     }
 }

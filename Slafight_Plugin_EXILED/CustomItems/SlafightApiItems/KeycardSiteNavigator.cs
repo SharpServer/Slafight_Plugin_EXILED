@@ -6,8 +6,8 @@ namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
 public class KeycardSiteNavigator : CItemKeycard
 {
-    public override string DisplayName => "S-NAV担当キーカード";
-    public override string Description => "S-NAV担当職員に支給される、研究員相当のキーカード。";
+    public override string DisplayName => "施設ナビゲーターキーカード";
+    public override string Description => "S-NAV担当職員に支給されるキーカード。";
 
     protected override string UniqueKey => "KeycardSiteNavigator";
 
@@ -21,7 +21,8 @@ public class KeycardSiteNavigator : CItemKeycard
     protected override KeycardPermissions Permissions =>
         KeycardPermissions.ContainmentLevelOne |
         KeycardPermissions.Checkpoints |
-        KeycardPermissions.Intercom;
+        KeycardPermissions.Intercom |
+        KeycardPermissions.ExitGates;
 
     protected override bool PickupLightEnabled => true;
     protected override Color PickupLightColor => new(0.35f, 0.95f, 0.85f);

@@ -61,6 +61,7 @@ public enum CRoleTypeId
     EvacuationGuard,
     SecurityChief,
     ChamberGuard,
+    SupplyManager,
     
     // ==== Scientists ====
     ZoneManager,

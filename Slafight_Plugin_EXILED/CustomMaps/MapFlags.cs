@@ -17,6 +17,8 @@ public static class MapFlags
     public static Vector3 AntiAntiMemeDocPoint = Vector3.zero;
     public static Vector3 SqDoorPoint = Vector3.zero;
     public static Vector3 AntiMemeButton = Vector3.zero;
+    public static Vector3 SupplyManagerSpawnPointA = Vector3.zero;
+    public static Vector3 SupplyManagerSpawnPointB = Vector3.zero;
     
     public static Vector3 FirstTeamSpawnPoint = Vector3.zero;
 

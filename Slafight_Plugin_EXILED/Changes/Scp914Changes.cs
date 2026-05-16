@@ -109,8 +109,9 @@ public static class Scp914Changes
             OneToOne = Scp914Rule.Keep,
             Fine = Scp914Rule.ToVanilla(ItemType.KeycardZoneManager),
             VeryFine = Scp914Rule.Weighted(
-                (0.5f, Scp914Rule.ToVanilla(ItemType.KeycardZoneManager)),
-                (0.5f, Scp914Rule.ToCItem<KeycardSiteNavigator>())),
+                (0.4f, Scp914Rule.ToVanilla(ItemType.KeycardZoneManager)),
+                (0.4f, Scp914Rule.ToCItem<KeycardSiteNavigator>()),
+                (0.2f, Scp914Rule.ToCItem<KeycardSupplyManager>())),
         });
 
         // --- Zone Manager ---
@@ -123,8 +124,9 @@ public static class Scp914Changes
             OneToOne = Scp914Rule.Keep,
             Fine = Scp914Rule.ToVanilla(ItemType.KeycardResearchCoordinator),
             VeryFine = Scp914Rule.Weighted(
-                (0.4f, Scp914Rule.ToVanilla(ItemType.KeycardResearchCoordinator)),
-                (0.4f, Scp914Rule.ToCItem<KeycardSurveillance>()),
+                (0.35f, Scp914Rule.ToVanilla(ItemType.KeycardResearchCoordinator)),
+                (0.35f, Scp914Rule.ToCItem<KeycardSurveillance>()),
+                (0.1f, Scp914Rule.ToCItem<KeycardSupplyManager>()),
                 (0.2f, Scp914Rule.ToCItem<KeycardChaosIntruder>())),
         });
 
@@ -415,6 +417,20 @@ public static class Scp914Changes
         // 施設系: Janitor < Scientist < ZoneManager < ResearchCoordinator < ContainmentEngineer < FacilityManager < SiteDirector < O5
         // 軍系: Armory1 < Guard = ChaosIntruder < Armory2 < SecurityChief < MTFPrivate < MTFOperative < MTFCaptain = ChaosInsurgency < SiteDirector < O5
 
+        // --- Supply Manager（管理・警備の橋渡し） ---
+        Scp914Registry.RegisterCItem<KeycardSupplyManager>(new()
+        {
+            Rough = Scp914Rule.ToCItem<Quarter>().Times(2),
+            Coarse = Scp914Rule.ToVanilla(ItemType.KeycardScientist),
+            OneToOne = Scp914Rule.ToCItem<KeycardSiteNavigator>(),
+            Fine = Scp914Rule.Weighted(
+                (0.6f, Scp914Rule.ToCItem<KeycardSurveillance>()),
+                (0.4f, Scp914Rule.ToCItem<KeycardArmoryLevel2>())),
+            VeryFine = Scp914Rule.Weighted(
+                (0.7f, Scp914Rule.ToCItem<KeycardSecurityChief>()),
+                (0.3f, Scp914Rule.ToVanilla(ItemType.KeycardFacilityManager))),
+        });
+
         // --- Site Navigator（施設系中級） ---
         Scp914Registry.RegisterCItem<KeycardSiteNavigator>(new()
         {
@@ -443,7 +459,7 @@ public static class Scp914Changes
             Rough = Scp914Rule.ToVanilla(ItemType.KeycardFacilityManager),
             Coarse = Scp914Rule.ToVanilla(ItemType.KeycardContainmentEngineer),
             OneToOne = Scp914Rule.Keep,
-            Fine = Scp914Rule.ToVanilla(ItemType.KeycardO5),
+            Fine = Scp914Rule.Destroy,
             VeryFine = Scp914Rule.Weighted(
                 (0.66f, Scp914Rule.ToVanilla(ItemType.KeycardO5)),
                 (0.34f, Scp914Rule.ToVanilla(ItemType.KeycardJanitor))),
@@ -539,7 +555,7 @@ public static class Scp914Changes
             Rough = Scp914Rule.Destroy,
             Coarse = Scp914Rule.ToCItem<Quarter>().Times(8),
             OneToOne = Scp914Rule.ToCItem<MasterCard>(),
-            Fine = Scp914Rule.ToCItem<KeycardSiteNavigator>(),
+            Fine = Scp914Rule.ToCItem<KeycardSupplyManager>(),
             VeryFine = Scp914Rule.ToCItem<KeycardSurveillance>(),
         });
 

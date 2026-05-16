@@ -6,8 +6,8 @@ namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
 public class KeycardSurveillance : CItemKeycard
 {
-    public override string DisplayName => "監視部門キーカード";
-    public override string Description => "監視担当職員に支給される、Research Coordinator互換のキーカード。";
+    public override string DisplayName => "監視課職員キーカード";
+    public override string Description => "監視担当職員に支給されるキーカード。";
 
     protected override string UniqueKey => "KeycardSurveillance";
 
@@ -21,6 +21,7 @@ public class KeycardSurveillance : CItemKeycard
     protected override KeycardPermissions Permissions =>
         KeycardPermissions.ContainmentLevelOne |
         KeycardPermissions.ContainmentLevelTwo |
+        KeycardPermissions.ArmoryLevelOne |
         KeycardPermissions.Checkpoints |
         KeycardPermissions.Intercom;
 

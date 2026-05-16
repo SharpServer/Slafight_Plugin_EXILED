@@ -206,6 +206,10 @@
         <Compile Include="API\Features\ObjectPrefab.cs" />
         <Compile Include="API\Features\PrefabSaveData.cs" />
         <Compile Include="API\Features\RoleLimitManager.cs" />
+        <Compile Include="API\Features\RoleTableContext.cs" />
+        <Compile Include="API\Features\RoleTableContextRegistry.cs" />
+        <Compile Include="API\Features\RoleTableDictionaries\Contexts\AprilRoleTableContext.cs" />
+        <Compile Include="API\Features\RoleTableDictionaries\Contexts\NormalRoleTableContext.cs" />
         <Compile Include="API\Features\RoleParseHelper.cs" />
         <Compile Include="API\Features\RoleSpecificTextProvider.cs" />
         <Compile Include="API\Features\ServerSpecifics.cs" />
@@ -257,6 +261,7 @@
         <Compile Include="CustomItems\SlafightApiItems\ArmorVip.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunDisarmerRifle.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunAnomalyDetainer.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\KeycardSupplyManager.cs" />
         <Compile Include="CustomItems\SlafightApiItems\S41MedicalPistol.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardChaosIntruder.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CloakGenerator.cs" />
@@ -380,6 +385,7 @@
         <Compile Include="CustomRoles\Guards\EvacuationGuard.cs" />
         <Compile Include="CustomRoles\Guards\SecurityChief.cs" />
         <Compile Include="CustomRoles\Guards\SecurityTeamGuard.cs" />
+        <Compile Include="CustomRoles\Guards\SupplyManager.cs" />
         <Compile Include="CustomRoles\Others\CandyWarrierApril.cs" />
         <Compile Include="CustomRoles\Others\CandyWarrierHalloween.cs" />
         <Compile Include="CustomRoles\Others\HideAdmin.cs" />
