@@ -47,6 +47,12 @@ public abstract class CItemKeycard : CItem
     /// <summary>権限。</summary>
     protected virtual KeycardPermissions Permissions => KeycardPermissions.None;
 
+    /// <summary>EXILED の生 KeycardPermissions flags。</summary>
+    public KeycardPermissions KeycardPermissionFlags => Permissions;
+
+    /// <summary>ゲーム内表示に合わせた Containment / Armory / Administration レベル。</summary>
+    public KeycardAccessLevels AccessLevels => KeycardAccessLevels.FromPermissions(Permissions);
+
     /// <summary>権限表示部分の色。</summary>
     protected virtual Color32? KeycardPermissionsColor => null;
 

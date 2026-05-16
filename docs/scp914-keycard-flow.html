@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <title>SCP-914 Keycard Flow (Draft)</title>
+  <title>SCP-914 Keycard Flow</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
     :root {
@@ -50,6 +50,11 @@
     h2{
       margin:0 0 10px;
       font-size:18px;
+    }
+    section h3{
+      margin:14px 0 8px;
+      font-size:14px;
+      color:var(--cyan);
     }
     section{
       background:var(--panel);
@@ -126,6 +131,11 @@
     .step.bad{border-color:var(--red);color:var(--red);}
     .step.rare{border-color:var(--amber);color:var(--amber);}
     .step.top{border-color:var(--purple);color:var(--purple);}
+    .rank-note{
+      margin:4px 0 10px;
+      color:var(--muted);
+      font-size:12px;
+    }
 
     .table-wrap{
       margin-top:6px;
@@ -184,8 +194,8 @@
 </head>
 <body>
 <header>
-  <h1>SCP-914 Keycard Flow (新仕様ドラフト)</h1>
-  <p>Janitor &lt; Scientist &lt; Zone Manager &lt; Research Coord. &lt; Containment Eng. &lt; Facility Manager &lt; Site Director &lt; O5、軍系は Armory1 &lt; Guard = Chaos Intruder &lt; Armory2 &lt; Security Chief &lt; MTF Private &lt; MTF Operative &lt; MTF Captain = Chaos Device &lt; Site Director &lt; O5 という階段をベースにした概要表。</p>
+  <h1>SCP-914 Keycard Flow</h1>
+  <p>Scp914Changes.cs / Scp914Registry の現在実装を読んでまとめた概要表。O5 は SCPCB の OMNI 的な最終ギャンブル枠で、低位カードからも極低確率で到達可能だが、基本は壁を越えて MasterCard / Site Director まで進めてから狙う。</p>
 </header>
 
 <main>
@@ -194,19 +204,31 @@
     <div class="grid">
       <div class="note">
         <strong>共通 O5 ロール</strong>
-        全ての入力に対して、処理の最初に 0.2% 程度で O5 に変換される超低確率ロールが走る想定（床ピックアップ/インベントリ共通）。
+        全ての入力に対して、処理の最初に 0.2% で O5 に変換される超低確率ロールが走る（床ピックアップ/インベントリ共通）。これは「どのカードにも一応夢はある」ための最低保証で、通常の育成ルートとは別枠。
       </div>
       <div class="note">
         <strong>研究・管理系階層</strong>
-        Janitor &lt; Scientist &lt; Zone Manager &lt; Research Coordinator &lt; Containment Engineer &lt; Facility Manager &lt; Site Director &lt; O5 の順で上がっていく。
+        Janitor &lt; Scientist &lt; Zone Manager &lt; Research Coordinator &lt; Containment Engineer &lt; Facility Manager &lt; Site Director &lt; O5 の順で上がっていく。Facility Manager は C3-Admin3 なので Containment Engineer より明確に上位。
       </div>
       <div class="note">
         <strong>軍・武器系階層</strong>
-        Armory 1 &lt; Guard = Chaos Intruder &lt; Armory 2 &lt; Security Chief &lt; MTF Private &lt; MTF Operative &lt; MTF Captain = Chaos Insurgency Device &lt; Site Director &lt; O5 のイメージ。
+        Armory 1 &lt; Guard = Chaos Intruder &lt; Armory 2 &lt; Security Chief &lt; MTF Private &lt; MTF Operative &lt; MTF Captain = Chaos Insurgency Device &lt; O5 のイメージ。
       </div>
       <div class="note">
         <strong>O5 / OMNI 的立ち位置</strong>
-        Site Director と同格以上の最終カード。OMNI のようにほぼ全権限を持ち、914 からは上位層やギャンブル用カード（MasterCard / Chaos ルート）経由でのみ到達する。
+        Site Director より上の最終カード。低位からの O5 直行は絶望的で、Research Coordinator / Armory 3 / Facility Manager 付近に Fine の壁がある。安定 Fine 連打では止まりやすく、Coarse / Rough で別系統へ戻すか、Very Fine / MasterCard で上振れを狙う設計。
+      </div>
+      <div class="note">
+        <strong>O5 到達の実質ルート</strong>
+        現実的には Site Director の Very Fine が O5 50% / Destroy 50%、MasterCard の Very Fine が O5 10% / Site Director 25% / Facility Manager 15% / Janitor 10% / Destroy 40%。下位カードは MasterCard や Site Director へ近づくための足場。
+      </div>
+      <div class="note">
+        <strong>O5 確率調整</strong>
+        個別の O5 抽選は Scp914Changes.cs の O5ProbabilityScale でまとめて調整する。共通 O5 ロールだけは O5WildcardChance で独立管理。
+      </div>
+      <div class="note">
+        <strong>Administration 表記</strong>
+        Checkpoints + Intercom = Administration 1、ExitGates = Administration 2、AlphaWarhead = Administration 3。コード上の flags は KeycardAccessLevels でこの表記へ変換する。
       </div>
     </div>
   </section>
@@ -226,7 +248,7 @@
           <span class="step top">Site Director</span><span class="arrow">→</span>
           <span class="step top">O5</span>
         </div>
-        <p class="small">Fine で基本 1 段階アップ、Very Fine で 1～2 段アップ＋一部 Destroy / ギャンブル（O5 抽選）。</p>
+        <p class="small">Research Coordinator 以降は Fine だけでは頭打ち。Coarse / Rough で別系統へ戻すか、Very Fine / MasterCard で壁を越える。</p>
       </article>
 
       <article class="path">
@@ -239,11 +261,12 @@
           <span class="step">Security Chief</span><span class="arrow">→</span>
           <span class="step">MTF Private</span><span class="arrow">→</span>
           <span class="step">MTF Operative</span><span class="arrow">→</span>
+          <span class="step">Armory 3</span><span class="arrow">→</span>
           <span class="step">MTF Captain / Chaos Device</span><span class="arrow">→</span>
           <span class="step top">Site Director</span><span class="arrow">→</span>
           <span class="step top">O5</span>
         </div>
-        <p class="small">軍系は武器アクセス段階とセキュリティ段階が混在。Fine で Armory / MTF が順に強化され、Very Fine で Captain / Chaos Device / O5 など上位へ。</p>
+        <p class="small">Armory 3 は Fine だと同帯ローテーション。Captain / Chaos Device へ抜けるには Very Fine を使う。</p>
       </article>
 
       <article class="path">
@@ -258,9 +281,10 @@
           <span class="step">Chaos Intruder</span><span class="arrow">→</span>
           <span class="step">Conscripts</span><span class="arrow">→</span>
           <span class="step">Chaos Device</span><span class="arrow">→</span>
+          <span class="step rare">Site Director</span><span class="arrow">→</span>
           <span class="step rare">O5</span>
         </div>
-        <p class="small">MasterCard の Very Fine や Conscripts / Chaos Device の Very Fine から、低～中確率で O5 / Site Director / 高位 Chaos カードへ飛ぶギャンブル枠。</p>
+        <p class="small">MasterCard / Conscripts は独自のギャンブル枠。Chaos Device は Captain 相当で、Very Fine から Site Director へ進む。</p>
       </article>
     </div>
   </section>
@@ -286,7 +310,7 @@
           <td>Quarter ×2</td>
           <td>Keep</td>
           <td class="good">Scientist 70% / Armory 1 30%</td>
-          <td class="rare">O5 5% / Destroy 95%</td>
+          <td class="rare">O5 0.5% / MasterCard 4.5% / Destroy 95%</td>
         </tr>
         <tr>
           <td><span class="src">Scientist</span><span class="perm">研究者</span></td>
@@ -294,7 +318,7 @@
           <td>Janitor</td>
           <td>Keep</td>
           <td class="good">Zone Manager</td>
-          <td>Zone Manager 40% / Site Navigator 40% / Supply Manager 20%</td>
+          <td>Zone Manager 40% / Site Navigator 35% / Supply Manager 20% / MasterCard 5%</td>
         </tr>
         <tr>
           <td><span class="src">Zone Manager</span><span class="perm">管理 1</span></td>
@@ -302,55 +326,55 @@
           <td>Scientist</td>
           <td>Keep</td>
           <td class="good">Research Coordinator</td>
-          <td>Research Coordinator 35% / Surveillance 35% / Supply Manager 10% / Chaos Intruder 20%</td>
+          <td>Research Coordinator 32% / Surveillance 32% / Supply Manager 10% / Chaos Intruder 20% / MasterCard 6%</td>
         </tr>
         <tr>
           <td><span class="src">Research Coordinator</span><span class="perm">研究管理</span></td>
           <td>Scientist 50% / Janitor 50%</td>
           <td>Scientist</td>
           <td>Keep</td>
-          <td class="good">Containment Engineer</td>
-          <td>Containment Engineer 25% / Destroy 75%</td>
+          <td class="good">Research Coord. 35% / Site Navigator 25% / Supply Manager 25% / Surveillance 15%</td>
+          <td>O5 2% / Containment Engineer 23% / MasterCard 5% / Destroy 70%</td>
         </tr>
         <tr>
-          <td><span class="src">Containment Engineer</span><span class="perm">収容技師</span></td>
+          <td><span class="src">Containment Engineer</span><span class="perm">収容技師 / Facility Manager 未満</span></td>
           <td>Scientist 50% / Research Coord. 50%</td>
           <td>Research Coordinator</td>
           <td>Keep</td>
           <td class="good">Facility Manager</td>
-          <td class="rare">O5 50% / Destroy 50%</td>
+          <td class="rare">O5 8% / MasterCard 12% / Destroy 80%</td>
         </tr>
         <tr>
-          <td><span class="src">Facility Manager</span><span class="perm">管理 2</span></td>
+          <td><span class="src">Facility Manager</span><span class="perm">C3-Admin3</span></td>
           <td>Scientist 50% / Research Coord. 50%</td>
           <td>Containment Engineer</td>
           <td>Keep</td>
-          <td class="good">Site Director</td>
-          <td class="rare">O5 25% / Destroy 75%</td>
+          <td class="good">Facility Manager 55% / Site Director 25% / MasterCard 20%</td>
+          <td class="rare">O5 25% / MasterCard 15% / Destroy 60%</td>
         </tr>
         <tr>
           <td><span class="src">Supply Manager (CItem)</span><span class="perm">搬入口 / 管理補助</span></td>
           <td>Quarter ×2</td>
           <td>Scientist</td>
           <td>Site Navigator</td>
-          <td class="good">Surveillance 60% / Armory 2 40%</td>
-          <td>Security Chief 70% / Facility Manager 30%</td>
+          <td class="good">Surveillance 55% / Armory 2 40% / MasterCard 5%</td>
+          <td>Security Chief 60% / Facility Manager 30% / MasterCard 10%</td>
         </tr>
         <tr>
           <td><span class="src">Site Director (CItem)</span><span class="perm">最上位管理</span></td>
           <td>Facility Manager</td>
           <td>Containment Engineer</td>
           <td>Keep</td>
-          <td class="top">O5</td>
-          <td class="top">O5 66% / Janitor 34%</td>
+          <td class="bad">Destroy</td>
+          <td class="top">O5 50% / Destroy 50%</td>
         </tr>
         <tr>
           <td><span class="src">O5</span><span class="perm">OMNI 相当</span></td>
-          <td>Scientist / Zone Manager へダウングレード</td>
+          <td>Scientist 50% / Zone Manager 50%</td>
           <td>Facility Manager</td>
           <td>Keep</td>
           <td>MasterCard</td>
-          <td>MasterCard (50%) / Keep (50%)</td>
+          <td>MasterCard</td>
         </tr>
         </tbody>
       </table>
@@ -359,6 +383,7 @@
 
   <section>
     <h2>軍 / 武器系カードの代表的変換</h2>
+    <p class="rank-note">表示順はおおまかなランク順。Armory 3 は武器権限だけを見ると強いが、C2-A3-Administration2 を持つ MTF Captain / Chaos Device より下の位置付け。</p>
     <div class="table-wrap">
       <table>
         <thead>
@@ -378,7 +403,7 @@
           <td class="bad">Destroy</td>
           <td>Guard</td>
           <td class="good">Chaos Intruder</td>
-          <td>Conscripts</td>
+          <td>Conscripts 95% / MasterCard 5%</td>
         </tr>
         <tr>
           <td><span class="src">Guard</span><span class="perm">Security 1</span></td>
@@ -386,7 +411,7 @@
           <td>Quarter ×2</td>
           <td>Keep</td>
           <td class="good">Armory 2</td>
-          <td>Security Chief / Chaos Intruder</td>
+          <td>Security Chief 49% / Chaos Intruder 49% / MasterCard 2%</td>
         </tr>
         <tr>
           <td><span class="src">Armory 2</span><span class="perm">武器 Lv2</span></td>
@@ -394,7 +419,7 @@
           <td>Armory 1</td>
           <td>Conscripts</td>
           <td class="good">Armory 3</td>
-          <td class="good">MTF Operative</td>
+          <td class="good">MTF Operative 85% / MasterCard 15%</td>
         </tr>
         <tr>
           <td><span class="src">Security Chief</span><span class="perm">武器/警備中位</span></td>
@@ -406,11 +431,11 @@
         </tr>
         <tr>
           <td><span class="src">MTF Private</span><span class="perm">Security 低位</span></td>
-          <td>Guard / Scientist などへダウン</td>
+          <td>Scientist 50% / Research Coord. 50%</td>
           <td>Research Coord.</td>
           <td>Containment Engineer</td>
           <td class="good">MTF Operative</td>
-          <td>MTF Operative / Armory 3</td>
+          <td>MTF Operative 47.5% / Armory 3 47.5% / MasterCard 5%</td>
         </tr>
         <tr>
           <td><span class="src">MTF Operative</span><span class="perm">Security 3</span></td>
@@ -418,23 +443,23 @@
           <td>Guard</td>
           <td>Keep</td>
           <td class="good">Armory 3</td>
-          <td>MTF Captain / O5 など上位へ</td>
+          <td>Armory 3 46% / MTF Captain 46% / MasterCard 8%</td>
         </tr>
         <tr>
-          <td><span class="src">MTF Captain</span><span class="perm">Security 4</span></td>
+          <td><span class="src">Armory 3</span><span class="perm">武器 Lv3 / Captain 未満</span></td>
+          <td>Armory 2</td>
+          <td>MTF Operative</td>
+          <td>MTF Operative</td>
+          <td class="good">Armory 3 35% / MTF Operative 35% / Security Chief 20% / MasterCard 10%</td>
+          <td class="good">MTF Captain 45% / Chaos Device 45% / MasterCard 10%</td>
+        </tr>
+        <tr>
+          <td><span class="src">MTF Captain</span><span class="perm">Security 4 / C2-A3-Admin2</span></td>
           <td>MTF Operative</td>
           <td>MTF Operative</td>
           <td>Chaos Device</td>
-          <td class="top">O5</td>
-          <td class="top">O5 高確率 / MasterCard など</td>
-        </tr>
-        <tr>
-          <td><span class="src">Armory 3</span><span class="perm">武器 Lv3</span></td>
-          <td>Armory 2</td>
-          <td>MTF Operative</td>
-          <td>MTF Captain</td>
-          <td class="top">O5 / Chaos Device</td>
-          <td class="top">O5 高確率 / MasterCard</td>
+          <td class="good">Armory 3</td>
+          <td class="rare">Site Director 35% / MasterCard 15% / Destroy 50%</td>
         </tr>
         </tbody>
       </table>
@@ -462,7 +487,7 @@
           <td>Chaos Intruder</td>
           <td>Keep</td>
           <td class="good">Chaos Device</td>
-          <td class="rare">O5 約 20% / Destroy 80%</td>
+          <td class="rare">O5 2% / MasterCard 8% / Destroy 90%</td>
         </tr>
         <tr>
           <td><span class="src">Chaos Intruder</span><span class="perm">Chaos 侵入</span></td>
@@ -470,15 +495,15 @@
           <td>Conscripts</td>
           <td>Keep</td>
           <td class="good">Chaos Device</td>
-          <td class="good">Armory 3</td>
+          <td class="good">Armory 3 90% / MasterCard 10%</td>
         </tr>
         <tr>
           <td><span class="src">Chaos Device (Chaos Insurgency keycard)</span><span class="perm">Captain 相当</span></td>
           <td>Conscripts</td>
           <td>Chaos Intruder</td>
-          <td>Keep</td>
+          <td>MTF Captain</td>
           <td class="good">Armory 3</td>
-          <td class="rare">O5 高確率 / Destroy / MasterCard など</td>
+          <td class="rare">Site Director 35% / MasterCard 15% / Destroy 50%</td>
         </tr>
         <tr>
           <td><span class="src">Quarter</span><span class="perm">小銭</span></td>
@@ -486,7 +511,7 @@
           <td class="bad">Destroy</td>
           <td class="bad">Destroy</td>
           <td class="good">Coin</td>
-          <td class="good">Janitor / Scientist など低位キー</td>
+          <td class="good">Janitor 50% / Scientist 50%</td>
         </tr>
         <tr>
           <td><span class="src">MasterCard</span><span class="perm">ギャンブルキー</span></td>
@@ -494,7 +519,7 @@
           <td>Quarter ×8</td>
           <td>PlayingCard</td>
           <td>Scientist / Site Navigator / Armory 2 など中位</td>
-          <td class="rare">O5 5% / Site Director 25% / Janitor 20% / Destroy 50%</td>
+          <td class="rare">O5 10% / Site Director 25% / Facility Manager 15% / Janitor 10% / Destroy 40%</td>
         </tr>
         <tr>
           <td><span class="src">PlayingCard</span><span class="perm">ジョーク</span></td>
@@ -509,8 +534,236 @@
     </div>
   </section>
 
+  <section>
+    <h2>権限一覧</h2>
+    <p class="rank-note">この節を権限の正規参照とする。各 Level は下位レベルを含む。Administration は Checkpoints + Intercom = Admin1、ExitGates = Admin2、AlphaWarhead = Admin3。API では vanilla は KeycardAccessLevels.FromVanillaItem(ItemType)、custom は CItemKeycard.AccessLevels から参照できる。</p>
+
+    <h3>Vanilla キーカード</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+        <tr>
+          <th>Keycard</th>
+          <th>Containment</th>
+          <th>Armory</th>
+          <th>Administration</th>
+          <th>備考</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td><span class="src">Janitor</span></td>
+          <td>C1</td>
+          <td>-</td>
+          <td>-</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="src">Scientist</span></td>
+          <td>C2</td>
+          <td>-</td>
+          <td>-</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="src">Zone Manager</span></td>
+          <td>C1</td>
+          <td>-</td>
+          <td>Admin1</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="src">Research Coordinator</span></td>
+          <td>C2</td>
+          <td>-</td>
+          <td>Admin1</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="src">Containment Engineer</span></td>
+          <td>C3</td>
+          <td>-</td>
+          <td>Admin1</td>
+          <td>Facility Manager 未満</td>
+        </tr>
+        <tr>
+          <td><span class="src">Facility Manager</span></td>
+          <td>C3</td>
+          <td>-</td>
+          <td>Admin3</td>
+          <td>Containment Engineer より上位</td>
+        </tr>
+        <tr>
+          <td><span class="src">Guard</span></td>
+          <td>C1</td>
+          <td>A1</td>
+          <td>Admin1</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="src">MTF Private</span></td>
+          <td>C2</td>
+          <td>A2</td>
+          <td>Admin1</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="src">MTF Operative</span></td>
+          <td>C2</td>
+          <td>A2</td>
+          <td>Admin2</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td><span class="src">MTF Captain</span></td>
+          <td>C2</td>
+          <td>A3</td>
+          <td>Admin2</td>
+          <td>Chaos Insurgency と同格</td>
+        </tr>
+        <tr>
+          <td><span class="src">Chaos Insurgency</span></td>
+          <td>C2</td>
+          <td>A3</td>
+          <td>Admin2</td>
+          <td>MTF Captain と同格</td>
+        </tr>
+        <tr>
+          <td><span class="src">O5</span></td>
+          <td>C3</td>
+          <td>A3</td>
+          <td>Admin3</td>
+          <td>All</td>
+        </tr>
+        <tr>
+          <td><span class="src">Surface Access Pass</span></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Admin2</td>
+          <td>Exit Gates only / 1回限り</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Custom キーカード</h3>
+    <div class="table-wrap">
+      <table>
+        <thead>
+        <tr>
+          <th>Keycard</th>
+          <th>Containment</th>
+          <th>Armory</th>
+          <th>Administration</th>
+          <th>根拠 / 備考</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+          <td><span class="src">Armory Level 1</span></td>
+          <td>-</td>
+          <td>A1</td>
+          <td>Admin1</td>
+          <td>ArmoryLevelOne + Checkpoints + Intercom</td>
+        </tr>
+        <tr>
+          <td><span class="src">Armory Level 2</span></td>
+          <td>-</td>
+          <td>A2</td>
+          <td>Admin1</td>
+          <td>ArmoryLevelTwo + Checkpoints + Intercom</td>
+        </tr>
+        <tr>
+          <td><span class="src">Armory Level 3</span></td>
+          <td>-</td>
+          <td>A3</td>
+          <td>Admin2</td>
+          <td>ArmoryLevelThree + ExitGates</td>
+        </tr>
+        <tr>
+          <td><span class="src">Chaos Intruder</span></td>
+          <td>C1</td>
+          <td>A1</td>
+          <td>Admin1</td>
+          <td>ContainmentLevelOne + ArmoryLevelOne + Checkpoints + Intercom</td>
+        </tr>
+        <tr>
+          <td><span class="src">Conscripts</span></td>
+          <td>C2</td>
+          <td>A2</td>
+          <td>Admin2</td>
+          <td>ContainmentLevelTwo + ArmoryLevelTwo + ExitGates</td>
+        </tr>
+        <tr>
+          <td><span class="src">Security Chief</span></td>
+          <td>C1</td>
+          <td>A2</td>
+          <td>Admin2</td>
+          <td>ContainmentLevelOne + ArmoryLevelTwo + ExitGates</td>
+        </tr>
+        <tr>
+          <td><span class="src">Supply Manager</span></td>
+          <td>-</td>
+          <td>-</td>
+          <td>Admin2</td>
+          <td>Checkpoints + Intercom + ExitGates</td>
+        </tr>
+        <tr>
+          <td><span class="src">Site Navigator</span></td>
+          <td>C1</td>
+          <td>-</td>
+          <td>Admin2</td>
+          <td>ContainmentLevelOne + ExitGates</td>
+        </tr>
+        <tr>
+          <td><span class="src">Surveillance</span></td>
+          <td>C2</td>
+          <td>A1</td>
+          <td>Admin1</td>
+          <td>ContainmentLevelTwo + ArmoryLevelOne + Checkpoints + Intercom</td>
+        </tr>
+        <tr>
+          <td><span class="src">Site Director</span></td>
+          <td>C3</td>
+          <td>A3</td>
+          <td>Admin3</td>
+          <td>AlphaWarhead あり</td>
+        </tr>
+        <tr>
+          <td><span class="src">Fifthist</span></td>
+          <td>C3</td>
+          <td>A3</td>
+          <td>Admin2</td>
+          <td>ExitGates まで</td>
+        </tr>
+        <tr>
+          <td><span class="src">Fifthist Priest</span></td>
+          <td>C3</td>
+          <td>A3</td>
+          <td>Admin3</td>
+          <td>AlphaWarhead あり</td>
+        </tr>
+        <tr>
+          <td><span class="src">MasterCard / PlayingCard</span></td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td>KeycardPermissions.None</td>
+        </tr>
+        <tr>
+          <td><span class="src">CUA SpyKit / Dninoue Missile / Dummy Road / Magic Missile</span></td>
+          <td>-</td>
+          <td>-</td>
+          <td>-</td>
+          <td>カード型 CItem だが KeycardPermissions.None</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
   <footer>
-    この HTML は、新仕様のイメージをまとめたドラフトです。実際の確率・細かい流れはプラグイン内 C# 実装（Scp914Changes.cs / Scp914Registry）を優先してください。SCP:SL 公式 Wiki の Keycard / SCP-914 Outputs、SCPCB の Keycard / SCP-914 出力表を参考に構成しています。[web:21][web:6][web:1][web:3]
+    この HTML は、プラグイン内 C# 実装（Scp914Changes.cs / Scp914Registry）を読んでまとめたものです。個別 O5 抽選の確率を調整した場合は O5ProbabilityScale 反映後の値が実際の挙動になり、共通 O5 ワイルドカードは O5WildcardChance の値がそのまま使われます。
   </footer>
 </main>
 </body>

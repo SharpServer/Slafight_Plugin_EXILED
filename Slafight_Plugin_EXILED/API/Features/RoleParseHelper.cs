@@ -10,7 +10,7 @@ public static class RoleParseHelper
 {
     private static readonly Dictionary<string, string> Aliases = new(StringComparer.OrdinalIgnoreCase)
     {
-        { "173", "Scp173" },
+        /*{ "173", "Scp173" },
         { "3114", "Scp3114" },
         { "3005", "Scp3005" },
         { "966", "Scp966" },
@@ -18,7 +18,7 @@ public static class RoleParseHelper
         { "NtfLieutenant", "NtfLieutenant" },
         { "Fifthist", "FifthistRescure" },
         { "SnowWarrier", "SnowWarrier" },
-        { "Janitor", "Janitor" },
+        { "Janitor", "Janitor" },*/
     };
 
     public static bool TryParseRole(string input, out RoleTypeId? vanilla, out CRoleTypeId? custom)

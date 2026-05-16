@@ -73,6 +73,7 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.EvacuationGuard] = ("<color=#00b7eb>Emergency Evacuation Guard</color>", FoundTeam, "職員達を上部階層へ避難させ、施設の秩序を守護せよ。"),
         [CRoleTypeId.SecurityChief]   = ("<color=#00b7eb>Security Chief</color>",             FoundTeam, "職員達を地上へ脱出させ、施設の秩序を守護せよ。"),
         [CRoleTypeId.ChamberGuard]    = ("<color=#00b7eb>Chamber Guard</color>",              FoundTeam, "Dクラスとオブジェクトに注意し、確実に職員達を避難させよ。"),
+        [CRoleTypeId.SupplyManager]   = ("<color=#00b7eb>Supply Manager</color>",             FoundTeam, "施設内に向かい警備員たちと合流し、備品と搬入口の管理を遂行せよ。"),
 
         // ── Scientists / Neutral-Foundation ───────────────────────────────
         [CRoleTypeId.ZoneManager]    = ("<color=#00ffff>Zone Manager</color>",      NeutFoundTeam, "施設からの脱出を目指しながら、警備職員達を監督せよ"),

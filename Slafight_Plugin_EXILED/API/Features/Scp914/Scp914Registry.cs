@@ -92,6 +92,7 @@ public static class Scp914Registry
     public static void Clear()
     {
         WildcardRule = null;
+        O5WildcardRule = null;
         VanillaTable.Clear();
         CustomItemTable.Clear();
         CItemTable.Clear();

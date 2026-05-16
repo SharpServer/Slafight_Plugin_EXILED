@@ -296,6 +296,9 @@ public static class PlayerExtensions
             case CRoleTypeId.ChamberGuard:
                 new ChamberGuard().SpawnRole(player, roleSpawnFlags);
                 break;
+            case CRoleTypeId.SupplyManager:
+                new SupplyManager().SpawnRole(player, roleSpawnFlags);
+                break;
             // ==== Scientists ====
             case CRoleTypeId.ZoneManager:
                 new ZoneManager().SpawnRole(player, roleSpawnFlags);
