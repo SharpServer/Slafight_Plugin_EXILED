@@ -26,5 +26,5 @@ public class KeycardSupplyManager : CItemKeycard
         KeycardPermissions.Intercom;
 
     protected override bool PickupLightEnabled => true;
-    protected override Color PickupLightColor => new(1f, 0.25f, 0.35f);
+    protected override Color PickupLightColor => new Color32(0, 107, 137, 255);
 }
