@@ -93,7 +93,7 @@ public static class Scp914Changes
         Scp914Registry.WildcardRule = Scp914Rule.Weighted(
             (1f / 10f, Scp914Rule.ToCItem<Scp513Item>()),
             (9f / 10f, Scp914Rule.ToCItem<CapybaraMissile>())
-        ).WithChance(1f / 12f);
+        ).WithChance(1f / 42f);
     }
 
     /// <summary>
