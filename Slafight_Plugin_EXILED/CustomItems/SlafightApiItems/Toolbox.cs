@@ -20,6 +20,7 @@ public class Toolbox : CItem
     protected override bool PickupLightEnabled => true;
     protected override Color PickupLightColor => Color.yellow;
     protected override string PickupSchematicName => "ToolboxModel";
+    protected override bool UseSchematicPickup => true;
 
     public enum UtilType
     {

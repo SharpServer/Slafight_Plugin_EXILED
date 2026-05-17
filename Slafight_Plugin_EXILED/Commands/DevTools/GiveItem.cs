@@ -4,6 +4,7 @@ using CommandSystem;
 using Exiled.API.Features;
 using Exiled.Permissions.Extensions;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Commands;
 
 namespace Slafight_Plugin_EXILED.Commands.DevTools;
 
@@ -11,7 +12,7 @@ public class GiveItem : ICommand
 {
     public string Command => "giveitem";
     public string[] Aliases { get; } = ["gi", "item", "gitem"];
-    public string Description => "Give a CItem to a player (by UniqueKey).";
+    public string Description => "Give a CItem by key. Usage: sl giveitem <key> [target]";
 
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
     {
@@ -33,7 +34,8 @@ public class GiveItem : ICommand
         if (arguments.Count == 0 || arguments.Count == 1 && arguments.At(0).Equals("help", StringComparison.OrdinalIgnoreCase))
         {
             var keys = CItem.GetAllInstances().Select(ci => ci.UniqueKeyName).ToArray();
-            response = "Usage: giveitem <uniqueKey> [targetId]\n" +
+            response = "Usage: sl giveitem <uniqueKey> [target]\n" +
+                       "Target can be omitted, @me, player id, nickname, or UserId.\n" +
                        $"Available CItem keys:\n{string.Join(", ", keys)}";
             return false;
         }
@@ -51,23 +53,9 @@ public class GiveItem : ICommand
 
         // ターゲット（省略時は実行者）
         Player target = executor;
-        if (arguments.Count >= 2)
-        {
-            if (int.TryParse(arguments.At(1), out int targetId))
-            {
-                target = Player.Get(targetId);
-                if (target == null)
-                {
-                    response = $"Player with ID {targetId} not found.";
-                    return false;
-                }
-            }
-            else
-            {
-                response = $"Invalid player ID: {arguments.At(1)}. Use numeric ID.";
-                return false;
-            }
-        }
+        if (arguments.Count >= 2 &&
+            !CommandTools.TryResolvePlayer(arguments.At(1), executor, out target, out response))
+            return false;
 
         // CItem を付与して、返り値があれば成功
         var item = cItem!.Give(target, displayMessage: true);

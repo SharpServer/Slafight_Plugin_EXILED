@@ -253,12 +253,17 @@
         <Compile Include="Commands\DevTools\DebugStart.cs" />
         <Compile Include="Commands\DevTools\GetQueue.cs" />
         <Compile Include="Commands\DevTools\GiveItem.cs" />
+        <Compile Include="Commands\DevTools\HelpCommand.cs" />
+        <Compile Include="Commands\DevTools\ListCommand.cs" />
         <Compile Include="Commands\DevTools\ObjectPrefabTools.cs" />
+        <Compile Include="Commands\DevTools\PlayerCommand.cs" />
+        <Compile Include="Commands\DevTools\QueueCommand.cs" />
         <Compile Include="Commands\DevTools\RunEvent.cs" />
         <Compile Include="Commands\DevTools\SetQueue.cs" />
         <Compile Include="Commands\DevTools\SpawnBuiltInPrefab.cs" />
         <Compile Include="Commands\DevTools\SpawnUniversal.cs" />
         <Compile Include="Commands\DevTools\SpawnWave.cs" />
+        <Compile Include="Commands\DevTools\StatusCommand.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CapybaraMissile.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ArmorInfantry.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ArmorVip.cs" />
@@ -452,6 +457,7 @@
         <Compile Include="API\Enums\SpawnTypeId.cs" />
         <Compile Include="API\Enums\SpecialEventType.cs" />
         <Compile Include="API\Enums\SyncType.cs" />
+        <Compile Include="Commands\CommandTools.cs" />
         <Compile Include="Commands\DevToolFunctionHandler.cs" />
         <Compile Include="Commands\DevTools\PlayOmegaWarhead.cs" />
         <Compile Include="Commands\DevTools\PlaySurfaceAttack.cs" />

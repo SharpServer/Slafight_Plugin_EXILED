@@ -3,6 +3,7 @@ using CommandSystem;
 using Exiled.API.Features;
 using Exiled.Permissions.Extensions;
 using PlayerRoles;
+using Slafight_Plugin_EXILED.Commands;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 
@@ -13,7 +14,7 @@ public class SpawnUniversal : ICommand
 {
     public string Command     => "spawn";
     public string[] Aliases   => ["us"];   // "spawn"自体はCommandに使うのでAliasesから除去
-    public string Description => "Universal CustomRole Spawner";
+    public string Description => "Set a vanilla/custom role. Usage: sl spawn <roleId> [target]";
 
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
     {
@@ -32,7 +33,8 @@ public class SpawnUniversal : ICommand
 
         if (arguments.Count == 0)
         {
-            response = "Usage: spawn <roleId> [targetPlayerId]\nAvailable roles:\n"
+            response = "Usage: sl spawn <roleId> [target]\n" +
+                     "Target can be omitted, @me, player id, nickname, or UserId.\nAvailable roles:\n"
                      + string.Join(", ", RoleParseHelper.GetAllRoleNames());
             return false;
         }
@@ -109,17 +111,6 @@ public class SpawnUniversal : ICommand
         if (arguments.Count < 2)
             return true;
 
-        if (!int.TryParse(arguments.At(1), out int targetId))
-        {
-            response = $"Invalid player ID: {arguments.At(1)}. Use numeric ID.";
-            return false;
-        }
-
-        target = Player.Get(targetId);
-        if (target != null)
-            return true;
-
-        response = $"Player with ID {targetId} not found.";
-        return false;
+        return CommandTools.TryResolvePlayer(arguments.At(1), executor, out target, out response);
     }
 }
