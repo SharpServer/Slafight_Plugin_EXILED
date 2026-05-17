@@ -21,11 +21,20 @@ using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.Hints;
 
-public class PlayerHUD : IBootstrapHandler
+public class PlayerHUD : IBootstrapHandler, IDisposable
 {
     public static PlayerHUD? Instance { get; private set; }
-    public static void Register() { Instance = new(); }
-    public static void Unregister() { Instance = null; }
+    public static void Register()
+    {
+        Unregister();
+        Instance = new();
+    }
+
+    public static void Unregister()
+    {
+        Instance?.Dispose();
+        Instance = null;
+    }
 
     private CoroutineHandle _specificAbilityLoop;
     private CoroutineHandle _abilityHudLoop;
@@ -34,6 +43,7 @@ public class PlayerHUD : IBootstrapHandler
 
     // 観戦者ID → 現在見ているプレイヤー
     private readonly Dictionary<int, Player> _spectateTargets = new();
+    private bool _disposed;
 
     public PlayerHUD()
     {
@@ -51,8 +61,12 @@ public class PlayerHUD : IBootstrapHandler
         _debugHudLoop = Timing.RunCoroutine(DebugHudLoop());
     }
 
-    ~PlayerHUD()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
         Exiled.Events.Handlers.Player.Verified -= ServerInfoHint;
         Exiled.Events.Handlers.Server.RoundStarted -= PlayerHUDMain;
         Exiled.Events.Handlers.Player.ChangingRole -= AllSyncHUD;
@@ -71,6 +85,9 @@ public class PlayerHUD : IBootstrapHandler
         
         if (_debugHudLoop.IsRunning)
             Timing.KillCoroutines(_debugHudLoop);
+
+        _spectateTargets.Clear();
+        GC.SuppressFinalize(this);
     }
 
 
@@ -314,19 +331,15 @@ public class PlayerHUD : IBootstrapHandler
         {
             string roleText, teamText, objectiveText;
 
-            // FacilityTermination 中の財団側特殊処理
+            // FacilityTermination 中は勝利条件と同じ人類/正常性の陣営表示に寄せる
             if (SpecialEventsHandler.Instance.NowEvent == SpecialEventType.FacilityTermination)
             {
-                var cteam = sourcePlayer.GetTeam();
-                if (cteam is CTeam.FoundationForces or CTeam.Guards &&
-                    sourcePlayer.GetCustomRole() != CRoleTypeId.Sculpture)
-                {
-                    HintSync(SyncType.PHUD_Role,      $"<color=#00b7eb>{sourcePlayer.Role.Name}</color>", targetForHint);
-                    HintSync(SyncType.PHUD_Team,      "<color=#00b7eb>The Foundation</color>",            targetForHint);
-                    HintSync(SyncType.PHUD_Objective, "財団に従い、人類を根絶させよ。",                    targetForHint);
-                    HintSync(SyncType.PHUD_Event,     SpecialEventsHandler.Instance.LocalizedEventName,   targetForHint);
-                    return;
-                }
+                (roleText, teamText, objectiveText) = GetFacilityTerminationInfo(sourcePlayer);
+                HintSync(SyncType.PHUD_Role,      roleText,      targetForHint);
+                HintSync(SyncType.PHUD_Team,      teamText,      targetForHint);
+                HintSync(SyncType.PHUD_Objective, objectiveText, targetForHint);
+                HintSync(SyncType.PHUD_Event,     SpecialEventsHandler.Instance.LocalizedEventName, targetForHint);
+                return;
             }
 
             var custom = sourcePlayer.GetCustomRole();
@@ -352,6 +365,42 @@ public class PlayerHUD : IBootstrapHandler
         {
             Log.Debug($"[ApplyRoleInfo] Exception for {sourcePlayer?.Nickname}: {e.Message}");
         }
+    }
+
+    private static (string role, string team, string objective) GetFacilityTerminationInfo(Player player)
+    {
+        var custom = player.GetCustomRole();
+        var cteam = player.GetTeam();
+        var name = player.Role?.Name ?? "";
+
+        var roleText = custom != CRoleTypeId.None &&
+                       RoleHintsDictionary.Table.TryGetValue(custom, out var data)
+            ? data.Role
+            : $"<color={(player.IsHumanitist() ? "#0000c8" : "red")}>{name}</color>";
+
+        if (!player.IsHumanitist())
+        {
+            if (custom == CRoleTypeId.Sculpture)
+                roleText = "<color=red>Sculpture</color>";
+            else if (cteam is CTeam.FoundationForces or CTeam.Guards)
+                roleText = $"<color=red>{name}</color>";
+
+            return (
+                roleText,
+                "<color=red>正常性</color>",
+                "財団に従い、人類を根絶させよ。"
+            );
+        }
+
+        var objective = cteam is CTeam.Scientists or CTeam.ClassD
+            ? "施設の方針変更に巻き込まれた。生き延び、正常性陣営から逃れろ。"
+            : "人類第一に、正常性陣営に抵抗せよ。";
+
+        return (
+            roleText,
+            "<color=#0000c8>人類</color>",
+            objective
+        );
     }
 
     private static (string role, string team, string objective) GetTeamFallback(Player player)

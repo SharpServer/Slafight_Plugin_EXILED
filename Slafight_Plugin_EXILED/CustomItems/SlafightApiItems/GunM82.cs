@@ -1,6 +1,5 @@
 using Exiled.API.Enums;
 using Exiled.API.Features;
-using Exiled.API.Features.DamageHandlers;
 using Exiled.Events.EventArgs.Player;
 using InventorySystem.Items.Firearms.Attachments;
 using PlayerRoles;
@@ -33,12 +32,6 @@ public class GunM82 : CItemWeapon
         AttachmentName.SoundSuppressor,
     ];
     protected override bool AllowAttachmentChanges => false;
-
-    protected override void OnShot(ShotEventArgs ev)
-    {
-        ev.Firearm.MagazineAmmo -= 29;
-        base.OnShot(ev);
-    }
 
     protected override void OnHurtingOthers(HurtingEventArgs ev)
     {

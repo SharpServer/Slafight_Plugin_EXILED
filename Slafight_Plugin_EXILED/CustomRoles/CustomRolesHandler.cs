@@ -113,10 +113,7 @@ public class CustomRolesHandler : IBootstrapHandler
 
     public void RoundCoroutine()
     {
-        Timing.CallDelayed(10f, () =>
-        {
-            Timing.RunCoroutine(UniversalConditionCoroutine());
-        });
+        Timing.RunCoroutine(DelayUnlessLobby(10f, () => Timing.RunCoroutine(UniversalConditionCoroutine())));
     }
 
     private IEnumerator<float> UniversalConditionCoroutine()
@@ -372,11 +369,7 @@ public class CustomRolesHandler : IBootstrapHandler
                     Intercom.TrySetOverride(player, true);
                 }
 
-                Timing.CallDelayed(10f, () =>
-                {
-                    if (!Round.IsLobby)
-                        StaticUtils.TryRestart();
-                });
+                ScheduleRestartIfRoundActive();
                 break;
 
             case CTeam.ChaosInsurgency:
@@ -398,11 +391,7 @@ public class CustomRolesHandler : IBootstrapHandler
                         Intercom.TrySetOverride(player, true);
                     }
 
-                    Timing.CallDelayed(10f, () =>
-                    {
-                        if (!Round.IsLobby)
-                            StaticUtils.TryRestart();
-                    });
+                    ScheduleRestartIfRoundActive();
                 }
                 else
                 {
@@ -422,11 +411,7 @@ public class CustomRolesHandler : IBootstrapHandler
                             Intercom.TrySetOverride(player, true);
                         }
 
-                        Timing.CallDelayed(10f, () =>
-                        {
-                            if (!Round.IsLobby)
-                                StaticUtils.TryRestart();
-                        });
+                        ScheduleRestartIfRoundActive();
                         break;
 
                     case "CANDY_WIN":
@@ -436,11 +421,7 @@ public class CustomRolesHandler : IBootstrapHandler
                             Intercom.TrySetOverride(player, true);
                         }
 
-                        Timing.CallDelayed(10f, () =>
-                        {
-                            if (!Round.IsLobby)
-                                StaticUtils.TryRestart();
-                        });
+                        ScheduleRestartIfRoundActive();
                         break;
 
                     default:
@@ -450,11 +431,7 @@ public class CustomRolesHandler : IBootstrapHandler
                             Intercom.TrySetOverride(player, true);
                         }
 
-                        Timing.CallDelayed(10f, () =>
-                        {
-                            if (!Round.IsLobby)
-                                StaticUtils.TryRestart();
-                        });
+                        ScheduleRestartIfRoundActive();
                         break;
                 }
                 break;
@@ -470,11 +447,7 @@ public class CustomRolesHandler : IBootstrapHandler
                         Intercom.TrySetOverride(player, true);
                     }
 
-                    Timing.CallDelayed(10f, () =>
-                    {
-                        if (!Round.IsLobby)
-                            StaticUtils.TryRestart();
-                    });
+                    ScheduleRestartIfRoundActive();
                 }
                 else
                 {
@@ -484,11 +457,7 @@ public class CustomRolesHandler : IBootstrapHandler
                         Intercom.TrySetOverride(player, true);
                     }
 
-                    Timing.CallDelayed(10f, () =>
-                    {
-                        if (!Round.IsLobby)
-                            StaticUtils.TryRestart();
-                    });
+                    ScheduleRestartIfRoundActive();
                 }
                 break;
 
@@ -507,12 +476,32 @@ public class CustomRolesHandler : IBootstrapHandler
                     Intercom.TrySetOverride(player, true);
                 }
 
-                Timing.CallDelayed(10f, () =>
-                {
-                    if (!Round.IsLobby)
-                        StaticUtils.TryRestart();
-                });
+                ScheduleRestartIfRoundActive();
                 break;
         }
+    }
+
+    private static void ScheduleRestartIfRoundActive()
+    {
+        Timing.RunCoroutine(DelayUnlessLobby(10f, StaticUtils.TryRestart));
+    }
+
+    private static IEnumerator<float> DelayUnlessLobby(float delay, Action action)
+    {
+        var remaining = delay;
+        while (remaining > 0f)
+        {
+            if (Round.IsLobby)
+                yield break;
+
+            var wait = Math.Min(0.5f, remaining);
+            remaining -= wait;
+            yield return Timing.WaitForSeconds(wait);
+        }
+
+        if (Round.IsLobby)
+            yield break;
+
+        action();
     }
 }

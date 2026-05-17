@@ -1,6 +1,9 @@
+using System;
+using System.Collections.Generic;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp079;
 using MEC;
+using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.SpecialEvents;
@@ -58,7 +61,7 @@ public class NewEventHandler : IBootstrapHandler
     private static void OnOvercharged(RecontainingEventArgs ev)
     {
         if (!ev.IsAllowed) return;
-        Timing.CallDelayed(25f, () =>
+        Timing.RunCoroutine(DelayUnlessLobby(25f, () =>
         {
             switch (SpecialEventsHandler.Instance.NowEvent)
             {
@@ -69,7 +72,26 @@ public class NewEventHandler : IBootstrapHandler
                     RecoverControl(FacilityControlRecoverType.DisableTesla);
                     break;
             }
-        });
+        }));
+    }
+
+    private static IEnumerator<float> DelayUnlessLobby(float delay, Action action)
+    {
+        var remaining = delay;
+        while (remaining > 0f)
+        {
+            if (Round.IsLobby)
+                yield break;
+
+            var wait = Math.Min(0.5f, remaining);
+            remaining -= wait;
+            yield return Timing.WaitForSeconds(wait);
+        }
+
+        if (Round.IsLobby)
+            yield break;
+
+        action();
     }
 
     private static void OnTesla(TriggeringTeslaEventArgs ev)

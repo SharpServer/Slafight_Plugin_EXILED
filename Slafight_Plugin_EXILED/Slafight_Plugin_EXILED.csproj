@@ -391,6 +391,7 @@
         <Compile Include="CustomRoles\Others\CandyWarrierApril.cs" />
         <Compile Include="CustomRoles\Others\CandyWarrierHalloween.cs" />
         <Compile Include="CustomRoles\Others\HideAdmin.cs" />
+        <Compile Include="CustomRoles\Others\HideWatch.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovAwakenRole.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovExtensionAndUtils.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovRole.cs" />

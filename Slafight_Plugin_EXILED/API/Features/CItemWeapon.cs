@@ -1,4 +1,5 @@
 #nullable enable
+using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
@@ -12,33 +13,37 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
-/// CItem の Firearm 特化派生。Exiled.CustomItems.CustomWeapon 互換の
-/// Damage / MagazineSize / Scale を virtual で受け取り、Spawn / Give 双方の経路で
-/// Firearm へ焼き付ける。
+/// CItem の Firearm 特化派生。Damage / MagazineSize / Scale を virtual で受け取り、
+/// Spawn / Give 双方の経路で Firearm へ焼き付ける。
 /// </summary>
 /// <remarks>
-/// <para>Spawn は <see cref="Item.Create"/> 経由で Firearm を作って MagazineSize を流し込み、
-/// <see cref="Item.CreatePickup"/> で Pickup に変換した後に Scale を反映する。
-/// Give は <see cref="Player.AddItem"/> の戻り Item に対して MagazineSize を上書きする。</para>
-/// <para>Damage は <see cref="OnHurtingOthers"/> でヒット量を上書きし、
-/// 連射時のリロード弾薬計算は CustomWeapon 同等の動作を OnReloading / OnReloaded で再現する。</para>
+/// <para>
+/// MagazineSize / MaxMagazineAmmo は「アタッチメント補正後の実効容量」として扱う。
+/// EXILED の MaxMagazineAmmo setter は内部の base capacity を変更するため、ここで
+/// attachment modifier を逆算して、派生側が見た目通りの容量を指定できるようにする。
+/// </para>
 /// </remarks>
 public abstract class CItemWeapon : CItem
 {
+    private readonly Dictionary<ushort, int> _totalAmmoBeforeShot = new();
+
     /// <summary>1 撃あたりのダメージ。負値ならバニラのダメージを使う (override 無し)。</summary>
     protected virtual float Damage => -1f;
 
-    /// <summary>マガジン容量。0 なら override 無し (バニラ MagazineSize)。</summary>
+    /// <summary>実効マガジン容量。0 なら override 無し (バニラ容量)。</summary>
     protected virtual byte MagazineSize => 0;
 
-    /// <summary>最大装弾数。0 なら override 無し。デフォルトでは MagazineSize と同じ値を使う。</summary>
+    /// <summary>実効最大装弾数。0 なら override 無し。デフォルトでは MagazineSize と同じ値を使う。</summary>
     protected virtual ushort MaxMagazineAmmo => MagazineSize;
 
-    /// <summary>生成 / 付与直後の装填数。0 なら override 無し。デフォルトでは MagazineSize と同じ値を使う。</summary>
-    protected virtual ushort InitialMagazineAmmo => MagazineSize;
+    /// <summary>生成 / 付与直後の装填数。0 なら override 無し。デフォルトでは MaxMagazineAmmo と同じ値を使う。</summary>
+    protected virtual ushort InitialMagazineAmmo => MaxMagazineAmmo;
 
     /// <summary>1 発射あたりの消費弾数。0 なら override 無し。</summary>
     protected virtual byte AmmoDrain => 0;
+
+    /// <summary>AmmoDrain 分の総弾数を持っていない場合に発射を止めるか。</summary>
+    protected virtual bool RequireAmmoDrainAvailableToShoot => AmmoDrain > 1;
 
     /// <summary>Pickup の見た目スケール。Vector3.one ならバニラサイズ。</summary>
     protected virtual Vector3 Scale => Vector3.one;
@@ -81,18 +86,24 @@ public abstract class CItemWeapon : CItem
         if (item is not Firearm firearm)
             return;
 
-        ApplyFirearmStats(firearm);
         ApplyFirearmAttachments(firearm);
+        ApplyFirearmStats(firearm);
     }
 
     /// <summary>最大装弾数 / 初期装填数 / 弾薬消費を Firearm に適用する。</summary>
     protected virtual void ApplyFirearmStats(Firearm firearm)
     {
-        if (MaxMagazineAmmo > 0)
-            firearm.MaxMagazineAmmo = MaxMagazineAmmo;
+        int effectiveMax = MaxMagazineAmmo;
+        if (effectiveMax > 0)
+            ApplyEffectiveMaxMagazineAmmo(firearm, effectiveMax);
 
         if (InitialMagazineAmmo > 0)
-            firearm.MagazineAmmo = InitialMagazineAmmo;
+        {
+            int initialAmmo = effectiveMax > 0
+                ? System.Math.Min(InitialMagazineAmmo, effectiveMax)
+                : InitialMagazineAmmo;
+            firearm.MagazineAmmo = initialAmmo;
+        }
 
         if (AmmoDrain > 0)
             firearm.AmmoDrain = AmmoDrain;
@@ -119,6 +130,24 @@ public abstract class CItemWeapon : CItem
         if (!ev.IsAllowed) return;
         if (Damage >= 0f)
             ev.Amount = Damage;
+    }
+
+    protected override void OnShooting(ShootingEventArgs ev)
+    {
+        if (!ev.IsAllowed) return;
+        if (ShouldBlockShooting(ev))
+        {
+            ev.IsAllowed = false;
+            return;
+        }
+
+        if (AmmoDrain > 1)
+            _totalAmmoBeforeShot[ev.Firearm.Serial] = ev.Firearm.TotalAmmo;
+    }
+
+    protected override void OnShot(ShotEventArgs ev)
+    {
+        ApplyManualAmmoDrain(ev.Firearm);
     }
 
     // ==== リロード時のマガジン取り回し (CustomWeapon 互換) ====
@@ -164,30 +193,29 @@ public abstract class CItemWeapon : CItem
     {
         if (!Check(ev.Item)) return;
 
-        if (MagazineSize > 0)
+        if (MaxMagazineAmmo > 0)
         {
-            // CustomWeapon の弾薬計算ロジックを移植 (chamber 弾を考慮):
-            // マガジン容量を MagazineSize に揃え、不足分はプレイヤーの所持弾から差し引く。
-            // 自動銃の chamber に既に 1 発入っていれば実装上のマガジン上限はその分減る。
+            // CustomWeapon の弾薬計算ロジックを実効容量ベースで移植 (chamber 弾を考慮)。
             var firearm = ev.Firearm;
             var ammoType = firearm.AmmoType;
+            int maxMagazineAmmo = GetConfiguredMaxMagazineAmmo(firearm);
             int magazineAmmo = firearm.MagazineAmmo;
             int chambered = firearm.Base.Modules
                 .OfType<AutomaticActionModule>()
                 .FirstOrDefault()?.SyncAmmoChambered ?? 0;
-            int loadable = MagazineSize - chambered;
-            int delta = -(MagazineSize - magazineAmmo - chambered);
+            int loadable = System.Math.Max(0, maxMagazineAmmo - chambered);
+            int delta = -(maxMagazineAmmo - magazineAmmo - chambered);
             int available = ev.Player.GetAmmo(ammoType) + magazineAmmo;
 
             if (loadable < available)
             {
-                firearm.MagazineAmmo = (byte)loadable;
+                firearm.MagazineAmmo = loadable;
                 int remainder = ev.Player.GetAmmo(ammoType) + delta;
                 ev.Player.SetAmmo(ammoType, (ushort)remainder);
             }
             else
             {
-                firearm.MagazineAmmo = (byte)available;
+                firearm.MagazineAmmo = available;
                 ev.Player.SetAmmo(ammoType, 0);
             }
         }
@@ -203,5 +231,64 @@ public abstract class CItemWeapon : CItem
 
     /// <summary>MagazineSize 到達時に基底側でリロードを止めるか。</summary>
     protected virtual bool ShouldBlockReloading(ReloadingWeaponEventArgs ev)
-        => MagazineSize > 0 && ev.Firearm.TotalAmmo >= MagazineSize;
+        => MaxMagazineAmmo > 0 && ev.Firearm.TotalAmmo >= GetConfiguredMaxMagazineAmmo(ev.Firearm);
+
+    /// <summary>発射を基底側で止めるか。</summary>
+    protected virtual bool ShouldBlockShooting(ShootingEventArgs ev)
+        => RequireAmmoDrainAvailableToShoot
+           && AmmoDrain > 1
+           && ev.Firearm.TotalAmmo < AmmoDrain;
+
+    private void ApplyManualAmmoDrain(Firearm firearm)
+    {
+        if (AmmoDrain <= 1) return;
+        if (!_totalAmmoBeforeShot.Remove(firearm.Serial, out int beforeShotTotal)) return;
+
+        int consumedByGame = System.Math.Max(0, beforeShotTotal - firearm.TotalAmmo);
+        int remainingDrain = AmmoDrain - consumedByGame;
+        if (remainingDrain <= 0) return;
+
+        DrainStoredAmmo(firearm, ref remainingDrain);
+    }
+
+    private static void DrainStoredAmmo(Firearm firearm, ref int amount)
+    {
+        if (amount <= 0) return;
+
+        int magazineDrain = System.Math.Min(firearm.MagazineAmmo, amount);
+        if (magazineDrain > 0)
+        {
+            firearm.MagazineAmmo -= magazineDrain;
+            amount -= magazineDrain;
+        }
+
+        int barrelDrain = System.Math.Min(firearm.BarrelAmmo, amount);
+        if (barrelDrain > 0)
+        {
+            firearm.BarrelAmmo -= barrelDrain;
+            amount -= barrelDrain;
+        }
+    }
+
+    private int GetConfiguredMaxMagazineAmmo(Firearm firearm)
+        => MaxMagazineAmmo > 0 ? MaxMagazineAmmo : firearm.MaxMagazineAmmo;
+
+    private static void ApplyEffectiveMaxMagazineAmmo(Firearm firearm, int effectiveMax)
+    {
+        int attachmentModifier = GetMagazineCapacityModifier(firearm);
+        int baseCapacity = System.Math.Max(0, effectiveMax - attachmentModifier);
+        firearm.MaxMagazineAmmo = baseCapacity;
+    }
+
+    private static int GetMagazineCapacityModifier(Firearm firearm)
+    {
+        try
+        {
+            return (int)firearm.Base.AttachmentsValue(AttachmentParam.MagazineCapacityModifier);
+        }
+        catch
+        {
+            return 0;
+        }
+    }
 }
