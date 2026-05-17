@@ -9,6 +9,8 @@ public static class FacilityTerminationContexts
         UnitPackRegistry.TryGet("FT_LastOperation", out var lastOpPack);
         UnitPackRegistry.TryGet("FT_GoC",          out var gocPack);
         UnitPackRegistry.TryGet("FT_Chaos",        out var chaosPack);
+        UnitPackRegistry.TryGet("SecurityTeam",    out var securityTeamPack);
+        UnitPackRegistry.TryGet("ChaosAgents",     out var chaosAgentsPack);
 
         var ctx = new SpawnContext(
             "FacilityTerminationCustom",
@@ -36,7 +38,9 @@ public static class FacilityTerminationContexts
             },
             lastOpPack,
             gocPack,
-            chaosPack
+            chaosPack,
+            securityTeamPack,
+            chaosAgentsPack
         );
 
         SpawnContextRegistry.Register(ctx);

@@ -43,6 +43,8 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
         subscriptions.Add(() => Exiled.Events.Handlers.Player.Dying += ModelRolesRagdoll, () => Exiled.Events.Handlers.Player.Dying -= ModelRolesRagdoll);
         subscriptions.Add(() => LabApi.Events.Handlers.PlayerEvents.SearchedToy += InteractionEvent, () => LabApi.Events.Handlers.PlayerEvents.SearchedToy -= InteractionEvent);
         subscriptions.Add(() => LabApi.Events.Handlers.ServerEvents.RoundStarted += Init, () => LabApi.Events.Handlers.ServerEvents.RoundStarted -= Init);
+        subscriptions.Add(() => LabApi.Events.Handlers.PlayerEvents.RaPlayerListAddingPlayer += HideWatchFromRaPlayerList, () => LabApi.Events.Handlers.PlayerEvents.RaPlayerListAddingPlayer -= HideWatchFromRaPlayerList);
+        subscriptions.Add(() => LabApi.Events.Handlers.PlayerEvents.RequestedRaPlayerInfo += HideWatchFromRaPlayerInfo, () => LabApi.Events.Handlers.PlayerEvents.RequestedRaPlayerInfo -= HideWatchFromRaPlayerInfo);
     }
 
     public bool ActivatedAntiMemeProtocol;
@@ -130,6 +132,29 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
     private static bool IsAntiMemeProtocolTarget(Exiled.API.Features.Player player)
     {
         return player.GetCustomRole() is CRoleTypeId.Scp3005 or CRoleTypeId.Scp3125;
+    }
+
+    private static bool IsHideWatchTarget(Player labPlayer)
+    {
+        if (labPlayer == null)
+            return false;
+
+        var player = Exiled.API.Features.Player.Get(labPlayer.ReferenceHub);
+        return player?.GetCustomRole() == CRoleTypeId.HideWatch;
+    }
+
+    private static void HideWatchFromRaPlayerList(PlayerRaPlayerListAddingPlayerEventArgs ev)
+    {
+        if (IsHideWatchTarget(ev.Target))
+            ev.InOverwatch = false;
+    }
+
+    private static void HideWatchFromRaPlayerInfo(PlayerRequestedRaPlayerInfoEventArgs ev)
+    {
+        if (!IsHideWatchTarget(ev.Target))
+            return;
+
+        ev.InfoBuilder.Replace(" <color=#008080>[OVERWATCH MODE]</color>", string.Empty);
     }
 
     /// <summary>

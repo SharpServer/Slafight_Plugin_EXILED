@@ -355,6 +355,9 @@ public static class PlayerExtensions
             case CRoleTypeId.HideAdmin:
                 new HideAdmin().SpawnRole(player, roleSpawnFlags);
                 break;
+            case CRoleTypeId.HideWatch:
+                new HideWatch().SpawnRole(player, roleSpawnFlags);
+                break;
             // ==== GoC ====
             case CRoleTypeId.GoCSquadLeader:
                 new GoCSquadLeader().SpawnRole(player, roleSpawnFlags);

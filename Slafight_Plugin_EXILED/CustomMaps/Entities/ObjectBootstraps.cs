@@ -60,7 +60,7 @@ public class ObjectBootstraps : IBootstrapHandler
     {
         Timing.CallDelayed(2f, () =>
         {
-            PlaceTantrumAbility.ExecuteByApi(EventHandler.Scp173SpawnPoint + Vector3.down * 0.75f);
+            PlaceTantrumAbility.ExecuteByApi(EventHandler.Scp173SpawnPoint);
         });
     }
 }

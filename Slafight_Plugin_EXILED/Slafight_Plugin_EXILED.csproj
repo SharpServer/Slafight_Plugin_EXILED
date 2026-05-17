@@ -199,6 +199,7 @@
         <Compile Include="API\Features\Scp914\Scp914Dispatcher.cs" />
         <Compile Include="API\Features\Scp914\Scp914Registry.cs" />
         <Compile Include="API\Features\SpeakerApi.cs" />
+        <Compile Include="API\Features\SchematicPickup.cs" />
         <Compile Include="API\Features\CRole.cs" />
         <Compile Include="API\Features\CRoom.cs" />
         <Compile Include="API\Features\CustomBooleans.cs" />
@@ -391,6 +392,7 @@
         <Compile Include="CustomRoles\Others\CandyWarrierApril.cs" />
         <Compile Include="CustomRoles\Others\CandyWarrierHalloween.cs" />
         <Compile Include="CustomRoles\Others\HideAdmin.cs" />
+        <Compile Include="CustomRoles\Others\HideWatch.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovAwakenRole.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovExtensionAndUtils.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovRole.cs" />

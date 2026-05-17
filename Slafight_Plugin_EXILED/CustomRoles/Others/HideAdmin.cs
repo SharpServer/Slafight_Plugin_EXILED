@@ -1,3 +1,4 @@
+using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using MEC;
@@ -30,7 +31,9 @@ public class HideAdmin : CRole
             player.SetCustomInfo("<color=#FF1493>THE ADMINISTRATOR</color>");
             player.MaxHealth = maxHealth;
             player.Health = maxHealth;
-            player.EnableEffect(EffectType.DamageReduction, 255);
+            player.EnableEffect<DamageReduction>(255);
+            player.EnableEffect<Fade>(255);
+            player.EnableEffect<NightVision>(255);
             player.IsBypassModeEnabled = true;
             player.IsNoclipPermitted = true;
 

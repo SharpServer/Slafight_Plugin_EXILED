@@ -128,6 +128,10 @@ internal static class RoleHintsDictionary
             "<color=#FF1493><b>THE ADMINISTRATOR</b></color>",
             "<color=#FF1493>THE ADMINISTRATOR</color>",
             "なぁ～んでもできる！"),
+        [CRoleTypeId.HideWatch] = (
+                $"<color={ServerColors.Cyan}><b>THE HIDEWATCH</b></color>",
+                "<color=#FF1493>THE ADMINISTRATOR</color>",
+                "ぐへへへへ"),
         
         // ── Experimental Features ─────────────────────────────────────────
         [CRoleTypeId.SecurityTeamGuard] = ("<color=#00b7eb>Security Team Guard</color>", FoundTeam, FoundObj),
