@@ -2,7 +2,6 @@ using System;
 using CommandSystem;
 using Exiled.API.Features;
 using Exiled.Permissions.Extensions;
-using Slafight_Plugin_EXILED.Hints;
 
 namespace Slafight_Plugin_EXILED.Commands.DevTools;
 

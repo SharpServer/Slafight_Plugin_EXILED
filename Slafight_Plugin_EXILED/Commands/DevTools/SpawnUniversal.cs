@@ -5,7 +5,6 @@ using Exiled.Permissions.Extensions;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
-using Slafight_Plugin_EXILED.Hints;
 
 namespace Slafight_Plugin_EXILED.Commands.DevTools;
 

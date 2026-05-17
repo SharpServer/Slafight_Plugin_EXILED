@@ -1,6 +1,5 @@
 using Exiled.API.Enums;
 using Exiled.API.Features;
-using Exiled.API.Features.DamageHandlers;
 using Exiled.Events.EventArgs.Player;
 using InventorySystem.Items.Firearms.Attachments;
 using PlayerRoles;

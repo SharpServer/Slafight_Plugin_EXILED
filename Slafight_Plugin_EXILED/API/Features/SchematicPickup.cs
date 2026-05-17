@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using AdminToys;
 using Exiled.API.Features;
-using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
 using MEC;
 using ProjectMER.Features;

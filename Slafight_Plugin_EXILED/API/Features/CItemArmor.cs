@@ -1,8 +1,6 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
@@ -11,7 +9,6 @@ using InventorySystem.Items.Armor;
 using UnityEngine;
 
 using PlayerEvents = Exiled.Events.EventArgs.Player;
-using PlayerHandlers = Exiled.Events.Handlers.Player;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 

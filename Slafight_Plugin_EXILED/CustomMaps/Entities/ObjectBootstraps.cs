@@ -8,7 +8,6 @@ using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.MainHandlers;
-using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Entities;
 

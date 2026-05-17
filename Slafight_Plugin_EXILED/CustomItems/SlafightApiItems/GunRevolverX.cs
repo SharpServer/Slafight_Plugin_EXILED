@@ -1,5 +1,3 @@
-using Exiled.API.Enums;
-using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 

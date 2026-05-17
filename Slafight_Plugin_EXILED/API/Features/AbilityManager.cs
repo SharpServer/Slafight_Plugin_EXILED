@@ -1,11 +1,8 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
-using Slafight_Plugin_EXILED.API.Enums;
-using Slafight_Plugin_EXILED.Hints;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 

@@ -1,5 +1,4 @@
 using CustomPlayerEffects;
-using Exiled.API.Enums;
 using Exiled.API.Features;
 using MEC;
 using PlayerRoles;

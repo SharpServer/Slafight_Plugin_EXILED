@@ -12,7 +12,6 @@ using Mirror;
 using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers.Wearables;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
-using Slafight_Plugin_EXILED.Changes;
 using UnityEngine;
 
 using PlayerHandlers = Exiled.Events.Handlers.Player;
