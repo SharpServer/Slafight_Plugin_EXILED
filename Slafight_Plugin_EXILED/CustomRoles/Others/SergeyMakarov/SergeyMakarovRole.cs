@@ -7,6 +7,7 @@ using PlayerStatsSystem;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
+using Slafight_Plugin_EXILED.MainHandlers;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.Others.SergeyMakarov;
@@ -72,8 +73,7 @@ public class SergeyMakarovRole : CRole
         
         Timing.CallDelayed(0.05f, () =>
         {
-            player.CustomName = $"セルゲイ・マカロフ ({player.Nickname})";
-            CustomInfoDisplay.Refresh(player);
+            RPNameSetter.SetForcedCustomName(player, $"セルゲイ・マカロフ ({player.Nickname})");
         });
         Timing.RunCoroutine(SergeySharedContents.SergeySharedCoroutine(player));
     }

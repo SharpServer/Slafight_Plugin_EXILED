@@ -119,26 +119,12 @@ public static class ServerSpecificsHandler
         if (settingId == 2)
         {
             Log.Debug("nickname updated");
-
-            var flags = player.Get();
-            if (flags == null)
-                Log.Debug($"[RPNameSetter] Flags null for {player.Nickname}, skipping.");
-
-            if (!(flags != null && flags.Contains(SpecificFlagType.RPNameDisabled)))
-            {
-                player.CustomName = !string.IsNullOrEmpty(text)
-                    ? $"{text} ({player.Nickname})"
-                    : player.Nickname;
-
-                CustomInfoDisplay.Refresh(player);
-            }
-
-            RPNameSetter.PlayerInputNames[player] = player.CustomName;
+            RPNameSetter.SetInputName(player, text);
         }
         else if (settingId == 6)
         {
             Log.Debug("passcode updated");
-            RPNameSetter.Passcodes[player] = text;
+            RPNameSetter.SetPasscode(player, text);
         }
     }
 

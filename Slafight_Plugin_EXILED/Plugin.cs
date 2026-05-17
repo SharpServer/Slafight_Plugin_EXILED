@@ -139,6 +139,7 @@ public class Plugin : Plugin<Config>
         AutoHandlerBootstrapRegister.Unregister();
         ServerSpecificsHandler.Unregister();
         CustomShieldState.UnregisterEvents();
+        RPNameSetter.ClearAll();
             
         HarmonyInstance.UnpatchAll(this.Name);
         HarmonyInstance = null;

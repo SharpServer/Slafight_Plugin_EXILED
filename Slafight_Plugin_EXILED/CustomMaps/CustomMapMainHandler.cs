@@ -133,7 +133,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler
         private bool CheckCode(Player player)
         {
             if (RequiredCode == null) return false;
-            return RPNameSetter.Passcodes.TryGetValue(player, out var code) && code == RequiredCode;
+            return RPNameSetter.TryGetPasscode(player, out var code) && code == RequiredCode;
         }
     }
 

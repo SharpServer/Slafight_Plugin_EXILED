@@ -245,6 +245,7 @@
         <Compile Include="Changes\FacilityLightHandler.cs" />
         <Compile Include="Changes\Scp1509Handler.cs" />
         <Compile Include="Changes\Scp914Changes.cs" />
+        <Compile Include="Changes\ScpPermissions.cs" />
         <Compile Include="Commands\DevTools\AbilityUniversal.cs" />
         <Compile Include="Commands\DevTools\ActivateGenerator.cs" />
         <Compile Include="Commands\DevTools\AddQueue.cs" />

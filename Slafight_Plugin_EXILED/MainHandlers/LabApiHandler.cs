@@ -65,6 +65,11 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
 
         if (!ActivatedAntiMemeProtocol)
         {
+            if (Exiled.API.Features.Player.Get(ev.Player)?.GetTeam() is CTeam.Fifthists)
+            {
+                ev.Player.SendHint("※第五教会は開始できません！");
+                return;
+            }
             foreach (var player in Exiled.API.Features.Player.List)
             {
                 if (!IsAntiMemeProtocolTarget(player)) continue;

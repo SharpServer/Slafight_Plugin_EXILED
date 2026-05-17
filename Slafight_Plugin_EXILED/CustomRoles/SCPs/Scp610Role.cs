@@ -79,6 +79,7 @@ public class Scp610Role : CRole
         if (ev.Player.Health <= 40f && !ev.Player.HasFlag(SpecificFlagType.Infecting610))
         {
             ev.Attacker.ShowHint("<size=22><color=yellow><b>相手を感染させる事に成功した！3分後には同胞になっているであろう！</b></color></size>", 5);
+            ev.Player.ShowHint("<size=22><color=red><b>SCP-610に感染してしまった！\nSCP-500で治療しなければ三分後には同胞になってしまうぞ！");
             ev.Player.TryAddFlag(SpecificFlagType.Infecting610);
             ev.Player.EnableEffect<Concussed>(255);
             ev.Player.EnableEffect<DamageReduction>(60);
