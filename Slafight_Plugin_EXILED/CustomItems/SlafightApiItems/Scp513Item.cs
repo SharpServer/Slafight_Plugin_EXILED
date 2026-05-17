@@ -17,7 +17,6 @@ public class Scp513Item : CItem
     protected override bool PickupLightEnabled => true;
     protected override Color PickupLightColor => Color.gray;
     protected override string PickupSchematicName => "SCP513ItemModel";
-    protected override bool UseSchematicPickup => true;
 
     public override void RegisterEvents()
     {

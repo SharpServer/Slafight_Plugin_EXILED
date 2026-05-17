@@ -61,11 +61,8 @@ public abstract class CItem
     // Pickup に追従する Schematic
     private static readonly Dictionary<ushort, SchematicObject> PickupSchematics = new();
     private static readonly Dictionary<ushort, CoroutineHandle> PickupSchematicCoroutines = new();
-    private static readonly Dictionary<SchematicPickup, CItem> SchematicPickupToItem = new();
 
     private static bool _eventsSubscribed;
-
-    private readonly List<SchematicPickup> _schematicPickups = [];
 
     // ======================================================
     // 静的ペンディング状態
@@ -191,7 +188,6 @@ public abstract class CItem
             DestroyPickupSchematicInternal(serial);
         PickupSchematics.Clear();
         PickupSchematicCoroutines.Clear();
-        SchematicPickupToItem.Clear();
 
         if (_eventsSubscribed)
         {
@@ -282,22 +278,6 @@ public abstract class CItem
     protected virtual Vector3 PickupSchematicRotationOffset => Vector3.zero;
     protected virtual Vector3 PickupSchematicScale => Vector3.one;
 
-    protected virtual bool UseSchematicPickup => false;
-    protected virtual Vector3 SchematicPickupInteractableOffset => Vector3.zero;
-    protected virtual Vector3 SchematicPickupInteractableRotationOffset => Vector3.zero;
-    protected virtual Vector3 SchematicPickupInteractableScale => Vector3.one;
-    protected virtual AdminToys.InvisibleInteractableToy.ColliderShape SchematicPickupInteractableShape =>
-        AdminToys.InvisibleInteractableToy.ColliderShape.Box;
-    protected virtual float SchematicPickupInteractionDuration => 0.25f;
-    protected virtual bool SchematicPickupRequireInventorySpace => true;
-    protected virtual bool SchematicPickupDestroyAfterSuccessfulSearch => true;
-    protected virtual string SchematicPickupInventoryFullHint => "<size=24>インベントリがいっぱいです。</size>";
-    protected virtual float SchematicPickupInventoryFullHintDuration => 2f;
-    protected virtual bool SchematicPickupUseBackingPickup => true;
-    protected virtual bool SchematicPickupHideBackingPickup => true;
-    protected virtual Vector3 SchematicPickupHiddenBackingPickupScale => Vector3.zero;
-    protected virtual Vector3 SchematicPickupBackingPickupScale => Vector3.one;
-
     // ======================================================
     // Goggles (Scp1344) 設定
     // ======================================================
@@ -376,7 +356,6 @@ public abstract class CItem
                                .ToList();
         foreach (var s in mine) SerialToItem.Remove(s);
 
-        DestroySchematicPickups();
         UnregisterEvents();
         Log.Debug($"CItem unregistered: {GetType().Name}");
     }
@@ -433,12 +412,6 @@ public abstract class CItem
     /// <summary>指定位置にこの CItem の Pickup を生成する。</summary>
     public virtual Pickup? Spawn(Vector3 position)
     {
-        if (UseSchematicPickup)
-        {
-            SpawnSchematicPickup(position);
-            return null;
-        }
-
         _pendingSpawnCItem = this;
         try
         {
@@ -592,114 +565,6 @@ public abstract class CItem
         }
     }
 
-    public virtual SchematicPickup? SpawnSchematicPickup(Vector3 position)
-    {
-        if (string.IsNullOrEmpty(PickupSchematicName))
-        {
-            Log.Warn($"CItem.SpawnSchematicPickup: {GetType().Name} has empty PickupSchematicName.");
-            return null;
-        }
-
-        _pendingSpawnCItem = this;
-        SchematicPickup? pickup;
-        try
-        {
-            pickup = SchematicPickup.Spawn(CreateSchematicPickupSettings(position));
-            if (pickup == null) return null;
-        }
-        finally
-        {
-            _pendingSpawnCItem = null;
-        }
-
-        if (pickup.BackingPickup != null)
-        {
-            if (!SerialToItem.ContainsKey(pickup.BackingPickup.Serial))
-                SerialToItem[pickup.BackingPickup.Serial] = this;
-
-            CustomizePickup(pickup.BackingPickup);
-            OnSpawned(pickup.BackingPickup);
-        }
-
-        SchematicPickupToItem[pickup] = this;
-        _schematicPickups.Add(pickup);
-        pickup.Searched += OnInternalSchematicPickupSearched;
-        pickup.Destroyed += OnInternalSchematicPickupDestroyed;
-        OnSchematicPickupSpawned(pickup);
-        return pickup;
-    }
-
-    protected virtual SchematicPickupSettings CreateSchematicPickupSettings(Vector3 position)
-        => new()
-        {
-            SchematicName = PickupSchematicName ?? string.Empty,
-            Position = position,
-            SchematicOffset = PickupSchematicOffset,
-            SchematicRotationOffset = PickupSchematicRotationOffset,
-            SchematicScale = PickupSchematicScale,
-            InteractableOffset = SchematicPickupInteractableOffset,
-            InteractableRotationOffset = SchematicPickupInteractableRotationOffset,
-            InteractableScale = SchematicPickupInteractableScale,
-            InteractableShape = SchematicPickupInteractableShape,
-            InteractionDuration = SchematicPickupInteractionDuration,
-            RequireInventorySpace = SchematicPickupRequireInventorySpace,
-            DestroyAfterSuccessfulSearch = SchematicPickupDestroyAfterSuccessfulSearch,
-            InventoryFullHint = SchematicPickupInventoryFullHint,
-            InventoryFullHintDuration = SchematicPickupInventoryFullHintDuration,
-            BackingPickupItemType = SchematicPickupUseBackingPickup ? BaseItem : null,
-            HideBackingPickup = SchematicPickupHideBackingPickup,
-            HiddenBackingPickupScale = SchematicPickupHiddenBackingPickupScale,
-            BackingPickupScale = SchematicPickupBackingPickupScale,
-            OnSearched = TryAcquireSchematicPickup,
-        };
-
-    protected virtual bool TryAcquireSchematicPickup(SchematicPickup pickup, Player player)
-    {
-        if (!OnSchematicPickupPickingUp(pickup, player))
-            return false;
-
-        var item = Give(player, displayMessage: true);
-        if (item == null) return false;
-
-        OnSchematicPickupAcquired(pickup, player, item);
-        return true;
-    }
-
-    protected virtual void OnSchematicPickupSpawned(SchematicPickup pickup) { }
-
-    protected virtual bool OnSchematicPickupPickingUp(SchematicPickup pickup, Player player) => true;
-
-    protected virtual void OnSchematicPickupSearched(SchematicPickup pickup, Player player) { }
-
-    protected virtual void OnSchematicPickupAcquired(SchematicPickup pickup, Player player, Item item) { }
-
-    protected virtual void OnSchematicPickupDestroyed(SchematicPickup pickup) { }
-
-    private void OnInternalSchematicPickupSearched(SchematicPickup pickup, Player player)
-    {
-        try { OnSchematicPickupSearched(pickup, player); }
-        catch (Exception ex) { Log.Error($"CItem.OnSchematicPickupSearched error in {GetType().Name}: {ex}"); }
-    }
-
-    private void OnInternalSchematicPickupDestroyed(SchematicPickup pickup)
-    {
-        pickup.Searched -= OnInternalSchematicPickupSearched;
-        pickup.Destroyed -= OnInternalSchematicPickupDestroyed;
-        _schematicPickups.Remove(pickup);
-        SchematicPickupToItem.Remove(pickup);
-
-        try { OnSchematicPickupDestroyed(pickup); }
-        catch (Exception ex) { Log.Error($"CItem.OnSchematicPickupDestroyed error in {GetType().Name}: {ex}"); }
-    }
-
-    private void DestroySchematicPickups()
-    {
-        foreach (var pickup in _schematicPickups.ToArray())
-            pickup.Destroy();
-
-        _schematicPickups.Clear();
-    }
-
     private static IEnumerator<float> TrackPickupSchematic(
         Pickup pickup,
         SchematicObject schem,
@@ -785,16 +650,6 @@ public abstract class CItem
         return ci is CItemHybrid hybrid && hybrid.IsCurrentSub(pickup.Serial, this);
     }
 
-    public bool Check(SchematicPickup? pickup)
-    {
-        if (pickup == null) return false;
-        if (!SchematicPickupToItem.TryGetValue(pickup, out var ci) || ci == null) return false;
-        if (ReferenceEquals(ci, this)) return true;
-        return ci is CItemHybrid hybrid
-               && pickup.BackingPickup != null
-               && hybrid.IsCurrentSub(pickup.BackingPickup.Serial, this);
-    }
-
     public bool CheckHeld(Player? player) => player != null && Check(player.CurrentItem);
 
     public bool HasIn(Player? player)
@@ -818,12 +673,6 @@ public abstract class CItem
     {
         cItem = null;
         return pickup != null && SerialToItem.TryGetValue(pickup.Serial, out cItem!);
-    }
-
-    public static bool TryGet(SchematicPickup? pickup, out CItem? cItem)
-    {
-        cItem = null;
-        return pickup != null && SchematicPickupToItem.TryGetValue(pickup, out cItem!);
     }
 
     public static bool TryGetByKey(string uniqueKey, out CItem? cItem)
@@ -1072,7 +921,7 @@ public abstract class CItem
         if (ci.PickupLightEnabled)
             ci.AddPickupLight(ev.Pickup);
 
-        if (!ci.UseSchematicPickup && !string.IsNullOrEmpty(ci.PickupSchematicName))
+        if (!string.IsNullOrEmpty(ci.PickupSchematicName))
         {
             AttachPickupSchematic(
                 ev.Pickup,
@@ -1131,13 +980,10 @@ public abstract class CItem
         {
             try
             {
-                ci.DestroySchematicPickups();
                 ci.OnWaitingForPlayers();
             }
             catch (Exception ex) { Log.Error($"CItem.OnWaitingForPlayers error in {ci.GetType().Name}: {ex}"); }
         }
-
-        SchematicPickupToItem.Clear();
     }
 
     // ======================================================

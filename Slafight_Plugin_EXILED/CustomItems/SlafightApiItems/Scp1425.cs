@@ -19,7 +19,6 @@ public class Scp1425 : CItem
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor   => Color.magenta;
     protected override string PickupSchematicName => "Scp1425Model";
-    protected override bool UseSchematicPickup => true;
 
     private readonly Dictionary<int, byte> _readCount = [];
 

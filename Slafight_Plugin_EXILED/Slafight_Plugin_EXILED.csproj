@@ -199,7 +199,6 @@
         <Compile Include="API\Features\Scp914\Scp914Dispatcher.cs" />
         <Compile Include="API\Features\Scp914\Scp914Registry.cs" />
         <Compile Include="API\Features\SpeakerApi.cs" />
-        <Compile Include="API\Features\SchematicPickup.cs" />
         <Compile Include="API\Features\CRole.cs" />
         <Compile Include="API\Features\CRoom.cs" />
         <Compile Include="API\Features\CustomBooleans.cs" />
@@ -269,7 +268,6 @@
         <Compile Include="CustomItems\SlafightApiItems\ArmorVip.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunDisarmerRifle.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunAnomalyDetainer.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunRevolverX.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardSupplyManager.cs" />
         <Compile Include="CustomItems\SlafightApiItems\S41MedicalPistol.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardChaosIntruder.cs" />
