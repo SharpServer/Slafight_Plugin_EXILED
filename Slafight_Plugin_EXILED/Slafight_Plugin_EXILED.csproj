@@ -264,6 +264,7 @@
         <Compile Include="CustomItems\SlafightApiItems\ArmorVip.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunDisarmerRifle.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunAnomalyDetainer.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\GunRevolverX.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardSupplyManager.cs" />
         <Compile Include="CustomItems\SlafightApiItems\S41MedicalPistol.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardChaosIntruder.cs" />

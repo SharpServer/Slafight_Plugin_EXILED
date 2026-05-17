@@ -55,6 +55,16 @@ public sealed class SchematicPickup
     public Vector3 Position => Schematic?.Position ?? Interactable.Position;
     public Quaternion Rotation => Schematic?.Rotation ?? Interactable.Rotation;
     public bool IsDestroyed => _destroyed;
+    public bool HasBackingPickup => BackingPickup?.Base != null;
+
+    public Pickup? AsPickup()
+        => HasBackingPickup ? BackingPickup : null;
+
+    public bool TryGetPickup(out Pickup? pickup)
+    {
+        pickup = AsPickup();
+        return pickup != null;
+    }
 
     public static IReadOnlyList<SchematicPickup> Active => ActivePickups;
 
