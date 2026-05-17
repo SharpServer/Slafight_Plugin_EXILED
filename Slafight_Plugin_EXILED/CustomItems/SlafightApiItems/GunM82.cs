@@ -20,6 +20,8 @@ public class GunM82 : CItemWeapon
     protected override ItemType BaseItem => ItemType.GunE11SR;
     protected override float Damage => 80f;
     protected override byte MagazineSize => 30;
+    protected override ushort MaxMagazineAmmo => 31;
+    protected override ushort InitialMagazineAmmo => 30;
     protected override Vector3 Scale => new(1f, 1f, 2.25f);
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor   => Color.cyan;
@@ -36,7 +38,7 @@ public class GunM82 : CItemWeapon
 
     protected override void OnShot(ShotEventArgs ev)
     {
-        ev.Firearm.MagazineAmmo -= 29;
+        ev.Firearm.MagazineAmmo = (ushort)Mathf.Max(0, ev.Firearm.MagazineAmmo - 29);
         base.OnShot(ev);
     }
 

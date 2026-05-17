@@ -81,8 +81,8 @@ public abstract class CItemWeapon : CItem
         if (item is not Firearm firearm)
             return;
 
-        ApplyFirearmStats(firearm);
         ApplyFirearmAttachments(firearm);
+        ApplyFirearmStats(firearm);
     }
 
     /// <summary>最大装弾数 / 初期装填数 / 弾薬消費を Firearm に適用する。</summary>
