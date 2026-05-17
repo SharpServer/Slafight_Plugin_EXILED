@@ -8,13 +8,13 @@ public static class AutoHandlerBootstrapRegister
 {
     public static void Register()
     {
-        var assembly = Assembly.GetExecutingAssembly(); // このクラスを含むアセンブリ。[web:14]
+        var assembly = Assembly.GetExecutingAssembly();
         var interfaceType = typeof(IBootstrapHandler);
 
         var handlerTypes = assembly
             .GetTypes()
             .Where(t =>
-                interfaceType.IsAssignableFrom(t) && // IBootstrapHandler を実装している。[web:1][web:3]
+                interfaceType.IsAssignableFrom(t) &&
                 t.IsClass &&
                 !t.IsAbstract);
 
@@ -31,7 +31,6 @@ public static class AutoHandlerBootstrapRegister
                 registerMethod.GetParameters().Length != 0)
                 continue;
 
-            // static メソッドなので target は null。[web:8][web:11][web:12][web:13]
             registerMethod.Invoke(null, null);
         }
     }

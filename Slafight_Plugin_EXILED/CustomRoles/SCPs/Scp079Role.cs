@@ -3,7 +3,6 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Map;
 using Exiled.Events.EventArgs.Player;
-using Exiled.Events.EventArgs.Scp079;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.Abilities;
@@ -26,14 +25,11 @@ public class Scp079Role : CRole
     public override void RegisterEvents()
     {
         Exiled.Events.Handlers.Map.GeneratorActivating += OnGenerated;
-        Exiled.Events.Handlers.Scp079.Recontaining += OnRecontaining;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Map.GeneratorActivating -= OnGenerated;
-        Exiled.Events.Handlers.Scp079.Recontaining -= OnRecontaining;
         base.UnregisterEvents();
     }
     
@@ -95,14 +91,4 @@ public class Scp079Role : CRole
         });
     }
 
-    private static void OnRecontaining(RecontainingEventArgs ev)
-    {
-        if (!ev.IsAllowed || !ev.IsAutomatic)
-            return;
-
-        if (!Player.List.Any(p => p != null && p.IsAlive && p.GetCustomRole() is CRoleTypeId.Scp079))
-            return;
-
-        ev.IsAllowed = false;
-    }
 }

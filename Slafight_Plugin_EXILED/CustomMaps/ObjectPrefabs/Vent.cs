@@ -71,7 +71,7 @@ public class Vent : ObjectPrefab
         if (player is null)
             return;
 
-        var now = Timing.LocalTime;  // MEC の現在時刻（秒）[web:60][web:65]
+        var now = Timing.LocalTime;
 
         // タイムアウトチェック
         if (_lastTouchTime.TryGetValue(player.Id, out var last) &&
