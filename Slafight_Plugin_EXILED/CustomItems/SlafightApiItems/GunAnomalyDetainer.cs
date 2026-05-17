@@ -27,8 +27,9 @@ public class GunAnomalyDetainer : CItemWeapon
     [
         AttachmentName.RifleBody,
         AttachmentName.NightVisionSight,
+        AttachmentName.StandardStock,
         AttachmentName.Foregrip,
-        AttachmentName.StandardMagJHP,
+        AttachmentName.LowcapMagJHP,
         AttachmentName.FlashHider,
     ];
     protected override bool AllowAttachmentChanges => false;
