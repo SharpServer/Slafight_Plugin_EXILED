@@ -438,6 +438,7 @@
         <Compile Include="MainHandlers\DebugModeHandler.cs" />
         <Compile Include="MainHandlers\EventHandler.cs" />
         <Compile Include="MainHandlers\FirstRolesHandler.cs" />
+        <Compile Include="MainHandlers\HardcodedSteamBuffHandler.cs" />
         <Compile Include="MainHandlers\LabApiHandler.cs" />
         <Compile Include="MainHandlers\NewEventHandler.cs" />
         <Compile Include="MainHandlers\RoundHandler.cs" />
