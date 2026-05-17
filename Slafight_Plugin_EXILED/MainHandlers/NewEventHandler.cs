@@ -1,3 +1,4 @@
+using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp079;
 using MEC;
@@ -12,6 +13,8 @@ public class NewEventHandler : IBootstrapHandler
     public static void Register()
     {
         Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
+        Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
+        Exiled.Events.Handlers.Server.RestartingRound += OnRestartingRound;
         Exiled.Events.Handlers.Scp079.Recontaining += OnOvercharged;
         Exiled.Events.Handlers.Player.TriggeringTesla += OnTesla;
         Exiled.Events.Handlers.Scp079.InteractingTesla += OnScp079InteractingTesla;
@@ -20,13 +23,17 @@ public class NewEventHandler : IBootstrapHandler
     public static void Unregister()
     {
         Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
+        Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
+        Exiled.Events.Handlers.Server.RestartingRound -= OnRestartingRound;
         Exiled.Events.Handlers.Scp079.Recontaining -= OnOvercharged;
         Exiled.Events.Handlers.Player.TriggeringTesla -= OnTesla;
         Exiled.Events.Handlers.Scp079.InteractingTesla -= OnScp079InteractingTesla;
+        ResetFacilityControlState();
     }
 
     public static bool AlreadyRecovered { get; private set; } = false;
     public static bool IsTeslaIdled = false;
+    private static CoroutineHandle _pendingRecoverControl;
 
     public static void RecoverControl(FacilityControlRecoverType type)
     {
@@ -50,7 +57,20 @@ public class NewEventHandler : IBootstrapHandler
     }
 
     private static void OnWaitingForPlayers()
+        => ResetFacilityControlState();
+
+    private static void OnRoundStarted()
+        => ResetFacilityControlState();
+
+    private static void OnRestartingRound()
+        => ResetFacilityControlState();
+
+    private static void ResetFacilityControlState()
     {
+        if (_pendingRecoverControl.IsRunning)
+            Timing.KillCoroutines(_pendingRecoverControl);
+
+        _pendingRecoverControl = default;
         AlreadyRecovered = false;
         IsTeslaIdled = false;
     }
@@ -58,9 +78,17 @@ public class NewEventHandler : IBootstrapHandler
     private static void OnOvercharged(RecontainingEventArgs ev)
     {
         if (!ev.IsAllowed) return;
-        Timing.CallDelayed(25f, () =>
+
+        if (_pendingRecoverControl.IsRunning)
+            Timing.KillCoroutines(_pendingRecoverControl);
+
+        var roundId = Round.UptimeRounds;
+        _pendingRecoverControl = Timing.CallDelayed(25f, () =>
         {
-            switch (SpecialEventsHandler.Instance.NowEvent)
+            if (Round.UptimeRounds != roundId || Round.IsLobby || Round.IsEnded)
+                return;
+
+            switch (SpecialEventsHandler.Instance?.NowEvent)
             {
                 case SpecialEventType.NuclearAttack:
                     RecoverControl(FacilityControlRecoverType.EnableTesla);
