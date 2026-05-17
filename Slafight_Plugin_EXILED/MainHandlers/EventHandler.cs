@@ -31,11 +31,21 @@ using MapHandler = Exiled.Events.Handlers.Map;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
-public class EventHandler : IBootstrapHandler
+public class EventHandler : IBootstrapHandler, IDisposable
 {
     public static EventHandler Instance { get; private set; }
-    public static void Register() { Instance = new(); }
-    public static void Unregister() { Instance = null; }
+    public static void Register()
+    {
+        Unregister();
+        Instance = new();
+    }
+
+    public static void Unregister()
+    {
+        Instance?.Dispose();
+        Instance = null;
+    }
+    private bool _disposed;
 
     public EventHandler()
     {
@@ -56,8 +66,12 @@ public class EventHandler : IBootstrapHandler
         WarheadHandler.DeadmanSwitchInitiating += DeadmanCancel;
     }
 
-    ~EventHandler()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
         PlayerHandler.Verified -= OnVerified;
         PlayerHandler.Left -= OnLeft;
         ServerHandler.RestartingRound -= OnRoundRestarted;
@@ -73,6 +87,7 @@ public class EventHandler : IBootstrapHandler
         PlayerHandler.Dying -= OnDying;
 
         WarheadHandler.DeadmanSwitchInitiating -= DeadmanCancel;
+        GC.SuppressFinalize(this);
     }
 
     public bool DeadmanDisable = false;

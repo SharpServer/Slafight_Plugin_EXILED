@@ -21,11 +21,20 @@ using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.Hints;
 
-public class PlayerHUD : IBootstrapHandler
+public class PlayerHUD : IBootstrapHandler, IDisposable
 {
     public static PlayerHUD? Instance { get; private set; }
-    public static void Register() { Instance = new(); }
-    public static void Unregister() { Instance = null; }
+    public static void Register()
+    {
+        Unregister();
+        Instance = new();
+    }
+
+    public static void Unregister()
+    {
+        Instance?.Dispose();
+        Instance = null;
+    }
 
     private CoroutineHandle _specificAbilityLoop;
     private CoroutineHandle _abilityHudLoop;
@@ -34,6 +43,7 @@ public class PlayerHUD : IBootstrapHandler
 
     // 観戦者ID → 現在見ているプレイヤー
     private readonly Dictionary<int, Player> _spectateTargets = new();
+    private bool _disposed;
 
     public PlayerHUD()
     {
@@ -51,8 +61,12 @@ public class PlayerHUD : IBootstrapHandler
         _debugHudLoop = Timing.RunCoroutine(DebugHudLoop());
     }
 
-    ~PlayerHUD()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
         Exiled.Events.Handlers.Player.Verified -= ServerInfoHint;
         Exiled.Events.Handlers.Server.RoundStarted -= PlayerHUDMain;
         Exiled.Events.Handlers.Player.ChangingRole -= AllSyncHUD;
@@ -71,6 +85,9 @@ public class PlayerHUD : IBootstrapHandler
         
         if (_debugHudLoop.IsRunning)
             Timing.KillCoroutines(_debugHudLoop);
+
+        _spectateTargets.Clear();
+        GC.SuppressFinalize(this);
     }
 
 

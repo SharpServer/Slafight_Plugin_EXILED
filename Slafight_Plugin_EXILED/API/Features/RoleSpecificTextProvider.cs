@@ -33,4 +33,9 @@ public static class RoleSpecificTextProvider
         if (player == null) return;
         _texts.Remove(player.Id);
     }
+
+    public static void ClearAll()
+    {
+        _texts.Clear();
+    }
 }

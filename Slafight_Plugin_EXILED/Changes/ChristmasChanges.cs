@@ -15,20 +15,36 @@ using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.Changes;
 
-public class ChristmasChanges : IBootstrapHandler
+public class ChristmasChanges : IBootstrapHandler, System.IDisposable
 {
     public static ChristmasChanges Instance { get; private set; }
-    public static void Register() { Instance = new(); }
-    public static void Unregister() { Instance = null; }
+    public static void Register()
+    {
+        Unregister();
+        Instance = new();
+    }
+
+    public static void Unregister()
+    {
+        Instance?.Dispose();
+        Instance = null;
+    }
+
+    private bool _disposed;
 
     public ChristmasChanges()
     {
         //Exiled.Events.Handlers.Scp2536.GrantingGift += TreeChange;
     }
 
-    ~ChristmasChanges()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
         //Exiled.Events.Handlers.Scp2536.GrantingGift -= TreeChange;
+        System.GC.SuppressFinalize(this);
     }
 
     public void TreeChange(GrantingGiftEventArgs ev)

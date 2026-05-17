@@ -33,11 +33,25 @@ using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;
 
-public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler
+public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDisposable
 {
     public static CustomMapMainHandler Instance { get; private set; }
-    public static void Register() { Instance = new(); CustomHandlersManager.RegisterEventsHandler(Instance); }
-    public static void Unregister() { CustomHandlersManager.UnregisterEventsHandler(Instance); Instance = null; }
+    public static void Register()
+    {
+        Unregister();
+        Instance = new();
+        CustomHandlersManager.RegisterEventsHandler(Instance);
+    }
+
+    public static void Unregister()
+    {
+        if (Instance == null)
+            return;
+
+        CustomHandlersManager.UnregisterEventsHandler(Instance);
+        Instance.Dispose();
+        Instance = null;
+    }
 
     private const float PositionToleranceSq = 1.45f * 1.45f; // SqrMagnitude 比較用に二乗済み
     private const float FemurJoinRadiusSq   = 1.005f * 1.005f;
@@ -63,6 +77,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler
     private readonly List<Player> femuredPlayers = [];
     private CoroutineHandle femurCoroutine;
     private CoroutineHandle trainCoroutine;
+    private bool _disposed;
 
     public static Vector3 PDExJoin;
     public static Vector3 PDExJoinKing;
@@ -151,8 +166,12 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler
         PlayerHandler.InteractingDoor                    += DoorInteracted;
     }
 
-    ~CustomMapMainHandler()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
         MapHandler.Generated                               -= OnGeneratorGenerating;
         ServerHandler.RoundStarted                         -= OnRoundStarted;
         ServerHandler.RestartingRound                      -= ResetInRestart;
@@ -162,6 +181,9 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler
 
         if (femurCoroutine.IsRunning) Timing.KillCoroutines(femurCoroutine);
         if (trainCoroutine.IsRunning) Timing.KillCoroutines(trainCoroutine);
+        specialDoors.Clear();
+        femuredPlayers.Clear();
+        GC.SuppressFinalize(this);
     }
 
     // ──────────────────────────────────────────────────────

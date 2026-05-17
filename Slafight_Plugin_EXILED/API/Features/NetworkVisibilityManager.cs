@@ -135,6 +135,8 @@ public static class NetworkVisibilityManager
         Exiled.Events.Handlers.Player.Verified                -= OnVerified;
         Exiled.Events.Handlers.Player.Spawned                 -= OnSpawned;
         Exiled.Events.Handlers.Player.ChangingSpectatedPlayer -= OnChangingSpectatedPlayer;
+        _states.Clear();
+        _identityCache.Clear();
     }
 
     // =========================================================

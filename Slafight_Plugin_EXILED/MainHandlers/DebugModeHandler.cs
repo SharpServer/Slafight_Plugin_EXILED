@@ -58,4 +58,10 @@ public static class DebugModeHandler
         DebugModePlayers.Remove(player);
         _lastDoors.Remove(player.Id);
     }
+
+    public static void ClearAll()
+    {
+        DebugModePlayers.Clear();
+        _lastDoors.Clear();
+    }
 }

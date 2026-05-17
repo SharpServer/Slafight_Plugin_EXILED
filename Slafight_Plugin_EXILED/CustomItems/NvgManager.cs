@@ -64,6 +64,7 @@ public static class NvgManager
         Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
         Exiled.Events.Handlers.Player.ChangingRole  -= OnChangingRole;
         Exiled.Events.Handlers.Player.Died          -= OnDied;
+        ClearRuntimeState(clearBattery: true);
     }
 
     // --------------------------------------------------------
@@ -71,11 +72,15 @@ public static class NvgManager
     // --------------------------------------------------------
 
     private static void OnRoundStarted()
+        => ClearRuntimeState(clearBattery: true);
+
+    private static void ClearRuntimeState(bool clearBattery)
     {
         foreach (var data in ActiveData.Values)
             KillRuntimeData(data);
         ActiveData.Clear();
-        BatteryData.Clear();
+        if (clearBattery)
+            BatteryData.Clear();
     }
 
     private static void OnChangingRole(ChangingRoleEventArgs ev)

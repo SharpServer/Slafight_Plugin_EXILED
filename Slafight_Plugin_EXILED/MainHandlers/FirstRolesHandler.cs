@@ -16,11 +16,22 @@ using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
-public class FirstRolesHandler : IBootstrapHandler
+public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
 {
     public static FirstRolesHandler Instance { get; private set; }
-    public static void Register() { Instance = new(); }
-    public static void Unregister() { Instance = null; }
+    public static void Register()
+    {
+        Unregister();
+        Instance = new();
+    }
+
+    public static void Unregister()
+    {
+        Instance?.Dispose();
+        Instance = null;
+    }
+
+    private bool _disposed;
 
     public FirstRolesHandler()
     {
@@ -30,12 +41,17 @@ public class FirstRolesHandler : IBootstrapHandler
         Exiled.Events.Handlers.Server.RoundStarted += RoundUnlocker;
     }
 
-    ~FirstRolesHandler()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
         Exiled.Events.Handlers.Server.WaitingForPlayers -= RoundLocker;
         Exiled.Events.Handlers.Player.ChangingRole -= CancelRoundStartedRole;
         Exiled.Events.Handlers.Server.RoundStarted -= SetupRandomRoles;
         Exiled.Events.Handlers.Server.RoundStarted -= RoundUnlocker;
+        System.GC.SuppressFinalize(this);
     }
 
     private static void RoundLocker()

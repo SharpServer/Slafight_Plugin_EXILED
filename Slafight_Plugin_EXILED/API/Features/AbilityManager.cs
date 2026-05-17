@@ -67,6 +67,9 @@ public static class AbilityManager
     // プレイヤー全クリア
     public static void ClearPlayer(Player player)
     {
+        if (player == null)
+            return;
+
         AbilityBase.RevokeAbility(player.Id);
         Loadouts.Remove(player.Id);
     }
@@ -75,7 +78,11 @@ public static class AbilityManager
     public static void ClearAllLoadouts()
     {
         foreach (var kvp in Loadouts.ToArray())
-            ClearPlayer(Player.Get(kvp.Key));
+        {
+            AbilityBase.RevokeAbility(kvp.Key);
+            Loadouts.Remove(kvp.Key);
+        }
+
         Loadouts.Clear();
     }
 
@@ -113,6 +120,7 @@ public static class AbilityManager
         Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
         Exiled.Events.Handlers.Player.Joined -= OnPlayerJoined;
+        ClearAllLoadouts();
         _initialized = false;
     }
 

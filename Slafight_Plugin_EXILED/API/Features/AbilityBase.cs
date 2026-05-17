@@ -269,6 +269,7 @@ public abstract class AbilityBase
         Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Joined -= OnPlayerJoined;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
+        RevokeAllPlayers();
         _initialized = false;
     }
 

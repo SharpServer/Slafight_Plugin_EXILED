@@ -39,13 +39,25 @@ public sealed class WinCondition(
     public bool Check(List<Player> players) => CheckFunc(players);
 }
 
-public class CustomRolesHandler : IBootstrapHandler
+public class CustomRolesHandler : IBootstrapHandler, IDisposable
 {
     public static CustomRolesHandler Instance { get; private set; }
-    public static void Register() { Instance = new(); }
-    public static void Unregister() { Instance = null; }
+    public static void Register()
+    {
+        Unregister();
+        Instance = new();
+    }
+
+    public static void Unregister()
+    {
+        Instance?.Dispose();
+        Instance = null;
+    }
 
     private readonly List<WinCondition> _winConditions;
+    private CoroutineHandle _roundConditionStart;
+    private CoroutineHandle _universalCondition;
+    private bool _disposed;
 
     public CustomRolesHandler()
     {
@@ -96,14 +108,25 @@ public class CustomRolesHandler : IBootstrapHandler
         Exiled.Events.Handlers.Server.RestartingRound += AbilityResetInRoundRestarting;
     }
 
-    ~CustomRolesHandler()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
         Exiled.Events.Handlers.Player.Hurting -= OnHurting;
         Exiled.Events.Handlers.Player.ChangingRole -= CustomRoleRemover;
         Exiled.Events.Handlers.Server.RoundStarted -= RoundCoroutine;
         Exiled.Events.Handlers.Server.EndingRound -= CancelEnd;
         Exiled.Events.Handlers.Server.WaitingForPlayers -= ResetAbilities;
         Exiled.Events.Handlers.Server.RestartingRound -= AbilityResetInRoundRestarting;
+
+        if (_roundConditionStart.IsRunning)
+            Timing.KillCoroutines(_roundConditionStart);
+        if (_universalCondition.IsRunning)
+            Timing.KillCoroutines(_universalCondition);
+
+        GC.SuppressFinalize(this);
     }
 
     public void ResetAbilities()
@@ -113,9 +136,14 @@ public class CustomRolesHandler : IBootstrapHandler
 
     public void RoundCoroutine()
     {
-        Timing.CallDelayed(10f, () =>
+        if (_roundConditionStart.IsRunning)
+            Timing.KillCoroutines(_roundConditionStart);
+        if (_universalCondition.IsRunning)
+            Timing.KillCoroutines(_universalCondition);
+
+        _roundConditionStart = Timing.CallDelayed(10f, () =>
         {
-            Timing.RunCoroutine(UniversalConditionCoroutine());
+            _universalCondition = Timing.RunCoroutine(UniversalConditionCoroutine());
         });
     }
 

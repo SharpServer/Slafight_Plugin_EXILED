@@ -16,6 +16,7 @@ public static class SpecificFlagsHandler
     {
         Exiled.Events.Handlers.Player.PickingUpItem -= OnPicking;
         Exiled.Events.Handlers.Player.DroppingItem -= OnDropping;
+        SpecificFlagsManager.ClearAll();
     }
 
     private static void OnPicking(PickingUpItemEventArgs ev)

@@ -179,6 +179,20 @@ public abstract class CItem
         RegisteredInstances.Clear();
         UniqueKeyToItem.Clear();
         SerialToItem.Clear();
+        _pendingGiveCItem = null;
+        _pendingGiveDisplayMessage = false;
+        _pendingSpawnCItem = null;
+
+        foreach (var serial in PickupLights.Keys.ToList())
+            DestroyPickupLightInternal(serial);
+        PickupLights.Clear();
+        PickupLightCoroutines.Clear();
+
+        foreach (var serial in PickupSchematics.Keys.ToList())
+            DestroyPickupSchematicInternal(serial);
+        PickupSchematics.Clear();
+        PickupSchematicCoroutines.Clear();
+        SchematicPickupToItem.Clear();
 
         if (_eventsSubscribed)
         {
