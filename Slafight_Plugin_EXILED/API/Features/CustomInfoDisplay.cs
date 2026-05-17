@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
-using PlayerRoles;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 

@@ -7,23 +7,25 @@ using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.Changes;
 
-public class EasterEggsHandler : IBootstrapHandler
+public class EasterEggsHandler : IBootstrapHandler, System.IDisposable
 {
     private const string MelancholyClip = "ee_melancholy.ogg";
     private const string MelancholyAudioPlayer = "EE_Melancholy";
 
     public static EasterEggsHandler Instance { get; private set; }
-    public static void Register() { Instance = new(); Instance.LoadClips(); }
+    public static void Register()
+    {
+        Unregister();
+        Instance = new();
+        Instance.LoadClips();
+    }
     public static void Unregister()
     {
-        if (Instance != null)
-        {
-            Exiled.Events.Handlers.Server.RoundStarted -= Instance.MelancholyNuke;
-            Exiled.Events.Handlers.Server.RestartingRound -= Instance.ClearSpeakers;
-        }
-
+        Instance?.Dispose();
         Instance = null;
     }
+
+    private bool _disposed;
 
     public EasterEggsHandler()
     {
@@ -31,10 +33,16 @@ public class EasterEggsHandler : IBootstrapHandler
         Exiled.Events.Handlers.Server.RestartingRound += ClearSpeakers;
     }
 
-    ~EasterEggsHandler()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
         Exiled.Events.Handlers.Server.RoundStarted -= MelancholyNuke;
         Exiled.Events.Handlers.Server.RestartingRound -= ClearSpeakers;
+        ClearSpeakers();
+        System.GC.SuppressFinalize(this);
     }
     public static void CreateAndPlayAudio(string fileName, string audioPlayerName, Vector3 position, bool destroyOnEnd = false, Transform parent = null, bool isSpatial = false, float maxDistance = 5, float minDistance = 5, bool loadClip = true)
         => SpeakerApi.Play(fileName, audioPlayerName, position, destroyOnEnd, parent, isSpatial, maxDistance, minDistance, loadClip);

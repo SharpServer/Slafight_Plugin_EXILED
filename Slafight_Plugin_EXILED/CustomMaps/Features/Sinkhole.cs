@@ -13,20 +13,40 @@ using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 
-public class Sinkhole : IBootstrapHandler
+public class Sinkhole : IBootstrapHandler, IDisposable
 {
     public static Sinkhole Instance { get; private set; }
-    public static void Register() { Instance = new(); }
-    public static void Unregister() { Instance = null; }
+    public static void Register()
+    {
+        Unregister();
+        Instance = new();
+    }
+
+    public static void Unregister()
+    {
+        Instance?.Dispose();
+        Instance = null;
+    }
+
+    private bool _disposed;
 
     public Sinkhole()
     {
         Exiled.Events.Handlers.Server.RoundStarted += RoundStartHole;
     }
 
-    ~Sinkhole()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
         Exiled.Events.Handlers.Server.RoundStarted -= RoundStartHole;
+        if (_sinkholeHandle.IsRunning)
+            Timing.KillCoroutines(_sinkholeHandle);
+        Sinkholes.Clear();
+        JoiningPlayers.Clear();
+        GC.SuppressFinalize(this);
     }
     
     private readonly List<Vector3> Sinkholes = [];

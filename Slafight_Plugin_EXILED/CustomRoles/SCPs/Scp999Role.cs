@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
-using Exiled.API.Features.Doors;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
@@ -10,7 +9,6 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
-using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -51,7 +49,8 @@ public class Scp999Role : CRole
     public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
     {
         base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Tutorial,RoleSpawnFlags.All);
+        player!.Role.Set(RoleTypeId.Scp173);
+        player.Role.Set(RoleTypeId.Tutorial,RoleSpawnFlags.AssignInventory);
         player.UniqueRole = UniqueRoleKey;
         player.MaxHealth = 99999;
         player.Health = player.MaxHealth;
@@ -62,8 +61,6 @@ public class Scp999Role : CRole
         RememberNato9(player);
 
         player.SetCustomInfo("SCP-999");
-
-        player.Position = Door.Get(DoorType.Scp173NewGate).Position + new Vector3(0f, 1f, 0f);
         LabApiHandler.Schem999(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
     }
     

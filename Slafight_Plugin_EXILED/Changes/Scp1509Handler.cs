@@ -10,20 +10,36 @@ using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.Changes;
 
-public class Scp1509Handler : IBootstrapHandler
+public class Scp1509Handler : IBootstrapHandler, System.IDisposable
 {
     public static Scp1509Handler Instance { get; private set; }
-    public static void Register() { Instance = new(); }
-    public static void Unregister() { Instance = null; }
+    public static void Register()
+    {
+        Unregister();
+        Instance = new();
+    }
+
+    public static void Unregister()
+    {
+        Instance?.Dispose();
+        Instance = null;
+    }
+
+    private bool _disposed;
 
     public Scp1509Handler()
     {
         Exiled.Events.Handlers.Scp1509.Resurrecting += OnReincarnating;
     }
 
-    ~Scp1509Handler()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
         Exiled.Events.Handlers.Scp1509.Resurrecting -= OnReincarnating;
+        System.GC.SuppressFinalize(this);
     }
 
     private void OnReincarnating(ResurrectingEventArgs ev)

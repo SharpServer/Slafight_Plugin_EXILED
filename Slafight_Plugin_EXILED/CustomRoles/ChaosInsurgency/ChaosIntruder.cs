@@ -1,13 +1,11 @@
 using Exiled.API.Enums;
 using Exiled.API.Features;
-using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
-using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.ChaosInsurgency;
 

@@ -27,11 +27,22 @@ public static class LinqExtensions
     }
 }
 
-public class SpecialEventsHandler : IBootstrapHandler
+public class SpecialEventsHandler : IBootstrapHandler, IDisposable
 {
     public static SpecialEventsHandler Instance { get; private set; }
-    public static void Register() { _ = new SpecialEventsHandler(); }
-    public static void Unregister() { Instance = null; }
+    public static void Register()
+    {
+        Unregister();
+        _ = new SpecialEventsHandler();
+    }
+
+    public static void Unregister()
+    {
+        Instance?.Dispose();
+        Instance = null;
+    }
+
+    private bool _disposed;
 
     public SpecialEventsHandler()
     {
@@ -39,10 +50,18 @@ public class SpecialEventsHandler : IBootstrapHandler
         SpecialEvent.RegisterAllEvents(); // 全イベント自動登録
     }
 
-    ~SpecialEventsHandler()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
         SpecialEvent.UnregisterAllEvents();
+        EventQueue.Clear();
+        HappenedEvents.Clear();
+        CurrentEvent = SpecialEventType.None;
         Instance = null;
+        GC.SuppressFinalize(this);
     }
 
     // =====================

@@ -3,7 +3,6 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using MEC;
 using ProjectMER.Features;
-using ProjectMER.Features.Extensions;
 using ProjectMER.Features.Serializable;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
@@ -11,7 +10,7 @@ using Slafight_Plugin_EXILED.CustomMaps;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
 
-namespace Slafight_Plugin_EXILED.MainHandlers;
+namespace Slafight_Plugin_EXILED.LabApiBridgeHandlers;
 
 public class CustomItemTriggerPointLabHandler : SlafightLabApiHandler
 {

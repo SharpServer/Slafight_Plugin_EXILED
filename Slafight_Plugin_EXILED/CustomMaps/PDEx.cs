@@ -16,11 +16,22 @@ using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;
 
-public class PDEx : IBootstrapHandler
+public class PDEx : IBootstrapHandler, System.IDisposable
 {
     public static PDEx Instance { get; private set; }
-    public static void Register() { Instance = new(); }
-    public static void Unregister() { Instance = null; }
+    public static void Register()
+    {
+        Unregister();
+        Instance = new();
+    }
+
+    public static void Unregister()
+    {
+        Instance?.Dispose();
+        Instance = null;
+    }
+
+    private bool _disposed;
 
     public PDEx()
     {
@@ -28,10 +39,17 @@ public class PDEx : IBootstrapHandler
         Exiled.Events.Handlers.Player.FailingEscapePocketDimension += JoinPDEx;
     }
 
-    ~PDEx()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
         Exiled.Events.Handlers.Server.RoundStarted -= Setup;
         Exiled.Events.Handlers.Player.FailingEscapePocketDimension -= JoinPDEx;
+        Timing.KillCoroutines(handle);
+        PDExPlayers.Clear();
+        System.GC.SuppressFinalize(this);
     }
 
     public static List<Player> PDExPlayers = [];

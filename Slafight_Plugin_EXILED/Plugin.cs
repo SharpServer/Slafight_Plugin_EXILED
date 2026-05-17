@@ -135,10 +135,13 @@ public class Plugin : Plugin<Config>
         Communications.Unregister();
         Scp914Changes.Unregister();
         Scp513.Unregister();
+        OmegaWarhead.Shutdown();
         
         AutoHandlerBootstrapRegister.Unregister();
         ServerSpecificsHandler.Unregister();
         CustomShieldState.UnregisterEvents();
+        RoleSpecificTextProvider.ClearAll();
+        DebugModeHandler.ClearAll();
         RPNameSetter.ClearAll();
             
         HarmonyInstance.UnpatchAll(this.Name);

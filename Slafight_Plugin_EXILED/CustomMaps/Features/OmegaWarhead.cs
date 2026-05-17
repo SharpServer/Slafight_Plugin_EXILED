@@ -119,4 +119,10 @@ public static class OmegaWarhead
         IsWarheadStarted = false;
         StartedPlayer = null;
     }
+
+    public static void Shutdown()
+    {
+        Reset();
+        OmegaWarheadStarting = null;
+    }
 }

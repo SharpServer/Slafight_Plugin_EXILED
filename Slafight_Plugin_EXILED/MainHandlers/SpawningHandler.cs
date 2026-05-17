@@ -12,11 +12,22 @@ using Slafight_Plugin_EXILED.CustomMaps.Features;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
-public class SpawningHandler : IBootstrapHandler
+public class SpawningHandler : IBootstrapHandler, IDisposable
 {
     public static SpawningHandler Instance { get; private set; }
-    public static void Register() { Instance = new(); }
-    public static void Unregister() { Instance = null; }
+    public static void Register()
+    {
+        Unregister();
+        Instance = new();
+    }
+
+    public static void Unregister()
+    {
+        Instance?.Dispose();
+        Instance = null;
+    }
+
+    private bool _disposed;
 
     public SpawningHandler()
     {
@@ -24,10 +35,15 @@ public class SpawningHandler : IBootstrapHandler
         SpawnSystem.Spawned += OnSpawned;
     }
 
-    ~SpawningHandler()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
         SpawnSystem.Spawning -= OnSpawning;
         SpawnSystem.Spawned -= OnSpawned;
+        GC.SuppressFinalize(this);
     }
     private void OnSpawning(object sender, SpawnSystem.CustomSpawningEventArgs ev)
     {

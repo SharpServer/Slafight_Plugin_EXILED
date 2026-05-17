@@ -1,8 +1,6 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
@@ -11,7 +9,6 @@ using InventorySystem.Items.Armor;
 using UnityEngine;
 
 using PlayerEvents = Exiled.Events.EventArgs.Player;
-using PlayerHandlers = Exiled.Events.Handlers.Player;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -45,13 +42,13 @@ public abstract class CItemArmor : CItem
     // ======================================================
 
     /// <summary>ベスト防弾効率（0–100）。</summary>
-    protected virtual int VestEfficacy { get; } = 80;
+    protected virtual int VestEfficacy => 80;
 
     /// <summary>ヘルメット防弾効率（0–100）。</summary>
-    protected virtual int HelmetEfficacy { get; } = 80;
+    protected virtual int HelmetEfficacy => 80;
 
     /// <summary>スタミナ消耗倍率（1.0 ≦ 値 ≦ 2.0 推奨）。</summary>
-    protected virtual float StaminaUseMultiplier { get; } = 1.15f;
+    protected virtual float StaminaUseMultiplier => 1.15f;
 
     /// <summary>
     /// 弾薬所持上限リスト。空なら変更しない。

@@ -23,6 +23,9 @@ public static class WarheadBoomEffectHandler
     {
         Exiled.Events.Handlers.Warhead.Starting -= InvokeCoroutine;
         Exiled.Events.Handlers.Warhead.Detonated -= OnDetonated;
+        Timing.KillCoroutines(_handle);
+        WarheadBoomEffectUtil.StopAllEffects();
+        IsBooming = false;
     }
 
     private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio

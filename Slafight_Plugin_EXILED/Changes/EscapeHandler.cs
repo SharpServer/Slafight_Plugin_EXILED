@@ -29,14 +29,25 @@ public class PlayerCustomEscapedEventArgs : EventArgs
     public PlayerCustomEscapedEventArgs(Player player) => Player = player;
 }
 
-public class EscapeHandler : IBootstrapHandler
+public class EscapeHandler : IBootstrapHandler, IDisposable
 {
     public static EscapeHandler Instance { get; private set; }
-    public static void Register() { Instance = new(); }
-    public static void Unregister() { Instance = null; }
+    public static void Register()
+    {
+        Unregister();
+        Instance = new();
+    }
+
+    public static void Unregister()
+    {
+        Instance?.Dispose();
+        Instance = null;
+    }
 
     public static event EventHandler<PlayerCustomEscapingEventArgs> PlayerCustomEscaping;
     public static event EventHandler<PlayerCustomEscapedEventArgs> PlayerCustomEscaped;
+
+    private bool _disposed;
 
     public EscapeHandler()
     {
@@ -45,11 +56,23 @@ public class EscapeHandler : IBootstrapHandler
         Exiled.Events.Handlers.Server.RoundStarted += AddEscapeCoroutine;
     }
 
-    ~EscapeHandler()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
 
+        _disposed = true;
         Exiled.Events.Handlers.Player.Escaping -= CancelDefaultEscape;
         Exiled.Events.Handlers.Server.RoundStarted -= AddEscapeCoroutine;
+        if (_escapeCoroutine.IsRunning)
+            Timing.KillCoroutines(_escapeCoroutine);
+        if (_setupCoroutine.IsRunning)
+            Timing.KillCoroutines(_setupCoroutine);
+        EscapePoints.Clear();
+        ClearEscapeOverrides();
+        PlayerCustomEscaping = null;
+        PlayerCustomEscaped = null;
+        GC.SuppressFinalize(this);
     }
 
     private const float EscapeRadius = 1.75f;
@@ -228,13 +251,17 @@ public class EscapeHandler : IBootstrapHandler
     }
 
     private CoroutineHandle _escapeCoroutine;
+    private CoroutineHandle _setupCoroutine;
 
     public void AddEscapeCoroutine()
     {
         if (_escapeCoroutine.IsRunning)
             Timing.KillCoroutines(_escapeCoroutine);
 
-        Timing.CallDelayed(2.0f, () => 
+        if (_setupCoroutine.IsRunning)
+            Timing.KillCoroutines(_setupCoroutine);
+
+        _setupCoroutine = Timing.CallDelayed(2.0f, () => 
         {
             EscapePoints.Clear();
             if (TriggerPointManager.TryGetByTag("EscapePoint", out var points))

@@ -13,15 +13,27 @@ using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
-public class SpawnSystem : IBootstrapHandler
+public class SpawnSystem : IBootstrapHandler, IDisposable
 {
     public static void Register()
     {
+        Unregister();
         UnitPackBootstrap.RegisterAllPacks();
         SpawnContextBootstrap.RegisterAllContexts(Config);
         _ = new SpawnSystem();
     }
-    public static void Unregister() { Instance = null; }
+    public static void Unregister()
+    {
+        Instance?.Dispose();
+        Instance = null;
+        UnitPackBootstrap.UnregisterAllPacks();
+        SpawnContextBootstrap.UnregisterAllContexts();
+        Spawning = null;
+        Spawned = null;
+        Disable = false;
+        PendingMiniWave = false;
+        ResetOverride();
+    }
 
     // =====================
     //  種別
@@ -195,6 +207,7 @@ public class SpawnSystem : IBootstrapHandler
     public static bool PendingMiniWave { get; private set; }
 
     public static SpawnSystem Instance { get; private set; }
+    private bool _disposed;
 
     // =====================
     //  コンストラクタ
@@ -206,9 +219,14 @@ public class SpawnSystem : IBootstrapHandler
         Exiled.Events.Handlers.Server.RespawningTeam += SpawnHandler;
     }
 
-    ~SpawnSystem()
+    public void Dispose()
     {
+        if (_disposed)
+            return;
+
+        _disposed = true;
         Exiled.Events.Handlers.Server.RespawningTeam -= SpawnHandler;
+        GC.SuppressFinalize(this);
     }
 
     // =====================

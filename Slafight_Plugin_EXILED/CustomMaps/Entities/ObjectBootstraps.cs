@@ -8,7 +8,6 @@ using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.MainHandlers;
-using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Entities;
 
@@ -60,7 +59,7 @@ public class ObjectBootstraps : IBootstrapHandler
     {
         Timing.CallDelayed(2f, () =>
         {
-            PlaceTantrumAbility.ExecuteByApi(EventHandler.Scp173SpawnPoint + Vector3.down * 0.75f);
+            PlaceTantrumAbility.ExecuteByApi(EventHandler.Scp173SpawnPoint);
         });
     }
 }

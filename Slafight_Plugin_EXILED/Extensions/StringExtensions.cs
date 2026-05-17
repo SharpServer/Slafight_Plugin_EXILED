@@ -1,3 +1,5 @@
+namespace Slafight_Plugin_EXILED.Extensions;
+
 public static class StringExtensions
 {
     // string.IsNullOrEmpty かどうかを判定し、trueならfallbackを返す

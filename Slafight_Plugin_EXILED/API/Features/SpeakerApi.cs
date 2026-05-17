@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Exiled.API.Features;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.API.Features;
