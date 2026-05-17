@@ -244,7 +244,7 @@ public static class TerminalRift
             yield break;
         }
         
-        yield return Timing.WaitUntilDone(Anim(RiftObjectPosition, new Vector3(0f, -28.5f, 0f), 15f));
+        yield return Timing.WaitUntilDone(Anim(RiftObjectPosition, new Vector3(0f, -28.5f, 0f), 12.5f));
 
         if (!Invoking) yield break;
 
@@ -257,7 +257,7 @@ public static class TerminalRift
             yield break;
         }
 
-        yield return Timing.WaitForSeconds(10f);
+        yield return Timing.WaitForSeconds(7.5f);
 
         if (!Invoking) yield break;
 
@@ -268,7 +268,7 @@ public static class TerminalRift
         }
 
         CreateAndPlayAudio("Moving.ogg", "RiftElevator", RiftObjectPosition, true, RiftObject.transform, false, 30f, 0);
-        yield return Timing.WaitUntilDone(AnimToPosition(RiftObject.Position, RiftObjectPosition, 15f));
+        yield return Timing.WaitUntilDone(AnimToPosition(RiftObject.Position, RiftObjectPosition, 12.5f));
 
         if (!Invoking) yield break;
 
