@@ -12,8 +12,6 @@ using Exiled.Events.EventArgs.Warhead;
 using InventorySystem.Items.Usables.Scp330;
 using MEC;
 using PlayerRoles;
-using ProjectMER.Features;
-using ProjectMER.Features.Serializable;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
@@ -187,37 +185,9 @@ public class EventHandler : IBootstrapHandler, IDisposable
         });
     }
 
-    public static Vector3 Scp173SpawnPoint = Vector3.zero;
-
-    private static void SetupSpawnPoints()
-    {
-        var tagToField = new Dictionary<string, Action<Vector3>>
-        {
-            { "Scp173SpawnPoint", pos => Scp173SpawnPoint = pos + Vector3.up * 0.05f },
-            { "Scp682SpawnPoint", pos => MapFlags.Scp682SpawnPoint = pos },
-            { "Scp3005SpawnPoint", pos => MapFlags.Scp3005SpawnPoint = pos },
-            { "FacilityManagerSpawnPoint", pos => MapFlags.FacilityManagerSpawnPoint = pos },
-            { "FirstTeamSpawnPoint", pos => MapFlags.FirstTeamSpawnPoint = pos },
-            { "SupplyManagerSpawnPointA", pos => MapFlags.SupplyManagerSpawnPointA = pos },
-            { "SupplyManagerSpawnPointB", pos => MapFlags.SupplyManagerSpawnPointB = pos },
-        };
-
-        foreach (var point in TriggerPointManager.GetAll())
-        {
-            if (point.Base is not SerializableCustomTriggerPoint trig || string.IsNullOrEmpty(trig.Tag))
-                continue;
-
-            if (!tagToField.TryGetValue(trig.Tag, out var setter))
-                continue;
-
-            setter(TriggerPointManager.GetWorldPosition(point));
-        }
-    }
-
     private static void OnRoundStarted()
     {
         SpecificFlagsManager.ClearAll();
-        SetupSpawnPoints();
         foreach (var player in Player.List.ToList().Where(IsPlayerValid))
         {
             player.ShowHint("");

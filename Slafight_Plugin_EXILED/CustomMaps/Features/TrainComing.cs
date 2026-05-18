@@ -3,6 +3,7 @@ using Exiled.API.Features;
 using MEC;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
+using Slafight_Plugin_EXILED.CustomMaps;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -49,7 +50,9 @@ public static class TrainComing
     /// </summary>
     public static void Start()
     {
-        if (CustomMapMainHandler.STS == default && CustomMapMainHandler.STC == default && CustomMapMainHandler.STE == default)
+        if (MapFlags.TrainStartPoint == default &&
+            MapFlags.TrainCheckpointPoint == default &&
+            MapFlags.TrainEndPoint == default)
         {
             Log.Warn("[Train] Start() called but no coordinates have been set yet. Call Start(Vector3, Vector3, Vector3) first.");
             return;

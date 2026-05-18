@@ -8,9 +8,9 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.Abilities;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -58,7 +58,7 @@ public class Scp173Role : CRole
     {
         // スポーンポイントが初期化されるまで待機（最大10秒）
         float elapsed = 0f;
-        while (EventHandler.Scp173SpawnPoint == Vector3.zero && elapsed < 10f)
+        while (MapFlags.Scp173SpawnPoint == Vector3.zero && elapsed < 10f)
         {
             yield return Timing.WaitForSeconds(0.25f);
             elapsed += 0.25f;
@@ -66,7 +66,7 @@ public class Scp173Role : CRole
         }
 
         yield return Timing.WaitForSeconds(0.05f);
-        player.Position = EventHandler.Scp173SpawnPoint;
+        player.Position = MapFlags.Scp173SpawnPoint;
     }
 
     private void OnBlinking(BlinkingEventArgs ev)

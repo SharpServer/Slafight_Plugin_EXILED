@@ -13,7 +13,6 @@ using MEC;
 using PlayerRoles;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
-using ProjectMER.Features.Serializable;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Changes;
@@ -58,17 +57,10 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
 
     private SchematicObject ChaosBar;
     private Vector3 ChaosBarNormalPos;
-    private Vector3 FBJoin;
     private SchematicObject FBDoor;
     private static bool FemurSetup;
     private SchematicObject FBButton;
     private static bool FemurBreaked;
-    private Vector3 FBCP;
-    private Vector3 OWB;
-    public static Vector3 OWJoin;
-    public static Vector3 STS;
-    public static Vector3 STC;
-    public static Vector3 STE;
     public static SchematicObject Scp012_t;
 
     // ドア位置 → DoorConfig のマッピング
@@ -79,8 +71,6 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
     private CoroutineHandle trainCoroutine;
     private bool _disposed;
 
-    public static Vector3 PDExJoin;
-    public static Vector3 PDExJoinKing;
     public static bool _femurSetup   => FemurSetup;
     public static bool _femurBreaked => FemurBreaked;
 
@@ -206,11 +196,14 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
         if (femurCoroutine.IsRunning) Timing.KillCoroutines(femurCoroutine);
         if (trainCoroutine.IsRunning) Timing.KillCoroutines(trainCoroutine);
         
-        SetDoorState();
         SetupMaps();
         HolidaySeasonMapLoader();
         SetCandyState();
-        Timing.CallDelayed(1.5f, SetupSpecialDoors);
+        Timing.CallDelayed(2.3f, () =>
+        {
+            SetupSpecialDoors();
+            SetDoorState();
+        });
     }
 
     private static void SetCandyState()
@@ -245,9 +238,9 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
         specialDoors.Clear();
 
         // OWJoin: CItem 継承クラスで管理するアクセスパス
-        if (OWJoin != default)
+        if (MapFlags.OmegaWarheadJoinPoint != default)
         {
-            specialDoors[OWJoin] = new DoorConfig
+            specialDoors[MapFlags.OmegaWarheadJoinPoint] = new DoorConfig
             {
                 RequiredCItemType = typeof(OmegaWarheadAccess), // ← 実際の CItem 派生クラス名に変更
                 HintMessage       = "専用のアクセスパスが必要そうだ・・・"
@@ -339,19 +332,24 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
 
         ObjectPrefabLoader.LoadMap("aaa");
 
-        Timing.CallDelayed(2.0f, () =>
+        Timing.CallDelayed(2.25f, () =>
         {
-            GetSchematicsAndTriggerPoints();
+            GetSchematics();
 
-            if (FBJoin != default && FBCP != default)
+            if (MapFlags.FemurBreakerJoinPoint != default && MapFlags.FemurBreakerCapybaraPoint != default)
                 femurCoroutine = Timing.RunCoroutine(FemurBreaker());
 
-            if (STS != default && STC != default && STE != default)
+            if (MapFlags.TrainStartPoint != default &&
+                MapFlags.TrainCheckpointPoint != default &&
+                MapFlags.TrainEndPoint != default)
             {
                 Timing.CallDelayed(25f, () =>
                 {
                     if (!Round.InProgress) return;
-                    trainCoroutine = Timing.RunCoroutine(TrainComing.SpawnTrainAndAnim(STS, STC, STE));
+                    trainCoroutine = Timing.RunCoroutine(TrainComing.SpawnTrainAndAnim(
+                        MapFlags.TrainStartPoint,
+                        MapFlags.TrainCheckpointPoint,
+                        MapFlags.TrainEndPoint));
                 });
             }
             else
@@ -369,7 +367,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
         });
     }
 
-    public void GetSchematicsAndTriggerPoints()
+    public void GetSchematics()
     {
         FemurSetup    = false;
         FemurBreaked  = false;
@@ -398,37 +396,6 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
                         Scp012_t = schematic;
                         break;
                 }
-            }
-        }
-
-        foreach (var point in TriggerPointManager.GetAll())
-        {
-            if (point.Base is not SerializableCustomTriggerPoint trig || string.IsNullOrEmpty(trig.Tag))
-                continue;
-
-            var pos = TriggerPointManager.GetWorldPosition(point);
-            switch (trig.Tag)
-            {
-                case "FemurBreaker_JoinPoint":    FBJoin    = pos; break;
-                case "FemurBreaker_CapybaraPoint": FBCP      = pos; break;
-                case "PDEX_JoinPoint":             PDExJoin  = pos; break;
-                case "PDEX_JoinPointKing":         PDExJoinKing = pos; break;
-                case "OWB":                        OWB       = pos; break;
-                case "OWJoin":
-                    OWJoin = pos;
-                    // OWJoin は SetupSpecialDoors より後に確定するため、ここで上書き登録。
-                    specialDoors[OWJoin] = new DoorConfig
-                    {
-                        RequiredCItemType = typeof(OmegaWarheadAccess), // ← 実際の型に合わせる
-                        HintMessage       = "専用のアクセスパスが必要そうだ・・・"
-                    };
-                    break;
-                case "ST_S":                       STS       = pos; break;
-                case "ST_C":                       STC       = pos; break;
-                case "ST_E":                       STE       = pos; break;
-                case "AntiAntiMemeDoc":            MapFlags.AntiAntiMemeDocPoint = pos; break;
-                case "SQ_Door":                    MapFlags.SqDoorPoint          = pos; break;
-                case "AntiMemeButton":             MapFlags.AntiMemeButton = pos; break;
             }
         }
     }
@@ -511,8 +478,8 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
         }
 
         // Omega Warhead ボタン
-        if (OWB != default &&
-            Vector3.SqrMagnitude(pos - OWB) <= PositionToleranceSq)
+        if (MapFlags.OmegaWarheadButton != default &&
+            Vector3.SqrMagnitude(pos - MapFlags.OmegaWarheadButton) <= PositionToleranceSq)
         {
             HandleOmegaWarheadButton(ev.Player);
         }
@@ -632,12 +599,12 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
             var target = Player.List.FirstOrDefault(p =>
                 p.IsConnected &&
                 p.GetTeam() != CTeam.SCPs &&
-                Vector3.SqrMagnitude(p.Position - FBJoin) <= FemurJoinRadiusSq);
+                Vector3.SqrMagnitude(p.Position - MapFlags.FemurBreakerJoinPoint) <= FemurJoinRadiusSq);
 
             if (target != null)
             {
                 target.Handcuff();
-                target.Position = FBCP;
+                target.Position = MapFlags.FemurBreakerCapybaraPoint;
                 femuredPlayers.Add(target);
                 FemurSetup = true;
 

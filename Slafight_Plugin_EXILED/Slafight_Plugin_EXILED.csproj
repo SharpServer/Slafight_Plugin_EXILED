@@ -190,6 +190,7 @@
         <Compile Include="API\Features\CustomShieldEvents.cs" />
         <Compile Include="API\Features\CustomShieldState.cs" />
         <Compile Include="API\Features\CustomInfoDisplay.cs" />
+        <Compile Include="API\Features\CustomTriggerPoint.cs" />
         <Compile Include="API\Features\GeneratorPrefab.cs" />
         <Compile Include="API\Features\LabApiHandlerRegistry.cs" />
         <Compile Include="API\Features\NetworkVisibilityManager.cs" />
@@ -335,8 +336,8 @@
         <Compile Include="CustomItems\SlafightApiItems\ThrowableScp244.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Toolbox.cs" />
         <Compile Include="CustomMaps\Communications.cs" />
-        <Compile Include="CustomMaps\Entities\ObjectBootstraps.cs" />
         <Compile Include="CustomMaps\Entities\Scp513.cs" />
+        <Compile Include="CustomMaps\Entities\ObjectBootstraps.cs" />
         <Compile Include="CustomMaps\Features\DailyCassieAnnounce.cs" />
         <Compile Include="CustomMaps\Features\DocumentDictionary.cs" />
         <Compile Include="CustomMaps\Features\OmegaWarhead.cs" />
@@ -431,14 +432,14 @@
         <Compile Include="Extensions\SchematicHelpers.cs" />
         <Compile Include="Extensions\StaticUtils.cs" />
         <Compile Include="Extensions\StringExtensions.cs" />
-        <Compile Include="LabApiBridgeHandlers\CustomItemTriggerPointLabHandler.cs" />
+        <Compile Include="LabApiBridgeHandlers\TriggerPointRegistry.cs" />
+        <Compile Include="LabApiBridgeHandlers\TriggerPointItemSpawner.cs" />
         <Compile Include="LabApiBridgeHandlers\ObjectPrefabHandlers.cs" />
         <Compile Include="MainHandlers\AutoHandlerBootstrapRegister.cs" />
         <Compile Include="MainHandlers\BadgeHandler.cs" />
         <Compile Include="MainHandlers\DebugModeHandler.cs" />
         <Compile Include="MainHandlers\EventHandler.cs" />
         <Compile Include="MainHandlers\FirstRolesHandler.cs" />
-        <Compile Include="MainHandlers\HardcodedSteamBuffHandler.cs" />
         <Compile Include="MainHandlers\LabApiHandler.cs" />
         <Compile Include="MainHandlers\NewEventHandler.cs" />
         <Compile Include="MainHandlers\RoundHandler.cs" />

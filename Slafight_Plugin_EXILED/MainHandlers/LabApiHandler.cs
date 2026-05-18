@@ -22,19 +22,22 @@ namespace Slafight_Plugin_EXILED.MainHandlers;
 public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
 {
     private static LabApiHandler _instance;
-    private static CustomItemTriggerPointLabHandler _customItemTriggerPointHandler;
+    private static TriggerPointRegistry _triggerPointRegistry;
+    private static TriggerPointItemSpawner _triggerPointItemSpawner;
 
     public static LabApiHandler Instance => _instance;
 
     public static void Register()
     {
         _instance = LabApiHandlerRegistry.Register(_instance);
-        _customItemTriggerPointHandler = LabApiHandlerRegistry.Register(_customItemTriggerPointHandler);
+        _triggerPointRegistry = LabApiHandlerRegistry.Register(_triggerPointRegistry);
+        _triggerPointItemSpawner = LabApiHandlerRegistry.Register(_triggerPointItemSpawner);
     }
 
     public static void Unregister()
     {
-        LabApiHandlerRegistry.Unregister(ref _customItemTriggerPointHandler);
+        LabApiHandlerRegistry.Unregister(ref _triggerPointItemSpawner);
+        LabApiHandlerRegistry.Unregister(ref _triggerPointRegistry);
         LabApiHandlerRegistry.Unregister(ref _instance);
     }
 

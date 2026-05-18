@@ -30,7 +30,7 @@ public static class MapGuardHandler
         {
             if (ev.Door == null) return;
             
-            if (!(Vector3.SqrMagnitude(ev.Door.Position - CustomMapMainHandler.OWJoin) > 0.75 * 0.75))
+            if (!(Vector3.SqrMagnitude(ev.Door.Position - MapFlags.OmegaWarheadJoinPoint) > 0.75 * 0.75))
             {
                 ev.IsAllowed = false;
                 Message(ev.Player);
@@ -53,7 +53,7 @@ public static class MapGuardHandler
             foreach (var door in Door.List)
             {
                 if (door == null) continue;
-                if (!(Vector3.SqrMagnitude(door.Position - CustomMapMainHandler.OWJoin) > 0.75 * 0.75))
+                if (!(Vector3.SqrMagnitude(door.Position - MapFlags.OmegaWarheadJoinPoint) > 0.75 * 0.75))
                 {
                     door.Unlock();
                     door.IsOpen = false;

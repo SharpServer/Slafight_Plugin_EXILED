@@ -105,7 +105,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
             }
             if (i <= 0) return;
             ev.IsAllowed = false;
-            ev.Player?.Position = CustomMapMainHandler.PDExJoin;
+            ev.Player?.Position = MapFlags.PocketDimensionExitJoinPoint;
             ev.Player?.DisableEffect(EffectType.PocketCorroding);
             ev.Player?.EnableEffect(EffectType.Slowness, 30);
             if (ev.Player != null)
@@ -121,7 +121,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
                 if (player is not { IsConnected: true, IsVerified: true }) continue;
                 if (player.GetCustomRole() == CRoleTypeId.Scp106 || (player.GetCustomRole() == CRoleTypeId.None && player.Role.Type == RoleTypeId.Scp106))
                 {
-                    player.Position = CustomMapMainHandler.PDExJoinKing;
+                    player.Position = MapFlags.PocketDimensionExitKingJoinPoint;
                     player.AddAbility(new AllowEscapeAbility(player));
                     player.ShowHint("アビリティ「腐蝕からの解放」が付与されました。\n人間を釈放したくなったら使ってください\nまた、近接チャットも一時的に利用可能です！");
                     Handler.CanUsePlayers.Add(player);

@@ -6,8 +6,8 @@ using Exiled.API.Features.Pickups;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
-using ProjectMER.Features;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;
@@ -68,7 +68,7 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
             Timing.KillCoroutines(_escapeCoroutine);
         if (_setupCoroutine.IsRunning)
             Timing.KillCoroutines(_setupCoroutine);
-        EscapePoints.Clear();
+        MapFlags.EscapePoints.Clear();
         ClearEscapeOverrides();
         PlayerCustomEscaping = null;
         PlayerCustomEscaped = null;
@@ -80,7 +80,7 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
     private const float ItemPickupRadius = 1.05f;
     private const float ItemPickupRadiusSqr = ItemPickupRadius * ItemPickupRadius;
 
-    public readonly List<Vector3> EscapePoints = [];
+    public IReadOnlyList<Vector3> EscapePoints => MapFlags.EscapePoints;
 
     // =====================
     //  動的オーバーライド
@@ -261,17 +261,8 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
         if (_setupCoroutine.IsRunning)
             Timing.KillCoroutines(_setupCoroutine);
 
-        _setupCoroutine = Timing.CallDelayed(2.0f, () => 
+        _setupCoroutine = Timing.CallDelayed(2.25f, () => 
         {
-            EscapePoints.Clear();
-            if (TriggerPointManager.TryGetByTag("EscapePoint", out var points))
-            {
-                foreach (var point in points)
-                {
-                    EscapePoints.Add(TriggerPointManager.GetWorldPosition(point));
-                }
-            }
-
             _escapeCoroutine = Timing.RunCoroutine(EscapeCoroutine());
         });
     }

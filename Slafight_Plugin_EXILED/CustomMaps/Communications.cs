@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using AdminToys;
 using Exiled.API.Enums;
 using Exiled.API.Features;
@@ -38,7 +37,7 @@ public static class Communications
 
     private static void Setup()
     {
-        Timing.CallDelayed(1f, () =>
+        Timing.CallDelayed(2.25f, () =>
         {
             SetupInteractable();
             SetupText();
@@ -51,11 +50,9 @@ public static class Communications
     
     private static void SetupInteractable()
     {
-        ProjectMER.Features.TriggerPointManager.TryGetByTag("EZCInteractable", out var list);
-        var point = list.FirstOrDefault();
-        if (point is null) return;
+        if (MapFlags.EzcInteractablePoint == Vector3.zero) return;
         var interactableToy = InteractableToy.Create();
-        interactableToy.Position = point.transform.position;
+        interactableToy.Position = MapFlags.EzcInteractablePoint;
         interactableToy.Rotation = Quaternion.identity;
         interactableToy.Scale = Vector3.one;
         interactableToy.Shape = InvisibleInteractableToy.ColliderShape.Box;
@@ -65,13 +62,11 @@ public static class Communications
 
     private static void SetupText()
     {
-        ProjectMER.Features.TriggerPointManager.TryGetByTag("EZCScreen", out var list);
-        var point = list.FirstOrDefault();
-        if (point is null) return;
+        if (MapFlags.EzcScreenPoint == Vector3.zero) return;
         var textToy = Text.Create();
         textToy.Scale = new Vector3(0.55f, 0.65f, 1f);
-        textToy.Position = point.transform.position;
-        textToy.Rotation = point.transform.rotation;
+        textToy.Position = MapFlags.EzcScreenPoint;
+        textToy.Rotation = MapFlags.EzcScreenRotation;
         textToy.Rotation = StaticUtils
             .GetWorldFromRoomLocal(RoomType.EzDownstairsPcs, Vector3.zero, new Vector3(-10f, 0f, 0f)).worldRotation;
         textToy.DisplaySize = new Vector2(120f, 20f);

@@ -1,0 +1,164 @@
+using System;
+using Exiled.API.Features;
+using MEC;
+using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomMaps;
+using UnityEngine;
+using Logger = LabApi.Features.Console.Logger;
+
+namespace Slafight_Plugin_EXILED.LabApiBridgeHandlers;
+
+public class TriggerPointRegistry : SlafightLabApiHandler
+{
+    protected override void RegisterEvents(EventSubscriptionScope subscriptions)
+    {
+        subscriptions.Add(
+            () => LabApi.Events.Handlers.ServerEvents.RoundStarted += OnRoundStarted,
+            () => LabApi.Events.Handlers.ServerEvents.RoundStarted -= OnRoundStarted);
+    }
+
+    private static void OnRoundStarted()
+    {
+        Logger.Info("LabApi Loader: Green");
+        MapFlags.ResetTriggerPoints();
+
+        Timing.CallDelayed(2.0f, RegisterTriggerPoints);
+    }
+
+    private static void RegisterTriggerPoints()
+    {
+        foreach (var point in CustomTriggerPoint.GetAll())
+        {
+            try
+            {
+                RegisterByTag(point);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"[TriggerPointRegistry] Error while registering trigger point {point.Tag}: {e}");
+            }
+        }
+    }
+
+    private static void RegisterByTag(CustomTriggerPoint point)
+    {
+        var tag = point.Tag;
+        var pos = point.Position;
+
+        switch (tag)
+        {
+            case "Scp173SpawnPoint":
+                MapFlags.Scp173SpawnPoint = pos + Vector3.up * 0.05f;
+                break;
+            case "Scp682SpawnPoint":
+                MapFlags.Scp682SpawnPoint = pos;
+                break;
+            case "Scp3005SpawnPoint":
+                MapFlags.Scp3005SpawnPoint = pos;
+                break;
+            case "FacilityManagerSpawnPoint":
+                MapFlags.FacilityManagerSpawnPoint = pos;
+                break;
+            case "FirstTeamSpawnPoint":
+                MapFlags.FirstTeamSpawnPoint = pos;
+                break;
+            case "SupplyManagerSpawnPointA":
+                MapFlags.SupplyManagerSpawnPointA = pos;
+                break;
+            case "SupplyManagerSpawnPointB":
+                MapFlags.SupplyManagerSpawnPointB = pos;
+                break;
+            case "FemurBreaker_JoinPoint":
+                MapFlags.FemurBreakerJoinPoint = pos;
+                break;
+            case "FemurBreaker_CapybaraPoint":
+                MapFlags.FemurBreakerCapybaraPoint = pos;
+                break;
+            case "PDEX_JoinPoint":
+                MapFlags.PocketDimensionExitJoinPoint = pos;
+                break;
+            case "PDEX_JoinPointKing":
+                MapFlags.PocketDimensionExitKingJoinPoint = pos;
+                break;
+            case "OWB":
+                MapFlags.OmegaWarheadButton = pos;
+                break;
+            case "OWJoin":
+                MapFlags.OmegaWarheadJoinPoint = pos;
+                break;
+            case "ST_S":
+                MapFlags.TrainStartPoint = pos;
+                break;
+            case "ST_C":
+                MapFlags.TrainCheckpointPoint = pos;
+                break;
+            case "ST_E":
+                MapFlags.TrainEndPoint = pos;
+                break;
+            case "AntiAntiMemeDoc":
+                MapFlags.AntiAntiMemeDocPoint = pos;
+                break;
+            case "SQ_Door":
+                MapFlags.SqDoorPoint = pos;
+                break;
+            case "AntiMemeButton":
+                MapFlags.AntiMemeButton = pos;
+                break;
+            case "EscapePoint":
+                MapFlags.EscapePoints.Add(pos);
+                break;
+            case "EZCInteractable":
+                MapFlags.EzcInteractablePoint = pos;
+                break;
+            case "EZCScreen":
+                MapFlags.EzcScreenPoint = pos;
+                MapFlags.EzcScreenRotation = point.Rotation;
+                break;
+            case "EzPcTentaclePoint":
+                MapFlags.EzPcTentaclePoint = pos;
+                break;
+            case "HczSQ":
+                MapFlags.HczOverbeyondDocumentPoint = pos;
+                break;
+            case "HczASQ":
+                MapFlags.HczAboutSqDocumentPoint = pos;
+                break;
+            case "LczS3005D":
+                MapFlags.LczScp3005DocumentPoint = pos;
+                break;
+            case "CISR_GoCRailgun":
+                MapFlags.CisrGoCRailgunPoint = pos;
+                break;
+            case "CISR_Scp1425":
+                MapFlags.CisrScp1425Point = pos;
+                break;
+            case "CISR_SNAV300":
+                MapFlags.CisrSnav300Point = pos;
+                break;
+            case "CISR_MFP":
+                MapFlags.CisrMemoryForcePillPoint = pos;
+                break;
+            case "CISR_SCP513":
+                MapFlags.CisrScp513Point = pos;
+                break;
+            case "CISR_SQ":
+                MapFlags.CisrSchwarzschildQuasarPoint = pos;
+                break;
+            case "CISR_AntiMemeGrenade":
+                MapFlags.CisrAntiMemeGrenadePoint = pos;
+                break;
+            case "CISR_KeycardArmory1":
+                MapFlags.CisrKeycardArmory1Point = pos;
+                break;
+            case "CISR_KeycardArmory2":
+                MapFlags.CisrKeycardArmory2Point = pos;
+                break;
+            case "CISR_KeycardArmory3":
+                MapFlags.CisrKeycardArmory3Point = pos;
+                break;
+            case "CISR_KeycardSurveillance":
+                MapFlags.CisrKeycardSurveillancePoint = pos;
+                break;
+        }
+    }
+}
