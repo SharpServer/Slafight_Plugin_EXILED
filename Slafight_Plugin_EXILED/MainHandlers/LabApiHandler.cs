@@ -15,7 +15,7 @@ using Light = LabApi.Features.Wrappers.LightSourceToy;
 using Player = LabApi.Features.Wrappers.Player;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps;
-using Slafight_Plugin_EXILED.LabApiBridgeHandlers;
+using Slafight_Plugin_EXILED.CustomMaps.Bridges;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 

@@ -2,10 +2,10 @@ using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Features;
-using UnityEngine;
 using Slafight_Plugin_EXILED.API.Interface;
+using UnityEngine;
 
-namespace Slafight_Plugin_EXILED.LabApiBridgeHandlers;
+namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
 
 /// <summary>
 /// This Handler is wrapper for ObjectPrefabs event receiving.

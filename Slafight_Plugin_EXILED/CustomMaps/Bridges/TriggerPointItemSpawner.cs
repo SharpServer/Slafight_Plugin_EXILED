@@ -6,7 +6,7 @@ using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomMaps;
 using UnityEngine;
 
-namespace Slafight_Plugin_EXILED.LabApiBridgeHandlers;
+namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
 
 public class TriggerPointItemSpawner : SlafightLabApiHandler
 {

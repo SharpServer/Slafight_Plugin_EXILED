@@ -1,4 +1,5 @@
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.CustomMaps.Core;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
 using System.Collections.Generic;
 using UnityEngine;
@@ -48,6 +49,12 @@ public static class MapFlags
     public static Vector3 CisrKeycardArmory2Point = Vector3.zero;
     public static Vector3 CisrKeycardArmory3Point = Vector3.zero;
     public static Vector3 CisrKeycardSurveillancePoint = Vector3.zero;
+    public static Vector3 CisrGunRevolverXPoint = Vector3.zero;
+    public static Vector3 CisrKeycardAPoint = Vector3.zero;
+    public static Vector3 CDoorO1 = Vector3.zero;
+    public static Vector3 CDoorO2 = Vector3.zero;
+    public static Vector3 CDoorO3 = Vector3.zero;
+    public static Vector3 CDoorO4 = Vector3.zero;
     public static readonly List<Vector3> EscapePoints = [];
     
     public static Vector3 FirstTeamSpawnPoint = Vector3.zero;

@@ -6,7 +6,7 @@ using Slafight_Plugin_EXILED.CustomMaps;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
 
-namespace Slafight_Plugin_EXILED.LabApiBridgeHandlers;
+namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
 
 public class TriggerPointRegistry : SlafightLabApiHandler
 {
@@ -101,6 +101,18 @@ public class TriggerPointRegistry : SlafightLabApiHandler
             case "SQ_Door":
                 MapFlags.SqDoorPoint = pos;
                 break;
+            case "CDoor_O1":
+                MapFlags.CDoorO1 = pos;
+                break;
+            case "CDoor_O2":
+                MapFlags.CDoorO2 = pos;
+                break;
+            case "CDoor_03":
+                MapFlags.CDoorO3 = pos;
+                break;
+            case "CDoor_O4":
+                MapFlags.CDoorO4 = pos;
+                break;
             case "AntiMemeButton":
                 MapFlags.AntiMemeButton = pos;
                 break;
@@ -158,6 +170,12 @@ public class TriggerPointRegistry : SlafightLabApiHandler
                 break;
             case "CISR_KeycardSurveillance":
                 MapFlags.CisrKeycardSurveillancePoint = pos;
+                break;
+            case "CISR_GunRevolverX":
+                MapFlags.CisrGunRevolverXPoint = pos;
+                break;
+            case "CISR_KeycardA":
+                MapFlags.CisrKeycardAPoint = pos;
                 break;
         }
     }
