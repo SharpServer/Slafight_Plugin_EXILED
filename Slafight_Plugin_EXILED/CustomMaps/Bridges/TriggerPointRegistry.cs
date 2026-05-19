@@ -107,7 +107,7 @@ public class TriggerPointRegistry : SlafightLabApiHandler
             case "CDoor_O2":
                 MapFlags.CDoorO2 = pos;
                 break;
-            case "CDoor_03":
+            case "CDoor_O3":
                 MapFlags.CDoorO3 = pos;
                 break;
             case "CDoor_O4":
