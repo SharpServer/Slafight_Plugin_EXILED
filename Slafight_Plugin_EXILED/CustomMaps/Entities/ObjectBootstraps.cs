@@ -51,6 +51,6 @@ public class ObjectBootstraps : IBootstrapHandler
     private static void SetupTantrum()
     {
         if (MapFlags.Scp173SpawnPoint != Vector3.zero)
-            PlaceTantrumAbility.ExecuteByApi(MapFlags.Scp173SpawnPoint);
+            PlaceTantrumAbility.ExecuteByApi(MapFlags.Scp173SpawnPoint + Vector3.down * 0.5f);
     }
 }

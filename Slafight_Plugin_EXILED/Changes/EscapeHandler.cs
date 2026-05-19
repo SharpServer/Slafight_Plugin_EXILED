@@ -193,6 +193,9 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
 
         switch (nowEvent)
         {
+            case SpecialEventType.FacilityTermination when player.GetTeam() == CTeam.Scientists:
+                return new EscapeTargetRole { Vanilla = null, Custom = CRoleTypeId.GoCOperative };
+
             case SpecialEventType.None:
             default:
                 return baseTarget;
