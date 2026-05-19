@@ -30,6 +30,7 @@ public class Scp079Role : CRole
 
     public override void UnregisterEvents()
     {
+        Exiled.Events.Handlers.Map.GeneratorActivating -= OnGenerated;
         base.UnregisterEvents();
     }
     

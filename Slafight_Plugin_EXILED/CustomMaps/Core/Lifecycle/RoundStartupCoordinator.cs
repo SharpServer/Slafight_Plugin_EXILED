@@ -22,6 +22,7 @@ internal sealed class RoundStartupCoordinator : IDisposable
     private readonly SurfaceGateBarrierController _surfaceGateBarrier;
     private readonly FemurBreakerController _femurBreaker;
     private CoroutineHandle _trainCoroutine;
+    private int _startupGeneration;
 
     public RoundStartupCoordinator(
         SpecialDoorAccessController doorAccess,
@@ -43,13 +44,17 @@ internal sealed class RoundStartupCoordinator : IDisposable
     {
         StopWarheadEffects();
         StopCoroutines();
+        var generation = ++_startupGeneration;
 
-        LoadBaseMapAndFeatures();
+        LoadBaseMapAndFeatures(generation);
         LoadSeasonMap();
-        SetCandyState();
+        SetCandyState(generation);
 
         Timing.CallDelayed(2.3f, () =>
         {
+            if (!IsCurrentStartup(generation))
+                return;
+
             _doorAccess.ConfigureForCurrentMap();
             _doorAccess.ApplyDoorState();
         });
@@ -62,6 +67,13 @@ internal sealed class RoundStartupCoordinator : IDisposable
 
     public void Dispose()
     {
+        StopRound();
+    }
+
+    public void StopRound()
+    {
+        _startupGeneration++;
+        StopWarheadEffects();
         StopCoroutines();
         _doorAccess.Clear();
         _surfaceGateBarrier.Clear();
@@ -71,15 +83,19 @@ internal sealed class RoundStartupCoordinator : IDisposable
     private void StopCoroutines()
     {
         _femurBreaker.StopMonitoring();
+        TrainComing.StopAll();
 
         if (_trainCoroutine.IsRunning)
             Timing.KillCoroutines(_trainCoroutine);
     }
 
-    private static void SetCandyState()
+    private void SetCandyState(int generation)
     {
         Timing.CallDelayed(3f, () =>
         {
+            if (!IsCurrentStartup(generation))
+                return;
+
             if (!CandyChanges.CandyChances.ContainsKey("Default"))
                 CandyChanges.Init();
 
@@ -97,7 +113,7 @@ internal sealed class RoundStartupCoordinator : IDisposable
         });
     }
 
-    private void LoadBaseMapAndFeatures()
+    private void LoadBaseMapAndFeatures(int generation)
     {
         WarheadBoomEffectUtil.StopAllEffects();
         OmegaWarhead.Reset();
@@ -105,9 +121,12 @@ internal sealed class RoundStartupCoordinator : IDisposable
 
         Timing.CallDelayed(2.25f, () =>
         {
+            if (!IsCurrentStartup(generation))
+                return;
+
             BindLoadedSchematics();
             _femurBreaker.StartMonitoringIfReady();
-            StartTrainIfReady();
+            StartTrainIfReady(generation);
             SpawnAntiAntiMemeDocument();
         });
     }
@@ -150,7 +169,7 @@ internal sealed class RoundStartupCoordinator : IDisposable
         }
     }
 
-    private void StartTrainIfReady()
+    private void StartTrainIfReady(int generation)
     {
         if (MapFlags.TrainStartPoint == default ||
             MapFlags.TrainCheckpointPoint == default ||
@@ -162,7 +181,7 @@ internal sealed class RoundStartupCoordinator : IDisposable
 
         Timing.CallDelayed(25f, () =>
         {
-            if (!Round.InProgress)
+            if (!IsCurrentStartup(generation))
                 return;
 
             _trainCoroutine = Timing.RunCoroutine(TrainComing.SpawnTrainAndAnim(
@@ -198,4 +217,7 @@ internal sealed class RoundStartupCoordinator : IDisposable
                 break;
         }
     }
+
+    private bool IsCurrentStartup(int generation)
+        => generation == _startupGeneration && Round.InProgress;
 }

@@ -6,6 +6,7 @@ using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Changes;
+using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.MainHandlers;
 using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 using Random = UnityEngine.Random;
@@ -348,12 +349,21 @@ public class SpecialEventsHandler : IBootstrapHandler, IDisposable
     public void InitStats()
     {
         EventPID++;
+        ResetRoundScopedState();
+    }
+
+    private void ResetRoundScopedState()
+    {
         EventHandler.Instance.DeadmanDisable = false;
         EventHandler.Instance.DeconCancellFlag = false;
         Warhead.IsLocked = false;
         EscapeHandler.ClearEscapeOverrides();
         SpawnSystem.Disable = false;
-        SpawnContextRegistry.SetActive("Default");
+        if (SpawnContextRegistry.TryGet("Default", out _))
+            SpawnContextRegistry.SetActive("Default");
+        MapFlags.IsOverrideActivated = false;
+        IsFifthistsRaidActive = false;
+        NewEventHandler.ResetState();
     }
 
     // =====================
@@ -368,6 +378,7 @@ public class SpecialEventsHandler : IBootstrapHandler, IDisposable
     public void RoundRestartSkipEvent()
     {
         EventPID++;
+        ResetRoundScopedState();
 
         // CurrentEvent を None にクリアする前に履歴へ記録
         // （RoundRestartAddEvent → SelectRandom が走る前に HappenedEvents へ確実に入れる）
@@ -390,6 +401,8 @@ public class SpecialEventsHandler : IBootstrapHandler, IDisposable
 
     public void OnWaitingForPlayersInitEvent()
     {
+        ResetRoundScopedState();
+
         if (EventQueue.Count == 0)
         {
             SelectRandom();

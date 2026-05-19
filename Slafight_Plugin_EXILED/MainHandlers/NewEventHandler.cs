@@ -15,6 +15,7 @@ public class NewEventHandler : IBootstrapHandler
     public static void Register()
     {
         Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
+        Exiled.Events.Handlers.Server.RestartingRound += ResetState;
         Exiled.Events.Handlers.Scp079.Recontaining += OnOvercharged;
         Exiled.Events.Handlers.Player.TriggeringTesla += OnTesla;
         Exiled.Events.Handlers.Scp079.InteractingTesla += OnScp079InteractingTesla;
@@ -23,13 +24,21 @@ public class NewEventHandler : IBootstrapHandler
     public static void Unregister()
     {
         Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
+        Exiled.Events.Handlers.Server.RestartingRound -= ResetState;
         Exiled.Events.Handlers.Scp079.Recontaining -= OnOvercharged;
         Exiled.Events.Handlers.Player.TriggeringTesla -= OnTesla;
         Exiled.Events.Handlers.Scp079.InteractingTesla -= OnScp079InteractingTesla;
+        ResetState();
     }
 
     public static bool AlreadyRecovered { get; private set; } = false;
     public static bool IsTeslaIdled = false;
+
+    public static void ResetState()
+    {
+        AlreadyRecovered = false;
+        IsTeslaIdled = false;
+    }
 
     public static void RecoverControl(FacilityControlRecoverType type)
     {
@@ -54,8 +63,7 @@ public class NewEventHandler : IBootstrapHandler
 
     private static void OnWaitingForPlayers()
     {
-        AlreadyRecovered = false;
-        IsTeslaIdled = false;
+        ResetState();
     }
 
     private static void OnOvercharged(RecontainingEventArgs ev)

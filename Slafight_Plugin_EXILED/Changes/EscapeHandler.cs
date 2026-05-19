@@ -54,6 +54,7 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
 
         Exiled.Events.Handlers.Player.Escaping += CancelDefaultEscape;
         Exiled.Events.Handlers.Server.RoundStarted += AddEscapeCoroutine;
+        Exiled.Events.Handlers.Server.RestartingRound += ResetRoundState;
     }
 
     public void Dispose()
@@ -64,12 +65,9 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
         _disposed = true;
         Exiled.Events.Handlers.Player.Escaping -= CancelDefaultEscape;
         Exiled.Events.Handlers.Server.RoundStarted -= AddEscapeCoroutine;
-        if (_escapeCoroutine.IsRunning)
-            Timing.KillCoroutines(_escapeCoroutine);
-        if (_setupCoroutine.IsRunning)
-            Timing.KillCoroutines(_setupCoroutine);
+        Exiled.Events.Handlers.Server.RestartingRound -= ResetRoundState;
+        ResetRoundState();
         MapFlags.EscapePoints.Clear();
-        ClearEscapeOverrides();
         PlayerCustomEscaping = null;
         PlayerCustomEscaped = null;
         GC.SuppressFinalize(this);
@@ -258,16 +256,23 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
 
     public void AddEscapeCoroutine()
     {
+        ResetRoundState();
+
+        _setupCoroutine = Timing.CallDelayed(2.25f, () => 
+        {
+            _escapeCoroutine = Timing.RunCoroutine(EscapeCoroutine());
+        });
+    }
+
+    private void ResetRoundState()
+    {
         if (_escapeCoroutine.IsRunning)
             Timing.KillCoroutines(_escapeCoroutine);
 
         if (_setupCoroutine.IsRunning)
             Timing.KillCoroutines(_setupCoroutine);
 
-        _setupCoroutine = Timing.CallDelayed(2.25f, () => 
-        {
-            _escapeCoroutine = Timing.RunCoroutine(EscapeCoroutine());
-        });
+        ClearEscapeOverrides();
     }
 
     private IEnumerator<float> EscapeCoroutine()

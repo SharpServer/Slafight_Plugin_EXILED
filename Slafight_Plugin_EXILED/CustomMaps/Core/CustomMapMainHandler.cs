@@ -64,7 +64,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
 
         MapHandler.Generated += _roundStartup.EngageServerRoomGenerators;
         ServerHandler.RoundStarted += _roundStartup.StartRound;
-        ServerHandler.RestartingRound += RoundStartupCoordinator.StopWarheadEffects;
+        ServerHandler.RestartingRound += _roundStartup.StopRound;
         MapHandler.SpawningTeamVehicle += _surfaceGateBarrier.HandleTeamVehicleSpawn;
         LabApi.Events.Handlers.PlayerEvents.SearchedToy += _toyInteractions.HandleSearchedToy;
         PlayerHandler.InteractingDoor += _doorAccess.HandleInteraction;
@@ -78,7 +78,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
         _disposed = true;
         MapHandler.Generated -= _roundStartup.EngageServerRoomGenerators;
         ServerHandler.RoundStarted -= _roundStartup.StartRound;
-        ServerHandler.RestartingRound -= RoundStartupCoordinator.StopWarheadEffects;
+        ServerHandler.RestartingRound -= _roundStartup.StopRound;
         MapHandler.SpawningTeamVehicle -= _surfaceGateBarrier.HandleTeamVehicleSpawn;
         LabApi.Events.Handlers.PlayerEvents.SearchedToy -= _toyInteractions.HandleSearchedToy;
         PlayerHandler.InteractingDoor -= _doorAccess.HandleInteraction;
