@@ -54,21 +54,16 @@ public class Scp1509Handler : IBootstrapHandler, System.IDisposable
         Timing.CallDelayed(0.1f, () =>
         {
             if (target == null) return;
-
-            // カスタムロール判定を先に行う
-            if (caster.GetCustomRole() == CRoleTypeId.Scp035)
-            {
-                target.SetRole(RoleTypeId.Scp0492, RoleSpawnFlags.AssignInventory);
-                Timing.CallDelayed(1f, () =>
-                {
-                    target.UniqueRole = "Zombified";
-                });
-                return;
-            }
-
             // チーム判定
             switch (caster.GetTeam())
             {
+                case CTeam.SCPs:
+                    target.SetRole(RoleTypeId.Scp0492, RoleSpawnFlags.None);
+                    Timing.CallDelayed(1f, () =>
+                    {
+                        target.UniqueRole = "Zombified";
+                    });
+                    break;
                 case CTeam.FoundationForces:
                     target.SetRole(RoleTypeId.NtfPrivate, RoleSpawnFlags.None);
                     break;
