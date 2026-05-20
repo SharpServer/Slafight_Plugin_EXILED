@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
@@ -52,13 +53,15 @@ public class Scp999Role : CRole
         player!.Role.Set(RoleTypeId.Scp173);
         player.Role.Set(RoleTypeId.Tutorial,RoleSpawnFlags.AssignInventory);
         player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 99999;
+        player.MaxHealth = 999;
         player.Health = player.MaxHealth;
         player.ClearInventory();
         player.AddItem(ItemType.GunCOM15);
         player.SetAmmoLimit(AmmoType.Nato9, Nato9Limit);
         player.SetAmmo(AmmoType.Nato9, Nato9Limit);
         RememberNato9(player);
+
+        player.EnableEffect<Fade>(255);
 
         player.SetCustomInfo("SCP-999");
         LabApiHandler.Schem999(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));

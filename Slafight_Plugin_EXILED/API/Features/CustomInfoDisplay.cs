@@ -69,7 +69,7 @@ public static class CustomInfoDisplay
     private static void Render(Player player, string? customInfo, CustomInfoDisplayOptions options)
     {
         string roleReplacement = ProcessText(options.RoleNameOverride ?? customInfo ?? GetRoleName(player));
-        string customName = ProcessText(GetCustomName(player));
+        string customName = ProcessCustomNameText(GetCustomName(player));
         string unitName = ProcessText(player.UnitName);
 
         var replacements = new Dictionary<string, string>
@@ -133,6 +133,9 @@ public static class CustomInfoDisplay
 
     private static string ProcessText(string? text)
         => string.IsNullOrEmpty(text) ? string.Empty : text.Replace("[br]", "\n");
+
+    private static string ProcessCustomNameText(string? text)
+        => ProcessText(text).Replace('[', '|').Replace(']', '|');
 
     private static string BuildLine(string text)
         => string.IsNullOrEmpty(text) ? string.Empty : text + "\n";
