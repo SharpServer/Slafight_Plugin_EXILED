@@ -1,6 +1,4 @@
 using System;
-using System.Linq;
-using Exiled.API.Enums;
 using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
 using MEC;
@@ -44,98 +42,12 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
     protected override void RegisterEvents(EventSubscriptionScope subscriptions)
     {
         subscriptions.Add(() => Exiled.Events.Handlers.Player.Dying += ModelRolesRagdoll, () => Exiled.Events.Handlers.Player.Dying -= ModelRolesRagdoll);
-        subscriptions.Add(() => LabApi.Events.Handlers.PlayerEvents.SearchedToy += InteractionEvent, () => LabApi.Events.Handlers.PlayerEvents.SearchedToy -= InteractionEvent);
-        subscriptions.Add(() => LabApi.Events.Handlers.ServerEvents.RoundStarted += Init, () => LabApi.Events.Handlers.ServerEvents.RoundStarted -= Init);
         subscriptions.Add(() => LabApi.Events.Handlers.PlayerEvents.RaPlayerListAddingPlayer += HideWatchFromRaPlayerList, () => LabApi.Events.Handlers.PlayerEvents.RaPlayerListAddingPlayer -= HideWatchFromRaPlayerList);
         subscriptions.Add(() => LabApi.Events.Handlers.PlayerEvents.RequestedRaPlayerInfo += HideWatchFromRaPlayerInfo, () => LabApi.Events.Handlers.PlayerEvents.RequestedRaPlayerInfo -= HideWatchFromRaPlayerInfo);
     }
 
-    public bool ActivatedAntiMemeProtocol;
-    public bool ActivatedAntiMemeProtocolInPast;
-
-    private void Init()
-    {
-        ActivatedAntiMemeProtocol = false;
-        ActivatedAntiMemeProtocolInPast = false;
-    }
-
-    private void InteractionEvent(PlayerSearchedToyEventArgs ev)
-    {
-        var antiMemeButton = MapFlags.AntiMemeButton == Vector3.zero
-            ? new Vector3(107.921f, 296.313f, -68.748f)
-            : MapFlags.AntiMemeButton;
-
-        if (ev.Interactable == null || Vector3.Distance(ev.Interactable.Position, antiMemeButton) >= 3f)
-            return;
-
-        if (!ActivatedAntiMemeProtocol)
-        {
-            if (Exiled.API.Features.Player.Get(ev.Player)?.GetTeam() is CTeam.Fifthists)
-            {
-                ev.Player.SendHint("※第五教会は開始できません！");
-                return;
-            }
-            foreach (var player in Exiled.API.Features.Player.List)
-            {
-                if (!IsAntiMemeProtocolTarget(player)) continue;
-                if (!ActivatedAntiMemeProtocolInPast)
-                    player.Health = 10000;
-
-                player.EnableEffect(EffectType.Poisoned, 255);
-                player.EnableEffect(EffectType.Decontaminating, 255);
-            }
-
-            var count = 0;
-            if (Exiled.API.Features.Player.List.Any(IsAntiMemeProtocolTarget))
-            {
-                count++;
-                if (!ActivatedAntiMemeProtocolInPast)
-                {
-                    Exiled.API.Features.Cassie.MessageTranslated(
-                        "By order of Facility Manager Control Room , $pitch_.85 Anti- $pitch_1 Me mu Protocol Activated .",
-                        $"<color=#ff0087>施設管理者制御室</color>からの命令により、<color={CTeam.Fifthists.GetTeamColor()}>アンチミームプロトコロル</color>が有効化されました。エージェントにより反ミーム性物体の非活性化が開始されます。",
-                        true,
-                        false);
-                    ActivatedAntiMemeProtocolInPast = true;
-                }
-                else
-                {
-                    Exiled.API.Features.Cassie.MessageTranslated(
-                        "$pitch_.85 Anti- $pitch_1 Me mu Protocol Resumed .",
-                        $"<color={CTeam.Fifthists.GetTeamColor()}>アンチミームプロトコル</color>が再開されました。",
-                        false,
-                        false);
-                }
-
-                ActivatedAntiMemeProtocol = true;
-            }
-
-            if (count <= 0)
-                ev.Player.SendHint("<size=26>※対象が見つかりませんでした</size>", 3.5f);
-        }
-        else
-        {
-            foreach (var player in Exiled.API.Features.Player.List)
-            {
-                if (!IsAntiMemeProtocolTarget(player)) continue;
-                player.DisableEffect(EffectType.Poisoned);
-                player.DisableEffect(EffectType.Decontaminating);
-            }
-
-            if (!Exiled.API.Features.Player.List.Any()) return;
-            Exiled.API.Features.Cassie.MessageTranslated(
-                "$pitch_.85 Anti- $pitch_1 Me mu Protocol Stopped .",
-                $"<color={CTeam.Fifthists.GetTeamColor()}>アンチミームプロトコル</color>が停止されました。",
-                false,
-                false);
-            ActivatedAntiMemeProtocol = false;
-        }
-    }
-
-    private static bool IsAntiMemeProtocolTarget(Exiled.API.Features.Player player)
-    {
-        return player.GetCustomRole() is CRoleTypeId.Scp3005 or CRoleTypeId.Scp3125;
-    }
+    public bool ActivatedAntiMemeProtocol => FacilityControlRoom.IsAntiMemeProtocolActive;
+    public bool ActivatedAntiMemeProtocolInPast => FacilityControlRoom.HasAntiMemeProtocolActivatedInPast;
 
     private static bool IsHideWatchTarget(Player labPlayer)
     {

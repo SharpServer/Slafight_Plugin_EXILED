@@ -337,9 +337,13 @@
         <Compile Include="CustomItems\SlafightApiItems\Scp513Item.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ThrowableScp244.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Toolbox.cs" />
+        <Compile Include="CustomMaps\FacilityControlRoom.cs" />
+        <Compile Include="CustomMaps\FacilityControlRoomFunction.cs" />
+        <Compile Include="CustomMaps\FacilityControlRoomFunctions\AntiMemeProtocolFunction.cs" />
         <Compile Include="CustomMaps\Communications.cs" />
         <Compile Include="CustomMaps\Entities\Scp513.cs" />
         <Compile Include="CustomMaps\Entities\ObjectBootstraps.cs" />
+        <Compile Include="CustomMaps\FacilityControlRoomFunctions\SurfaceBombingFunction.cs" />
         <Compile Include="CustomMaps\Features\DailyCassieAnnounce.cs" />
         <Compile Include="CustomMaps\Features\DocumentDictionary.cs" />
         <Compile Include="CustomMaps\Features\OmegaWarhead.cs" />

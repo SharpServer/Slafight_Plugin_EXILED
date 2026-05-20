@@ -69,7 +69,7 @@ public static class DocumentDictionary
                        "それじゃあ、グッドラック。\n" +
                        "- Dr. Aqurista Ω Boom</size>";
             case DocumentType.ScientistSamuels:
-                return "<size=15>新しい安全プロトコルSP-02-Nに従い、\n" +
+                return "<size=17>パスワード</size>\n<size=15>新しい安全プロトコルSP-02-Nに従い、\n" +
                        "個人アクセスコードはランダムな間隔\n" +
                        "（2～4週間ごと、または必要に応じて)\n" +
                        "で変更され、新しいセキュリティコードは\n" +
@@ -81,6 +81,36 @@ public static class DocumentDictionary
                        "<b>直ちにセキュリティ担当者にご連絡ください。</b>新しいコードをお送りします。\n" +
                        "- 警備主任 スーザン・リプリー: \n" +
                        "2137-1111-1121\n" +
+                       "- 当直警備員: \n" +
+                       "2137-1124-1211</size>";
+            case DocumentType.ScientistMasoi:
+                return "<size=17>パスワード</size>\n<size=15>新しい安全プロトコルSP-02-Nに従い、\n" +
+                       "個人アクセスコードはランダムな間隔\n" +
+                       "（2～4週間ごと、または必要に応じて)\n" +
+                       "で変更され、新しいセキュリティコードは\n" +
+                       "セクションCの個人ロッカーに封された封筒で届けられます。\n" +
+                       "氏名：枡追博士\n" +
+                       "新しい個人アクセスコード：\n" +
+                       "<b>1217</b>\n" +
+                       "封印が破られている、または封筒が何らかの形で改竄していることに気づいた場合は、\n" +
+                       "<b>直ちにセキュリティ担当者にご連絡ください。</b>新しいコードをお送りします。\n" +
+                       "- 警備主任 ポール・オブライエン: \n" +
+                       "2137-1354-0924\n" +
+                       "- 当直警備員: \n" +
+                       "2137-1124-1211</size>";
+            case DocumentType.ScientistGalia:
+                return "<size=17>パスワード</size>\n<size=15>新しい安全プロトコルSP-02-Nに従い、\n" +
+                       "個人アクセスコードはランダムな間隔\n" +
+                       "（2～4週間ごと、または必要に応じて)\n" +
+                       "で変更され、新しいセキュリティコードは\n" +
+                       "セクションCの個人ロッカーに封された封筒で届けられます。\n" +
+                       "氏名：ブルー・R・ガリア博士\n" +
+                       "新しい個人アクセスコード：\n" +
+                       "<b>1236</b>\n" +
+                       "封印が破られている、または封筒が何らかの形で改竄していることに気づいた場合は、\n" +
+                       "<b>直ちにセキュリティ担当者にご連絡ください。</b>新しいコードをお送りします。\n" +
+                       "- 警備主任 ポール・オブライエン: \n" +
+                       "2137-1354-0924\n" +
                        "- 当直警備員: \n" +
                        "2137-1124-1211</size>";
             case DocumentType.AboutSergey:
@@ -120,6 +150,9 @@ public enum DocumentType
     DeltaWarhead,
     OmegaWarhead,
     ScientistSamuels,
+    ScientistMasoi,
+    ScientistGalia,
+    ScientistJlolldo,
     AboutSergey,
     AntiAntiMeme,
     AprilWtf,

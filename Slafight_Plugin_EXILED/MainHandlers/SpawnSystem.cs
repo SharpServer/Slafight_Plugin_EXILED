@@ -31,7 +31,6 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
         Spawning = null;
         Spawned = null;
         Disable = false;
-        PendingMiniWave = false;
         ResetOverride();
     }
 
@@ -204,7 +203,8 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
 
     public static SpawnOverrideMode OverrideMode { get; private set; } = SpawnOverrideMode.None;
     public static SpawnTypeId? PendingOverrideType { get; private set; }
-    public static bool PendingMiniWave { get; private set; }
+    private static bool? PendingMiniWaveOverride { get; set; }
+    public static bool PendingMiniWave => PendingMiniWaveOverride ?? false;
 
     public static SpawnSystem Instance { get; private set; }
     private bool _disposed;
@@ -233,16 +233,17 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
     //  外部からの切り替えAPI
     // =====================
 
-    public static void ReplaceNextSpawn(SpawnTypeId spawnType, bool isMiniWave = false)
+    public static void ReplaceNextSpawn(SpawnTypeId spawnType, bool? isMiniWave = null)
     {
         OverrideMode = SpawnOverrideMode.NextWave;
         PendingOverrideType = spawnType;
-        PendingMiniWave = isMiniWave;
-        Log.Info($"SpawnSystem: Next spawn overridden to {spawnType} (Mini:{isMiniWave})");
+        PendingMiniWaveOverride = isMiniWave;
+        Log.Info($"SpawnSystem: Next spawn overridden to {spawnType} (Mini:{isMiniWave?.ToString() ?? "source"})");
     }
 
     public static void ForceSpawnNow(SpawnTypeId spawnType, bool isMiniWave = false)
     {
+        ResetOverride();
         Log.Info($"SpawnSystem: ForceSpawnNow {spawnType} (Mini:{isMiniWave})");
         Instance?.SummonForces(spawnType, isMiniWave);
     }
@@ -251,6 +252,7 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
     {
         OverrideMode = SpawnOverrideMode.None;
         PendingOverrideType = null;
+        PendingMiniWaveOverride = null;
     }
 
     // =====================
@@ -268,8 +270,20 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
         // 即時オーバーライド（NextWave）
         if (OverrideMode == SpawnOverrideMode.NextWave && PendingOverrideType.HasValue)
         {
-            SummonForces(PendingOverrideType.Value, PendingMiniWave);
-            ResetOverride();
+            var overrideType = PendingOverrideType.Value;
+            var isMiniWave = PendingMiniWaveOverride ?? ev.Wave.IsMiniWave;
+
+            try
+            {
+                Log.Info(
+                    $"SpawnSystem: Applying next-wave override. Source={ev.NextKnownTeam} Mini={ev.Wave.IsMiniWave}, Override={overrideType} Mini={isMiniWave}");
+                SummonForces(overrideType, isMiniWave);
+            }
+            finally
+            {
+                ResetOverride();
+            }
+
             return;
         }
 
@@ -389,64 +403,73 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
     {
         _isDefaultWave = false;
 
-        var specs = Player.List
-            .Where(p =>
-                p.Role == RoleTypeId.Spectator &&
-                p.GetCustomRole() == CRoleTypeId.None)
-            .ToList();
-
-        int spawnCount = specs.Count;
-
-        string cassieCallsign  = string.Empty;
-        string displayCallsign = string.Empty;
-
-        if (Config.NatoCallsign)
+        try
         {
-            var nato = GenerateNatoCallsignFull();
-            cassieCallsign  = nato.cassie;
-            displayCallsign = nato.display;
+            var specs = Player.List
+                .Where(p =>
+                    p.Role == RoleTypeId.Spectator &&
+                    p.GetCustomRole() == CRoleTypeId.None)
+                .ToList();
+
+            int spawnCount = specs.Count;
+
+            string cassieCallsign  = string.Empty;
+            string displayCallsign = string.Empty;
+
+            if (Config.NatoCallsign)
+            {
+                var nato = GenerateNatoCallsignFull();
+                cassieCallsign  = nato.cassie;
+                displayCallsign = nato.display;
+            }
+
+            AssignTeamRoles(
+                spawnType,
+                playerFilter: p => specs.Contains(p),
+                fixedCount: null);
+
+            Faction faction = spawnType switch
+            {
+                SpawnTypeId.MtfNtfNormal or SpawnTypeId.MtfNtfBackup
+                    or SpawnTypeId.MtfHdNormal or SpawnTypeId.MtfHdBackup
+                    or SpawnTypeId.MtfLastOperationNormal or SpawnTypeId.MtfLastOperationBackup
+                    => Faction.FoundationStaff,
+
+                SpawnTypeId.GoiChaosNormal or SpawnTypeId.GoiChaosBackup
+                    or SpawnTypeId.GoiFifthistNormal or SpawnTypeId.GoiFifthistBackup
+                    or SpawnTypeId.GoiGoCNormal or SpawnTypeId.GoiGoCBackup
+                    => Faction.FoundationEnemy,
+
+                _ => Faction.Unclassified
+            };
+
+            // Spawned イベントに渡す Args を組み立てる
+            var ctx = SpawnContextRegistry.ActiveContext;
+            var dummyWeights = new Dictionary<SpawnTypeId, int>(); // ここでは使わないが型上必要
+
+            var spawnedArgs = new CustomSpawningEventArgs(
+                sourceEventArgs: null,
+                nowContext: ctx,
+                baseWeights: dummyWeights,
+                faction: faction,
+                isMiniWave: isMiniWave)
+            {
+                SpawnType = spawnType,
+                SpawnCount = spawnCount,
+                CassieCallsign = cassieCallsign,
+                DisplayCallsign = displayCallsign,
+            };
+
+            Spawned?.Invoke(null, spawnedArgs);
         }
-
-        AssignTeamRoles(
-            spawnType,
-            playerFilter: p => specs.Contains(p),
-            fixedCount: null);
-
-        Faction faction = spawnType switch
+        catch (Exception ex)
         {
-            SpawnTypeId.MtfNtfNormal or SpawnTypeId.MtfNtfBackup
-                or SpawnTypeId.MtfHdNormal or SpawnTypeId.MtfHdBackup
-                or SpawnTypeId.MtfLastOperationNormal or SpawnTypeId.MtfLastOperationBackup
-                => Faction.FoundationStaff,
-
-            SpawnTypeId.GoiChaosNormal or SpawnTypeId.GoiChaosBackup
-                or SpawnTypeId.GoiFifthistNormal or SpawnTypeId.GoiFifthistBackup
-                or SpawnTypeId.GoiGoCNormal or SpawnTypeId.GoiGoCBackup
-                => Faction.FoundationEnemy,
-
-            _ => Faction.Unclassified
-        };
-
-        // Spawned イベントに渡す Args を組み立てる
-        var ctx = SpawnContextRegistry.ActiveContext;
-        var dummyWeights = new Dictionary<SpawnTypeId, int>(); // ここでは使わないが型上必要
-
-        var spawnedArgs = new CustomSpawningEventArgs(
-            sourceEventArgs: null,
-            nowContext: ctx,
-            baseWeights: dummyWeights,
-            faction: faction,
-            isMiniWave: isMiniWave)
+            Log.Error($"SpawnSystem: SummonForces failed for {spawnType} (Mini:{isMiniWave}): {ex}");
+        }
+        finally
         {
-            SpawnType = spawnType,
-            SpawnCount = spawnCount,
-            CassieCallsign = cassieCallsign,
-            DisplayCallsign = displayCallsign,
-        };
-
-        Spawned?.Invoke(null, spawnedArgs);
-
-        Timing.CallDelayed(0.02f, () => _isDefaultWave = true);
+            Timing.CallDelayed(0.02f, () => _isDefaultWave = true);
+        }
     }
 
     // =====================

@@ -57,6 +57,7 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
     private readonly List<WinCondition> _winConditions;
     private bool _disposed;
     private CoroutineHandle _conditionCoroutine;
+    private CoroutineHandle _roundLockCoroutine;
 
     public CustomRolesHandler()
     {
@@ -123,6 +124,9 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
         if (_conditionCoroutine.IsRunning)
             Timing.KillCoroutines(_conditionCoroutine);
 
+        if (_roundLockCoroutine.IsRunning)
+            Timing.KillCoroutines(_roundLockCoroutine);
+
         GC.SuppressFinalize(this);
     }
 
@@ -148,71 +152,86 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
             if (Round.IsLobby)
                 yield break;
 
-            var alivePlayers = Player.List
-                .Where(p => p != null && p.IsAlive && p.Role.Type != RoleTypeId.Spectator)
-                .ToList();
+            var alivePlayers = GetAliveRoundPlayers();
 
-            foreach (var condition in _winConditions.Where(c => c.IsEnabled))
+            foreach (var condition in _winConditions)
             {
-                if (condition.Check(alivePlayers))
-                {
-                    Log.Debug($"[RoundCondition] {condition.DebugName} triggered");
-                    if (condition.IsForEnd)
-                    {
-                        Round.IsLocked = false;
-                        condition.ExecuteAction();
-                        yield break;
-                    }
+                if (!TryCheckCondition(condition, alivePlayers))
+                    continue;
 
-                    condition.ExecuteAction();
+                Log.Debug($"[RoundCondition] {condition.DebugName} triggered");
+
+                if (!TryExecuteCondition(condition))
+                    continue;
+
+                if (condition.IsForEnd)
+                {
+                    yield break;
                 }
+
+                break;
             }
 
             yield return Timing.WaitForSeconds(1f);
         }
     }
 
+    private static bool TryCheckCondition(WinCondition condition, List<Player> alivePlayers)
+    {
+        try
+        {
+            return condition.IsEnabled && condition.Check(alivePlayers);
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"[RoundCondition] {condition.DebugName} check failed: {ex}");
+            return false;
+        }
+    }
+
+    private static bool TryExecuteCondition(WinCondition condition)
+    {
+        try
+        {
+            if (condition.IsForEnd)
+                Round.IsLocked = false;
+
+            condition.ExecuteAction();
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"[RoundCondition] {condition.DebugName} execution failed: {ex}");
+            return false;
+        }
+    }
+
+    private static List<Player> GetAliveRoundPlayers()
+    {
+        return Player.List
+            .Where(IsAliveRoundPlayer)
+            .ToList();
+    }
+
+    private static bool IsAliveRoundPlayer(Player? player)
+    {
+        return player != null && player.IsAlive && player.Role.Type != RoleTypeId.Spectator;
+    }
+
     private static bool CheckAIKill(List<Player> players)
     {
-        int scpCount = 0;
-        bool only079 = true;
-        List<Player> scp079s = [];
-
-        foreach (var player in players)
-        {
-            if (player.GetTeam() != CTeam.SCPs)
-                continue;
-
-            scpCount++;
-
-            if (player.Role.Type == RoleTypeId.Scp079)
-                scp079s.Add(player);
-            else
-                only079 = false;
-        }
-
-        bool scpSideIsOnly079 = scpCount > 0 && only079 && scp079s.Count == scpCount;
-
-        var nonScpTeams = players
-            .Where(p => p.GetTeam() != CTeam.SCPs)
-            .GroupBy(p => p.GetTeam())
-            .Count();
-
-        return scpSideIsOnly079 && nonScpTeams == 1;
+        return HasOnlyTargetRoleOnSideAgainstSingleOpposingTeam(
+            players,
+            player => player.GetTeam() == CTeam.SCPs,
+            IsScp079Player);
     }
 
     private static void ExecuteAIKill()
     {
-        var scp079s = Player.List
-            .Where(p => p != null && p.IsAlive && p.Role.Type == RoleTypeId.Scp079)
-            .ToList();
+        var terminated = TerminatePlayers(IsScp079Player, "Terminated by C.A.S.S.I.E.");
 
-        foreach (var p in scp079s)
-        {
-            p.Kill(
-                "Terminated by C.A.S.S.I.E."
-            );
-        }
+        if (terminated == 0)
+            return;
         
         Exiled.API.Features.Cassie.MessageTranslated("SCP-079 has been terminated by Central Autonomic Service System for Internal Emergencies.", "<color=red>SCP-079</color>は<color=yellow>C.A.S.S.I.E</color>により終了されました。");
         NewEventHandler.RecoverControl(FacilityControlRecoverType.DisableTesla);
@@ -220,74 +239,101 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
     
     private static bool CheckAraorunKill(List<Player> players)
     {
-        int scpCount = 0;
-        bool only079 = true;
-        List<Player> scp079s = [];
-
-        foreach (var player in players)
-        {
-            if (player.GetTeam().IsGoI())
-                continue;
-
-            scpCount++;
-
-            if (player.Role.Type == RoleTypeId.Scp079)
-                scp079s.Add(player);
-            else
-                only079 = false;
-        }
-
-        bool scpSideIsOnly079 = scpCount > 0 && only079 && scp079s.Count == scpCount;
-
-        var nonScpTeams = players
-            .Where(p => p.GetTeam().IsGoI())
-            .GroupBy(p => p.GetTeam())
-            .Count();
-
-        return scpSideIsOnly079 && nonScpTeams == 1;
+        return HasOnlyTargetRoleOnSideAgainstSingleOpposingTeam(
+            players,
+            player => !player.GetTeam().IsGoI(),
+            IsAraOrunPlayer);
     }
 
     private static void ExecuteAraOrunKill()
     {
-        var scp079s = Player.List
-            .Where(p => p != null && p.IsAlive && p.Role.Type == RoleTypeId.Scp079)
-            .ToList();
+        var terminated = TerminatePlayers(IsAraOrunPlayer, "Terminated by Fifthists");
 
-        foreach (var p in scp079s)
-        {
-            p.Kill(
-                "Terminated by Fifthists"
-            );
-        }
-        
+        if (terminated == 0)
+            return;
+
         Exiled.API.Features.Cassie.MessageTranslated("Unknown Subject has been terminated by SCP 3 1 2 5", $"<color=yellow>アラ・オルン</color>は<color={CTeam.Fifthists.GetTeamColor()}>SCP-3125</color>により終了されました。");
     }
 
-    private static void CancelEnd(EndingRoundEventArgs ev)
+    private static bool HasOnlyTargetRoleOnSideAgainstSingleOpposingTeam(
+        List<Player> players,
+        Func<Player, bool> isSideMember,
+        Func<Player, bool> isTargetRole)
     {
-        int count = 0;
+        int sidePlayerCount = 0;
+        int targetRoleCount = 0;
+        HashSet<CTeam> opposingTeams = [];
 
-        foreach (var player in Player.List)
+        foreach (var player in players)
         {
-            if (player != null && player.HasSpecificWinMethod())
-                count++;
+            if (!IsAliveRoundPlayer(player))
+                continue;
+
+            if (isSideMember(player))
+            {
+                sidePlayerCount++;
+
+                if (isTargetRole(player))
+                {
+                    targetRoleCount++;
+                    continue;
+                }
+
+                return false;
+            }
+
+            opposingTeams.Add(player.GetTeam());
         }
 
-        if (count == 0)
+        return sidePlayerCount > 0 &&
+               targetRoleCount == sidePlayerCount &&
+               opposingTeams.Count == 1;
+    }
+
+    private static bool IsScp079Player(Player player)
+    {
+        return IsAliveRoundPlayer(player) &&
+               player.GetTeam() == CTeam.SCPs &&
+               player.Role.Type == RoleTypeId.Scp079;
+    }
+
+    private static bool IsAraOrunPlayer(Player player)
+    {
+        return IsAliveRoundPlayer(player) &&
+               player.GetCustomRole() == CRoleTypeId.AraOrun;
+    }
+
+    private static int TerminatePlayers(Func<Player, bool> selector, string reason)
+    {
+        var targets = Player.List
+            .Where(player => player != null && selector(player))
+            .ToList();
+
+        foreach (var target in targets)
+        {
+            target.Kill(reason);
+        }
+
+        return targets.Count;
+    }
+
+    private void CancelEnd(EndingRoundEventArgs ev)
+    {
+        if (!HasSpecificWinPlayers())
             return;
 
         ev.IsAllowed = false;
         Round.IsLocked = true;
-        Timing.RunCoroutine(RoundLocker());
+
+        if (!_roundLockCoroutine.IsRunning)
+            _roundLockCoroutine = Timing.RunCoroutine(RoundLocker());
     }
 
-    private static IEnumerator<float> RoundLocker()
+    private IEnumerator<float> RoundLocker()
     {
         for (;;)
         {
-            var count = Player.List.OfType<Player>().Count(player => player.HasSpecificWinMethod());
-
-            if (count == 0)
+            if (Round.IsLobby || !HasSpecificWinPlayers())
             {
                 Round.IsLocked = false;
                 yield break;
@@ -295,6 +341,11 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
 
             yield return Timing.WaitForSeconds(1f);
         }
+    }
+
+    private static bool HasSpecificWinPlayers()
+    {
+        return Player.List.Any(player => player != null && player.HasSpecificWinMethod());
     }
 
     private static void OnHurting(HurtingEventArgs ev)
