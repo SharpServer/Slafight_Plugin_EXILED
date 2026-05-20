@@ -13,6 +13,7 @@ public sealed class AntiMemeProtocolFunction : FacilityControlRoomFunction
     public override string Id => "AntiMemeProtocol";
     public override string DisplayName => "アンチミームプロトコル";
     public override string Description => "SCP-3005 / SCP-3125 に対する反ミーム性無力化処理を開始または停止する。";
+    public override KeycardPermissions RequiredPermissions => KeycardPermissions.ContainmentLevelThree;
 
     public override void ResetState()
     {

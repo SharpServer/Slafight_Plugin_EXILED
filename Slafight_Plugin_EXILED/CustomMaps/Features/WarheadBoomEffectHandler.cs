@@ -38,11 +38,18 @@ public static class WarheadBoomEffectHandler
     {
         IsBooming = false;
         if (Round.IsLobby) return;
-        Timing.RunCoroutine(KillCoroutine());
+        foreach (var player in Player.List)
+        {
+            if (player == null || !player.IsAlive) continue;
+            if (player.Position.y <= 265f)
+            {
+                player.Kill(DamageType.Warhead);
+            }
+        }
         foreach (var player in Player.List)
         {
             if (player is null || !player.IsAlive) continue;
-            player.EnableEffect(EffectType.Concussed, 255, 5f);
+            player.EnableEffect(EffectType.Concussed, 255, 10f);
         }
     }
 
@@ -180,25 +187,5 @@ public static class WarheadBoomEffectHandler
         // ── 後片付け ───────────────────────────────────────────────
         light.Intensity = 0f;
         light.Destroy();
-    }
-
-    private static IEnumerator<float> KillCoroutine()
-    {
-        while (true)
-        {
-            if (!Round.InProgress) yield break;
-            foreach (var player in Player.List)
-            {
-                if (player == null || !player.IsAlive) continue;
-                if (player.Zone is ZoneType.Entrance or ZoneType.HeavyContainment or ZoneType.LightContainment or ZoneType.Pocket)
-                {
-                    if (!player.IsEffectActive<Decontaminating>())
-                    {
-                        player.EnableEffect<Decontaminating>(255);
-                    }
-                }
-            }
-            yield return Timing.WaitForSeconds(1f);
-        }
     }
 }

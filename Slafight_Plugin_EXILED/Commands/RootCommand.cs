@@ -37,6 +37,7 @@ public class RootCommand : ParentCommand
         RegisterCommand(new SpawnObjectPrefab());
         RegisterCommand(new SpawnWave());
         RegisterCommand(new PlaySurfaceAttack());
+        RegisterCommand(new PlayInstantSurfaceBombing());
         RegisterCommand(new PlayOmegaWarhead());
         RegisterCommand(new ActivateGenerator());
     }

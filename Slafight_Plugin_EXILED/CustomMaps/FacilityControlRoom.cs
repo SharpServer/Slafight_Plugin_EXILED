@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Exiled.API.Enums;
-using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
@@ -20,7 +19,6 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
     private const float ConsoleInteractRadius = 3f;
     private const float SessionMaxDistance = 4.5f;
     private const float HintRefreshSeconds = 0.8f;
-    private const KeycardPermissions RequiredPermissions = KeycardPermissions.AlphaWarhead;
 
     private static readonly Vector3 DefaultConsolePosition = new(107.921f, 296.313f, -68.748f);
     private static readonly IReadOnlyList<FacilityControlRoomFunction> Functions = CreateFunctions();
@@ -140,12 +138,6 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
             return;
         }
 
-        if (!HasRequiredPermission(keycard))
-        {
-            player.ShowHint("<size=24>制御室操作を終了しました。\nこのキーカードでは施設管理者制御室を操作できません。</size>", 3.5f);
-            return;
-        }
-
         var session = new FacilityControlRoomSession(player, keycard.Serial, consolePosition);
         session.HintLoop = Timing.RunCoroutine(HintLoopCoroutine(session));
         _sessions[player] = session;
@@ -160,6 +152,12 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
     {
         var function = Functions[session.SelectedFunctionIndex];
         var executedCount = _functionExecutionCounts.TryGetValue(function.Id, out var count) ? count : 0;
+
+        if (!HasRequiredPermissions(stagedKeycard.Permissions, function.RequiredPermissions))
+        {
+            ShowFunctionHint(player, session, BuildPermissionBlockedHint(function));
+            return;
+        }
 
         if (IsExecutionLimitReached(function, executedCount))
         {
@@ -231,25 +229,79 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
     {
         keycard = player.CurrentItem as Keycard;
         return keycard != null &&
-               keycard.Serial == session.StagedItemSerial &&
-               HasRequiredPermission(keycard);
+               keycard.Serial == session.StagedItemSerial;
     }
 
     private string BuildModeHint(FacilityControlRoomSession session)
     {
         var function = Functions[session.SelectedFunctionIndex];
+        var keycard = session.Player.CurrentItem as Keycard;
+        var permissionText = BuildRequiredPermissionStatus(function, keycard);
         var statusText = BuildFunctionStatusText(function);
         return
             $"<size=24>施設管理者制御室 操作モード</size>\n" +
             $"<size=22>現在選択されている機能：{function.DisplayName}</size>\n" +
-            $"<size=20>{function.Description}{statusText}\nキーカードをドロップ：機能切替 / 再度インタラクト：実行</size>";
+            $"<size=20>{function.Description}\n{permissionText}{statusText}\nキーカードをドロップ：機能切替 / 再度インタラクト：実行</size>";
     }
 
-    private static bool HasRequiredPermission(Keycard keycard)
+    private static bool HasRequiredPermissions(KeycardPermissions actual, KeycardPermissions required)
     {
-        return RequiredPermissions == KeycardPermissions.None ||
-               (keycard.Permissions & RequiredPermissions) == RequiredPermissions ||
-               keycard.Permissions.HasFlagFast(RequiredPermissions);
+        if (required == KeycardPermissions.None)
+            return true;
+
+        var actualLevels = KeycardAccessLevels.FromPermissions(actual);
+        var requiredLevels = KeycardAccessLevels.FromPermissions(required);
+
+        return actualLevels.Containment >= requiredLevels.Containment &&
+               actualLevels.Armory >= requiredLevels.Armory &&
+               actualLevels.Administration >= requiredLevels.Administration;
+    }
+
+    private static string BuildRequiredPermissionStatus(FacilityControlRoomFunction function, Keycard keycard)
+    {
+        var hasPermission = keycard != null && HasRequiredPermissions(keycard.Permissions, function.RequiredPermissions);
+        var color = hasPermission ? "#57ff7a" : "#ff4d4d";
+        return $"必要権限：<color={color}>{BuildRequiredPermissionText(function.RequiredPermissions)}</color>";
+    }
+
+    private static string BuildPermissionBlockedHint(FacilityControlRoomFunction function)
+    {
+        return $"<size=24>{function.DisplayName} は実行できません。\n必要権限：<color=#ff4d4d>{BuildRequiredPermissionText(function.RequiredPermissions)}</color></size>";
+    }
+
+    private static string BuildRequiredPermissionText(KeycardPermissions permissions)
+    {
+        if (permissions == KeycardPermissions.None)
+            return "なし";
+
+        var levels = KeycardAccessLevels.FromPermissions(permissions);
+        var parts = new List<string>();
+
+        if (levels.Containment > 0)
+            parts.Add($"Containment Level {levels.Containment}");
+
+        if (levels.Armory > 0)
+            parts.Add($"Armory Level {levels.Armory}");
+
+        if (levels.Administration > 0)
+            parts.Add(GetAdministrationPermissionText(permissions, levels.Administration));
+
+        return string.Join(", ", parts);
+    }
+
+    private static string GetAdministrationPermissionText(KeycardPermissions permissions, int administrationLevel)
+    {
+        if ((permissions & KeycardPermissions.AlphaWarhead) == KeycardPermissions.AlphaWarhead)
+            return "AlphaWarhead";
+
+        if ((permissions & KeycardPermissions.ExitGates) == KeycardPermissions.ExitGates)
+            return "ExitGates";
+
+        if ((permissions & KeycardPermissions.Checkpoints) == KeycardPermissions.Checkpoints &&
+            (permissions & KeycardPermissions.Intercom) == KeycardPermissions.Intercom)
+            return "Checkpoints + Intercom";
+
+        return $"Administration Level {administrationLevel}";
     }
 
     private static Vector3 GetConsolePosition()

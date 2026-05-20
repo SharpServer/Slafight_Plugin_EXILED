@@ -15,19 +15,20 @@ namespace Slafight_Plugin_EXILED.CustomMaps.FacilityControlRoomFunctions;
 public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
 {
     private static readonly Vector3 BombingStartPoint = new(138f, 299f, -41f);
-    private static readonly Vector3 BombingEndPoint = new(-40f, 299f, -41f);
+    private static readonly Vector3 BombingEndPoint = new(-20f, 305f, -41f);
 
-    private const int BombCount = 32;
-    private const float BombInterval = 0.35f;
-    private const float BombScatterRadius = 7.5f;
-    private const float BombFuseSeconds = 2.25f;
+    private const int BombCount = 64;
+    private const float BombInterval = 0.25f;
+    private const float BombScatterRadius = 10f;
+    private const float BombFuseSeconds = 1.25f;
     private const float DownwardVelocity = 18f;
 
-    private CoroutineHandle _bombingHandle;
+    private static CoroutineHandle _bombingHandle;
 
     public override string Id => "SurfaceBombing";
     public override string DisplayName => "爆撃要請";
     public override string Description => "地上制圧のため、爆撃を要請する。";
+    public override KeycardPermissions RequiredPermissions => KeycardPermissions.ArmoryLevelThree | KeycardPermissions.ExitGates;
     public override bool UseCooldown => true;
     public override float CooldownSeconds => 300f;
 
@@ -48,18 +49,45 @@ public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
         {
             return Failure("<size=24>爆撃要請に失敗しました。\n既に爆撃が進行中です。</size>");
         }
-        Player.List.Where(p => p.Position.y >= 290f).ToList().ForEach(p => p.MessageTranslated(
-            "Defense Forces to Control, Operation Accepted. Starting Surface Attack.",string.Empty,
-            "[防衛部隊から管制室へ]地上爆撃を承認しました。これより攻撃を開始します・・・",
-            true, false));
-        _bombingHandle = Timing.RunCoroutine(SurfaceBombingCoroutine());
+        StartBombing(skipStartupDelay: false);
 
         return Success("<size=24>爆撃要請を送信しました。\n地上への爆撃を開始します。</size>");
     }
 
-    private static IEnumerator<float> SurfaceBombingCoroutine()
+    public static bool TryStartInstantBombing(out string failureReason)
     {
-        yield return Timing.WaitForSeconds(6.5f);
+        if (Round.IsLobby || Round.IsEnded)
+        {
+            failureReason = "Surface bombing cannot start outside an active round.";
+            return false;
+        }
+
+        if (_bombingHandle.IsRunning)
+        {
+            failureReason = "Surface bombing is already in progress.";
+            return false;
+        }
+
+        StartBombing(skipStartupDelay: true);
+        failureReason = string.Empty;
+        return true;
+    }
+
+    private static void StartBombing(bool skipStartupDelay)
+    {
+        Player.List.Where(p => p.Position.y >= 290f).ToList().ForEach(p => p.MessageTranslated(
+            "Defense Forces to Control, Operation Accepted. Starting Surface Attack.", string.Empty,
+            "[防衛部隊から管制室へ]地上爆撃を承認しました。これより攻撃を開始します・・・",
+            true, false));
+
+        _bombingHandle = Timing.RunCoroutine(SurfaceBombingCoroutine(skipStartupDelay));
+    }
+
+    private static IEnumerator<float> SurfaceBombingCoroutine(bool skipStartupDelay)
+    {
+        if (!skipStartupDelay)
+            yield return Timing.WaitForSeconds(6.5f);
+
         for (int i = 0; i < BombCount; i++)
         {
             if (Round.IsLobby || Round.IsEnded)

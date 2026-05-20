@@ -1,3 +1,4 @@
+using Exiled.API.Enums;
 using Exiled.API.Features.Items;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;
@@ -12,6 +13,7 @@ public abstract class FacilityControlRoomFunction
     public virtual float CooldownSeconds => 60f;
     public virtual bool UseExecutionLimit => false;
     public virtual int MaxExecutionCount => 1;
+    public virtual KeycardPermissions RequiredPermissions => KeycardPermissions.None;
 
     public virtual void ResetState()
     {
