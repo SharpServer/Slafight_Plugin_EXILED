@@ -25,7 +25,6 @@ public class FacilityTermination : SpecialEvent
     public override string TriggerRequirement => "無し";
 
     private CoroutineHandle _mainCoroutine;
-    private CoroutineHandle _humanitistsCoroutine;
 
     private static EventHandler EventHandler => EventHandler.Instance;
     private Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio =>
@@ -42,9 +41,7 @@ public class FacilityTermination : SpecialEvent
         SpawnContextRegistry.SetActive("FacilityTerminationCustom");
 
         Timing.KillCoroutines(_mainCoroutine);
-        Timing.KillCoroutines(_humanitistsCoroutine);
         _mainCoroutine = Timing.RunCoroutine(DecontaminationCoroutine());
-        _humanitistsCoroutine = Timing.RunCoroutine(HumanitistsCoroutine());
     }
 
     // ===== キャンセル判定 =====
@@ -59,7 +56,6 @@ public class FacilityTermination : SpecialEvent
 
         Exiled.API.Features.Cassie.Clear();
         Timing.KillCoroutines(_mainCoroutine);
-        Timing.KillCoroutines(_humanitistsCoroutine);
         SpawnContextRegistry.SetActive("Default");
         return true;
     }
@@ -276,35 +272,5 @@ public class FacilityTermination : SpecialEvent
             player.EnableEffect(EffectType.Decontaminating);
     }
 
-    // ===== 勝利条件チェック =====
-
-    private IEnumerator<float> HumanitistsCoroutine()
-    {
-        while (true)
-        {
-            if (IsEventCanceled()) yield break;
-
-            var alivePlayers = Player.List
-                .Where(p => p != null && p.IsAlive && p.Role.Type != RoleTypeId.Spectator)
-                .ToList();
-
-            if (alivePlayers.IsOnlyTeam(CTeam.GoC, "humanity"))
-            {
-                Log.Debug("[FacilityTermination] Humanitists win");
-                CustomRolesHandler.EndRound(CTeam.GoC, "SavedHumanity");
-                SpawnContextRegistry.SetActive("Default");
-                yield break;
-            }
-
-            if (alivePlayers.IsOnlyTeam(CTeam.FoundationForces, "nohumanity"))
-            {
-                Log.Debug("[FacilityTermination] Foundation win");
-                CustomRolesHandler.EndRound(CTeam.FoundationForces, "NoHumanityAllowed");
-                SpawnContextRegistry.SetActive("Default");
-                yield break;
-            }
-
-            yield return Timing.WaitForSeconds(1f);
-        }
-    }
+    // FacilityTermination の勝利判定は RoundVictoryDefinitions 側で全体判定する。
 }

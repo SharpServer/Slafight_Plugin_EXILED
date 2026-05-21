@@ -1,6 +1,7 @@
 using Exiled.API.Features;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features.RoundVictory;
 using Slafight_Plugin_EXILED.CustomRoles;
 
 namespace Slafight_Plugin_EXILED.Extensions;
@@ -16,12 +17,16 @@ public static class RoundUtils
         CustomRolesHandler.EndRound(team, specificReason);
     }
 
+    /// <summary>
+    /// vanilla の終了判定を止めるべき独自勝利勢力の生存者かを返します。
+    /// </summary>
+    /// <remarks>
+    /// 実際の対象勢力は <see cref="RoundVictoryDefinitions.RequiresVanillaEndLock"/> で管理します。
+    /// </remarks>
     public static bool HasSpecificWinMethod(this Player player)
     {
         var info = player.GetRoleInfo();
         if (info is { Vanilla: RoleTypeId.Tutorial, Custom: CRoleTypeId.None }) return false;
-        if (!player.IsAlive) return false;
-        return player.GetTeam() is not (CTeam.SCPs or CTeam.Null or CTeam.FoundationForces or CTeam.Guards
-            or CTeam.Scientists or CTeam.ChaosInsurgency or CTeam.ClassD);
+        return RoundVictoryDefinitions.RequiresVanillaEndLock(player);
     }
 }
