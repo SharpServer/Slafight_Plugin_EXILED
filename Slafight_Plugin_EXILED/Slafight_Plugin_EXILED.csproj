@@ -365,6 +365,7 @@
         <Compile Include="CustomMaps\ObjectPrefabs\HIDTurretObject.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Document.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Tentacle.cs" />
+        <Compile Include="CustomMaps\ObjectPrefabs\Trashbox.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Vent.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\WarheadBoomEffect.cs" />
         <Compile Include="CustomMaps\Bridges\TriggerPointItemSpawner.cs" />
