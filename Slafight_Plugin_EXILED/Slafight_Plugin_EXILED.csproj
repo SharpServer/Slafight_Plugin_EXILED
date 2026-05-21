@@ -213,6 +213,7 @@
         <Compile Include="API\Features\RoleTableDictionaries\Contexts\AprilRoleTableContext.cs" />
         <Compile Include="API\Features\RoleTableDictionaries\Contexts\NormalRoleTableContext.cs" />
         <Compile Include="API\Features\RoleParseHelper.cs" />
+        <Compile Include="API\Features\RoundVictory\RoundEndSystem.cs" />
         <Compile Include="API\Features\RoundVictory\RoundVictorySystem.cs" />
         <Compile Include="API\Features\RoleSpecificTextProvider.cs" />
         <Compile Include="API\Features\ServerSpecifics.cs" />

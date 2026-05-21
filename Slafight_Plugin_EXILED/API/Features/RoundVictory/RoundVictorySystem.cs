@@ -315,7 +315,7 @@ public static class RoundVictoryDefinitions
             {
                 Log.Debug("[FacilityTermination] Humanitists win");
                 SpawnContextRegistry.SetActive("Default");
-                CustomRolesHandler.EndRound(CTeam.GoC, "SavedHumanity");
+                CustomRolesHandler.EndRound(CTeam.GoC, RoundEndReasons.SavedHumanity);
             },
             context => context.ActiveEvent is SpecialEventType.FacilityTermination),
 
@@ -328,7 +328,7 @@ public static class RoundVictoryDefinitions
             {
                 Log.Debug("[FacilityTermination] Foundation win");
                 SpawnContextRegistry.SetActive("Default");
-                CustomRolesHandler.EndRound(CTeam.FoundationForces, "NoHumanityAllowed");
+                CustomRolesHandler.EndRound(CTeam.FoundationForces, RoundEndReasons.NoHumanityAllowed);
             },
             context => context.ActiveEvent is SpecialEventType.FacilityTermination),
     ];
@@ -348,7 +348,7 @@ public static class RoundVictoryDefinitions
             "SnowWarrierWin",
             CTeam.Others,
             player => player.GetCustomRole() == CRoleTypeId.SnowWarrier,
-            "SW_WIN",
+            RoundEndReasons.SnowWarrierWin,
             context => context.Season == SeasonTypeId.Christmas,
             requiresVanillaEndLock: true,
             priority: 20),
@@ -357,7 +357,7 @@ public static class RoundVictoryDefinitions
             "CandyWarrierWin",
             CTeam.Others,
             player => player.IsCandyWarrier(),
-            "CANDY_WIN",
+            RoundEndReasons.CandyWarrierWin,
             context => context.Season is SeasonTypeId.April or SeasonTypeId.Halloween,
             requiresVanillaEndLock: true,
             priority: 20),
