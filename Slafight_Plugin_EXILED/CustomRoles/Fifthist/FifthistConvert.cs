@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -16,33 +17,20 @@ public class FifthistConvert : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.FifthistConvert;
     protected override CTeam Team { get; set; } = CTeam.Fifthists;
     protected override string UniqueRoleKey { get; set; } = "FifthistConvert";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Tutorial;
+    protected override float? SpawnMaxHealth => 150f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunA7,
+        ItemType.Medkit,
+        ItemType.ArmorCombat,
+        typeof(KeycardFifthist),
+        typeof(Scp1425),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Tutorial);
-        Vector3 offset;
-        int maxHealth = 150;
-
-        player.UniqueRole = UniqueRoleKey;
-        player.SetCustomInfo("<color=#FF0090>Fifthist Convert</color>");
-        player.MaxHealth = maxHealth;
-        player.Health = maxHealth;
-            
-        Room spawnRoom = Room.Get(RoomType.Surface);
-        Log.Debug(spawnRoom.Position);
-        offset = new Vector3(0f,0f,0f);
-        player.Position = new Vector3(124f,289f,21f);//SpawnRoom.Position + SpawnRoom.Rotation * offset;
-        //player.Rotation = SpawnRoom.Rotation;
-            
-        player.ClearInventory();
-        Log.Debug("Giving Items to FifthistConvert");
-        player.AddItem(ItemType.GunA7);
-        //player.AddItem(ItemType.KeycardFacilityManager);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.ArmorCombat);
-        CItem.Get<KeycardFifthist>()?.Give(player);
-        CItem.Get<Scp1425>()?.Give(player);
-        player.SetAmmo(AmmoType.Nato762,170);
-    }
+        [AmmoType.Nato762] = 170,
+    };
+    protected override Vector3? SpawnPosition => new Vector3(124f, 289f, 21f);
+    protected override string SpawnCustomInfo => "<color=#FF0090>Fifthist Convert</color>";
 }

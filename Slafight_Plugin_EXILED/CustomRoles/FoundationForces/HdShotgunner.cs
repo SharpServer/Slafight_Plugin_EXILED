@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -15,26 +16,22 @@ public class HdShotgunner : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.HdShotgunner;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "HdShotgunner";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfPrivate;
+    protected override float? SpawnMaxHealth => 110f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunShotgun,
+        ItemType.GunShotgun,
+        ItemType.KeycardMTFOperative,
+        ItemType.Adrenaline,
+        ItemType.Medkit,
+        ItemType.Radio,
+        typeof(ArmorInfantry),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfPrivate);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 110;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.AddItem(ItemType.GunShotgun);
-        player.AddItem(ItemType.GunShotgun);
-        player.AddItem(ItemType.KeycardMTFOperative);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Radio);
-        CItem.Get<ArmorInfantry>()?.Give(player);
-            
-        player.SetAmmo(AmmoType.Ammo12Gauge,200);
+        [AmmoType.Ammo12Gauge] = 200,
+    };
+    protected override string SpawnCustomInfo => "<color=#727472>Hammer Down Shotgunner</color>";
 
-        //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
-        CustomInfoDisplay.Apply(player, "<color=#727472>Hammer Down Shotgunner</color>");
-    }
 }

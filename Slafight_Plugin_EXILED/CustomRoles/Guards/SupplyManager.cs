@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using MEC;
@@ -19,24 +20,25 @@ public class SupplyManager : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SupplyManager;
     protected override CTeam Team { get; set; } = CTeam.Guards;
     protected override string UniqueRoleKey { get; set; } = "SupplyManager";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.FacilityGuard;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.Medkit,
+        ItemType.Medkit,
+        ItemType.ArmorLight,
+        ItemType.Radio,
+        ItemType.GunCOM18,
+        typeof(KeycardSupplyManager),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.FacilityGuard);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.ArmorLight);
-        player.AddItem(ItemType.Radio);
-        CItem.Get<KeycardSupplyManager>()?.Give(player);
-        player.AddItem(ItemType.GunCOM18);
-        player.SetAmmo(AmmoType.Nato9,80);
-            
-        player.SetCustomInfo("Supply Manager");
+        [AmmoType.Nato9] = 80,
+    };
+    protected override string SpawnCustomInfo => "Supply Manager";
+
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
+    {
         Timing.CallDelayed(0.05f, () =>
         {
             if (Random.Range(0, 2) == 0)

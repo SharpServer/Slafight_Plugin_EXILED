@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -16,25 +17,22 @@ public class SecurityTeamGuard : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SecurityTeamGuard;
     protected override CTeam Team { get; set; } = CTeam.Guards;
     protected override string UniqueRoleKey { get; set; } = "SecurityTeamGuard";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.FacilityGuard;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.KeycardGuard,
+        ItemType.Medkit,
+        ItemType.Painkillers,
+        ItemType.ArmorCombat,
+        ItemType.Radio,
+        typeof(GunFSP18),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.FacilityGuard);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.GiveCItem<GunFSP18>();
-        player.AddItem(ItemType.KeycardGuard);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Painkillers);
-        player.AddItem(ItemType.ArmorCombat);
-        player.AddItem(ItemType.Radio);
-        player.SetAmmo(AmmoType.Nato9,110);
+        [AmmoType.Nato9] = 110,
+    };
+    protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
+    protected override string SpawnCustomInfo => "Security Team Guard";
 
-        player.Position = MapFlags.FirstTeamSpawnPoint;
-            
-        player.SetCustomInfo("Security Team Guard");
-    }
 }

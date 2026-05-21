@@ -23,35 +23,25 @@ public class FifthistPriest : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.FifthistPriest;
     protected override CTeam Team { get; set; } = CTeam.Fifthists;
     protected override string UniqueRoleKey { get; set; } =  "F_Priest";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Tutorial;
+    protected override float? SpawnMaxHealth => 555f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunSCP127,
+        ItemType.ArmorHeavy,
+        typeof(KeycardFifthistPriest),
+        ItemType.SCP500,
+        ItemType.Adrenaline,
+        ItemType.GrenadeHE,
+    ];
+    protected override Vector3? SpawnPosition => new Vector3(124f, 289f, 21f);
+    protected override string SpawnCustomInfo => "<color=#FF0090>Fifthist Priest</color>";
 
     private CoroutineHandle _auraHandle;
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-
-        player!.Role.Set(RoleTypeId.Tutorial);
-        int maxHealth = 555;
-
-        player.UniqueRole = UniqueRoleKey;
         player.Scale = new Vector3(1.1f, 1.1f, 1.1f);
-        CustomInfoDisplay.Apply(player, "<color=#FF0090>Fifthist Priest</color>");
-        player.MaxHealth = maxHealth;
-        player.Health = maxHealth;
-
-        Room spawnRoom = Room.Get(RoomType.Surface);
-        Vector3 offset = Vector3.zero;
-        player.Position = new Vector3(124f, 289f, 21f);
-        // player.Rotation = spawnRoom.Rotation;
-
-        player.ClearInventory();
-        Log.Debug("Giving Items to F_Priest");
-        player.AddItem(ItemType.GunSCP127);
-        player.AddItem(ItemType.ArmorHeavy);
-        CItem.Get<KeycardFifthistPriest>()?.Give(player);
-        player.AddItem(ItemType.SCP500);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.GrenadeHE);
 
         try
         {
@@ -105,11 +95,11 @@ public class FifthistPriest : CRole
         }
     }
 
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         if (_auraHandle.IsRunning)
             Timing.KillCoroutines(_auraHandle);
 
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 }

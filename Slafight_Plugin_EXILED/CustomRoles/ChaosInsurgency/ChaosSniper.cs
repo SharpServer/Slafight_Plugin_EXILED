@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -15,24 +16,20 @@ public class ChaosSniper : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.ChaosSniper;
     protected override CTeam Team { get; set; } = CTeam.ChaosInsurgency;
     protected override string UniqueRoleKey { get; set; } = "ChaosSniper";
-
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosRepressor;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.KeycardChaosInsurgency,
+        ItemType.Medkit,
+        ItemType.Adrenaline,
+        ItemType.ArmorCombat,
+        typeof(GunSL8),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.ChaosRepressor);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        
-        player.ClearInventory();
-        player.GiveCItem<GunSL8>();
-        player.AddItem(ItemType.KeycardChaosInsurgency);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.ArmorCombat);
-        
-        player.SetAmmo(AmmoType.Nato556, 100);
-            
-        player.SetCustomInfo("Chaos Insurgency Sniper");
-    }
+        [AmmoType.Nato556] = 100,
+    };
+    protected override string SpawnCustomInfo => "Chaos Insurgency Sniper";
+
 }

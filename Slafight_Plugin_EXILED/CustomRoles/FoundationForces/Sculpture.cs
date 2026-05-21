@@ -22,7 +22,6 @@ public class Sculpture : CRole
     {
         Exiled.Events.Handlers.Scp173.Blinking += OnBlinking;
         Exiled.Events.Handlers.Scp173.AddingObserver += OnObserving;
-        Exiled.Events.Handlers.Player.Hurting += OnNecking;
         base.RegisterEvents();
     }
 
@@ -30,7 +29,6 @@ public class Sculpture : CRole
     {
         Exiled.Events.Handlers.Scp173.Blinking -= OnBlinking;
         Exiled.Events.Handlers.Scp173.AddingObserver -= OnObserving;
-        Exiled.Events.Handlers.Player.Hurting -= OnNecking;
         base.UnregisterEvents();
     }
     
@@ -69,9 +67,8 @@ public class Sculpture : CRole
         }
     }
 
-    private void OnNecking(HurtingEventArgs ev)
+    protected override void OnRoleHurtingOthers(HurtingEventArgs ev)
     {
-        if (!Check(ev.Attacker)) return;
         if (ev.DamageHandler.Type == DamageType.Scp173 && ev.IsInstantKill)
         {
             ev.IsAllowed = false;
@@ -80,9 +77,9 @@ public class Sculpture : CRole
         }
     }
 
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         Exiled.API.Features.Cassie.Clear();
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 }

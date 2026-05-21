@@ -18,28 +18,27 @@ public class GoCMedic : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.GoCMedic;
     protected override CTeam Team { get; set; } = CTeam.GoC;
     protected override string UniqueRoleKey { get; set; } = "GoCMedic";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfSpecialist;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunE11SR,
+        ItemType.KeycardMTFOperative,
+        ItemType.SCP500,
+        ItemType.Radio,
+        typeof(AdvancedMedkit),
+        typeof(AdvancedMedkit),
+        typeof(AdvancedMedkit),
+        typeof(ArmorInfantry),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfSpecialist);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.AddItem(ItemType.GunE11SR);
-        player.AddItem(ItemType.KeycardMTFOperative);
-        CItem.Get<AdvancedMedkit>()?.Give(player);
-        CItem.Get<AdvancedMedkit>()?.Give(player);
-        CItem.Get<AdvancedMedkit>()?.Give(player);
-        player.AddItem(ItemType.SCP500);
-        player.AddItem(ItemType.Radio);
-        CItem.Get<ArmorInfantry>()?.Give(player);
-            
-        player.SetAmmo(AmmoType.Nato556,140);
+        [AmmoType.Nato556] = 140,
+    };
+    protected override string SpawnCustomInfo => "Global Occult Collision: Broken Dagger Medic";
 
-        //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
-        player.SetCustomInfo("Global Occult Collision: Broken Dagger Medic");
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
+    {
         Timing.RunCoroutine(Coroutine(player));
     }
     

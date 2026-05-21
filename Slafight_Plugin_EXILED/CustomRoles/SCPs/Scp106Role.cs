@@ -80,9 +80,9 @@ public class Scp106Role : CRole
         }
     }
     
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         CassieHelper.AnnounceTermination(ev, "SCP 1 0 6", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 }

@@ -19,18 +19,17 @@ public class CandyResearcher : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.CandyResearcher;
     protected override CTeam Team { get; set; } = CTeam.Scientists;
     protected override string UniqueRoleKey { get; set; } = "CandyResearcher";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scientist;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.KeycardScientist,
+        ItemType.SCP330,
+    ];
+    protected override string SpawnCustomInfo => "Candy Researcher";
 
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Scientist);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.AddItem(ItemType.KeycardScientist);
-        player.AddItem(ItemType.SCP330);  // 明示的にバッグ追加
-
         Timing.CallDelayed(0.02f, () =>
         {
             if (Scp330Bag.TryGetBag(player.ReferenceHub, out var bag))
@@ -52,7 +51,5 @@ public class CandyResearcher : CRole
         
         Door.Get(DoorType.Scp330).IsOpen = true;
         player.Position = Door.Get(DoorType.Scp330).Position + (Vector3.up * 0.8f);
-            
-        player.SetCustomInfo("Candy Researcher");
     }
 }

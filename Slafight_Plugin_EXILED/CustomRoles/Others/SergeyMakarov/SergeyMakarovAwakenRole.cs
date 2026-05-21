@@ -51,12 +51,12 @@ public class SergeyMakarovAwakenRole : CRole
         });
     }
 
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         CreateAndPlayAudio("FemurBreaker.ogg", "SergeyVoice", Vector3.zero, true, null, false, 999999999, 0);
         Timing.CallDelayed(3,
             () => Exiled.API.Features.Cassie.MessageTranslated("Anomaly It is successfully terminated.",
                 "「霊的実体「セルゲイ・マカロフ」は終了されました」", true));
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 }

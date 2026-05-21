@@ -53,7 +53,7 @@ public class Scp079Role : CRole
         }
     }
     
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         if (MapFlags.IsOverrideActivated && ev.DamageHandler.Type is DamageType.Warhead)
         {
@@ -62,7 +62,7 @@ public class Scp079Role : CRole
         }
         if (ev.Attacker is not null)
             CassieHelper.AnnounceTermination(ev, "SCP 0 7 9", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 
     private static void OnGenerated(GeneratorActivatingEventArgs ev)

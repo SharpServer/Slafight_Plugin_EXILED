@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using MEC;
@@ -17,25 +18,25 @@ public class SecurityChief : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SecurityChief;
     protected override CTeam Team { get; set; } = CTeam.Guards;
     protected override string UniqueRoleKey { get; set; } = "SecurityChief";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.FacilityGuard;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.Medkit,
+        ItemType.Medkit,
+        ItemType.ArmorCombat,
+        ItemType.Radio,
+        typeof(KeycardSecurityChief),
+        typeof(GunFSP18),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.FacilityGuard);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        Log.Debug("Giving Items to SecurityChief");
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.ArmorCombat);
-        player.AddItem(ItemType.Radio);
-        CItem.Get<KeycardSecurityChief>()?.Give(player);
-        CItem.Get<GunFSP18>()?.Give(player);
-        player.SetAmmo(AmmoType.Nato9,130);
-            
-        player.SetCustomInfo("Security Chief");
+        [AmmoType.Nato9] = 130,
+    };
+    protected override string SpawnCustomInfo => "Security Chief";
+
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
+    {
         Timing.CallDelayed(0.05f, () =>
         {
             player.Position = Room.Get(RoomType.EzChef).WorldPosition(Vector3.up * 0.75f);

@@ -3,6 +3,7 @@ using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
+using Exiled.Events.EventArgs.Map;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp0492;
 using MEC;
@@ -33,16 +34,12 @@ public class Scp3005Role : CRole
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Player.Hurting += OnHurting;
-        Exiled.Events.Handlers.Player.SpawningRagdoll += CancelRagdoll;
         Exiled.Events.Handlers.Scp0492.ConsumedCorpse += OnConsumed;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Player.Hurting -= OnHurting;
-        Exiled.Events.Handlers.Player.SpawningRagdoll -= CancelRagdoll;
         Exiled.Events.Handlers.Scp0492.ConsumedCorpse -= OnConsumed;
         base.UnregisterEvents();
     }
@@ -69,7 +66,7 @@ public class Scp3005Role : CRole
         Timing.RunCoroutine(Scp3005Coroutine(player));
     }
     
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         if (FacilityControlRoom.IsAntiMemeProtocolActive && ev.Attacker is null)
         {
@@ -79,12 +76,12 @@ public class Scp3005Role : CRole
         {
             CassieHelper.AnnounceTermination(ev, "SCP 3 0 0 5", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
         }
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 
-    private void OnHurting(HurtingEventArgs ev)
+    protected override void OnRoleHurting(HurtingEventArgs ev)
     {
-        if (ev.Player?.GetCustomRole() == this.CRoleTypeId && ev.Attacker != null && ev.Attacker?.GetCustomRole() != this.CRoleTypeId)
+        if (ev.Attacker != null && ev.Attacker?.GetCustomRole() != this.CRoleTypeId)
         {
             var hasGoggles = ev.Attacker != null && ev.Attacker.Items
                 .OfType<Scp1344>()
@@ -107,9 +104,8 @@ public class Scp3005Role : CRole
         Timing.CallDelayed(0.1f, () => target?.Position = ev.Ragdoll.Position + Vector3.up * 0.15f);
     }
 
-    private void CancelRagdoll(SpawningRagdollEventArgs ev)
+    protected override void OnRoleSpawningRagdoll(SpawningRagdollEventArgs ev)
     {
-        if (!Check(ev.Player)) return;
         ev.IsAllowed = false;
     }
     

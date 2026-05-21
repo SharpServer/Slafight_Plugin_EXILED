@@ -15,16 +15,13 @@ public class HideWatch : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.HideWatch;
     protected override CTeam Team { get; set; } = CTeam.Others;
     protected override string UniqueRoleKey { get; set; } = "HideWatch";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Overwatch;
+    protected override string SpawnCustomInfo => $"<color={ServerColors.Cyan}>THE HIDEWATCH</color>";
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Overwatch);
-        player.UniqueRole = UniqueRoleKey;
-
         Timing.CallDelayed(0.05f, () =>
         {
-            player.SetCustomInfo($"<color={ServerColors.Cyan}>THE HIDEWATCH</color>");
             player.ChangeAppearance(RoleTypeId.Spectator);
         });
     }

@@ -40,7 +40,6 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
         Exiled.Events.Handlers.Scp096.Enraging += OnEnraging;
         Exiled.Events.Handlers.Scp096.AddingTarget += OnTargetAdded;
         Exiled.Events.Handlers.Scp096.CalmingDown += OnCalming;
-        Exiled.Events.Handlers.Player.Hurting += OnTouchedEnemy;
         base.RegisterEvents();
     }
 
@@ -50,11 +49,10 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
         Exiled.Events.Handlers.Scp096.Enraging -= OnEnraging;
         Exiled.Events.Handlers.Scp096.AddingTarget -= OnTargetAdded;
         Exiled.Events.Handlers.Scp096.CalmingDown -= OnCalming;
-        Exiled.Events.Handlers.Player.Hurting -= OnTouchedEnemy;
         base.UnregisterEvents();
     }
     
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         if (ev.Player != null)
         {
@@ -62,7 +60,7 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
             InTryNotToCryAnim.Remove(ev.Player);  // ★安全クリーンアップ
         }
         CassieHelper.AnnounceTermination(ev, "SCP 0 9 6", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 
     private void StartAnger(Player player)
@@ -114,9 +112,7 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
         player.HumeShieldRegenerationMultiplier = 0.35f;
         ChangeSpeedState(player, false);
         
-        
         player.Transform.eulerAngles = new Vector3(0, -90, 0);
-        
         ShyGuyPositions[player] = player.Position;
         
         Log.Debug("Scp096: Anger was Spawned!");
@@ -160,9 +156,9 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
         ChangeSpeedState(ev.Player, false);
     }
     
-    private void OnTouchedEnemy(HurtingEventArgs ev)
+    protected override void OnRoleHurtingOthers(HurtingEventArgs ev)
     {
-        if (ev.Attacker != null && ev.Attacker.GetCustomRole() == CRoleTypeId.Scp096Anger)
+        if (ev.Attacker != null)
         {
             ev.Amount = 999999;
             ev.Attacker.ArtificialHealth += 25;

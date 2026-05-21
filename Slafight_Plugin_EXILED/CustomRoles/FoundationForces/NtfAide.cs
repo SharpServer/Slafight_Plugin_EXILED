@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -13,28 +14,23 @@ public class NtfAide : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.NtfLieutenant;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "NtfAide";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfSergeant;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunE11SR,
+        ItemType.KeycardMTFCaptain,
+        ItemType.Adrenaline,
+        ItemType.Adrenaline,
+        ItemType.Medkit,
+        ItemType.GrenadeFlash,
+        ItemType.ArmorHeavy,
+        ItemType.Radio,
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfSergeant);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        Log.Debug("Giving Items to NtfAide");
-        player.AddItem(ItemType.GunE11SR);
-        player.AddItem(ItemType.KeycardMTFCaptain);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.GrenadeFlash);
-        player.AddItem(ItemType.ArmorHeavy);
-        player.AddItem(ItemType.Radio);
-        
-        player.SetAmmo(AmmoType.Nato9, 130);
+        [AmmoType.Nato9] = 130,
+    };
+    protected override string SpawnCustomInfo => "Nine-tailed Fox Lieutenant";
 
-        //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Nine-tailed Fox Aide");
-        CustomInfoDisplay.Apply(player, "Nine-tailed Fox Lieutenant");
-    }
 }

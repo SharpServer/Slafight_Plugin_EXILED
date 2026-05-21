@@ -15,45 +15,21 @@ public class Surveillance : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Surveillance;
     protected override CTeam Team { get; set; } = CTeam.Scientists;
     protected override string UniqueRoleKey { get; set; } = "Surveillance";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp079;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override bool SpawnClearsInventory => true;
+    protected override string SpawnCustomInfo => "Surveillance";
 
-    public override void RegisterEvents()
+    protected override void OnRoleReceivingVoiceMessage(ReceivingVoiceMessageEventArgs ev)
     {
-        Exiled.Events.Handlers.Player.ReceivingVoiceMessage += TrashMessages;
-        Exiled.Events.Handlers.Player.VoiceChatting += DenySpeakInScpChat;
-        base.RegisterEvents();
-    }
-
-    public override void UnregisterEvents()
-    {
-        Exiled.Events.Handlers.Player.ReceivingVoiceMessage -= TrashMessages;
-        Exiled.Events.Handlers.Player.VoiceChatting -= DenySpeakInScpChat;
-        base.UnregisterEvents();
-    }
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
-    {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Scp079);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-            
-        player.SetCustomInfo("Surveillance");
-    }
-
-    private void TrashMessages(ReceivingVoiceMessageEventArgs ev)
-    {
-        if (!Check(ev.Player)) return;
         if (ev.VoiceMessage.Channel == VoiceChatChannel.ScpChat)
         {
             ev.IsAllowed = false;
         }
     }
 
-    private void DenySpeakInScpChat(VoiceChattingEventArgs ev)
+    protected override void OnRoleVoiceChatting(VoiceChattingEventArgs ev)
     {
-        if (!Check(ev.Player)) return;
         if (ev.VoiceMessage.Channel == VoiceChatChannel.ScpChat)
         {
             ev.IsAllowed = false;

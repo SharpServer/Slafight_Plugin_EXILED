@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -14,28 +15,23 @@ public class HdCommander : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.HdCommander;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "HdCommander";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfSergeant;
+    protected override float? SpawnMaxHealth => 125f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.KeycardMTFOperative,
+        ItemType.Adrenaline,
+        ItemType.Medkit,
+        ItemType.GrenadeHE,
+        ItemType.GrenadeHE,
+        ItemType.Radio,
+        typeof(ArmorVip),
+        typeof(GunN7CR),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfSergeant);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 125;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        Log.Debug("Giving Items to HdCommander");
-        player.AddItem(ItemType.KeycardMTFOperative);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.GrenadeHE);
-        player.AddItem(ItemType.GrenadeHE);
-        player.AddItem(ItemType.Radio);
-        CItem.Get<ArmorVip>()?.Give(player);
-        CItem.Get<GunN7CR>()?.Give(player);
-            
-        player.SetAmmo(AmmoType.Nato556,200);
+        [AmmoType.Nato556] = 200,
+    };
+    protected override string SpawnCustomInfo => "<color=#727472>Hammer Down Commander</color>";
 
-        //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Commander");
-        CustomInfoDisplay.Apply(player, "<color=#727472>Hammer Down Commander</color>");
-    }
 }

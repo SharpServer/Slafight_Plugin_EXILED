@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -15,22 +16,21 @@ public class ZoneManager : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.ZoneManager;
     protected override CTeam Team { get; set; } = CTeam.Scientists;
     protected override string UniqueRoleKey { get; set; } = "ZoneManager";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scientist;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunFSP9,
+        ItemType.KeycardZoneManager,
+        ItemType.KeycardScientist,
+        ItemType.Medkit,
+        ItemType.ArmorLight,
+        ItemType.Radio,
+    ];
+    protected override string SpawnCustomInfo => "Zone Manager";
 
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Scientist);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        Log.Debug("Giving Items to ZoneManager");
-        player.AddItem(ItemType.GunFSP9);
-        player.AddItem(ItemType.KeycardZoneManager);
-        player.AddItem(ItemType.KeycardScientist);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.ArmorLight);
-        player.AddItem(ItemType.Radio);
         var selectZone = Random.Range(0,2);
         switch (selectZone)
         {
@@ -49,7 +49,5 @@ public class ZoneManager : CRole
                 break;
             }
         }
-            
-        player.SetCustomInfo("Zone Manager");
     }
 }

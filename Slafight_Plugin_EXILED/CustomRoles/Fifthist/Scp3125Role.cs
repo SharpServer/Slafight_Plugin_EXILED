@@ -28,20 +28,6 @@ public class Scp3125Role : CRole
     protected override CTeam Team { get; set; } = CTeam.Fifthists;
     protected override string UniqueRoleKey { get; set; } = "SCP-3125";
 
-    public override void RegisterEvents()
-    {
-        Exiled.Events.Handlers.Player.Hurting += OnHurting;
-        Exiled.Events.Handlers.Player.SpawningRagdoll += CancelRagdoll;
-        base.RegisterEvents();
-    }
-
-    public override void UnregisterEvents()
-    {
-        Exiled.Events.Handlers.Player.Hurting -= OnHurting;
-        Exiled.Events.Handlers.Player.SpawningRagdoll -= CancelRagdoll;
-        base.UnregisterEvents();
-    }
-
     public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
     {
         base.SpawnRole(player, roleSpawnFlags);
@@ -72,7 +58,7 @@ public class Scp3125Role : CRole
         });
     }
     
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         if (FacilityControlRoom.IsAntiMemeProtocolActive && ev.Attacker is null)
         {
@@ -82,26 +68,21 @@ public class Scp3125Role : CRole
         {
             CassieHelper.AnnounceTermination(ev, "SCP 3 1 2 5", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
         }
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 
-    private void OnHurting(HurtingEventArgs ev)
+    protected override void OnRoleHurtingOthers(HurtingEventArgs ev)
     {
-        if (Check(ev.Attacker))
-        {
-            ev.Amount = 55555f;
-            return;
-        }
-
-        if (Check(ev.Player))
-        {
-            ev.IsAllowed = false;
-        }
+        ev.Amount = 55555f;
     }
 
-    private void CancelRagdoll(SpawningRagdollEventArgs ev)
+    protected override void OnRoleHurting(HurtingEventArgs ev)
     {
-        if (!Check(ev.Player)) return;
+        ev.IsAllowed = false;
+    }
+
+    protected override void OnRoleSpawningRagdoll(SpawningRagdollEventArgs ev)
+    {
         ev.IsAllowed = false;
     }
 

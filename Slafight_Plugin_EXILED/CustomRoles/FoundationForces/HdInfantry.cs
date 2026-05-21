@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -14,28 +15,23 @@ public class HdInfantry : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.HdInfantry;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "HdInfantry";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfPrivate;
+    protected override float? SpawnMaxHealth => 110f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunCrossvec,
+        ItemType.KeycardMTFOperative,
+        ItemType.Adrenaline,
+        ItemType.Medkit,
+        ItemType.GrenadeFlash,
+        ItemType.GrenadeHE,
+        ItemType.Radio,
+        typeof(ArmorInfantry),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfPrivate);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 110;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        Log.Debug("Giving Items to HdInfantry");
-        player.AddItem(ItemType.GunCrossvec);
-        player.AddItem(ItemType.KeycardMTFOperative);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.GrenadeFlash);
-        player.AddItem(ItemType.GrenadeHE);
-        player.AddItem(ItemType.Radio);
-        CItem.Get<ArmorInfantry>()?.Give(player);
-            
-        player.SetAmmo(AmmoType.Nato9,140);
+        [AmmoType.Nato9] = 140,
+    };
+    protected override string SpawnCustomInfo => "<color=#727472>Hammer Down Infantry</color>";
 
-        //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
-        CustomInfoDisplay.Apply(player, "<color=#727472>Hammer Down Infantry</color>");
-    }
 }

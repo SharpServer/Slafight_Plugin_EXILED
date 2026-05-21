@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Features;
 using InventorySystem.Items.Usables.Scp330;
 using PlayerRoles;
@@ -15,26 +16,23 @@ public class ChaosPenal : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.ChaosPenal;
     protected override CTeam Team { get; set; } = CTeam.ChaosInsurgency;
     protected override string UniqueRoleKey { get; set; } = "ChaosBreaker";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosConscript;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.ArmorCombat,
+        ItemType.GrenadeHE,
+        ItemType.GrenadeHE,
+        ItemType.GrenadeHE,
+        ItemType.SCP207,
+        ItemType.AntiSCP207,
+        typeof(KeycardConscripts),
+    ];
+    protected override string SpawnCustomInfo => "Chaos Insurgency Penal";
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void GiveCustomItems(Player player)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.ChaosConscript);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        
-        player.ClearInventory();
-        player.AddItem(ItemType.ArmorCombat);
         player.SetCategoryLimit(ItemCategory.Grenade, 4);
-        player.AddItem(ItemType.GrenadeHE);
-        player.AddItem(ItemType.GrenadeHE);
-        player.AddItem(ItemType.GrenadeHE);
-        player.AddItem(ItemType.SCP207);
-        player.AddItem(ItemType.AntiSCP207);
-        CItem.Get<KeycardConscripts>()?.Give(player); // Conscripts Card
         player.TryAddCandy(CandyKindID.Pink);
-            
-        player.SetCustomInfo("Chaos Insurgency Penal");
     }
 }

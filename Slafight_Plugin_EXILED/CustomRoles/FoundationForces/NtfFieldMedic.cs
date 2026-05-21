@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -18,26 +19,22 @@ public class NtfFieldMedic : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.NtfFieldMedic;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "NtfFieldMedic";
-
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfPrivate;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunCrossvec,
+        ItemType.KeycardMTFOperative,
+        ItemType.ArmorCombat,
+        ItemType.Radio,
+        ItemType.Flashlight,
+        typeof(S41MedicalPistol),
+        typeof(AdvancedMedkit),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfPrivate);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
+        [AmmoType.Nato9] = 120,
+    };
+    protected override string SpawnCustomInfo => "Nine-tailed Fox Field Medic";
 
-        player.AddItem(ItemType.GunCrossvec);
-        player.GiveCItem<S41MedicalPistol>();
-        player.AddItem(ItemType.KeycardMTFOperative);
-        player.AddItem(ItemType.ArmorCombat);
-        player.GiveCItem<AdvancedMedkit>();
-        player.AddItem(ItemType.Radio);
-        player.AddItem(ItemType.Flashlight);
-
-        player.SetAmmo(AmmoType.Nato9, 120);
-
-        CustomInfoDisplay.Apply(player, "Nine-tailed Fox Field Medic");
-    }
 }

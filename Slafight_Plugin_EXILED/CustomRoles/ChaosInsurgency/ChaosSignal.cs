@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -15,26 +16,25 @@ public class ChaosSignal : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.ChaosSignal;
     protected override CTeam Team { get; set; } = CTeam.ChaosInsurgency;
     protected override string UniqueRoleKey { get; set; } = "ChaosSignal";
-
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosRifleman;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.KeycardChaosInsurgency,
+        ItemType.Medkit,
+        ItemType.Painkillers,
+        ItemType.ArmorCombat,
+        ItemType.GunAK,
+        typeof(SNAV300),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.ChaosRifleman);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        
-        player.ClearInventory();
+        [AmmoType.Nato762] = 120,
+    };
+    protected override string SpawnCustomInfo => "Chaos Insurgency Signal";
+
+    protected override void OnRoleSpawnStarting(Player player, RoleSpawnFlags roleSpawnFlags)
+    {
         player.SetCategoryLimit(ItemCategory.Radio, 2);
-        player.AddItem(ItemType.KeycardChaosInsurgency);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Painkillers);
-        player.AddItem(ItemType.ArmorCombat);
-        player.AddItem(ItemType.GunAK);
-        CItem.Get<SNAV300>()?.Give(player);
-        
-        player.SetAmmo(AmmoType.Nato762, 120);
-            
-        player.SetCustomInfo("Chaos Insurgency Signal");
     }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CustomPlayerEffects;
 using Exiled.API.Features;
 using MEC;
@@ -16,28 +17,24 @@ public class HideAdmin : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.HideAdmin;
     protected override CTeam Team { get; set; } = CTeam.Others;
     protected override string UniqueRoleKey { get; set; } = "HideAdmin";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Tutorial;
+    protected override float? SpawnMaxHealth => 99999f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        typeof(CloakGenerator),
+        ItemType.KeycardO5,
+    ];
+    protected override string SpawnCustomInfo => "<color=#FF1493>THE ADMINISTRATOR</color>";
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Tutorial);
-        player.UniqueRole = UniqueRoleKey;
-
-        const int maxHealth = 99999;
-
         Timing.CallDelayed(0.05f, () =>
         {
-            player.SetCustomInfo("<color=#FF1493>THE ADMINISTRATOR</color>");
-            player.MaxHealth = maxHealth;
-            player.Health = maxHealth;
             player.EnableEffect<DamageReduction>(255);
             player.EnableEffect<Fade>(255);
             player.EnableEffect<NightVision>(255);
             player.IsBypassModeEnabled = true;
             player.IsNoclipPermitted = true;
-
-            CItem.Get<CloakGenerator>()?.Give(player);
-            player.AddItem(ItemType.KeycardO5);
             player.IsSpectatable = false;
         });
     }

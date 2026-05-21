@@ -81,7 +81,7 @@ public static class ServerSpecificsHandler
 
             if (ci is CItemHybrid hybrid)
             {
-                hybrid.SwitchMode(item.Serial, player);
+                hybrid.TrySwitchModeFromInput(item.Serial, player);
             }
             else
             {

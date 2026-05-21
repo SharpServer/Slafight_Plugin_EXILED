@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Pickups.Projectiles;
@@ -18,32 +19,26 @@ public class ChaosCommando : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.ChaosCommando;
     protected override CTeam Team { get; set; }  = CTeam.ChaosInsurgency;
     protected override string UniqueRoleKey { get; set; } = "CI_Commando";
-
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosRepressor;
+    protected override float? SpawnMaxHealth => 120f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.KeycardChaosInsurgency,
+        ItemType.Adrenaline,
+        ItemType.Medkit,
+        typeof(AdvancedMedkit),
+        typeof(ArmorInfantry),
+        typeof(GunSuperLogicer),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.ChaosRepressor);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 120;
-        player.Health = player.MaxHealth;
-        
-        player.ClearInventory();
-        Log.Debug("Giving Items to ChaosCommando");
-        player.AddItem(ItemType.KeycardChaosInsurgency);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.Medkit);
-        CItem.Get<AdvancedMedkit>()?.Give(player);
-        CItem.Get<ArmorInfantry>()?.Give(player);
-        CItem.Get<GunSuperLogicer>()?.Give(player);
-        
-        player.SetAmmo(AmmoType.Nato762, 130);
-            
-        player.SetCustomInfo("Chaos Insurgency Commando");
-    }
+        [AmmoType.Nato762] = 130,
+    };
+    protected override string SpawnCustomInfo => "Chaos Insurgency Commando";
 
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         Projectile.CreateAndSpawn(ProjectileType.FragGrenade,ev.Player.Position + Vector3.up * 0.5f);
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 }

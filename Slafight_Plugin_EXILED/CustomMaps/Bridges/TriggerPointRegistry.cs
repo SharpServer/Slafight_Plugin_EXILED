@@ -13,16 +13,16 @@ public class TriggerPointRegistry : SlafightLabApiHandler
     protected override void RegisterEvents(EventSubscriptionScope subscriptions)
     {
         subscriptions.Add(
-            () => LabApi.Events.Handlers.ServerEvents.RoundStarted += OnRoundStarted,
-            () => LabApi.Events.Handlers.ServerEvents.RoundStarted -= OnRoundStarted);
+            () => LabApi.Events.Handlers.ServerEvents.WaitingForPlayers += OnWaitingForPlayers,
+            () => LabApi.Events.Handlers.ServerEvents.WaitingForPlayers -= OnWaitingForPlayers);
     }
 
-    private static void OnRoundStarted()
+    private static void OnWaitingForPlayers()
     {
         Logger.Info("LabApi Loader: Green");
         MapFlags.ResetTriggerPoints();
 
-        Timing.CallDelayed(2.0f, RegisterTriggerPoints);
+        Timing.CallDelayed(5.0f, RegisterTriggerPoints);
     }
 
     private static void RegisterTriggerPoints()

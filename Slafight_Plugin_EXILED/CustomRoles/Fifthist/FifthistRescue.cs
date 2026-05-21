@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -15,32 +16,22 @@ public class FifthistRescure : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.FifthistRescure;
     protected override CTeam Team { get; set; } = CTeam.Fifthists;
     protected override string UniqueRoleKey { get; set; } = "FIFTHIST";
-
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Tutorial;
+    protected override float? SpawnMaxHealth => 150f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunAK,
+        ItemType.ArmorHeavy,
+        typeof(KeycardFifthist),
+        ItemType.Medkit,
+        ItemType.Adrenaline,
+        ItemType.SCP500,
+        ItemType.GrenadeHE,
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-
-        player!.Role.Set(RoleTypeId.Tutorial);
-        int maxHealth = 150;
-
-        player.UniqueRole = UniqueRoleKey;
-        CustomInfoDisplay.Apply(player, "<color=#FF0090>Fifthist Rescure</color>");
-        player.MaxHealth = maxHealth;
-        player.Health = maxHealth;
-
-        Room spawnRoom = Room.Get(RoomType.Surface);
-        Vector3 offset = Vector3.zero;
-        player.Position = new Vector3(124f, 289f, 21f);
-
-        player.ClearInventory();
-        Log.Debug("Giving Items to Fifthist");
-        player.AddItem(ItemType.GunAK);
-        player.AddItem(ItemType.ArmorHeavy);
-        CItem.Get<KeycardFifthist>()?.Give(player);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.SCP500);
-        player.AddItem(ItemType.GrenadeHE);
-        player.SetAmmo(AmmoType.Nato762,180);
-    }
+        [AmmoType.Nato762] = 180,
+    };
+    protected override Vector3? SpawnPosition => new Vector3(124f, 289f, 21f);
+    protected override string SpawnCustomInfo => "<color=#FF0090>Fifthist Rescure</color>";
 }

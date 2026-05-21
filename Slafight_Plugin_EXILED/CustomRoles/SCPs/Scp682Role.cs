@@ -28,18 +28,6 @@ public class Scp682Role : CRole
     
     private static readonly Dictionary<Player, float> SpeedLevels = new();
     
-    public override void RegisterEvents()
-    {
-        Exiled.Events.Handlers.Player.Hurting += Hurting;
-        base.RegisterEvents();
-    }
-
-    public override void UnregisterEvents()
-    {
-        Exiled.Events.Handlers.Player.Hurting -= Hurting;
-        base.UnregisterEvents();
-    }
-    
     public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
     {
         base.SpawnRole(player, roleSpawnFlags);
@@ -105,20 +93,18 @@ public class Scp682Role : CRole
         }
     }
 
-    private void Hurting(HurtingEventArgs ev)
+    protected override void OnRoleHurtingOthers(HurtingEventArgs ev)
     {
-        if (ev.Attacker != null &&
-            ev.Attacker.GetCustomRole() == CRoleTypeId.Scp682 &&
-            SpeedLevels.TryGetValue(ev.Attacker, out float level))
+        if (ev.Attacker != null && SpeedLevels.TryGetValue(ev.Attacker, out float level))
         {
             ev.Amount *= level;
             SpeedLevels[ev.Attacker] = level + ev.Amount / 10000;
         }
     }
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         SpeedLevels.Remove(ev.Player);
         CassieHelper.AnnounceTermination(ev, "SCP 6 8 2", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 }

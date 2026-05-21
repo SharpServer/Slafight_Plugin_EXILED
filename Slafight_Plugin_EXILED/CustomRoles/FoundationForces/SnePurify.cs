@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -14,27 +15,22 @@ public class SnePurify : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SnePurify;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "SnePurify";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfPrivate;
+    protected override float? SpawnMaxHealth => 125f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.SCP1509,
+        ItemType.KeycardMTFOperative,
+        ItemType.Adrenaline,
+        ItemType.Medkit,
+        ItemType.GrenadeFlash,
+        ItemType.GrenadeHE,
+        ItemType.Radio,
+        ItemType.ArmorCombat,
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfPrivate);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 125;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.AddItem(ItemType.SCP1509);
-        player.AddItem(ItemType.KeycardMTFOperative);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.GrenadeFlash);
-        player.AddItem(ItemType.GrenadeHE);
-        player.AddItem(ItemType.Radio);
-        player.AddItem(ItemType.ArmorCombat);
-            
-        player.SetAmmo(AmmoType.Nato9,120);
-
-        //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
-        player.SetCustomInfo("<color=#FF1493>See No Evil Purify</color>");
-    }
+        [AmmoType.Nato9] = 120,
+    };
+    protected override string SpawnCustomInfo => "<color=#FF1493>See No Evil Purify</color>";
 }

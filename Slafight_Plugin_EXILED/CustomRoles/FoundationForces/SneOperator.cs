@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -15,27 +16,22 @@ public class SneOperator : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SneOperator;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "SneOperator";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfCaptain;
+    protected override float? SpawnMaxHealth => 150f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunFRMG0,
+        ItemType.KeycardMTFCaptain,
+        typeof(SerumC),
+        typeof(AntiMemeGoggle),
+        typeof(NeutralizeGrenade),
+        typeof(NeutralizeGrenade),
+        ItemType.Radio,
+        ItemType.ArmorHeavy,
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfCaptain);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 150;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.AddItem(ItemType.GunFRMG0);
-        player.AddItem(ItemType.KeycardMTFCaptain);
-        CItem.Get<SerumC>()?.Give(player);
-        CItem.Get<AntiMemeGoggle>()?.Give(player);
-        CItem.Get<NeutralizeGrenade>()?.Give(player);
-        CItem.Get<NeutralizeGrenade>()?.Give(player);
-        player.AddItem(ItemType.Radio);
-        player.AddItem(ItemType.ArmorHeavy);
-            
-        player.SetAmmo(AmmoType.Nato556,200);
-
-        //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
-        player.SetCustomInfo("<color=#FF1493>See No Evil Operator</color>");
-    }
+        [AmmoType.Nato556] = 200,
+    };
+    protected override string SpawnCustomInfo => "<color=#FF1493>See No Evil Operator</color>";
 }

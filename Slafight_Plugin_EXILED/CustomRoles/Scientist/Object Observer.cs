@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
@@ -16,23 +17,14 @@ public class ObjectObserver : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.ObjectObserver;
     protected override CTeam Team { get; set; } = CTeam.Scientists;
     protected override string UniqueRoleKey { get; set; } = "ObjectObserver";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
-    {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Scientist);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        Log.Debug("Giving Items to ObjectObserver");
-        player.AddItem(ItemType.KeycardScientist);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.ArmorLight);
-        var pos = Door.Get(DoorType.Scp173Connector).Position;
-        pos += new Vector3(0f,0.35f,0f);
-        player.Position = pos;
-            
-        player.SetCustomInfo("Object Observer");
-    }
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scientist;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.KeycardScientist,
+        ItemType.Medkit,
+        ItemType.ArmorLight,
+    ];
+    protected override Vector3? SpawnPosition => Door.Get(DoorType.Scp173Connector).Position + new Vector3(0f, 0.35f, 0f);
+    protected override string SpawnCustomInfo => "Object Observer";
 }

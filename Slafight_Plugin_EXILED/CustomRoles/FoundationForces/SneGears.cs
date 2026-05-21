@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -15,26 +16,21 @@ public class SneGears : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SneGears;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "SneGears";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfSergeant;
+    protected override float? SpawnMaxHealth => 125f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunE11SR,
+        ItemType.KeycardMTFOperative,
+        typeof(SerumC),
+        ItemType.Medkit,
+        typeof(AntiMemeGoggle),
+        ItemType.Radio,
+        ItemType.ArmorHeavy,
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfSergeant);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 125;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.AddItem(ItemType.GunE11SR);
-        player.AddItem(ItemType.KeycardMTFOperative);
-        CItem.Get<SerumC>()?.Give(player);
-        player.AddItem(ItemType.Medkit);
-        CItem.Get<AntiMemeGoggle>()?.Give(player);
-        player.AddItem(ItemType.Radio);
-        player.AddItem(ItemType.ArmorHeavy);
-            
-        player.SetAmmo(AmmoType.Nato556,140);
-
-        //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
-        player.SetCustomInfo("<color=#FF1493>See No Evil Gears</color>");
-    }
+        [AmmoType.Nato556] = 140,
+    };
+    protected override string SpawnCustomInfo => "<color=#FF1493>See No Evil Gears</color>";
 }

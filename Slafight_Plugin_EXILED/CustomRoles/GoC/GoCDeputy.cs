@@ -18,29 +18,27 @@ public class GoCDeputy : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.GoCDeputy;
     protected override CTeam Team { get; set; } = CTeam.GoC;
     protected override string UniqueRoleKey { get; set; } = "GoCDeputy";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfSergeant;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunCom45,
+        ItemType.GunE11SR,
+        ItemType.KeycardMTFOperative,
+        ItemType.Medkit,
+        ItemType.GrenadeHE,
+        ItemType.Radio,
+        typeof(FlashBangE),
+        typeof(ArmorInfantry),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfSergeant);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.AddItem(ItemType.GunCom45);
-        player.AddItem(ItemType.GunE11SR);
-        player.AddItem(ItemType.KeycardMTFOperative);
-        CItem.Get<FlashBangE>()?.Give(player);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.GrenadeHE);
-        player.AddItem(ItemType.Radio);
-        
-        CItem.Get<ArmorInfantry>()?.Give(player);
-            
-        player.SetAmmo(AmmoType.Nato556,140);
+        [AmmoType.Nato556] = 140,
+    };
+    protected override string SpawnCustomInfo => "Global Occult Collision: Broken Dagger Deputy";
 
-        //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
-        player.SetCustomInfo("Global Occult Collision: Broken Dagger Deputy");
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
+    {
         Timing.RunCoroutine(Coroutine(player));
     }
     

@@ -33,33 +33,34 @@ public class GoCHoundDog : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.GoCHoundDog;
     protected override CTeam Team { get; set; } = CTeam.GoC;
     protected override string UniqueRoleKey { get; set; } = "GoCHoundDog";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfSpecialist;
+    protected override float? SpawnMaxHealth => 120f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        typeof(ArmorVip),
+        typeof(GunSuperLogicer),
+        typeof(GunGoCRailgunFull),
+        typeof(CloakGenerator),
+        ItemType.Adrenaline,
+        ItemType.Medkit,
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfSpecialist);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 120;
-        player.Health = player.MaxHealth;
+        [AmmoType.Nato762] = 140,
+    };
+    protected override string SpawnCustomInfo => "Global Occult Collision: Hound Dog Mark II Combat Garment White Suit";
+
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
+    {
         player.CustomHumeShieldStat.MaxValue = 1500;
         player.CustomHumeShieldStat.CurValue = player.CustomHumeShieldStat.MaxValue;
         player.CustomHumeShieldStat.ShieldRegenerationMultiplier = 3.5f;
-        player.ClearInventory();
-        CItem.Get<ArmorVip>()?.Give(player);
-        CItem.Get<GunSuperLogicer>()?.Give(player);
-        CItem.Get<GunGoCRailgunFull>()?.Give(player);
-        CItem.Get<CloakGenerator>()?.Give(player);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.Medkit);
         player.IsBypassModeEnabled = true;
-            
-        player.SetAmmo(AmmoType.Nato762,140);
 
-        player.SetCustomInfo("Global Occult Collision: Hound Dog Mark II Combat Garment White Suit");
         Timing.RunCoroutine(Coroutine(player));
     }
 
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         var grenade = Pickup.CreateAndSpawn(ItemType.GrenadeHE, ev.Player.Position, Quaternion.identity);
         if (grenade is GrenadePickup grenadeBase)
@@ -67,24 +68,11 @@ public class GoCHoundDog : CRole
             grenadeBase.FuseTime = 0.01f;
         }
         
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 
-    public override void RegisterEvents()
+    protected override void OnRoleBeingHandcuffed(HandcuffingEventArgs ev)
     {
-        Exiled.Events.Handlers.Player.Handcuffing += OnCuffering;
-        base.RegisterEvents();
-    }
-
-    public override void UnregisterEvents()
-    {
-        Exiled.Events.Handlers.Player.Handcuffing -= OnCuffering;
-        base.UnregisterEvents();
-    }
-
-    private void OnCuffering(HandcuffingEventArgs ev)
-    {
-        if (!Check(ev.Target)) return;
         ev.Target.Kill("自爆機能による力");
         var grenade = Pickup.CreateAndSpawn(ItemType.GrenadeFlash, ev.Player.Position, Quaternion.identity);
         if (grenade is FlashbangProjectile grenadeBase)

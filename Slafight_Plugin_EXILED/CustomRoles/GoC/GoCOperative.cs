@@ -18,27 +18,26 @@ public class GoCOperative : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.GoCOperative;
     protected override CTeam Team { get; set; } = CTeam.GoC;
     protected override string UniqueRoleKey { get; set; } = "GoCOperative";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfPrivate;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunCrossvec,
+        ItemType.GunShotgun,
+        ItemType.KeycardMTFOperative,
+        ItemType.Medkit,
+        ItemType.Radio,
+        ItemType.ArmorCombat,
+        typeof(GoCRecruitPaper),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfPrivate);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.AddItem(ItemType.GunCrossvec);
-        player.AddItem(ItemType.GunShotgun);
-        player.AddItem(ItemType.KeycardMTFOperative);
-        player.AddItem(ItemType.Medkit);
-        CItem.Get<GoCRecruitPaper>()?.Give(player);
-        player.AddItem(ItemType.Radio);
-        player.AddItem(ItemType.ArmorCombat);
-            
-        player.SetAmmo(AmmoType.Nato9,140);
+        [AmmoType.Nato9] = 140,
+    };
+    protected override string SpawnCustomInfo => "Global Occult Collision: Broken Dagger Operative";
 
-        //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
-        player.SetCustomInfo("Global Occult Collision: Broken Dagger Operative");
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
+    {
         Timing.RunCoroutine(Coroutine(player));
     }
     

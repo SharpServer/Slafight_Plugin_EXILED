@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -15,25 +16,21 @@ public class ChaosTacticalUnit : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.ChaosTacticalUnit;
     protected override CTeam Team { get; set; } = CTeam.ChaosInsurgency;
     protected override string UniqueRoleKey { get; set; } = "ChaosTacticalUnit";
-
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosMarauder;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.KeycardChaosInsurgency,
+        ItemType.Medkit,
+        ItemType.Painkillers,
+        ItemType.ArmorCombat,
+        ItemType.GrenadeFlash,
+        typeof(GunTacticalRevolver),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.ChaosMarauder);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        
-        player.ClearInventory();
-        CItem.Get<GunTacticalRevolver>()?.Give(player);
-        player.AddItem(ItemType.KeycardChaosInsurgency);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Painkillers);
-        player.AddItem(ItemType.ArmorCombat);
-        player.AddItem(ItemType.GrenadeFlash);
-        
-        player.SetAmmo(AmmoType.Ammo44Cal, 40);
-            
-        player.SetCustomInfo("Chaos Insurgency Tactical Unit");
-    }
+        [AmmoType.Ammo44Cal] = 40,
+    };
+    protected override string SpawnCustomInfo => "Chaos Insurgency Tactical Unit";
+
 }

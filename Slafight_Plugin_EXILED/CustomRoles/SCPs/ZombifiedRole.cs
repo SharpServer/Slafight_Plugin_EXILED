@@ -17,18 +17,14 @@ public class ZombifiedRole : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Zombified;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "Zombified";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp0492;
+    protected override RoleSpawnFlags? SpawnBaseRoleFlags => RoleSpawnFlags.AssignInventory;
+    protected override float? SpawnMaxHealth => 125f;
+    protected override bool SpawnClearsInventory => true;
+    protected override string SpawnCustomInfo => "<color=#C50000>Zombified Subject</color>";
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-
-        player!.Role.Set(RoleTypeId.Scp0492, RoleSpawnFlags.AssignInventory);
-        player.MaxHealth = 125f;
-        player.Health = player.MaxHealth;
-        player.UniqueRole = UniqueRoleKey;
-        player.ClearInventory();
-        player.SetCustomInfo("<color=#C50000>Zombified Subject</color>");
-
         if (player.CurrentRoom is null)
         {
             player.Position = Room.Random(ZoneType.HeavyContainment).WorldPosition(Vector3.up*1.05f);

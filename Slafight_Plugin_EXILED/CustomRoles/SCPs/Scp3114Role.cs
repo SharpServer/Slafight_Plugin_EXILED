@@ -57,9 +57,9 @@ public class Scp3114Role : CRole
         ev.Scp3114.DisguiseDuration = 300f;
     }
 
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         CassieHelper.AnnounceTermination(ev, "SCP 3 1 1 4", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 }

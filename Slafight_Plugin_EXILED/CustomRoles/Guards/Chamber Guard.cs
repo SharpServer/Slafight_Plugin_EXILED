@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
@@ -16,27 +17,25 @@ public class ChamberGuard : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.ChamberGuard;
     protected override CTeam Team { get; set; } = CTeam.Guards;
     protected override string UniqueRoleKey { get; set; } = "ChamberGuard";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.FacilityGuard;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunFSP9,
+        ItemType.KeycardGuard,
+        ItemType.Medkit,
+        ItemType.ArmorLight,
+        ItemType.Radio,
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.FacilityGuard);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        Log.Debug("Giving Items to ChamberGuard");
-        player.AddItem(ItemType.GunFSP9);
-        player.AddItem(ItemType.KeycardGuard);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.ArmorLight);
-        player.AddItem(ItemType.Radio);
-        player.SetAmmo(AmmoType.Nato9,100);
-        var pos = Door.Get(DoorType.Scp173Connector).Position;
-        pos += new Vector3(0f,0.35f,0f);
-        player.Position = pos;
-        Log.Debug($"RoomPos: {pos},CGuard pos: {player.Position}");
-            
-        player.SetCustomInfo("Chamber Guard");
+        [AmmoType.Nato9] = 100,
+    };
+    protected override Vector3? SpawnPosition => Door.Get(DoorType.Scp173Connector).Position + new Vector3(0f, 0.35f, 0f);
+    protected override string SpawnCustomInfo => "Chamber Guard";
+
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
+    {
+        Log.Debug($"RoomPos: {player.Position},CGuard pos: {player.Position}");
     }
 }

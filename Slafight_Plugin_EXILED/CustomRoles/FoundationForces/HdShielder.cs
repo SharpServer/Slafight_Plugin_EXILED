@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System;
 using Exiled.API.Enums;
 using Exiled.API.Features;
@@ -22,6 +23,22 @@ public class HdShielder : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.HdShielder;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "HdShielder";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfPrivate;
+    protected override float? SpawnMaxHealth => 120f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        typeof(GunFSP18),
+        ItemType.KeycardMTFOperative,
+        typeof(ArmorInfantry),
+        ItemType.Medkit,
+        ItemType.Radio,
+        ItemType.Flashlight,
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
+    {
+        [AmmoType.Nato9] = 120,
+    };
+    protected override string SpawnCustomInfo => "<color=#727472>Hammer Down Shielder</color>";
 
     public override void RegisterEvents()
     {
@@ -37,33 +54,14 @@ public class HdShielder : CRole
         base.UnregisterEvents();
     }
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        if (player == null) return;
-
-        player.Role.Set(RoleTypeId.NtfPrivate);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 120f;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-
-        CItem.Get<GunFSP18>()?.Give(player);
-        player.AddItem(ItemType.KeycardMTFOperative);
-        CItem.Get<ArmorInfantry>()?.Give(player);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Radio);
-        player.AddItem(ItemType.Flashlight);
-        player.SetAmmo(AmmoType.Nato9, 120);
-
         CustomShieldState.GetOrCreate(player).Configure(
             ShieldMaxValue,
             ShieldMaxValue,
             damageReduction: 0f,
             damageAcceptingThreshold: 0.01f,
             autoDecay: false);
-
-        player.SetCustomInfo("<color=#727472>Hammer Down Shielder</color>");
     }
 
     private void OnShieldAbsorbingDamage(CustomShieldAbsorbingDamageEventArgs ev)
@@ -105,9 +103,9 @@ public class HdShielder : CRole
         state.Damage(Scp049ShieldDamage);
     }
 
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         CustomShieldState.Clear(ev.Player);
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 }

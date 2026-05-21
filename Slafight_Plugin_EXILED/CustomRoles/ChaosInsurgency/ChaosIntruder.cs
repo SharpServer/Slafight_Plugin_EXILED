@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -16,27 +17,22 @@ public class ChaosIntruder : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.ChaosIntruder;
     protected override CTeam Team { get; set; } = CTeam.ChaosInsurgency;
     protected override string UniqueRoleKey { get; set; } = "ChaosIntruder";
-
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosMarauder;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GrenadeFlash,
+        ItemType.Medkit,
+        ItemType.Adrenaline,
+        ItemType.ArmorCombat,
+        typeof(GunSuppressiver),
+        typeof(KeycardChaosIntruder),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.ChaosMarauder);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        
-        player.ClearInventory();
-        player.AddItem(ItemType.GrenadeFlash);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.ArmorCombat);
-        player.GiveCItem<GunSuppressiver>();
-        player.GiveCItem<KeycardChaosIntruder>();
-        
-        player.SetAmmo(AmmoType.Nato9, 100);
+        [AmmoType.Nato9] = 100,
+    };
+    protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
+    protected override string SpawnCustomInfo => "Chaos Insurgency Intruder";
 
-        player.Position = MapFlags.FirstTeamSpawnPoint;
-            
-        player.SetCustomInfo("Chaos Insurgency Intruder");
-    }
 }

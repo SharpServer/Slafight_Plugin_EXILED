@@ -102,11 +102,11 @@ public class Scp035Role : CRole
         Timing.RunCoroutine(Coroutine(player));
     }
 
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         Cleanup(ev.Player);
         CassieHelper.AnnounceTermination(ev, "SCP 0 3 5", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 
     private void OnDyingByRole(DyingEventArgs ev)

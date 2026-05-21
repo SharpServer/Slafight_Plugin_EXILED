@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -15,27 +16,24 @@ public class NtfSpecialist : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.NtfSpecialist;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "NtfSpecialist";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfSpecialist;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunCOM18,
+        ItemType.KeycardMTFCaptain,
+        ItemType.Medkit,
+        ItemType.Medkit,
+        ItemType.GrenadeHE,
+        ItemType.ArmorHeavy,
+        ItemType.Radio,
+        typeof(GunM82),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfSpecialist);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.GiveCItem<GunM82>();
-        player.AddItem(ItemType.GunCOM18);
-        player.AddItem(ItemType.KeycardMTFCaptain);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.GrenadeHE);
-        player.AddItem(ItemType.ArmorHeavy);
-        player.AddItem(ItemType.Radio);
-        
-        player.SetAmmo(AmmoType.Nato556, 180);
-        player.SetAmmo(AmmoType.Nato9, 120);
+        [AmmoType.Nato556] = 180,
+        [AmmoType.Nato9] = 120,
+    };
+    protected override string SpawnCustomInfo => "Nine-tailed Fox Specialist";
 
-        player.SetCustomInfo("Nine-tailed Fox Specialist");
-    }
 }

@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -17,27 +18,21 @@ public class Engineer : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Engineer;
     protected override CTeam Team { get; set; } = CTeam.Scientists;
     protected override string UniqueRoleKey { get; set; } = "Engineer";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scientist;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.KeycardContainmentEngineer,
+        ItemType.Medkit,
+        ItemType.Medkit,
+        typeof(Toolbox),
+    ];
+    protected override string SpawnCustomInfo => "Engineer";
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags flags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        if (player == null) return;
-        player.Role.Set(RoleTypeId.Scientist);
-        base.SpawnRole(player, flags);
-
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-
-        player.ClearInventory();
-        player.AddItem(ItemType.KeycardContainmentEngineer);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Medkit);
-        CItem.Get<Toolbox>()?.Give(player);
-
         var room = Room.Get(RoomType.HczTestRoom);
-        var pos = room != null ? room.WorldPosition(new Vector3(0f, 1f, 0f)) : player.Position;
-        player.Position = pos;
-
-        player.SetCustomInfo("Engineer");
+        if (room != null)
+            player.Position = room.WorldPosition(new Vector3(0f, 1f, 0f));
     }
 }

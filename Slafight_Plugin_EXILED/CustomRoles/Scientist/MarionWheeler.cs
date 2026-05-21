@@ -22,28 +22,22 @@ public class MarionWheeler : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.MarionWheeler;
     protected override CTeam Team { get; set; } = CTeam.Scientists;
     protected override string UniqueRoleKey { get; set; } = "MarionWheeler";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scientist;
+    protected override float? SpawnMaxHealth => 120f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.KeycardContainmentEngineer,
+        ItemType.Medkit,
+        ItemType.Medkit,
+        ItemType.Medkit,
+        typeof(GunScp7381),
+        typeof(ClassZMemoryForcePil),
+    ];
+    protected override Vector3? SpawnPosition => Door.Get(DoorType.Intercom).Position + Vector3.up * 1.25f;
+    protected override string SpawnCustomInfo => "Marion Wheeler";
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags flags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        if (player == null) return;
-        player.Role.Set(RoleTypeId.Scientist);
-        base.SpawnRole(player, flags);
-
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 120;
-        player.Health = player.MaxHealth;
-
-        player.ClearInventory();
-        player.AddItem(ItemType.KeycardContainmentEngineer);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Medkit);
-        player.GiveCItem<GunScp7381>();
-        player.GiveCItem<ClassZMemoryForcePil>();
-        player.Position = Door.Get(DoorType.Intercom).Position + Vector3.up * 1.25f;
-
-        player.SetCustomInfo("Marion Wheeler");
-
         Timing.CallDelayed(0.1f, () =>
         {
             Timing.RunCoroutine(Coroutine(player));

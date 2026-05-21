@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -14,28 +15,22 @@ public class HdMarshal : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.HdMarshal;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "HdMarshal";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfCaptain;
+    protected override float? SpawnMaxHealth => 180f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.KeycardMTFCaptain,
+        typeof(SerumC),
+        typeof(AdvancedMedkit),
+        ItemType.GrenadeHE,
+        ItemType.GrenadeHE,
+        ItemType.Radio,
+        typeof(ArmorVip),
+        typeof(GunN7Weltkrieg),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfCaptain);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 180;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        Log.Debug("Giving Items to HdMarshal");
-        player.AddItem(ItemType.KeycardMTFCaptain);
-        CItem.Get<SerumC>()?.Give(player);
-        CItem.Get<AdvancedMedkit>()?.Give(player);
-        player.AddItem(ItemType.GrenadeHE);
-        player.AddItem(ItemType.GrenadeHE);
-        player.AddItem(ItemType.Radio);
-        CItem.Get<ArmorVip>()?.Give(player);
-        CItem.Get<GunN7Weltkrieg>()?.Give(player);
-            
-        player.SetAmmo(AmmoType.Nato556,250);
-
-        //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Commander");
-        CustomInfoDisplay.Apply(player, "<color=#727472>Hammer Down Marshal</color>");
-    }
+        [AmmoType.Nato556] = 250,
+    };
+    protected override string SpawnCustomInfo => "<color=#727472>Hammer Down Marshal</color>";
 }

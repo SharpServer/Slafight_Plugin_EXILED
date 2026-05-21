@@ -59,6 +59,12 @@ public abstract class CItemHybrid : CItem
 
     protected override ItemType BaseItem => SubModes[0].TargetItem.GetBaseItem();
 
+    /// <summary>ServerSpecifics のキー入力によるモード切替を許可するか。</summary>
+    protected virtual bool EnableKeyModeSwitch => true;
+
+    /// <summary>モード切替時に Hint を表示するか。</summary>
+    protected virtual bool ShowModeSwitchHint => true;
+
     // ======================================================
     // Give
     // ======================================================
@@ -81,6 +87,36 @@ public abstract class CItemHybrid : CItem
     /// インベントリが満杯の場合は切り替えをキャンセルする。
     /// </summary>
     public void SwitchMode(ushort oldSerial, Player player)
+        => ChangeMode(oldSerial, player);
+
+    /// <summary>キー入力からのモード切替。EnableKeyModeSwitch が false の場合は何もしない。</summary>
+    public bool TrySwitchModeFromInput(ushort oldSerial, Player player)
+    {
+        if (!EnableKeyModeSwitch)
+        {
+            Log.Debug($"[Hybrid] TrySwitchModeFromInput: key mode switch disabled for {GetType().Name}");
+            return false;
+        }
+
+        ChangeMode(oldSerial, player);
+        return true;
+    }
+
+    /// <summary>現在手に持っている Hybrid アイテムを次のモードへ切り替える。</summary>
+    protected void ChangeMode(Player player)
+    {
+        var item = player.CurrentItem;
+        if (item == null)
+        {
+            Log.Debug($"[Hybrid] ChangeMode: no CurrentItem for {player.Nickname}");
+            return;
+        }
+
+        ChangeMode(item.Serial, player);
+    }
+
+    /// <summary>指定 serial の Hybrid アイテムを次のモードへ切り替える。</summary>
+    protected void ChangeMode(ushort oldSerial, Player player)
     {
         if (!_serialModeIndex.TryGetValue(oldSerial, out var currentIndex))
         {
@@ -139,10 +175,13 @@ public abstract class CItemHybrid : CItem
         SerialTracker.ForceUnregister(oldSerial);
         player.RemoveItem(oldItem, destroy: true);
 
-        player.ShowHint(
-            $"<size=24>モード切替: {nextSub.ModeName.OrDefault(nextSub.TargetItem.DisplayName)}</size>\n" +
-            $"<size=23>{nextSub.ModeDescription.OrDefault(nextSub.TargetItem.Description)}</size>",
-            2f);
+        if (ShowModeSwitchHint)
+        {
+            player.ShowHint(
+                $"<size=24>モード切替: {nextSub.ModeName.OrDefault(nextSub.TargetItem.DisplayName)}</size>\n" +
+                $"<size=23>{nextSub.ModeDescription.OrDefault(nextSub.TargetItem.Description)}</size>",
+                2f);
+        }
     }
 
     // ======================================================

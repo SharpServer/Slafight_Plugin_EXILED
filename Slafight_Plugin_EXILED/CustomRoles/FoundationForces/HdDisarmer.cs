@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -15,27 +16,22 @@ public class HdDisarmer : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.HdDisarmer;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "HdDisarmer";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfPrivate;
+    protected override float? SpawnMaxHealth => 110f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        typeof(GunDisarmerRifle),
+        ItemType.GunCrossvec,
+        ItemType.KeycardMTFOperative,
+        ItemType.Adrenaline,
+        ItemType.Medkit,
+        ItemType.Radio,
+        typeof(ArmorInfantry),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfPrivate);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 110;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.GiveCItem<GunDisarmerRifle>();
-        player.AddItem(ItemType.GunCrossvec);
-        player.AddItem(ItemType.KeycardMTFOperative);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Radio);
-        CItem.Get<ArmorInfantry>()?.Give(player);
-            
-        player.SetAmmo(AmmoType.Nato9,120);
-        player.SetAmmo(AmmoType.Nato556, 200);
-
-        //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
-        CustomInfoDisplay.Apply(player, "<color=#727472>Hammer Down Disarmer</color>");
-    }
+        [AmmoType.Nato9] = 120,
+        [AmmoType.Nato556] = 200,
+    };
+    protected override string SpawnCustomInfo => "<color=#727472>Hammer Down Disarmer</color>";
 }

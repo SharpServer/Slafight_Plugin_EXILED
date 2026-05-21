@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -15,27 +16,22 @@ public class SneNeutralitist : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SneNeutralitist;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "SneNeutralitist";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfPrivate;
+    protected override float? SpawnMaxHealth => 125f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunE11SR,
+        ItemType.KeycardMTFOperative,
+        ItemType.Adrenaline,
+        ItemType.Medkit,
+        typeof(NeutralizeGrenade),
+        typeof(NeutralizeGrenade),
+        ItemType.Radio,
+        ItemType.ArmorCombat,
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.NtfPrivate);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 125;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.AddItem(ItemType.GunE11SR);
-        player.AddItem(ItemType.KeycardMTFOperative);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.Medkit);
-        CItem.Get<NeutralizeGrenade>()?.Give(player);
-        CItem.Get<NeutralizeGrenade>()?.Give(player);
-        player.AddItem(ItemType.Radio);
-        player.AddItem(ItemType.ArmorCombat);
-            
-        player.SetAmmo(AmmoType.Nato556,120);
-
-        //PlayerExtensions.OverrideRoleName(player,$"{player.GroupName}","Hammer Down Infantry");
-        player.SetCustomInfo("<color=#FF1493>See No Evil Neutralitist</color>");
-    }
+        [AmmoType.Nato556] = 120,
+    };
+    protected override string SpawnCustomInfo => "<color=#FF1493>See No Evil Neutralitist</color>";
 }

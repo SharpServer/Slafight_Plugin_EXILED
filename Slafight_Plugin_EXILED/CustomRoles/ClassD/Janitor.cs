@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
@@ -16,29 +17,19 @@ public class Janitor : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Janitor;
     protected override CTeam Team { get; set; } = CTeam.ClassD;
     protected override string UniqueRoleKey { get; set; } = "Janitor";
-
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags)
-    {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.ClassD);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        Log.Debug("Giving Items to Janitor");
-        CItem.Get<FakeGrenade>()?.Give(player);
-        CItem.Get<FakeGrenade>()?.Give(player);
-        CItem.Get<FakeGrenade>()?.Give(player);
-        CItem.Get<FakeGrenade>()?.Give(player);
-        CItem.Get<FakeGrenade>()?.Give(player);
-        CItem.Get<FakeGrenade>()?.Give(player);
-        player.AddItem(ItemType.KeycardJanitor);
-        player.AddItem(ItemType.Radio);
-        var pos = Door.Get(DoorType.Scp173Connector).Position;
-        pos += new Vector3(0f,0.35f,0f);
-        player.Position = pos;
-        Log.Debug($"RoomPos: {pos},Janitor pos: {player.Position}");
-            
-        CustomInfoDisplay.Apply(player, "Janitor");
-    }
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ClassD;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        typeof(FakeGrenade),
+        typeof(FakeGrenade),
+        typeof(FakeGrenade),
+        typeof(FakeGrenade),
+        typeof(FakeGrenade),
+        typeof(FakeGrenade),
+        ItemType.KeycardJanitor,
+        ItemType.Radio,
+    ];
+    protected override Vector3? SpawnPosition => Door.Get(DoorType.Scp173Connector).Position + new Vector3(0f, 0.35f, 0f);
+    protected override string SpawnCustomInfo => "Janitor";
 }

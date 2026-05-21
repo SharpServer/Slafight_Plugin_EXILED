@@ -28,14 +28,12 @@ public class Scp966Role : CRole
     public override void RegisterEvents()
     {
         Exiled.Events.Handlers.Scp3114.Disguising += ExtendTime;
-        Exiled.Events.Handlers.Player.Hurting += Hurting;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
         Exiled.Events.Handlers.Scp3114.Disguising -= ExtendTime;
-        Exiled.Events.Handlers.Player.Hurting -= Hurting;
         base.UnregisterEvents();
     }
     
@@ -129,23 +127,21 @@ public class Scp966Role : CRole
         ev.Ragdoll.Destroy();
     }
 
-    private void Hurting(HurtingEventArgs ev)
+    protected override void OnRoleHurtingOthers(HurtingEventArgs ev)
     {
-        if (ev.Attacker?.GetCustomRole() == CRoleTypeId.Scp966)
-        {
-            ev.Amount = 10f;
-        }
-        else if (ev.Player?.GetCustomRole() == CRoleTypeId.Scp966)
-        {
-            if (!ev.Player?.GetEffect(EffectType.Invisible)) return;
-            ev.Attacker?.ShowHitMarker();
-        }
+        ev.Amount = 10f;
     }
 
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleHurting(HurtingEventArgs ev)
+    {
+        if (!ev.Player?.GetEffect(EffectType.Invisible)) return;
+        ev.Attacker?.ShowHitMarker();
+    }
+
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         SpeedLevels.Remove(ev.Player);
         CassieHelper.AnnounceTermination(ev, "SCP 9 6 6", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 }

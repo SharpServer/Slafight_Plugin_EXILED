@@ -48,27 +48,14 @@ public class Scp610Role : CRole
         LabApi.Features.Wrappers.Player.Get(player.NetId)!.DestroySchematic(schematicObject);
     }
 
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         CassieHelper.AnnounceTermination(ev, "SCP 6 1 0", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 
-    public override void RegisterEvents()
+    protected override void OnRoleHurtingOthers(HurtingEventArgs ev)
     {
-        Exiled.Events.Handlers.Player.Hurting += OnHurtingOthers;
-        base.RegisterEvents();
-    }
-
-    public override void UnregisterEvents()
-    {
-        Exiled.Events.Handlers.Player.Hurting -= OnHurtingOthers;
-        base.UnregisterEvents();
-    }
-
-    private void OnHurtingOthers(HurtingEventArgs ev)
-    {
-        if (!Check(ev.Attacker)) return;
         ev.Amount /= 3.5f;
         if (ev.Player.Health <= 40f && !ev.Player.HasFlag(SpecificFlagType.Infecting610))
         {

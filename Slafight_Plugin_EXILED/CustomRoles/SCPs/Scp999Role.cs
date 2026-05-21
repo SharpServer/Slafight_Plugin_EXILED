@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.API.Features.Pickups;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
@@ -16,7 +18,9 @@ namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 public class Scp999Role : CRole
 {
     private const ushort Nato9Limit = 500;
+    private const float Nato9AutoDropCleanupRadiusSqr = 2.25f;
     private readonly Dictionary<int, ushort> _reserveNato9ByPlayerId = [];
+    private readonly Dictionary<int, Nato9SwitchState> _pendingNato9SwitchesByPlayerId = [];
 
     protected override string RoleName { get; set; } = "SCP-999";
     protected override string Description { get; set; } = "<size=24><color=#FF1493>SCP-999</color>\n全員とたわむれましょう！\n※勝敗には影響しません。可愛いペット的にふるまって\n攻撃してきた奴らに痛い一撃を喰らわせてやりましょう。";
@@ -44,6 +48,7 @@ public class Scp999Role : CRole
         Exiled.Events.Handlers.Player.DroppingAmmo -= OnDroppingAmmo;
         Exiled.Events.Handlers.Player.ReloadingWeapon -= OnReloadingWeapon;
         _reserveNato9ByPlayerId.Clear();
+        _pendingNato9SwitchesByPlayerId.Clear();
         base.UnregisterEvents();
     }
 
@@ -77,7 +82,7 @@ public class Scp999Role : CRole
     {
         if (!Check(ev.Player)) return;
 
-        RememberNato9(ev.Player);
+        PrepareNato9Switch(ev.Player);
         ApplyNato9Profile(ev.Player);
     }
 
@@ -85,9 +90,11 @@ public class Scp999Role : CRole
     {
         if (!Check(ev.Player)) return;
 
+        _pendingNato9SwitchesByPlayerId.TryGetValue(ev.Player.Id, out Nato9SwitchState switchState);
         RestoreNato9Profile(ev.Player);
         Timing.CallDelayed(0.05f, () => RestoreNato9Profile(ev.Player));
         Timing.CallDelayed(0.25f, () => RestoreNato9Profile(ev.Player));
+        Timing.CallDelayed(0.5f, () => ClearNato9Switch(ev.Player, switchState));
     }
 
     private void OnDroppingAmmo(DroppingAmmoEventArgs ev)
@@ -113,6 +120,20 @@ public class Scp999Role : CRole
         _reserveNato9ByPlayerId[player.Id] = player.GetAmmo(AmmoType.Nato9);
     }
 
+    private void PrepareNato9Switch(Player player)
+    {
+        if (!Check(player)) return;
+
+        ushort reserve = player.GetAmmo(AmmoType.Nato9);
+        _reserveNato9ByPlayerId[player.Id] = reserve;
+        _pendingNato9SwitchesByPlayerId[player.Id] = new Nato9SwitchState
+        {
+            Reserve = reserve,
+            Position = player.Position,
+            ExistingPickupSerials = GetNearbyOwnedNato9PickupSerials(player),
+        };
+    }
+
     private void ApplyNato9Profile(Player player)
     {
         if (!Check(player)) return;
@@ -130,18 +151,65 @@ public class Scp999Role : CRole
         player.SetAmmoLimit(AmmoType.Nato9, Nato9Limit);
 
         ushort current = player.GetAmmo(AmmoType.Nato9);
-        ushort remembered = _reserveNato9ByPlayerId.TryGetValue(player.Id, out ushort value)
+        Nato9SwitchState? switchState = _pendingNato9SwitchesByPlayerId.TryGetValue(player.Id, out Nato9SwitchState state)
+            ? state
+            : null;
+        ushort remembered = switchState?.Reserve
+            ?? (_reserveNato9ByPlayerId.TryGetValue(player.Id, out ushort value)
             ? value
-            : current;
+            : current);
 
         ushort restored = Math.Min(Nato9Limit, Math.Max(current, remembered));
+        CleanupAutomaticNato9Drops(player, switchState);
         player.SetAmmo(AmmoType.Nato9, restored);
         _reserveNato9ByPlayerId[player.Id] = restored;
     }
 
-    protected override void OnDying(DyingEventArgs ev)
+    private static HashSet<ushort> GetNearbyOwnedNato9PickupSerials(Player player)
+        => Pickup.List
+            .OfType<AmmoPickup>()
+            .Where(pickup => IsOwnedNato9PickupNear(player, pickup, player.Position))
+            .Select(pickup => pickup.Serial)
+            .ToHashSet();
+
+    private static void CleanupAutomaticNato9Drops(Player player, Nato9SwitchState? switchState)
+    {
+        if (switchState == null) return;
+
+        foreach (AmmoPickup pickup in Pickup.List.OfType<AmmoPickup>().ToList())
+        {
+            if (!IsOwnedNato9PickupNear(player, pickup, switchState.Position)) continue;
+            if (switchState.ExistingPickupSerials.Contains(pickup.Serial)) continue;
+
+            pickup.Destroy();
+        }
+    }
+
+    private void ClearNato9Switch(Player player, Nato9SwitchState? switchState)
+    {
+        if (switchState == null) return;
+        if (!_pendingNato9SwitchesByPlayerId.TryGetValue(player.Id, out Nato9SwitchState current)) return;
+        if (!ReferenceEquals(current, switchState)) return;
+
+        _pendingNato9SwitchesByPlayerId.Remove(player.Id);
+    }
+
+    private static bool IsOwnedNato9PickupNear(Player player, AmmoPickup pickup, UnityEngine.Vector3 origin)
+        => pickup.IsSpawned
+           && pickup.AmmoType == AmmoType.Nato9
+           && pickup.PreviousOwner == player
+           && (pickup.Position - origin).sqrMagnitude <= Nato9AutoDropCleanupRadiusSqr;
+
+    private sealed class Nato9SwitchState
+    {
+        public ushort Reserve { get; init; }
+        public UnityEngine.Vector3 Position { get; init; }
+        public HashSet<ushort> ExistingPickupSerials { get; init; } = [];
+    }
+
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         CassieHelper.AnnounceTermination(ev, "SCP 9 9 9", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 }

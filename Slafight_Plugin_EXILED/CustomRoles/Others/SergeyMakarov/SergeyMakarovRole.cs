@@ -78,7 +78,7 @@ public class SergeyMakarovRole : CRole
         Timing.RunCoroutine(SergeySharedContents.SergeySharedCoroutine(player));
     }
 
-    protected override void OnDying(DyingEventArgs ev)
+    protected override void OnRoleDying(DyingEventArgs ev)
     {
         if (ev.Attacker == null && ev.DamageHandler.Base is CustomReasonDamageHandler) return;
         ev.IsAllowed = false;
@@ -107,6 +107,6 @@ public class SergeyMakarovRole : CRole
         SpawnContextRegistry.Register(chaosOnlyContext);
         SpawnContextRegistry.SetActive("SM_ChaosOnly");
         Timing.RunCoroutine(SergeyMakarovExtensionAndUtils.AwakenScene(ev.Player));
-        base.OnDying(ev);
+        base.OnRoleDying(ev);
     }
 }

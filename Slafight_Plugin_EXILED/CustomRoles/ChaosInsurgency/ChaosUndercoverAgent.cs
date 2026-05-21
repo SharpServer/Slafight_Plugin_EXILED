@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using MEC;
@@ -17,28 +18,31 @@ public class ChaosUndercoverAgent : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.ChaosUndercoverAgent;
     protected override CTeam Team { get; set; } = CTeam.ChaosInsurgency;
     protected override string UniqueRoleKey { get; set; } = "ChaosUndercoverAgent";
-
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosMarauder;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GrenadeFlash,
+        ItemType.Medkit,
+        ItemType.Adrenaline,
+        ItemType.ArmorCombat,
+        typeof(KeycardConscripts),
+        typeof(CUA_SpyKit),
+    ];
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.ChaosMarauder);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        
-        player.ClearInventory();
-        player.AddItem(ItemType.GrenadeFlash);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Adrenaline);
-        player.AddItem(ItemType.ArmorCombat);
+        [AmmoType.Ammo44Cal] = 24,
+    };
+    protected override string SpawnCustomInfo => "Chaos Insurgency Undercover Agent";
+
+    protected override void GiveCustomItems(Player player)
+    {
         if (!player.HasItem(ItemType.GunRevolver))
             player.AddItem(ItemType.GunRevolver);
-        CItem.Get<KeycardConscripts>()?.Give(player); // Conscripts Card
-        CItem.Get<CUA_SpyKit>()?.Give(player);
-        
-        player.SetAmmo(AmmoType.Ammo44Cal, 24);
-            
-        player.SetCustomInfo("Chaos Insurgency Undercover Agent");
+    }
+
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
+    {
         Timing.CallDelayed(0.05f, () =>
         {
             var data = StaticUtils.GetWorldFromRoomLocal(RoomType.HczCrossRoomWater, new Vector3(-4.98f, -9.25f, 2.3f), new Vector3(0f, 270f, 0f));
