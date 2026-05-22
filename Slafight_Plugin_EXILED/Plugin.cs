@@ -14,6 +14,7 @@ using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Entities;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
+using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.Patches;
 using UserSettings.ServerSpecific;
@@ -69,6 +70,8 @@ public class Plugin : Plugin<Config>
         Communications.Register();
         Scp914Changes.Register();
         Scp513.Register();
+        Trashbox.TriggeredSecretCount = 0;
+        Trashbox.TriggeredEvents.Clear();
             
         AutoHandlerBootstrapRegister.Register();
         ServerSpecificsHandler.Register();

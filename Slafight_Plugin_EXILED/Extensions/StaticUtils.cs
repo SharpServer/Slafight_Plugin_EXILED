@@ -11,6 +11,7 @@ using Exiled.CustomItems.API.Features;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using Random = System.Random;
 
@@ -111,6 +112,15 @@ public static class StaticUtils
             CustomItem.TrySpawn(item.Id, player.Position + Vector3.up * 0.5f, out _);
         else
             player.TryAddCustomItem<T>();
+    }
+    
+    /// <summary>型引数でCItemを付与 or ドロップします。</summary>
+    public static void GiveOrDrop<T>(this Player player, bool showHint = false) where T : CItem
+    {
+        if (player.IsInventoryFull)
+            CItem.Get<T>()?.Spawn(player.Position + Vector3.up * 0.5f);
+        else
+            CItem.Get<T>()?.Give(player, showHint);
     }
 
     // ───────────────────────────────
