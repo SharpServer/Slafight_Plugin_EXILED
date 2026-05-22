@@ -18,7 +18,7 @@ public class FifthistConvert : CRole
     protected override CTeam Team { get; set; } = CTeam.Fifthists;
     protected override string UniqueRoleKey { get; set; } = "FifthistConvert";
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Tutorial;
-    protected override float? SpawnMaxHealth => 150f;
+    protected override float? SpawnMaxHealth => 100f;
     protected override IReadOnlyList<object> SpawnItems =>
     [
         ItemType.GunA7,

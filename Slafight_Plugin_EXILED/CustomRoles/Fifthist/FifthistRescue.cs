@@ -17,7 +17,7 @@ public class FifthistRescure : CRole
     protected override CTeam Team { get; set; } = CTeam.Fifthists;
     protected override string UniqueRoleKey { get; set; } = "FIFTHIST";
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Tutorial;
-    protected override float? SpawnMaxHealth => 150f;
+    protected override float? SpawnMaxHealth => 135f;
     protected override IReadOnlyList<object> SpawnItems =>
     [
         ItemType.GunAK,
