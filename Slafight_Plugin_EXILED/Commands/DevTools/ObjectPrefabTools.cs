@@ -26,6 +26,7 @@ public class SpawnObjectPrefab : ICommand
 
     private static readonly Dictionary<Player, ObjectPrefab> Grabbing = new();
     private static readonly Dictionary<Player, float> GrabDistance = new();
+    private static readonly Dictionary<Player, Vector3> GrabLocalOffset = new();
     private static readonly Dictionary<Player, Quaternion> GrabRotationOffset = new();
     private static readonly Dictionary<Player, bool> GrabLockRotation = new();
     private static readonly Dictionary<Player, CoroutineHandle> GrabCoroutines = new();
@@ -157,7 +158,7 @@ public class SpawnObjectPrefab : ICommand
         "  .sl objprefab grab [InstanceID]\n" +
         "  .sl objprefab grabpos [InstanceID]\n" +
         "  .sl objprefab ungrab\n" +
-        "  .sl objprefab offset <distanceDelta>\n" +
+        "  .sl objprefab offset <forwardDelta> | <rightDelta> <upDelta> <forwardDelta>\n" +
         "  .sl objprefab grot <pitch> <yaw> <roll>\n" +
         "  .sl objprefab bring [InstanceID]\n" +
         "  .sl objprefab bringpos [InstanceID]\n" +
@@ -344,8 +345,13 @@ public class SpawnObjectPrefab : ICommand
             UngrabInternal(player);
 
         Grabbing[player] = prefab;
-        float dist = Vector3.Distance(player.CameraTransform.position, prefab.Position);
-        GrabDistance[player] = dist > 0.5f ? dist : DefaultCreateDistance;
+        var localOffset = Quaternion.Inverse(player.CameraTransform.rotation) *
+                          (prefab.Position - player.CameraTransform.position);
+        if (localOffset.sqrMagnitude < 0.01f)
+            localOffset = Vector3.forward * DefaultCreateDistance;
+
+        GrabLocalOffset[player] = localOffset;
+        GrabDistance[player] = Mathf.Max(0.5f, localOffset.magnitude);
         GrabRotationOffset[player] = positionOnly
             ? Quaternion.identity
             : Quaternion.Inverse(Quaternion.Euler(0, player.CameraTransform.rotation.eulerAngles.y, 0)) * prefab.Rotation;
@@ -858,6 +864,7 @@ public class SpawnObjectPrefab : ICommand
 
         Grabbing.Remove(player);
         GrabDistance.Remove(player);
+        GrabLocalOffset.Remove(player);
         GrabRotationOffset.Remove(player);
         GrabLockRotation.Remove(player);
     }
@@ -869,11 +876,13 @@ public class SpawnObjectPrefab : ICommand
             if (!player.IsConnected || prefab == null)
                 break;
 
-            var dist = GrabDistance.TryGetValue(player, out var d) ? d : 2f;
+            var localOffset = GrabLocalOffset.TryGetValue(player, out var offset)
+                ? offset
+                : Vector3.forward * (GrabDistance.TryGetValue(player, out var d) ? d : DefaultCreateDistance);
             var rotOffset = GrabRotationOffset.TryGetValue(player, out var ro) ? ro : Quaternion.identity;
             var lockRot = GrabLockRotation.TryGetValue(player, out var lr) && lr;
 
-            prefab.Position = player.CameraTransform.position + player.CameraTransform.forward * dist;
+            prefab.Position = player.CameraTransform.position + player.CameraTransform.rotation * localOffset;
 
             if (!lockRot)
             {
@@ -898,22 +907,43 @@ public class SpawnObjectPrefab : ICommand
 
         if (args.Count < 2)
         {
-            response = "Usage: .sl objprefab offset <distanceDelta>";
+            response = "Usage: .sl objprefab offset <forwardDelta> OR .sl objprefab offset <rightDelta> <upDelta> <forwardDelta>";
             return false;
         }
 
-        if (!TryParseFloat(args.At(1), out var delta))
+        var currentOffset = GrabLocalOffset.TryGetValue(player, out var offset)
+            ? offset
+            : Vector3.forward * (GrabDistance.TryGetValue(player, out var dist) ? dist : DefaultCreateDistance);
+
+        if (args.Count >= 4)
         {
-            response = "distanceDelta must be a number.";
+            if (!TryParseFloat(args.At(1), out var right) ||
+                !TryParseFloat(args.At(2), out var up) ||
+                !TryParseFloat(args.At(3), out var forward))
+            {
+                response = "rightDelta, upDelta, forwardDelta must be numbers.";
+                return false;
+            }
+
+            currentOffset += new Vector3(right, up, forward);
+        }
+        else if (TryParseFloat(args.At(1), out var delta))
+        {
+            currentOffset += Vector3.forward * delta;
+        }
+        else
+        {
+            response = "offset values must be numbers.";
             return false;
         }
-        
-        if (GrabDistance.TryGetValue(player, out var currDist))
-        {
-            GrabDistance[player] = Mathf.Max(0.5f, currDist + delta);
-        }
 
-        response = $"Added {delta} to grab distance. Current: {GrabDistance[player]:F1}";
+        if (currentOffset.z < 0.5f)
+            currentOffset.z = 0.5f;
+
+        GrabLocalOffset[player] = currentOffset;
+        GrabDistance[player] = currentOffset.magnitude;
+
+        response = $"Grab offset updated. Right:{currentOffset.x:F2} Up:{currentOffset.y:F2} Forward:{currentOffset.z:F2}";
         return true;
     }
 

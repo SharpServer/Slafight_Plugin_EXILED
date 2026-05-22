@@ -35,6 +35,7 @@ public class RootCommand : ParentCommand
         RegisterCommand(new GiveItem());
         RegisterCommand(new SpawnBuiltInPrefab());
         RegisterCommand(new SpawnObjectPrefab());
+        RegisterCommand(new HitboxCommand());
         RegisterCommand(new SpawnWave());
         RegisterCommand(new PlaySurfaceAttack());
         RegisterCommand(new PlayInstantSurfaceBombing());
@@ -56,6 +57,8 @@ public class RootCommand : ParentCommand
         sb.AppendLine("    sl player role Scp173 5");
         sb.AppendLine("    sl player item KeycardSiteDirector @me");
         sb.AppendLine("    sl queue list");
+        sb.AppendLine("    sl hitbox look on");
+        sb.AppendLine("    sl hitbox clear");
         sb.AppendLine();
         sb.AppendLine("Available subcommands:");
 
