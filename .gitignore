@@ -28,6 +28,7 @@ Thumbs.db
 
 # Claude Code / ローカル作業メモ
 .claude/
+.codex-tools/
 IMPLEMENTATION_PLAN.md
 build_log.txt
 build_log_utf8.txt

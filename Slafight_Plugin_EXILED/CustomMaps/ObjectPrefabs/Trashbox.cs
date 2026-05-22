@@ -18,8 +18,8 @@ public class Trashbox : ObjectPrefab
 
     private SchematicObject? _schematicObject;
     private InteractableToy? _interactableToy;
-    private static readonly Vector3 InteractableLocalOffset = Vector3.zero;
-    private static readonly Vector3 InteractableBaseScale = Vector3.one * 1.5f + Vector3.up * 2f;
+    private static readonly Vector3 InteractableLocalOffset = Vector3.back;
+    private static readonly Vector3 InteractableBaseScale = Vector3.one + Vector3.up * 2f;
 
     private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
         = EventHandler.CreateAndPlayAudio;

@@ -141,7 +141,7 @@ public abstract class ObjectPrefab : IObjectPrefab
         Vector3? baseScale = null,
         bool spawn = true)
     {
-        var toy = InteractableToy.Create();
+        var toy = InteractableToy.Create(networkSpawn: false);
         toy.InteractionDuration = interactionDuration;
         toy.Shape = shape;
 
@@ -195,10 +195,26 @@ public abstract class ObjectPrefab : IObjectPrefab
 
         foreach (var interactable in _managedInteractables)
         {
-            interactable.Toy.Position = sourcePosition + sourceRotation * interactable.LocalOffset;
-            interactable.Toy.Rotation = sourceRotation;
-            interactable.Toy.Scale = Vector3.Scale(interactable.BaseScale, Scale);
+            SyncInteractableTransform(
+                interactable.Toy,
+                sourcePosition + sourceRotation * interactable.LocalOffset,
+                sourceRotation,
+                Vector3.Scale(interactable.BaseScale, Scale));
         }
+    }
+
+    private static void SyncInteractableTransform(InteractableToy toy, Vector3 position, Quaternion rotation, Vector3 scale)
+    {
+        if (toy.IsDestroyed)
+            return;
+
+        toy.Transform.localPosition = position;
+        toy.Transform.localRotation = rotation;
+        toy.Transform.localScale = scale;
+
+        toy.Base.NetworkPosition = toy.Transform.localPosition;
+        toy.Base.NetworkRotation = toy.Transform.localRotation;
+        toy.Base.NetworkScale = toy.Transform.localScale;
     }
 
     public virtual bool MatchesInteractableToy(InteractableToy? interactable, Vector3 toyPosition)
