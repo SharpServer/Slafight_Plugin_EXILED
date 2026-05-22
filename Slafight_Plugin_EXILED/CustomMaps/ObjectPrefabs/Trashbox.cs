@@ -83,6 +83,7 @@ public class Trashbox : ObjectPrefab
             player.ShowHint("<size=26>あなたはゴミ箱を漁った・・・\n" +
                             "しかし、何も見つからなかった。\n" +
                             "<color=yellow>もうここには何もないようだ</color></size>",5);
+            return;
         }
 
         var values = Enum.GetValues(typeof(TrashboxEventType))
@@ -157,7 +158,7 @@ public class Trashbox : ObjectPrefab
                     4 => "5egg_4.ogg",
                     _ => string.Empty
                 };
-                SpeakerApi.CreateOrGetSpeaker(songName, Position, null, "Trashbox___PLS_HL_55555");
+                CreateAndPlayAudio(songName, "Trashbox___PLS_HL_55555", pos, true, null, false, 5f, 0f);
                 TriggeredSecretCount++;
                 if (TriggeredSecretCount >= 4)
                 {
