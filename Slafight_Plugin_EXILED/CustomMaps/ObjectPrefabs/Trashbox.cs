@@ -39,6 +39,7 @@ public class Trashbox : ObjectPrefab
     protected override void OnCreate()
     {
          _schematicObject = SpawnManagedSchematic("trashbox");
+         TriggeredEvents.Clear();
          HimselfTriggered = false;
 
          Timing.CallDelayed(0.5f, CreateInteractableToy);
