@@ -30,7 +30,7 @@ public class Trashbox : ObjectPrefab
     private static readonly Vector3 InteractableBaseScale = Vector3.one + Vector3.up * 2f;
     public int TriggeredEventCount => TriggeredEvents.Count;
     public static byte TriggeredSecretCount;
-    public bool HimselfTriggered { get; private set; }
+    public static bool HimselfTriggered { get; private set; }
     public List<TrashboxEventType> TriggeredEvents { get; private set; } = [];
 
     private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
