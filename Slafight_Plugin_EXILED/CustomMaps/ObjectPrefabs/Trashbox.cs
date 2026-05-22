@@ -29,7 +29,7 @@ public class Trashbox : ObjectPrefab
     private static readonly Vector3 InteractableLocalOffset = Vector3.zero;
     private static readonly Vector3 InteractableBaseScale = Vector3.one + Vector3.up * 2f;
     public int TriggeredEventCount => TriggeredEvents.Count;
-    public byte TriggeredSecretCount;
+    public static byte TriggeredSecretCount;
     public bool HimselfTriggered { get; private set; }
     public List<TrashboxEventType> TriggeredEvents { get; private set; } = [];
 
