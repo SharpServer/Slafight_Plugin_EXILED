@@ -70,8 +70,6 @@ public class Plugin : Plugin<Config>
         Communications.Register();
         Scp914Changes.Register();
         Scp513.Register();
-        Trashbox.TriggeredSecretCount = 0;
-        Trashbox.TriggeredEvents.Clear();
             
         AutoHandlerBootstrapRegister.Register();
         ServerSpecificsHandler.Register();

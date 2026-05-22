@@ -36,6 +36,7 @@ public class Trashbox : ObjectPrefab
     private static readonly Vector3 InteractableBaseScale = Vector3.one + Vector3.up * 2f;
     public static int TriggeredEventCount => TriggeredEvents.Count;
     public static byte TriggeredSecretCount;
+    public bool HimselfTriggered { get; private set; }
     public static List<TrashboxEventType> TriggeredEvents { get; private set; }
 
     private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
@@ -44,6 +45,7 @@ public class Trashbox : ObjectPrefab
     protected override void OnCreate()
     {
          _schematicObject = SpawnManagedSchematic("trashbox");
+         HimselfTriggered = false;
 
          Timing.CallDelayed(0.5f, CreateInteractableToy);
          base.OnCreate();
@@ -93,6 +95,10 @@ public class Trashbox : ObjectPrefab
             .ToArray();
 
         var elected = values[UnityEngine.Random.Range(0, values.Length)];
+        if (HimselfTriggered && elected is TrashboxEventType.Zombie)
+        {
+            elected = TrashboxEventType.Secret;
+        }
         TriggeredEvents.Add(elected);
 
         switch (elected)
@@ -131,6 +137,7 @@ public class Trashbox : ObjectPrefab
                                 "<color=red>ワオ！なぞの死体が出てきた。</color></size>",5);
                 var ragdoll = Ragdoll.SpawnRagdoll(RoleTypeId.Scp0492, player.Position, Quaternion.identity, new CustomReasonDamageHandler("???"), "Dr. Redheart");
                 CItem.Get<KeycardHimself>()?.Spawn(ragdoll?.Position ?? player.Position + Vector3.up * 0.25f);
+                HimselfTriggered = true;
                 break;
             case TrashboxEventType.Secret:
                 var text = TriggeredSecretCount switch
@@ -154,6 +161,7 @@ public class Trashbox : ObjectPrefab
                     4 => "5egg_4.ogg"
                 };
                 SpeakerApi.CreateOrGetSpeaker(songName, Position, null, "Trashbox___PLS_HL_55555");
+                TriggeredSecretCount++;
                 if (TriggeredSecretCount >= 4)
                 {
                     TriggeredSecretCount = 0;
