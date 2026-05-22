@@ -140,7 +140,8 @@ public class Trashbox : ObjectPrefab
                     1 => "頭が活性化するような曲が流れてきた。",
                     2 => "不安を与える曲が流れてきた。",
                     3 => "虚無になる曲が流れてきた。",
-                    4 => $"<b><color={CTeam.Fifthists.GetTeamColor()}>星のシグナル</color></b>を感じる曲が流れてきた・・・！"
+                    4 => $"<b><color={CTeam.Fifthists.GetTeamColor()}>星のシグナル</color></b>を感じる曲が流れてきた・・・！",
+                    _ => string.Empty
                 };
                 var combinedText = "<size=26>あなたはゴミ箱を漁った・・・\n" +
                                    $"<color=yellow>{text}</color></size>";
@@ -152,7 +153,8 @@ public class Trashbox : ObjectPrefab
                     1 => "5egg_1.ogg",
                     2 => "5egg_2.ogg",
                     3 => "5egg_3.ogg",
-                    4 => "5egg_4.ogg"
+                    4 => "5egg_4.ogg",
+                    _ => string.Empty
                 };
                 SpeakerApi.CreateOrGetSpeaker(songName, Position, null, "Trashbox___PLS_HL_55555");
                 TriggeredSecretCount++;
