@@ -17,8 +17,12 @@ namespace Slafight_Plugin_EXILED.Commands.DevTools;
 public class SpawnObjectPrefab : ICommand
 {
     public string Command => "objprefab";
-    public string[] Aliases { get; } = ["opf"];
-    public string Description => "RoomTypeローカル座標でObjectPrefabを編集・保存・ロードする開発用ツール";
+    public string[] Aliases { get; } = ["opf", "op"];
+    public string Description => "ObjectPrefabをMER風に設置・選択・編集・保存する開発用ツール";
+
+    private const float DefaultCreateDistance = 2.5f;
+    private const float LookSelectMaxDistance = 35f;
+    private const float LookSelectFallbackRadius = 1.35f;
 
     private static readonly Dictionary<Player, ObjectPrefab> Grabbing = new();
     private static readonly Dictionary<Player, float> GrabDistance = new();
@@ -53,19 +57,63 @@ public class SpawnObjectPrefab : ICommand
 
         switch (sub)
         {
-            case "spawn":   return Spawn(arguments, player, out response);
-            case "save":    return Save(arguments, player, out response);
-            case "saveall": return SaveAll(arguments, player, out response);
-            case "load":    return Load(arguments, player, out response);
-            case "list":    return List(arguments, player, out response);
-            case "remove":  return Remove(arguments, player, out response);
-            case "clear":   return Clear(arguments, player, out response);
-            case "tp":      return Tp(arguments, player, out response);
+            case "help":
+            case "?":
+                response = GetUsage();
+                return true;
 
-            case "move":    return Move(arguments, player, out response);
-            case "rot":     return Rotate(arguments, player, out response);
+            case "spawn":
+            case "create":
+            case "cr":
+                return Spawn(arguments, player, out response);
+
+            case "save":
+            case "s":
+                return Save(arguments, player, out response);
+
+            case "saveall":
+            case "sa":
+                return SaveAll(arguments, player, out response);
+
+            case "load":
+            case "l":
+                return Load(arguments, player, out response);
+
+            case "list":
+            case "ls":
+                return List(arguments, player, out response);
+
+            case "types":
+            case "prefabs":
+            case "classes":
+                return Types(arguments, out response);
+
+            case "maps":
+                return Maps(arguments, out response);
+
+            case "remove":
+            case "delete":
+            case "del":
+                return Remove(arguments, player, out response);
+
+            case "clear":   return Clear(arguments, player, out response);
+            case "tp":
+            case "goto":
+                return Tp(arguments, player, out response);
+
+            case "move":
+            case "addpos":
+                return Move(arguments, player, out response);
+
+            case "rot":
+            case "addrot":
+                return Rotate(arguments, player, out response);
+
             case "setpos":  return SetPos(arguments, player, out response);
             case "setrot":  return SetRot(arguments, player, out response);
+            case "scale":
+            case "scl":
+                return Scale(arguments, player, out response);
 
             case "grab":    return Grab(arguments, player, out response);
             case "grabpos": return GrabPos(arguments, player, out response);
@@ -77,8 +125,14 @@ public class SpawnObjectPrefab : ICommand
 
             case "max":     return SetMaxRooms(arguments, player, out response);
 
-            case "sel":     return Select(arguments, player, out response);
-            case "mod":     return Mod(arguments, player, out response);
+            case "sel":
+            case "select":
+                return Select(arguments, player, out response);
+
+            case "mod":
+            case "modify":
+            case "m":
+                return Mod(arguments, player, out response);
 
             default:
                 response = GetUsage();
@@ -88,70 +142,309 @@ public class SpawnObjectPrefab : ICommand
 
     private string GetUsage() =>
         "Usage:\n" +
-        "  .sl objprefab spawn <PrefabClass> [AutoDestroySeconds]\n" +
-        "  .sl objprefab save <MapName>\n" +
-        "  .sl objprefab saveall <MapName> [BaseMapName]\n" +
-        "  .sl objprefab load <MapName>\n" +
-        "  .sl objprefab list\n" +
-        "  .sl objprefab remove <InstanceID>\n" +
+        "  .sl objprefab create <PrefabClass> [x y z] [AutoDestroySeconds] [grab|grabpos] [Option=Value]\n" +
+        "  .sl objprefab select [InstanceID|look|near|none]\n" +
+        "  .sl objprefab delete [InstanceID]\n" +
+        "  .sl objprefab modify <info|position|rotation|scale|max|autodestroy|bring>\n" +
+        "  .sl objprefab save <MapName> / load <MapName> / saveall <MapName> [BaseMapName]\n" +
+        "  .sl objprefab list / types [filter] / maps\n" +
         "  .sl objprefab clear\n" +
-        "  .sl objprefab tp <InstanceID>\n" +
-        "  .sl objprefab move <InstanceID> <dx> <dy> <dz>\n" +
-        "  .sl objprefab rot <InstanceID> <pitch> <yaw> <roll>\n" +
-        "  .sl objprefab setpos <InstanceID> <x> <y> <z>\n" +
-        "  .sl objprefab setrot <InstanceID> <pitch> <yaw> <roll>\n" +
-        "  .sl objprefab grab <InstanceID>\n" +
-        "  .sl objprefab grabpos <InstanceID>\n" +
+        "Legacy shortcuts still work:\n" +
+        "  .sl objprefab move [InstanceID] <dx> <dy> <dz>\n" +
+        "  .sl objprefab rot [InstanceID] <pitch> <yaw> <roll>\n" +
+        "  .sl objprefab setpos [InstanceID] <x> <y> <z>\n" +
+        "  .sl objprefab setrot [InstanceID] <pitch> <yaw> <roll>\n" +
+        "  .sl objprefab grab [InstanceID]\n" +
+        "  .sl objprefab grabpos [InstanceID]\n" +
         "  .sl objprefab ungrab\n" +
         "  .sl objprefab offset <distanceDelta>\n" +
         "  .sl objprefab grot <pitch> <yaw> <roll>\n" +
-        "  .sl objprefab bring <InstanceID>\n" +
-        "  .sl objprefab bringpos <InstanceID>\n" +
-        "  .sl objprefab max <InstanceID> <count>\n" +
-        "  .sl objprefab sel [InstanceID|none]\n" +
-        "  .sl objprefab mod <info|pos|addpos|rot|max|autodestroy|bring>\n";
+        "  .sl objprefab bring [InstanceID]\n" +
+        "  .sl objprefab bringpos [InstanceID]\n" +
+        "  .sl objprefab max [InstanceID] <count>\n";
+
+    private static IEnumerable<Type> GetPrefabTypes()
+    {
+        return Assembly.GetExecutingAssembly().GetTypes()
+            .Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(ObjectPrefab)))
+            .OrderBy(t => t.Name);
+    }
+
+    private static bool TryResolvePrefabType(string input, out Type prefabType, out string response)
+    {
+        prefabType = null;
+        response = string.Empty;
+
+        var exact = GetPrefabTypes()
+            .FirstOrDefault(t => t.Name.Equals(input, StringComparison.OrdinalIgnoreCase) ||
+                                 t.FullName?.Equals(input, StringComparison.OrdinalIgnoreCase) == true ||
+                                 t.FullName?.EndsWith("." + input, StringComparison.OrdinalIgnoreCase) == true);
+
+        if (exact != null)
+        {
+            prefabType = exact;
+            return true;
+        }
+
+        var matches = GetPrefabTypes()
+            .Where(t => t.Name.IndexOf(input, StringComparison.OrdinalIgnoreCase) >= 0)
+            .ToList();
+
+        if (matches.Count == 1)
+        {
+            prefabType = matches[0];
+            return true;
+        }
+
+        response = matches.Count > 1
+            ? $"Prefab class '{input}' is ambiguous: {string.Join(", ", matches.Select(t => t.Name))}"
+            : $"Prefab class '{input}' not found. Use '.sl objprefab types {input}' to search.";
+        return false;
+    }
+
+    private static bool TryParseFloat(string value, out float result)
+        => float.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out result);
+
+    private static bool TryReadVector(ArraySegment<string> args, int index, out Vector3 value)
+    {
+        value = Vector3.zero;
+        if (args.Count < index + 3)
+            return false;
+
+        if (!TryParseFloat(args.At(index), out var x) ||
+            !TryParseFloat(args.At(index + 1), out var y) ||
+            !TryParseFloat(args.At(index + 2), out var z))
+        {
+            return false;
+        }
+
+        value = new Vector3(x, y, z);
+        return true;
+    }
+
+    private static Vector3 GetLookPosition(Player player)
+    {
+        var origin = player.CameraTransform.position;
+        var forward = player.CameraTransform.forward;
+        return Physics.Raycast(origin, forward, out RaycastHit hit, LookSelectMaxDistance)
+            ? hit.point
+            : origin + forward * DefaultCreateDistance;
+    }
+
+    private static string FormatVector(Vector3 value)
+        => $"{value.x:F2}, {value.y:F2}, {value.z:F2}";
+
+    private static string FormatPrefab(ObjectPrefab prefab)
+        => $"[{prefab.ObjectInstanceID}] {prefab.GetType().Name}";
+
+    private bool TryResolveTarget(
+        ArraySegment<string> args,
+        Player player,
+        int index,
+        out ObjectPrefab prefab,
+        out int consumed,
+        out string response,
+        bool allowValueStart = false)
+    {
+        prefab = null;
+        consumed = 0;
+        response = string.Empty;
+
+        if (args.Count > index)
+        {
+            var id = args.At(index);
+            if (id.Equals("@sel", StringComparison.OrdinalIgnoreCase) ||
+                id.Equals("selected", StringComparison.OrdinalIgnoreCase))
+            {
+                if (Selected.TryGetValue(player, out var selectedByToken) &&
+                    InstanceManager.Get(selectedByToken.ObjectInstanceID) != null)
+                {
+                    prefab = selectedByToken;
+                    consumed = 1;
+                    return true;
+                }
+
+                response = "No prefab selected.";
+                return false;
+            }
+
+            var byId = InstanceManager.Get(id) as ObjectPrefab;
+            if (byId != null)
+            {
+                prefab = byId;
+                consumed = 1;
+                return true;
+            }
+
+            if (!allowValueStart || !TryParseFloat(id, out _))
+            {
+                response = $"Prefab {id} not found.";
+                return false;
+            }
+        }
+
+        if (Selected.TryGetValue(player, out var selected) && InstanceManager.Get(selected.ObjectInstanceID) != null)
+        {
+            prefab = selected;
+            return true;
+        }
+
+        response = "No prefab selected. Use '.sl objprefab select' while looking at one, or pass an InstanceID.";
+        return false;
+    }
+
+    private bool TryFindLookPrefab(Player player, out ObjectPrefab prefab, out float forwardDistance)
+    {
+        prefab = null;
+        forwardDistance = 0f;
+
+        var origin = player.CameraTransform.position;
+        var forward = player.CameraTransform.forward.normalized;
+        var bestScore = float.MaxValue;
+
+        foreach (var candidate in InstanceManager.GetAll().OfType<ObjectPrefab>())
+        {
+            var toObject = candidate.Position - origin;
+            var projected = Vector3.Dot(toObject, forward);
+            if (projected < 0.2f || projected > LookSelectMaxDistance)
+                continue;
+
+            var closestOnRay = origin + forward * projected;
+            var distanceFromRay = Vector3.Distance(candidate.Position, closestOnRay);
+            var radius = Mathf.Max(LookSelectFallbackRadius, candidate.ToySearchRadius);
+            if (distanceFromRay > radius)
+                continue;
+
+            var score = distanceFromRay + projected * 0.02f;
+            if (score >= bestScore)
+                continue;
+
+            bestScore = score;
+            prefab = candidate;
+            forwardDistance = projected;
+        }
+
+        return prefab != null;
+    }
+
+    private bool TryFindNearestPrefab(Player player, float radius, out ObjectPrefab prefab)
+    {
+        prefab = InstanceManager.GetAll()
+            .OfType<ObjectPrefab>()
+            .Where(p => Vector3.Distance(player.Position, p.Position) <= radius)
+            .OrderBy(p => Vector3.Distance(player.Position, p.Position))
+            .FirstOrDefault();
+
+        return prefab != null;
+    }
+
+    private void StartGrab(Player player, ObjectPrefab prefab, bool positionOnly)
+    {
+        if (Grabbing.TryGetValue(player, out _))
+            UngrabInternal(player);
+
+        Grabbing[player] = prefab;
+        float dist = Vector3.Distance(player.CameraTransform.position, prefab.Position);
+        GrabDistance[player] = dist > 0.5f ? dist : DefaultCreateDistance;
+        GrabRotationOffset[player] = positionOnly
+            ? Quaternion.identity
+            : Quaternion.Inverse(Quaternion.Euler(0, player.CameraTransform.rotation.eulerAngles.y, 0)) * prefab.Rotation;
+        GrabLockRotation[player] = positionOnly;
+
+        var handle = Timing.RunCoroutine(GrabFollowCoroutine(player));
+        GrabCoroutines[player] = handle;
+    }
 
     // ===== spawn =====
     private bool Spawn(ArraySegment<string> args, Player player, out string response)
     {
         if (args.Count < 2)
         {
-            response = "Usage: .sl objprefab spawn <PrefabClass> [AutoDestroySeconds]";
+            response = "Usage: .sl objprefab create <PrefabClass> [x y z] [AutoDestroySeconds] [grab|grabpos] [Option=Value]";
             return false;
         }
 
         string prefabTypeName = args.At(1);
 
-        Type prefabType = Assembly.GetExecutingAssembly().GetTypes()
-            .FirstOrDefault(t => t.IsSubclassOf(typeof(ObjectPrefab)) &&
-                                 (t.Name.Equals(prefabTypeName, StringComparison.OrdinalIgnoreCase) ||
-                                  t.FullName?.EndsWith("." + prefabTypeName, StringComparison.OrdinalIgnoreCase) == true));
-
-        if (prefabType == null)
-        {
-            response = $"Prefab class '{prefabTypeName}' not found.";
+        if (!TryResolvePrefabType(prefabTypeName, out var prefabType, out response))
             return false;
+
+        var position = GetLookPosition(player);
+        int index = 2;
+        float autoDestroyTime = -1f;
+        bool startGrab = false;
+        bool startGrabPos = false;
+        var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        if (TryReadVector(args, index, out var explicitPosition))
+        {
+            position = explicitPosition;
+            index += 3;
         }
 
-        float autoDestroyTime = -1f;
-        if (args.Count > 2 && !float.TryParse(args.At(2), out autoDestroyTime))
+        for (; index < args.Count; index++)
         {
-            response = "AutoDestroySeconds must be a number.";
+            var token = args.At(index);
+            if (token.Equals("grab", StringComparison.OrdinalIgnoreCase))
+            {
+                startGrab = true;
+                continue;
+            }
+
+            if (token.Equals("grabpos", StringComparison.OrdinalIgnoreCase))
+            {
+                startGrabPos = true;
+                continue;
+            }
+
+            var splitIndex = token.IndexOf('=');
+            if (splitIndex > 0)
+            {
+                var key = token[..splitIndex];
+                var value = token[(splitIndex + 1)..];
+                if (key.Equals("ad", StringComparison.OrdinalIgnoreCase) ||
+                    key.Equals("autodestroy", StringComparison.OrdinalIgnoreCase))
+                {
+                    if (!TryParseFloat(value, out autoDestroyTime))
+                    {
+                        response = $"AutoDestroySeconds must be a number: {value}";
+                        return false;
+                    }
+                    continue;
+                }
+
+                options[key] = value;
+                continue;
+            }
+
+            if (TryParseFloat(token, out autoDestroyTime))
+                continue;
+
+            response = $"Unknown create option '{token}'. Use grab, grabpos, AutoDestroySeconds, or Option=Value.";
             return false;
         }
 
         var prefab = (ObjectPrefab)Activator.CreateInstance(prefabType)!;
 
-        prefab.Position = player.Position + Vector3.up * 1.5f;
-        prefab.Rotation = player.Rotation;
+        prefab.Position = position;
+        prefab.Rotation = Quaternion.Euler(0, player.CameraTransform.rotation.eulerAngles.y, 0);
         prefab.Scale = Vector3.one;
-        prefab.AutoDestroyEnabled = args.Count > 2 && autoDestroyTime > 0f;
+        prefab.AutoDestroyEnabled = autoDestroyTime > 0f;
         prefab.AutoDestroyTime = autoDestroyTime;
         prefab.MaxRooms = 1;
 
-        prefab.Create();
+        if (options.Count > 0)
+            prefab.ApplyOptions(options);
 
-        response = $"Spawned prefab '{prefabType.Name}' with ID {prefab.ObjectInstanceID}.";
+        prefab.Create();
+        Selected[player] = prefab;
+
+        if (startGrab || startGrabPos)
+            StartGrab(player, prefab, startGrabPos);
+
+        response = $"Created and selected {FormatPrefab(prefab)} at ({FormatVector(prefab.Position)}).";
+        if (startGrab || startGrabPos)
+            response += startGrabPos ? " GrabPos enabled." : " Grab enabled.";
         return true;
     }
 
@@ -324,6 +617,7 @@ public class SpawnObjectPrefab : ICommand
     // ===== list =====
     private bool List(ArraySegment<string> args, Player player, out string response)
     {
+        Selected.TryGetValue(player, out var selected);
         var all = InstanceManager.GetAll()
             .Select(p =>
             {
@@ -332,7 +626,8 @@ public class SpawnObjectPrefab : ICommand
                     .FirstOrDefault();
                 var roomName = closestRoom?.Name ?? "Unknown";
                 var op = p as ObjectPrefab;
-                return $"[{p.ObjectInstanceID}] {p.GetType().Name} @ {roomName} " +
+                var marker = selected != null && selected.ObjectInstanceID == p.ObjectInstanceID ? "* " : "  ";
+                return $"{marker}[{p.ObjectInstanceID}] {p.GetType().Name} @ {roomName} " +
                        $"Pos({p.Position.x:F1},{p.Position.y:F1},{p.Position.z:F1}) MaxRooms:{op?.MaxRooms ?? 1}";
             })
             .ToList();
@@ -343,25 +638,46 @@ public class SpawnObjectPrefab : ICommand
         return true;
     }
 
+    private bool Types(ArraySegment<string> args, out string response)
+    {
+        var filter = args.Count >= 2 ? args.At(1) : null;
+        var types = GetPrefabTypes()
+            .Select(t => t.Name)
+            .Where(name => string.IsNullOrWhiteSpace(filter) ||
+                           name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+            .ToList();
+
+        response = types.Count > 0
+            ? "ObjectPrefab types:\n  " + string.Join("\n  ", types)
+            : $"No ObjectPrefab types matched '{filter}'.";
+        return types.Count > 0;
+    }
+
+    private bool Maps(ArraySegment<string> args, out string response)
+    {
+        Directory.CreateDirectory(ObjectPrefabConfig.DirectoryPath);
+        var maps = Directory.GetFiles(ObjectPrefabConfig.DirectoryPath, "*.json")
+            .Select(Path.GetFileNameWithoutExtension)
+            .OrderBy(name => name)
+            .ToList();
+
+        response = maps.Count > 0
+            ? "ObjectPrefab maps:\n  " + string.Join("\n  ", maps)
+            : $"No ObjectPrefab maps found in {ObjectPrefabConfig.DirectoryPath}.";
+        return true;
+    }
+
     // ===== remove =====
     private bool Remove(ArraySegment<string> args, Player player, out string response)
     {
-        if (args.Count < 2)
-        {
-            response = "Usage: .sl objprefab remove <InstanceID>";
+        if (!TryResolveTarget(args, player, 1, out var prefab, out _, out response))
             return false;
-        }
 
-        string id = args.At(1);
-        var prefab = InstanceManager.Get(id);
-
-        if (prefab is null)
-        {
-            response = $"Prefab {id} not found.";
-            return false;
-        }
-
+        var id = prefab.ObjectInstanceID;
         prefab.Destroy();
+        if (Selected.TryGetValue(player, out var selected) && selected.ObjectInstanceID == id)
+            Selected.Remove(player);
+
         response = $"Removed prefab {id}.";
         return true;
     }
@@ -377,212 +693,127 @@ public class SpawnObjectPrefab : ICommand
     // ===== tp =====
     private bool Tp(ArraySegment<string> args, Player player, out string response)
     {
-        if (args.Count < 2)
-        {
-            response = "Usage: .sl objprefab tp <InstanceID>";
+        if (!TryResolveTarget(args, player, 1, out var prefab, out _, out response))
             return false;
-        }
-
-        string id = args.At(1);
-        var prefab = InstanceManager.Get(id);
-
-        if (prefab is null)
-        {
-            response = $"Prefab {id} not found.";
-            return false;
-        }
 
         player.Position = prefab.Position + Vector3.up * 1.2f;
-        response = $"Teleported to prefab {id}.";
+        response = $"Teleported to {FormatPrefab(prefab)}.";
         return true;
     }
 
     // ===== move =====
     private bool Move(ArraySegment<string> args, Player player, out string response)
     {
-        if (args.Count < 5)
+        if (!TryResolveTarget(args, player, 1, out var prefab, out var consumed, out response, true))
+            return false;
+
+        var valueIndex = 1 + consumed;
+        if (!TryReadVector(args, valueIndex, out var delta))
         {
-            response = "Usage: .sl objprefab move <InstanceID> <dx> <dy> <dz>";
+            response = "Usage: .sl objprefab move [InstanceID] <dx> <dy> <dz>";
             return false;
         }
 
-        string id = args.At(1);
-        var prefab = InstanceManager.Get(id);
-        if (prefab is null)
-        {
-            response = $"Prefab {id} not found.";
-            return false;
-        }
-
-        if (!float.TryParse(args.At(2), out float dx) ||
-            !float.TryParse(args.At(3), out float dy) ||
-            !float.TryParse(args.At(4), out float dz))
-        {
-            response = "dx, dy, dz must be numbers.";
-            return false;
-        }
-
-        prefab.Position += new Vector3(dx, dy, dz);
-        response = $"Moved prefab {id} by ({dx}, {dy}, {dz}).";
+        prefab.Position += delta;
+        response = $"Moved {FormatPrefab(prefab)} by ({FormatVector(delta)}).";
         return true;
     }
 
     // ===== setpos =====
     private bool SetPos(ArraySegment<string> args, Player player, out string response)
     {
-        if (args.Count < 5)
+        if (!TryResolveTarget(args, player, 1, out var prefab, out var consumed, out response, true))
+            return false;
+
+        var valueIndex = 1 + consumed;
+        if (!TryReadVector(args, valueIndex, out var position))
         {
-            response = "Usage: .sl objprefab setpos <InstanceID> <x> <y> <z>";
+            response = "Usage: .sl objprefab setpos [InstanceID] <x> <y> <z>";
             return false;
         }
 
-        string id = args.At(1);
-        var prefab = InstanceManager.Get(id);
-        if (prefab is null)
-        {
-            response = $"Prefab {id} not found.";
-            return false;
-        }
-
-        if (!float.TryParse(args.At(2), out float x) ||
-            !float.TryParse(args.At(3), out float y) ||
-            !float.TryParse(args.At(4), out float z))
-        {
-            response = "x, y, z must be numbers.";
-            return false;
-        }
-
-        prefab.Position = new Vector3(x, y, z);
-        response = $"Set prefab {id} position to ({x}, {y}, {z}).";
+        prefab.Position = position;
+        response = $"Set {FormatPrefab(prefab)} position to ({FormatVector(position)}).";
         return true;
     }
 
     // ===== rot =====
     private bool Rotate(ArraySegment<string> args, Player player, out string response)
     {
-        if (args.Count < 5)
-        {
-            response = "Usage: .sl objprefab rot <InstanceID> <pitch> <yaw> <roll>";
+        if (!TryResolveTarget(args, player, 1, out var prefab, out var consumed, out response, true))
             return false;
-        }
 
-        string id = args.At(1);
-        var prefab = InstanceManager.Get(id);
-        if (prefab is null)
+        var valueIndex = 1 + consumed;
+        if (!TryReadVector(args, valueIndex, out var rotation))
         {
-            response = $"Prefab {id} not found.";
-            return false;
-        }
-
-        if (!float.TryParse(args.At(2), out float pitch) ||
-            !float.TryParse(args.At(3), out float yaw) ||
-            !float.TryParse(args.At(4), out float roll))
-        {
-            response = "pitch, yaw, roll must be numbers.";
+            response = "Usage: .sl objprefab rot [InstanceID] <pitch> <yaw> <roll>";
             return false;
         }
 
         var currentEuler = prefab.Rotation.eulerAngles;
-        var newEuler = currentEuler + new Vector3(pitch, yaw, roll);
+        var newEuler = currentEuler + rotation;
         prefab.Rotation = Quaternion.Euler(newEuler);
 
-        response = $"Rotated prefab {id} by ({pitch}, {yaw}, {roll}).";
+        response = $"Rotated {FormatPrefab(prefab)} by ({FormatVector(rotation)}).";
         return true;
     }
 
     // ===== setrot =====
     private bool SetRot(ArraySegment<string> args, Player player, out string response)
     {
-        if (args.Count < 5)
+        if (!TryResolveTarget(args, player, 1, out var prefab, out var consumed, out response, true))
+            return false;
+
+        var valueIndex = 1 + consumed;
+        if (!TryReadVector(args, valueIndex, out var rotation))
         {
-            response = "Usage: .sl objprefab setrot <InstanceID> <pitch> <yaw> <roll>";
+            response = "Usage: .sl objprefab setrot [InstanceID] <pitch> <yaw> <roll>";
             return false;
         }
 
-        string id = args.At(1);
-        var prefab = InstanceManager.Get(id);
-        if (prefab is null)
+        prefab.Rotation = Quaternion.Euler(rotation);
+        response = $"Set {FormatPrefab(prefab)} rotation to ({FormatVector(rotation)}).";
+        return true;
+    }
+
+    private bool Scale(ArraySegment<string> args, Player player, out string response)
+    {
+        if (!TryResolveTarget(args, player, 1, out var prefab, out var consumed, out response, true))
+            return false;
+
+        var valueIndex = 1 + consumed;
+        if (!TryReadVector(args, valueIndex, out var scale))
         {
-            response = $"Prefab {id} not found.";
+            response = "Usage: .sl objprefab scale [InstanceID] <x> <y> <z>";
             return false;
         }
 
-        if (!float.TryParse(args.At(2), out float pitch) ||
-            !float.TryParse(args.At(3), out float yaw) ||
-            !float.TryParse(args.At(4), out float roll))
-        {
-            response = "pitch, yaw, roll must be numbers.";
-            return false;
-        }
-
-        prefab.Rotation = Quaternion.Euler(pitch, yaw, roll);
-        response = $"Set prefab {id} rotation to ({pitch}, {yaw}, {roll}).";
+        prefab.Scale = scale;
+        response = $"Set {FormatPrefab(prefab)} scale to ({FormatVector(scale)}).";
         return true;
     }
 
     // ===== grab =====
     private bool Grab(ArraySegment<string> args, Player player, out string response)
     {
-        if (args.Count < 2)
-        {
-            response = "Usage: .sl objprefab grab <InstanceID>";
+        if (!TryResolveTarget(args, player, 1, out var prefab, out _, out response))
             return false;
-        }
 
-        string id = args.At(1);
-        var prefab = InstanceManager.Get(id) as ObjectPrefab;
-        if (prefab is null)
-        {
-            response = $"Prefab {id} not found or not ObjectPrefab.";
-            return false;
-        }
-
-        if (Grabbing.TryGetValue(player, out _))
-            UngrabInternal(player);
-
-        Grabbing[player] = prefab;
-        float dist = Vector3.Distance(player.CameraTransform.position, prefab.Position);
-        GrabDistance[player] = dist > 0.5f ? dist : 2f;
-        GrabRotationOffset[player] = Quaternion.Inverse(Quaternion.Euler(0, player.CameraTransform.rotation.eulerAngles.y, 0)) * prefab.Rotation;
-        GrabLockRotation[player] = false;
-
-        var handle = Timing.RunCoroutine(GrabFollowCoroutine(player));
-        GrabCoroutines[player] = handle;
-
-        response = $"Now grabbing prefab {id}.";
+        StartGrab(player, prefab, false);
+        Selected[player] = prefab;
+        response = $"Now grabbing {FormatPrefab(prefab)}.";
         return true;
     }
 
     // ===== grabpos (位置だけ追従) =====
     private bool GrabPos(ArraySegment<string> args, Player player, out string response)
     {
-        if (args.Count < 2)
-        {
-            response = "Usage: .sl objprefab grabpos <InstanceID>";
+        if (!TryResolveTarget(args, player, 1, out var prefab, out _, out response))
             return false;
-        }
 
-        string id = args.At(1);
-        var prefab = InstanceManager.Get(id) as ObjectPrefab;
-        if (prefab is null)
-        {
-            response = $"Prefab {id} not found or not ObjectPrefab.";
-            return false;
-        }
-
-        if (Grabbing.TryGetValue(player, out _))
-            UngrabInternal(player);
-
-        Grabbing[player] = prefab;
-        float dist = Vector3.Distance(player.CameraTransform.position, prefab.Position);
-        GrabDistance[player] = dist > 0.5f ? dist : 2f;
-        GrabRotationOffset[player] = Quaternion.identity;
-        GrabLockRotation[player] = true;
-
-        var handle = Timing.RunCoroutine(GrabFollowCoroutine(player));
-        GrabCoroutines[player] = handle;
-
-        response = $"Now grabbing (position only) prefab {id}.";
+        StartGrab(player, prefab, true);
+        Selected[player] = prefab;
+        response = $"Now grabbing position only for {FormatPrefab(prefab)}.";
         return true;
     }
 
@@ -653,7 +884,7 @@ public class SpawnObjectPrefab : ICommand
             return false;
         }
 
-        if (!float.TryParse(args.At(1), out var delta))
+        if (!TryParseFloat(args.At(1), out var delta))
         {
             response = "distanceDelta must be a number.";
             return false;
@@ -683,9 +914,9 @@ public class SpawnObjectPrefab : ICommand
             return false;
         }
 
-        if (!float.TryParse(args.At(1), out var pitch) ||
-            !float.TryParse(args.At(2), out var yaw) ||
-            !float.TryParse(args.At(3), out var roll))
+        if (!TryParseFloat(args.At(1), out var pitch) ||
+            !TryParseFloat(args.At(2), out var yaw) ||
+            !TryParseFloat(args.At(3), out var roll))
         {
             response = "pitch, yaw, roll must be numbers.";
             return false;
@@ -700,74 +931,42 @@ public class SpawnObjectPrefab : ICommand
     // ===== bring (位置+回転) =====
     private bool Bring(ArraySegment<string> args, Player player, out string response)
     {
-        if (args.Count < 2)
-        {
-            response = "Usage: .sl objprefab bring <InstanceID>";
+        if (!TryResolveTarget(args, player, 1, out var prefab, out _, out response))
             return false;
-        }
-
-        string id = args.At(1);
-        var prefab = InstanceManager.Get(id);
-        if (prefab is null)
-        {
-            response = $"Prefab {id} not found.";
-            return false;
-        }
 
         prefab.Position = player.CameraTransform.position + player.CameraTransform.forward * 2f;
         prefab.Rotation = Quaternion.Euler(0, player.CameraTransform.rotation.eulerAngles.y, 0);
 
-        response = $"Brought prefab {id} to your position.";
+        response = $"Brought {FormatPrefab(prefab)} to your front.";
         return true;
     }
 
     // ===== bringpos (位置だけ) =====
     private bool BringPos(ArraySegment<string> args, Player player, out string response)
     {
-        if (args.Count < 2)
-        {
-            response = "Usage: .sl objprefab bringpos <InstanceID>";
+        if (!TryResolveTarget(args, player, 1, out var prefab, out _, out response))
             return false;
-        }
-
-        string id = args.At(1);
-        var prefab = InstanceManager.Get(id);
-        if (prefab is null)
-        {
-            response = $"Prefab {id} not found.";
-            return false;
-        }
 
         prefab.Position = player.CameraTransform.position + player.CameraTransform.forward * 2f;
-        response = $"Brought (position only) prefab {id} to your position.";
+        response = $"Brought position only for {FormatPrefab(prefab)} to your front.";
         return true;
     }
 
     // ===== max (ID指定) =====
     private bool SetMaxRooms(ArraySegment<string> args, Player player, out string response)
     {
-        if (args.Count < 3)
-        {
-            response = "Usage: .sl objprefab max <InstanceID> <count>";
+        if (!TryResolveTarget(args, player, 1, out var prefab, out var consumed, out response, true))
             return false;
-        }
 
-        string id = args.At(1);
-        var prefab = InstanceManager.Get(id) as ObjectPrefab;
-        if (prefab is null)
+        var valueIndex = 1 + consumed;
+        if (args.Count <= valueIndex || !int.TryParse(args.At(valueIndex), out var count) || count < 0)
         {
-            response = $"Prefab {id} not found or not ObjectPrefab.";
-            return false;
-        }
-
-        if (!int.TryParse(args.At(2), out var count) || count < 0)
-        {
-            response = "count must be >= 0 integer.";
+            response = "Usage: .sl objprefab max [InstanceID] <count>";
             return false;
         }
 
         prefab.MaxRooms = count == 0 ? 1 : count;
-        response = $"Set prefab {id} MaxRooms to {prefab.MaxRooms}.";
+        response = $"Set {FormatPrefab(prefab)} MaxRooms to {prefab.MaxRooms}.";
         return true;
     }
 
@@ -776,33 +975,74 @@ public class SpawnObjectPrefab : ICommand
     {
         if (args.Count == 1)
         {
-            if (Selected.TryGetValue(player, out var current))
+            if (TryFindLookPrefab(player, out var looked, out var distance))
             {
-                response = $"Selected prefab: [{current.ObjectInstanceID}] {current.GetType().Name} at {current.Position}";
+                Selected[player] = looked;
+                response = $"Selected {FormatPrefab(looked)} at {distance:F1}m.";
                 return true;
             }
 
-            response = "No prefab selected. Usage: .sl objprefab sel <InstanceID>";
+            if (Selected.TryGetValue(player, out var current))
+            {
+                response = $"Selected prefab: {FormatPrefab(current)} at {current.Position}. Look at another prefab and run select to switch.";
+                return true;
+            }
+
+            response = "No prefab selected. Look at a prefab and run '.sl objprefab select', or pass an InstanceID.";
             return false;
         }
 
-        if (args.At(1).Equals("none", StringComparison.OrdinalIgnoreCase))
+        var selector = args.At(1);
+        if (selector.Equals("none", StringComparison.OrdinalIgnoreCase) ||
+            selector.Equals("clear", StringComparison.OrdinalIgnoreCase))
         {
             Selected.Remove(player);
             response = "Cleared selected prefab.";
             return true;
         }
 
-        string id = args.At(1);
-        var prefab = InstanceManager.Get(id) as ObjectPrefab;
+        if (selector.Equals("look", StringComparison.OrdinalIgnoreCase))
+        {
+            if (!TryFindLookPrefab(player, out var looked, out var distance))
+            {
+                response = "No ObjectPrefab found on your sight line.";
+                return false;
+            }
+
+            Selected[player] = looked;
+            response = $"Selected {FormatPrefab(looked)} at {distance:F1}m.";
+            return true;
+        }
+
+        if (selector.Equals("near", StringComparison.OrdinalIgnoreCase))
+        {
+            var radius = 5f;
+            if (args.Count >= 3 && !TryParseFloat(args.At(2), out radius))
+            {
+                response = "Usage: .sl objprefab select near [radius]";
+                return false;
+            }
+
+            if (!TryFindNearestPrefab(player, radius, out var nearest))
+            {
+                response = $"No ObjectPrefab found within {radius:F1}m.";
+                return false;
+            }
+
+            Selected[player] = nearest;
+            response = $"Selected nearest {FormatPrefab(nearest)}.";
+            return true;
+        }
+
+        var prefab = InstanceManager.Get(selector) as ObjectPrefab;
         if (prefab is null)
         {
-            response = $"Prefab {id} not found or not ObjectPrefab.";
+            response = $"Prefab {selector} not found.";
             return false;
         }
 
         Selected[player] = prefab;
-        response = $"Selected prefab [{prefab.ObjectInstanceID}] {prefab.GetType().Name}.";
+        response = $"Selected {FormatPrefab(prefab)}.";
         return true;
     }
 
@@ -811,13 +1051,13 @@ public class SpawnObjectPrefab : ICommand
     {
         if (!Selected.TryGetValue(player, out var prefab))
         {
-            response = "No prefab selected. Use '.sl objprefab sel <InstanceID>' first.";
+            response = "No prefab selected. Use '.sl objprefab select' while looking at one first.";
             return false;
         }
 
         if (args.Count < 2)
         {
-            response = "Usage: .sl objprefab mod <info|pos|addpos|rot|max|autodestroy|bring>";
+            response = "Usage: .sl objprefab modify <info|position|rotation|scale|max|autodestroy|bring>";
             return false;
         }
 
@@ -837,13 +1077,26 @@ public class SpawnObjectPrefab : ICommand
                     response += "\n Options: " + string.Join(", ", options.Select(kv => $"{kv.Key}={kv.Value}"));
                 return true;
 
+            case "position":
             case "pos":
-                return ModSetPos(args, prefab, out response);
+                return ModPosition(args, player, prefab, out response);
 
             case "addpos":
-                return ModAddPos(args, prefab, out response);
+                return ModAddPos(args, prefab, 2, out response);
 
+            case "rotation":
+            case "rotate":
             case "rot":
+                return ModRotation(args, prefab, out response);
+
+            case "scale":
+            case "scl":
+                return ModScale(args, prefab, out response);
+
+            case "setpos":
+                return ModSetPos(args, prefab, out response);
+
+            case "setrot":
                 return ModSetRot(args, prefab, out response);
 
             case "max":
@@ -859,71 +1112,181 @@ public class SpawnObjectPrefab : ICommand
                 // サブクラス固有のmodサブコマンドを試行
                 if (prefab.HandleModCommand(args, out response))
                     return true;
-                response = "Unknown subcommand. Use: info / pos / addpos / rot / max / autodestroy / bring";
+                response = "Unknown subcommand. Use: info / position / rotation / scale / max / autodestroy / bring";
+                return false;
+        }
+    }
+
+    private bool ModPosition(ArraySegment<string> args, Player player, ObjectPrefab prefab, out string response)
+    {
+        if (args.Count < 3)
+        {
+            response =
+                "Usage:\n" +
+                "  .sl objprefab modify position set <x> <y> <z>\n" +
+                "  .sl objprefab modify position add <dx> <dy> <dz>\n" +
+                "  .sl objprefab modify position bring\n" +
+                "  .sl objprefab modify position grab";
+            return false;
+        }
+
+        switch (args.At(2).ToLowerInvariant())
+        {
+            case "set":
+                return ModSetPos(args, prefab, 3, out response);
+            case "add":
+                return ModAddPos(args, prefab, 3, out response);
+            case "bring":
+                return ModBring(args, player, prefab, out response);
+            case "grab":
+                StartGrab(player, prefab, true);
+                response = $"Now grabbing position only for {FormatPrefab(prefab)}.";
+                return true;
+            default:
+                if (TryReadVector(args, 2, out _))
+                    return ModSetPos(args, prefab, 2, out response);
+
+                response = "Unknown position action. Use set / add / bring / grab.";
+                return false;
+        }
+    }
+
+    private bool ModRotation(ArraySegment<string> args, ObjectPrefab prefab, out string response)
+    {
+        if (args.Count < 3)
+        {
+            response =
+                "Usage:\n" +
+                "  .sl objprefab modify rotation set <pitch> <yaw> <roll>\n" +
+                "  .sl objprefab modify rotation add <pitch> <yaw> <roll>";
+            return false;
+        }
+
+        switch (args.At(2).ToLowerInvariant())
+        {
+            case "set":
+                return ModSetRot(args, prefab, 3, out response);
+            case "add":
+                return ModAddRot(args, prefab, 3, out response);
+            default:
+                if (TryReadVector(args, 2, out _))
+                    return ModSetRot(args, prefab, 2, out response);
+
+                response = "Unknown rotation action. Use set / add.";
+                return false;
+        }
+    }
+
+    private bool ModScale(ArraySegment<string> args, ObjectPrefab prefab, out string response)
+    {
+        if (args.Count < 3)
+        {
+            response =
+                "Usage:\n" +
+                "  .sl objprefab modify scale set <x> <y> <z>\n" +
+                "  .sl objprefab modify scale add <x> <y> <z>";
+            return false;
+        }
+
+        switch (args.At(2).ToLowerInvariant())
+        {
+            case "set":
+                return ModSetScale(args, prefab, 3, out response);
+            case "add":
+                return ModAddScale(args, prefab, 3, out response);
+            default:
+                if (TryReadVector(args, 2, out _))
+                    return ModSetScale(args, prefab, 2, out response);
+
+                response = "Unknown scale action. Use set / add.";
                 return false;
         }
     }
 
     private bool ModSetPos(ArraySegment<string> args, ObjectPrefab prefab, out string response)
+        => ModSetPos(args, prefab, 2, out response);
+
+    private bool ModSetPos(ArraySegment<string> args, ObjectPrefab prefab, int index, out string response)
     {
-        if (args.Count < 5)
+        if (!TryReadVector(args, index, out var position))
         {
-            response = "Usage: .sl objprefab mod pos <x> <y> <z>";
+            response = "Usage: .sl objprefab modify position set <x> <y> <z>";
             return false;
         }
 
-        if (!float.TryParse(args.At(2), out var x) ||
-            !float.TryParse(args.At(3), out var y) ||
-            !float.TryParse(args.At(4), out var z))
-        {
-            response = "x, y, z must be numbers.";
-            return false;
-        }
-
-        prefab.Position = new Vector3(x, y, z);
-        response = $"Set position to ({x}, {y}, {z}).";
+        prefab.Position = position;
+        response = $"Set {FormatPrefab(prefab)} position to ({FormatVector(position)}).";
         return true;
     }
 
     private bool ModAddPos(ArraySegment<string> args, ObjectPrefab prefab, out string response)
+        => ModAddPos(args, prefab, 2, out response);
+
+    private bool ModAddPos(ArraySegment<string> args, ObjectPrefab prefab, int index, out string response)
     {
-        if (args.Count < 5)
+        if (!TryReadVector(args, index, out var delta))
         {
-            response = "Usage: .sl objprefab mod addpos <dx> <dy> <dz>";
+            response = "Usage: .sl objprefab modify position add <dx> <dy> <dz>";
             return false;
         }
 
-        if (!float.TryParse(args.At(2), out var dx) ||
-            !float.TryParse(args.At(3), out var dy) ||
-            !float.TryParse(args.At(4), out var dz))
-        {
-            response = "dx, dy, dz must be numbers.";
-            return false;
-        }
-
-        prefab.Position += new Vector3(dx, dy, dz);
-        response = $"Added position ({dx}, {dy}, {dz}). Now: {prefab.Position}";
+        prefab.Position += delta;
+        response = $"Moved {FormatPrefab(prefab)} by ({FormatVector(delta)}). Now: {prefab.Position}";
         return true;
     }
 
     private bool ModSetRot(ArraySegment<string> args, ObjectPrefab prefab, out string response)
+        => ModSetRot(args, prefab, 2, out response);
+
+    private bool ModSetRot(ArraySegment<string> args, ObjectPrefab prefab, int index, out string response)
     {
-        if (args.Count < 5)
+        if (!TryReadVector(args, index, out var rotation))
         {
-            response = "Usage: .sl objprefab mod rot <pitch> <yaw> <roll>";
+            response = "Usage: .sl objprefab modify rotation set <pitch> <yaw> <roll>";
             return false;
         }
 
-        if (!float.TryParse(args.At(2), out var pitch) ||
-            !float.TryParse(args.At(3), out var yaw) ||
-            !float.TryParse(args.At(4), out var roll))
+        prefab.Rotation = Quaternion.Euler(rotation);
+        response = $"Set {FormatPrefab(prefab)} rotation to ({FormatVector(rotation)}).";
+        return true;
+    }
+
+    private bool ModAddRot(ArraySegment<string> args, ObjectPrefab prefab, int index, out string response)
+    {
+        if (!TryReadVector(args, index, out var rotation))
         {
-            response = "pitch, yaw, roll must be numbers.";
+            response = "Usage: .sl objprefab modify rotation add <pitch> <yaw> <roll>";
             return false;
         }
 
-        prefab.Rotation = Quaternion.Euler(pitch, yaw, roll);
-        response = $"Set rotation to ({pitch}, {yaw}, {roll}).";
+        prefab.Rotation = Quaternion.Euler(prefab.Rotation.eulerAngles + rotation);
+        response = $"Rotated {FormatPrefab(prefab)} by ({FormatVector(rotation)}).";
+        return true;
+    }
+
+    private bool ModSetScale(ArraySegment<string> args, ObjectPrefab prefab, int index, out string response)
+    {
+        if (!TryReadVector(args, index, out var scale))
+        {
+            response = "Usage: .sl objprefab modify scale set <x> <y> <z>";
+            return false;
+        }
+
+        prefab.Scale = scale;
+        response = $"Set {FormatPrefab(prefab)} scale to ({FormatVector(scale)}).";
+        return true;
+    }
+
+    private bool ModAddScale(ArraySegment<string> args, ObjectPrefab prefab, int index, out string response)
+    {
+        if (!TryReadVector(args, index, out var scale))
+        {
+            response = "Usage: .sl objprefab modify scale add <x> <y> <z>";
+            return false;
+        }
+
+        prefab.Scale += scale;
+        response = $"Added scale ({FormatVector(scale)}) to {FormatPrefab(prefab)}. Now: {prefab.Scale}";
         return true;
     }
 
@@ -954,7 +1317,7 @@ public class SpawnObjectPrefab : ICommand
             return false;
         }
 
-        if (!float.TryParse(args.At(2), out var sec))
+        if (!TryParseFloat(args.At(2), out var sec))
         {
             response = "seconds must be a number (or -1 to disable).";
             return false;
