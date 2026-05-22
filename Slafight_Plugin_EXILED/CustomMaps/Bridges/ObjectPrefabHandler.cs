@@ -44,11 +44,10 @@ public class ObjectPrefabHandler : SlafightLabApiHandler, IBootstrapHandler
 
         foreach (var prefab in InstanceManager.GetAll())
         {
-            if (prefab == null || prefab.ToySearchRadius <= 0f)
+            if (prefab == null)
                 continue;
 
-            float dist = Vector3.Distance(prefab.Position, toyPos);
-            if (dist <= prefab.ToySearchRadius)
+            if (prefab.MatchesInteractableToy(ev.Interactable, toyPos))
             {
                 prefab.InvokeToySearchingNearby(ev);
             }
@@ -73,11 +72,10 @@ public class ObjectPrefabHandler : SlafightLabApiHandler, IBootstrapHandler
 
         foreach (var prefab in InstanceManager.GetAll())
         {
-            if (prefab == null || prefab.ToySearchRadius <= 0f)
+            if (prefab == null)
                 continue;
 
-            float dist = Vector3.Distance(prefab.Position, toyPos);
-            if (dist <= prefab.ToySearchRadius)
+            if (prefab.MatchesInteractableToy(ev.Interactable, toyPos))
             {
                 prefab.InvokeToySearchedNearby(ev);
             }

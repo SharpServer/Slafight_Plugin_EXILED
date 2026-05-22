@@ -31,6 +31,8 @@ public class Document : ObjectPrefab
 
     private SchematicObject? _schematicObject;
     private InteractableToy? _interactableToy;
+    private static readonly Vector3 InteractableLocalOffset = Vector3.zero;
+    private static readonly Vector3 InteractableBaseScale = Vector3.one;
 
     private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
         = EventHandler.CreateAndPlayAudio;
@@ -38,7 +40,7 @@ public class Document : ObjectPrefab
     protected override void OnCreate()
     {
         if (ShowModel)
-            _schematicObject = ObjectSpawner.SpawnSchematic("Document", base.Position, base.Rotation);
+            _schematicObject = SpawnManagedSchematic("Document");
 
         Timing.CallDelayed(0.5f, CreateInteractableToy);
         base.OnCreate();
@@ -46,22 +48,17 @@ public class Document : ObjectPrefab
 
     private void CreateInteractableToy()
     {
-        _interactableToy = InteractableToy.Create();
-        _interactableToy.Position = _schematicObject?.Position ?? base.Position;
-        _interactableToy.Rotation = _schematicObject?.Rotation ?? base.Rotation;
-        _interactableToy.InteractionDuration = 3f;
-        _interactableToy.Shape = InvisibleInteractableToy.ColliderShape.Box;
-        _interactableToy.Scale = Vector3.one;
-        _interactableToy.Spawn();
+        _interactableToy = CreateManagedInteractable(
+            interactionDuration: 3f,
+            shape: InvisibleInteractableToy.ColliderShape.Box,
+            localOffset: InteractableLocalOffset,
+            baseScale: InteractableBaseScale);
 
         Log.Info($"Document Interactable spawned at {_interactableToy.Position}");
-        SyncWithSchematic();
     }
 
     protected override void OnDestroy()
     {
-        _schematicObject?.Destroy();
-        _interactableToy?.Destroy();
         _schematicObject = null;
         _interactableToy = null;
         Log.Debug("[Document] Destroyed");
@@ -99,7 +96,7 @@ public class Document : ObjectPrefab
         if (options.TryGetValue("ShowModel", out var sm)
             && bool.TryParse(sm, out var show))
         {
-            ShowModel = show;
+            SetShowModel(show);
         }
     }
 
@@ -119,18 +116,7 @@ public class Document : ObjectPrefab
                 response = $"Invalid value '{args.At(2)}'. Use true or false.";
                 return true;
             }
-            ShowModel = val;
-            // ランタイムでモデルの表示/非表示を切り替え
-            if (val && _schematicObject == null)
-            {
-                _schematicObject = ObjectSpawner.SpawnSchematic("Document", Position, Rotation);
-                SyncWithSchematic();
-            }
-            else if (!val && _schematicObject != null)
-            {
-                _schematicObject.Destroy();
-                _schematicObject = null;
-            }
+            SetShowModel(val);
             response = $"Set ShowModel to {val}.";
             return true;
         }
@@ -154,66 +140,21 @@ public class Document : ObjectPrefab
         return base.HandleModCommand(args, out response);
     }
 
-    // ===== Position/Rotation/Scale sync =====
-
-    public override Vector3 Position
+    private void SetShowModel(bool showModel)
     {
-        get => _schematicObject != null ? _schematicObject.Position : base.Position;
-        set
-        {
-            if (_schematicObject != null)
-            {
-                _schematicObject.Position = value;
-                SyncWithSchematic();
-            }
-            else
-            {
-                base.Position = value;
-            }
-        }
-    }
-
-    public override Quaternion Rotation
-    {
-        get => _schematicObject != null ? _schematicObject.Rotation : base.Rotation;
-        set
-        {
-            if (_schematicObject != null)
-            {
-                _schematicObject.Rotation = value;
-                SyncWithSchematic();
-            }
-            else
-            {
-                base.Rotation = value;
-            }
-        }
-    }
-
-    public override Vector3 Scale
-    {
-        get => _schematicObject != null ? _schematicObject.Scale : base.Scale;
-        set
-        {
-            if (_schematicObject != null)
-            {
-                _schematicObject.Scale = value;
-                if (_interactableToy != null)
-                    _interactableToy.Scale = value * 1.2f;
-            }
-            else
-            {
-                base.Scale = value;
-            }
-        }
-    }
-
-    private void SyncWithSchematic()
-    {
-        if (_schematicObject == null || _interactableToy == null)
+        ShowModel = showModel;
+        if (string.IsNullOrEmpty(ObjectInstanceID))
             return;
 
-        _interactableToy.Position = _schematicObject.Position;
-        _interactableToy.Rotation = _schematicObject.Rotation;
+        if (showModel && _schematicObject == null)
+        {
+            _schematicObject = SpawnManagedSchematic("Document");
+        }
+        else if (!showModel && _schematicObject != null)
+        {
+            DestroyManagedSchematic();
+            _schematicObject = null;
+            SyncManagedObjects();
+        }
     }
 }

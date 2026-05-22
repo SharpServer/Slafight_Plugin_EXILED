@@ -24,6 +24,8 @@ public class Vent : ObjectPrefab
 
     private SchematicObject? _schematicObject;
     private InteractableToy? _interactableToy;
+    private static readonly Vector3 InteractableLocalOffset = Vector3.zero;
+    private static readonly Vector3 InteractableBaseScale = Vector3.one;
 
     private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
         = EventHandler.CreateAndPlayAudio;
@@ -34,7 +36,7 @@ public class Vent : ObjectPrefab
 
     protected override void OnCreate()
     {
-        _schematicObject = ObjectSpawner.SpawnSchematic("Vent", base.Position, base.Rotation);
+        _schematicObject = SpawnManagedSchematic("Vent");
         Timing.CallDelayed(0.5f, CreateInteractableToy);
         base.OnCreate();
     }
@@ -43,22 +45,17 @@ public class Vent : ObjectPrefab
     {
         if (_schematicObject == null) return;
 
-        _interactableToy = InteractableToy.Create();
-        _interactableToy.Position = _schematicObject.Position;
-        _interactableToy.Rotation = _schematicObject.Rotation;
-        _interactableToy.InteractionDuration = 3f;
-        _interactableToy.Shape = InvisibleInteractableToy.ColliderShape.Box;
-        _interactableToy.Scale = Vector3.one;
-        _interactableToy.Spawn();
+        _interactableToy = CreateManagedInteractable(
+            interactionDuration: 3f,
+            shape: InvisibleInteractableToy.ColliderShape.Box,
+            localOffset: InteractableLocalOffset,
+            baseScale: InteractableBaseScale);
 
         Log.Info($"Vent Interactable spawned at {_interactableToy.Position}");
-        SyncWithSchematic();
     }
 
     protected override void OnDestroy()
     {
-        _schematicObject?.Destroy();
-        _interactableToy?.Destroy();
         _schematicObject = null;
         _interactableToy = null;
         Log.Debug("[Vent] Destroyed");
@@ -178,66 +175,5 @@ public class Vent : ObjectPrefab
     {
         _touchedDictionary = [];
         _lastTouchTime = [];
-    }
-
-    public override Vector3 Position
-    {
-        get => _schematicObject != null ? _schematicObject.Position : base.Position;
-        set
-        {
-            if (_schematicObject != null)
-            {
-                _schematicObject.Position = value;
-                SyncWithSchematic();
-            }
-            else
-            {
-                base.Position = value;
-            }
-        }
-    }
-
-    public override Quaternion Rotation
-    {
-        get => _schematicObject != null ? _schematicObject.Rotation : base.Rotation;
-        set
-        {
-            if (_schematicObject != null)
-            {
-                _schematicObject.Rotation = value;
-                SyncWithSchematic();
-            }
-            else
-            {
-                base.Rotation = value;
-            }
-        }
-    }
-
-    public override Vector3 Scale
-    {
-        get => _schematicObject != null ? _schematicObject.Scale : base.Scale;
-        set
-        {
-            if (_schematicObject != null)
-            {
-                _schematicObject.Scale = value;
-                if (_interactableToy != null)
-                    _interactableToy.Scale = value * 1.2f;
-            }
-            else
-            {
-                base.Scale = value;
-            }
-        }
-    }
-
-    private void SyncWithSchematic()
-    {
-        if (_schematicObject == null || _interactableToy == null)
-            return;
-
-        _interactableToy.Position = _schematicObject.Position;
-        _interactableToy.Rotation = _schematicObject.Rotation;
     }
 }

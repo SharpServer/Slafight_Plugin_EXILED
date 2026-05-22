@@ -799,6 +799,15 @@ public class SpawnObjectPrefab : ICommand
         if (!TryResolveTarget(args, player, 1, out var prefab, out _, out response))
             return false;
 
+        if (Grabbing.TryGetValue(player, out var current) &&
+            current.ObjectInstanceID == prefab.ObjectInstanceID &&
+            !GrabLockRotation.GetValueOrDefault(player))
+        {
+            UngrabInternal(player);
+            response = $"Released {FormatPrefab(prefab)}.";
+            return true;
+        }
+
         StartGrab(player, prefab, false);
         Selected[player] = prefab;
         response = $"Now grabbing {FormatPrefab(prefab)}.";
@@ -810,6 +819,15 @@ public class SpawnObjectPrefab : ICommand
     {
         if (!TryResolveTarget(args, player, 1, out var prefab, out _, out response))
             return false;
+
+        if (Grabbing.TryGetValue(player, out var current) &&
+            current.ObjectInstanceID == prefab.ObjectInstanceID &&
+            GrabLockRotation.GetValueOrDefault(player))
+        {
+            UngrabInternal(player);
+            response = $"Released {FormatPrefab(prefab)}.";
+            return true;
+        }
 
         StartGrab(player, prefab, true);
         Selected[player] = prefab;
@@ -1071,6 +1089,8 @@ public class SpawnObjectPrefab : ICommand
                     $" Rot: {prefab.Rotation.eulerAngles}\n" +
                     $" Scale: {prefab.Scale}\n" +
                     $" MaxRooms: {prefab.MaxRooms}\n" +
+                    $" ManagedSchematic: {(prefab.ManagedSchematic != null ? "yes" : "no")}\n" +
+                    $" ManagedInteractables: {prefab.ManagedInteractables.Count}\n" +
                     $" AutoDestroy: {(prefab.AutoDestroyEnabled ? prefab.AutoDestroyTime.ToString() : "disabled")}";
                 var options = prefab.CollectOptions();
                 if (options.Count > 0)
@@ -1105,6 +1125,10 @@ public class SpawnObjectPrefab : ICommand
             case "autodestroy":
                 return ModSetAutoDestroy(args, prefab, out response);
 
+            case "option":
+            case "opt":
+                return ModApplyOption(args, prefab, out response);
+
             case "bring":
                 return ModBring(args, player, prefab, out response);
 
@@ -1112,7 +1136,7 @@ public class SpawnObjectPrefab : ICommand
                 // サブクラス固有のmodサブコマンドを試行
                 if (prefab.HandleModCommand(args, out response))
                     return true;
-                response = "Unknown subcommand. Use: info / position / rotation / scale / max / autodestroy / bring";
+                response = "Unknown subcommand. Use: info / position / rotation / scale / max / autodestroy / option / bring";
                 return false;
         }
     }
@@ -1334,6 +1358,27 @@ public class SpawnObjectPrefab : ICommand
         prefab.AutoDestroyEnabled = true;
         prefab.AutoDestroyTime = sec;
         response = $"AutoDestroy enabled: {sec} seconds.";
+        return true;
+    }
+
+    private bool ModApplyOption(ArraySegment<string> args, ObjectPrefab prefab, out string response)
+    {
+        if (args.Count < 4)
+        {
+            var options = prefab.CollectOptions();
+            response = options.Count > 0
+                ? "Current options: " + string.Join(", ", options.Select(kv => $"{kv.Key}={kv.Value}")) +
+                  "\nUsage: .sl objprefab modify option <key> <value>"
+                : "Usage: .sl objprefab modify option <key> <value>";
+            return false;
+        }
+
+        var key = args.At(2);
+        var value = args.At(3);
+        prefab.ApplyOptions(new Dictionary<string, string> { [key] = value });
+        prefab.SyncManagedObjects();
+
+        response = $"Applied option {key}={value} to {FormatPrefab(prefab)}.";
         return true;
     }
 

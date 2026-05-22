@@ -18,35 +18,31 @@ public class Trashbox : ObjectPrefab
 
     private SchematicObject? _schematicObject;
     private InteractableToy? _interactableToy;
+    private static readonly Vector3 InteractableLocalOffset = Vector3.zero;
+    private static readonly Vector3 InteractableBaseScale = Vector3.one * 1.5f + Vector3.up * 2f;
 
     private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
         = EventHandler.CreateAndPlayAudio;
 
     protected override void OnCreate()
     {
-         _schematicObject = ObjectSpawner.SpawnSchematic("trashbox", base.Position, base.Rotation);
+         _schematicObject = SpawnManagedSchematic("trashbox");
 
-        Timing.CallDelayed(0.5f, CreateInteractableToy);
-        base.OnCreate();
+         Timing.CallDelayed(0.5f, CreateInteractableToy);
+         base.OnCreate();
     }
 
     private void CreateInteractableToy()
     {
-        _interactableToy = InteractableToy.Create();
-        _interactableToy.Position = _schematicObject?.Position ?? base.Position;
-        _interactableToy.Position += Vector3.zero;
-        _interactableToy.Rotation = _schematicObject?.Rotation ?? base.Rotation;
-        _interactableToy.InteractionDuration = 5f;
-        _interactableToy.Shape = InvisibleInteractableToy.ColliderShape.Box;
-        _interactableToy.Scale = Vector3.one * 1.5f + Vector3.up * 2f;
-        _interactableToy.Spawn();
-        SyncWithSchematic();
+        _interactableToy = CreateManagedInteractable(
+            interactionDuration: 5f,
+            shape: InvisibleInteractableToy.ColliderShape.Box,
+            localOffset: InteractableLocalOffset,
+            baseScale: InteractableBaseScale);
     }
 
     protected override void OnDestroy()
     {
-        _schematicObject?.Destroy();
-        _interactableToy?.Destroy();
         _schematicObject = null;
         _interactableToy = null;
         base.OnDestroy();
@@ -57,67 +53,5 @@ public class Trashbox : ObjectPrefab
         var player = Player.Get(ev.Player);
         var pos = _schematicObject?.Position ?? Position;
         player?.ShowHint("ゴミ箱を漁った・・・中には、何も入っていなかった。");
-    }
-
-    // ===== Position/Rotation/Scale sync =====
-
-    public override Vector3 Position
-    {
-        get => _schematicObject != null ? _schematicObject.Position : base.Position;
-        set
-        {
-            if (_schematicObject != null)
-            {
-                _schematicObject.Position = value;
-                SyncWithSchematic();
-            }
-            else
-            {
-                base.Position = value;
-            }
-        }
-    }
-
-    public override Quaternion Rotation
-    {
-        get => _schematicObject != null ? _schematicObject.Rotation : base.Rotation;
-        set
-        {
-            if (_schematicObject != null)
-            {
-                _schematicObject.Rotation = value;
-                SyncWithSchematic();
-            }
-            else
-            {
-                base.Rotation = value;
-            }
-        }
-    }
-
-    public override Vector3 Scale
-    {
-        get => _schematicObject != null ? _schematicObject.Scale : base.Scale;
-        set
-        {
-            if (_schematicObject != null)
-            {
-                _schematicObject.Scale = value;
-                _interactableToy?.Scale = value * 1.2f;
-            }
-            else
-            {
-                base.Scale = value;
-            }
-        }
-    }
-
-    private void SyncWithSchematic()
-    {
-        if (_schematicObject == null || _interactableToy == null)
-            return;
-
-        _interactableToy.Position = _schematicObject.Position;
-        _interactableToy.Rotation = _schematicObject.Rotation;
     }
 }
