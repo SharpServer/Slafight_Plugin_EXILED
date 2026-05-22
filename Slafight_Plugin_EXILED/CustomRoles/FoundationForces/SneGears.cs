@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.Events.EventArgs.Player;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
@@ -33,4 +34,12 @@ public class SneGears : CRole
         [AmmoType.Nato556] = 140,
     };
     protected override string SpawnCustomInfo => "<color=#FF1493>See No Evil Gears</color>";
+    protected override void OnRoleHurting(HurtingEventArgs ev)
+    {
+        if (ev.Attacker.GetTeam() is CTeam.Fifthists || ev.Attacker.GetCustomRole() is CRoleTypeId.Scp3005)
+        {
+            ev.Amount *= 0.77f; 
+        }
+        base.OnRoleHurting(ev);
+    }
 }
