@@ -17,20 +17,17 @@ public class HitboxCommand : ICommand
 {
     private const float DefaultDuration = 300f;
     private const float PrimitiveRedrawInterval = 1f;
-    private const float DrawLineInfiniteDuration = 3600f;
-    private const float ClearFadeDuration = 1.25f;
     private const float DefaultLookRange = 80f;
     private const float DefaultNearRadius = 8f;
     private const int MaxCollidersPerSession = 64;
     private const float PrimitiveLineWidth = 0.035f;
 
     private static readonly Dictionary<int, HitboxDrawSession> Sessions = new();
-    private static readonly Dictionary<string, HitboxRenderBackend> PlayerBackends = new();
     private static int _nextSessionId = 1;
 
     public string Command => "hitbox";
     public string[] Aliases { get; } = ["hb", "collider", "colliders"];
-    public string Description => "Draw/clear collider hitboxes: look/near/name/player/probe/drawtest/clear/list.";
+    public string Description => "Draw/clear collider hitboxes with Primitive toys: look/near/area/name/player/probe/clear/list.";
 
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
     {
@@ -46,17 +43,13 @@ public class HitboxCommand : ICommand
                 "Usage: sl hitbox <action> [...]\n" +
                 "  look [duration|on|off] [range] [self|all]\n" +
                 "  near [radius] [duration|on|off] [self|all] [nameFilter]\n" +
+                "  area [radius] [duration|on|off] [self|all]\n" +
                 "  name <nameFilter> [duration|on|off] [self|all] [max]\n" +
                 "  player [target|all] [duration|on|off] [self|all]\n" +
                 "  probe [range]\n" +
-                "  drawtest\n" +
-                "  drawbounds [range]\n" +
-                "  drawcollider [range]\n" +
-                "  mode [draw|primitive]\n" +
                 "  list\n" +
                 "  clear [all|sessionId]\n" +
-                "Default visibility is self. Use duration `on` to draw until cleared.\n" +
-                "Default render mode is primitive. Use `sl hitbox mode draw` for EXILED Draw.Line rendering.";
+                "Default visibility is self. Use duration `on` to draw until cleared.";
             return false;
         }
 
@@ -74,11 +67,8 @@ public class HitboxCommand : ICommand
         {
             "look" or "ray" or "target" => DrawLook(arguments, executor, out response),
             "probe" or "inspect" or "lookinfo" => ProbeLook(arguments, executor, out response),
-            "drawtest" or "linetest" => DrawTest(executor, out response),
-            "drawbounds" or "boundstest" => DrawBoundsTest(arguments, executor, out response),
-            "drawcollider" or "collidertest" => DrawColliderTest(arguments, executor, out response),
-            "mode" or "backend" or "renderer" => SetRenderMode(arguments, executor, out response),
             "near" or "around" or "radius" => DrawNear(arguments, executor, out response),
+            "area" or "all" or "allnear" or "range" => DrawArea(arguments, executor, out response),
             "name" or "find" or "search" => DrawName(arguments, executor, out response),
             "player" or "players" or "pl" => DrawPlayer(arguments, executor, out response),
             _ => UnknownAction(action, out response),
@@ -93,8 +83,6 @@ public class HitboxCommand : ICommand
 
         Collider collider = hit.collider;
         Bounds bounds = collider.bounds;
-        int estimatedMessages = EstimateDrawMessageCount(collider);
-        int estimatedLineSegments = EstimateDrawLineSegmentCount(collider);
         response =
             "Hitbox probe\n" +
             $"  Name: {GetColliderName(collider)}\n" +
@@ -103,82 +91,7 @@ public class HitboxCommand : ICommand
             $"  Distance: {hit.distance:0.###}m\n" +
             $"  Bounds center: {FormatVector(bounds.center)}\n" +
             $"  Bounds size: {FormatVector(bounds.size)}\n" +
-            $"  Finite bounds: {IsFinite(bounds.center) && IsFinite(bounds.size)}\n" +
-            $"  Draw.Collider estimated messages: {estimatedMessages}\n" +
-            $"  Draw.Collider estimated line segments: {estimatedLineSegments}\n" +
-            $"  Render mode: {FormatBackend(GetPreferredBackend(executor))}";
-        return true;
-    }
-
-    private static bool DrawTest(Player executor, out string response)
-    {
-        if (executor.CameraTransform == null)
-        {
-            response = "Camera transform not found.";
-            return false;
-        }
-
-        Vector3 start = executor.CameraTransform.position + executor.CameraTransform.forward * 1.5f;
-        Vector3 end = start + Vector3.up * 0.75f;
-        Log.Warn($"[Hitbox] Sending EXILED Draw test line to {executor.Nickname}. If this player disconnects, DrawableLineMessage/EXILED Draw is incompatible with this server/client build.");
-        Draw.Line(start, end, Color.red, 1f, new[] { executor });
-        response = "Sent one EXILED Draw line. If you were disconnected, the issue is EXILED Draw/DrawableLineMessage, not collider selection.";
-        return true;
-    }
-
-    private static bool SetRenderMode(ArraySegment<string> arguments, Player executor, out string response)
-    {
-        if (arguments.Count < 2)
-        {
-            response =
-                $"Current hitbox render mode for {executor.Nickname}: {FormatBackend(GetPreferredBackend(executor))}\n" +
-                "Usage: sl hitbox mode <draw|primitive>";
-            return true;
-        }
-
-        string mode = arguments.At(1);
-        if (!TryParseBackend(mode, out HitboxRenderBackend backend))
-        {
-            response = $"Unknown hitbox render mode: {mode}. Use draw or primitive.";
-            return false;
-        }
-
-        PlayerBackends[executor.UserId] = backend;
-        response = $"Hitbox render mode for {executor.Nickname}: {FormatBackend(backend)}.";
-        return true;
-    }
-
-    private static bool DrawBoundsTest(ArraySegment<string> arguments, Player executor, out string response)
-    {
-        float range = ParseFloat(arguments, 1, DefaultLookRange, 1f, 500f);
-        if (!TryRaycastLook(executor, range, out RaycastHit hit, out response))
-            return false;
-
-        DrawBoundsAsLines(hit.collider.bounds, Color.blue, 1f, new[] { executor });
-        response =
-            "Sent looked collider bounds as EXILED Draw.Line segments.\n" +
-            $"  Target: {GetColliderName(hit.collider)}\n" +
-            "  Expected DrawableLine messages: 12";
-        return true;
-    }
-
-    private static bool DrawColliderTest(ArraySegment<string> arguments, Player executor, out string response)
-    {
-        float range = ParseFloat(arguments, 1, DefaultLookRange, 1f, 500f);
-        if (!TryRaycastLook(executor, range, out RaycastHit hit, out response))
-            return false;
-
-        Collider collider = hit.collider;
-        int estimatedMessages = EstimateDrawMessageCount(collider);
-        int estimatedSegments = EstimateDrawLineSegmentCount(collider);
-        Log.Warn($"[Hitbox] Sending EXILED Draw.Collider test to {executor.Nickname}. Target={GetColliderName(collider)}, Messages~{estimatedMessages}, Segments~{estimatedSegments}");
-        DrawColliderAsLines(collider, Color.red, 1f, new[] { executor });
-        response =
-            "Sent looked collider as EXILED Draw.Line segments.\n" +
-            $"  Target: {GetColliderName(collider)}\n" +
-            $"  Estimated DrawableLine messages: {estimatedMessages}\n" +
-            $"  Estimated line segments: {estimatedSegments}\n" +
-            "  MeshCollider is intentionally rendered as bounds to avoid sending every triangle.";
+            $"  Finite bounds: {IsFinite(bounds.center) && IsFinite(bounds.size)}";
         return true;
     }
 
@@ -201,16 +114,13 @@ public class HitboxCommand : ICommand
             return false;
         }
 
-        ClearOwnerSessions(executor, "look:");
-
         int id = StartSession(
             executor,
             $"look:{GetColliderName(hit.collider)}",
             () => colliders,
             duration,
             visibleToAll,
-            Color.cyan,
-            GetPreferredBackend(executor));
+            Color.cyan);
 
         response = StartedMessage(id, "look", colliders.Length, duration, visibleToAll);
         return true;
@@ -227,7 +137,7 @@ public class HitboxCommand : ICommand
         bool visibleToAll = ParseVisibility(arguments, 3);
         string filter = arguments.Count >= 5 ? string.Join(" ", arguments.Skip(4)) : string.Empty;
 
-        IEnumerable<Collider> Resolve() => GetNearbyColliders(executor.Position, radius, filter);
+        IEnumerable<Collider> Resolve() => GetNearbyColliders(executor, radius, filter);
         Collider[] initial = Resolve().ToArray();
         if (initial.Length == 0)
         {
@@ -243,10 +153,39 @@ public class HitboxCommand : ICommand
             Resolve,
             duration,
             visibleToAll,
-            Color.yellow,
-            GetPreferredBackend(executor));
+            Color.yellow);
 
         response = StartedMessage(id, "near", initial.Length, duration, visibleToAll);
+        return true;
+    }
+
+    private static bool DrawArea(ArraySegment<string> arguments, Player executor, out string response)
+    {
+        float radius = ParseFloat(arguments, 1, DefaultNearRadius, 0.25f, 100f);
+
+        if (IsOffArgument(arguments, 1) || IsOffArgument(arguments, 2))
+            return ClearOwnerSessions(executor, out response);
+
+        float duration = ParseDuration(arguments, 2, DefaultDuration);
+        bool visibleToAll = ParseVisibility(arguments, 3);
+
+        IEnumerable<Collider> Resolve() => GetNearbyColliders(executor, radius, string.Empty);
+        Collider[] initial = Resolve().ToArray();
+        if (initial.Length == 0)
+        {
+            response = $"No colliders found within {radius:0.#}m.";
+            return false;
+        }
+
+        int id = StartSession(
+            executor,
+            $"area:{radius:0.#}m",
+            Resolve,
+            duration,
+            visibleToAll,
+            Color.yellow);
+
+        response = StartedMessage(id, "area", initial.Length, duration, visibleToAll);
         return true;
     }
 
@@ -281,8 +220,7 @@ public class HitboxCommand : ICommand
             Resolve,
             duration,
             visibleToAll,
-            Color.magenta,
-            GetPreferredBackend(executor));
+            Color.magenta);
 
         response = StartedMessage(id, "name", initial.Length, duration, visibleToAll);
         return true;
@@ -312,7 +250,7 @@ public class HitboxCommand : ICommand
                 return false;
             }
 
-            int allId = StartSession(executor, "players:all", ResolveAll, duration, visibleToAll, Color.green, GetPreferredBackend(executor));
+            int allId = StartSession(executor, "players:all", ResolveAll, duration, visibleToAll, Color.green);
             response = StartedMessage(allId, "player all", initialAll.Length, duration, visibleToAll);
             return true;
         }
@@ -334,8 +272,7 @@ public class HitboxCommand : ICommand
             ResolveTarget,
             duration,
             visibleToAll,
-            Color.green,
-            GetPreferredBackend(executor));
+            Color.green);
 
         response = StartedMessage(id, "player", initial.Length, duration, visibleToAll);
         return true;
@@ -351,7 +288,7 @@ public class HitboxCommand : ICommand
             foreach (int id in Sessions.Keys.ToArray())
                 StopSession(id);
 
-            response = $"Cleared {count} hitbox draw session(s). Primitive lines are removed immediately; Draw lines expire by their original duration.";
+            response = $"Cleared {count} hitbox draw session(s).";
             return true;
         }
 
@@ -359,7 +296,7 @@ public class HitboxCommand : ICommand
         {
             bool stopped = StopSession(sessionId);
             response = stopped
-                ? $"Cleared hitbox draw session #{sessionId}. Primitive lines are removed immediately; Draw lines expire by their original duration."
+                ? $"Cleared hitbox draw session #{sessionId}."
                 : $"Hitbox draw session not found: #{sessionId}";
             return stopped;
         }
@@ -381,7 +318,7 @@ public class HitboxCommand : ICommand
                 removed++;
         }
 
-        response = $"Cleared {removed} hitbox draw session(s) owned by {executor.Nickname}. Primitive lines are removed immediately; Draw lines expire by their original duration.";
+        response = $"Cleared {removed} hitbox draw session(s) owned by {executor.Nickname}.";
         return true;
     }
 
@@ -426,7 +363,7 @@ public class HitboxCommand : ICommand
         response = "Active hitbox draw sessions:\n" + string.Join("\n", sessions
             .OrderBy(s => s.Id)
             .Select(s =>
-                $"  #{s.Id} {s.Label} owner={s.OwnerName} mode={FormatBackend(s.Backend)} visible={(s.VisibleToAll ? "all" : "self")} last={s.LastDrawCount} remaining={FormatRemaining(s)}"));
+                $"  #{s.Id} {s.Label} owner={s.OwnerName} visible={(s.VisibleToAll ? "all" : "self")} last={s.LastDrawCount} remaining={FormatRemaining(s)}"));
         return true;
     }
 
@@ -442,8 +379,7 @@ public class HitboxCommand : ICommand
         Func<IEnumerable<Collider>> resolveColliders,
         float duration,
         bool visibleToAll,
-        Color color,
-        HitboxRenderBackend backend)
+        Color color)
     {
         int id = _nextSessionId++;
         var session = new HitboxDrawSession(
@@ -455,8 +391,7 @@ public class HitboxCommand : ICommand
             duration <= 0f ? float.PositiveInfinity : Time.time + duration,
             visibleToAll,
             visibleToAll ? null : owner,
-            color,
-            backend);
+            color);
 
         Sessions[id] = session;
         session.Handle = Timing.RunCoroutine(DrawLoop(session));
@@ -471,37 +406,14 @@ public class HitboxCommand : ICommand
                 break;
 
             int count = 0;
-            IEnumerable<Player> viewers = session.VisibleToAll ? null : new[] { session.SelfViewer };
             Collider[] colliders = session.ResolveColliders()
                 .Where(IsDrawableCollider)
                 .Take(MaxCollidersPerSession)
                 .ToArray();
 
-            if (session.Backend == HitboxRenderBackend.Primitive)
-            {
-                count = RenderPrimitiveHitboxes(session, colliders);
-            }
-            else
-            {
-                float lineDuration = GetDrawLineDuration(session);
-                foreach (Collider collider in colliders)
-                {
-                    try
-                    {
-                        DrawColliderSafely(collider, session.Color, lineDuration, viewers);
-                        count++;
-                    }
-                    catch (Exception ex)
-                    {
-                        Log.Debug($"Hitbox draw failed for {GetColliderName(collider)}: {ex.Message}");
-                    }
-                }
-            }
+            count = RenderPrimitiveHitboxes(session, colliders);
 
             session.LastDrawCount = count;
-            if (session.Backend == HitboxRenderBackend.ExiledDraw)
-                break;
-
             yield return Timing.WaitForSeconds(PrimitiveRedrawInterval);
         }
 
@@ -517,17 +429,6 @@ public class HitboxCommand : ICommand
         ClearPrimitiveLines(session);
         Sessions.Remove(id);
         return true;
-    }
-
-    private static float GetDrawLineDuration(HitboxDrawSession session)
-    {
-        if (session.Backend != HitboxRenderBackend.ExiledDraw)
-            return ClearFadeDuration;
-
-        if (float.IsPositiveInfinity(session.EndTime))
-            return DrawLineInfiniteDuration;
-
-        return Mathf.Max(0.25f, session.EndTime - Time.time);
     }
 
     private static bool TryRaycastLook(Player executor, float range, out RaycastHit hit, out string response)
@@ -587,116 +488,34 @@ public class HitboxCommand : ICommand
         return false;
     }
 
+    private static bool ShouldIgnoreAreaCollider(Player executor, Collider collider)
+    {
+        if (collider == null)
+            return true;
+
+        if (IsSessionPrimitiveCollider(collider))
+            return true;
+
+        return IsPlayerCollider(executor, collider);
+    }
+
+    private static bool IsPlayerCollider(Player player, Collider collider)
+    {
+        if (player?.GameObject == null || collider == null)
+            return false;
+
+        Transform playerTransform = player.GameObject.transform;
+        return collider.gameObject == player.GameObject ||
+               collider.transform.IsChildOf(playerTransform) ||
+               playerTransform.IsChildOf(collider.transform);
+    }
+
     private static IEnumerable<Collider> GetHitCollider(Collider hitCollider)
     {
         if (!IsDrawableCollider(hitCollider))
             return Enumerable.Empty<Collider>();
 
         return new[] { hitCollider };
-    }
-
-    private static void DrawColliderSafely(Collider collider, Color color, float duration, IEnumerable<Player> viewers)
-    {
-        DrawColliderAsLines(collider, color, duration, viewers);
-    }
-
-    private static bool IsHeavyCollider(Collider collider)
-        => collider is MeshCollider || collider.GetType().Name == "TerrainCollider";
-
-    private static void DrawColliderAsLines(Collider collider, Color color, float duration, IEnumerable<Player> viewers)
-    {
-        if (collider is SphereCollider sphereCollider)
-        {
-            DrawSphereColliderAsLines(sphereCollider, color, duration, viewers);
-            return;
-        }
-
-        if (collider is CapsuleCollider capsuleCollider)
-        {
-            DrawCapsuleColliderAsLines(capsuleCollider, color, duration, viewers);
-            return;
-        }
-
-        DrawBoundsAsLines(collider.bounds, color, duration, viewers);
-    }
-
-    private static void DrawBoundsAsLines(Bounds bounds, Color color, float duration, IEnumerable<Player> viewers)
-    {
-        var segments = new List<(Vector3 start, Vector3 end)>();
-        AddBoundsSegments(bounds, segments);
-        DrawSegments(segments, color, duration, viewers);
-    }
-
-    private static void DrawSphereColliderAsLines(SphereCollider sphereCollider, Color color, float duration, IEnumerable<Player> viewers)
-    {
-        Transform transform = sphereCollider.transform;
-        Vector3 center = transform.TransformPoint(sphereCollider.center);
-        Vector3 scale = transform.lossyScale;
-        float radius = sphereCollider.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.y), Mathf.Abs(scale.z));
-        var segments = new List<(Vector3 start, Vector3 end)>();
-        AddCircleSegments(center, transform.rotation, Vector3.right, Vector3.forward, radius, radius, 16, segments);
-        AddCircleSegments(center, transform.rotation, Vector3.right, Vector3.up, radius, radius, 16, segments);
-        AddCircleSegments(center, transform.rotation, Vector3.forward, Vector3.up, radius, radius, 16, segments);
-        DrawSegments(segments, color, duration, viewers);
-    }
-
-    private static void DrawCapsuleColliderAsLines(CapsuleCollider capsuleCollider, Color color, float duration, IEnumerable<Player> viewers)
-    {
-        Transform transform = capsuleCollider.transform;
-        Vector3 center = transform.TransformPoint(capsuleCollider.center);
-        Vector3 scale = transform.lossyScale;
-        float radius = capsuleCollider.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.z));
-        float height = Mathf.Max(capsuleCollider.height * Mathf.Abs(scale.y), radius * 2f);
-        Vector3 axis = transform.up;
-        if (capsuleCollider.direction == 0)
-            axis = transform.right;
-        else if (capsuleCollider.direction == 2)
-            axis = transform.forward;
-
-        Vector3 sideA = Vector3.Cross(axis, Vector3.up);
-        if (sideA.sqrMagnitude < 0.001f)
-            sideA = Vector3.Cross(axis, Vector3.right);
-
-        sideA.Normalize();
-        Vector3 sideB = Vector3.Cross(axis, sideA).normalized;
-        float halfBody = Mathf.Max(0f, height * 0.5f - radius);
-        Vector3 top = center + axis * halfBody;
-        Vector3 bottom = center - axis * halfBody;
-
-        var segments = new List<(Vector3 start, Vector3 end)>();
-        AddCircleSegments(top, Quaternion.identity, sideA, sideB, radius, radius, 12, segments);
-        AddCircleSegments(bottom, Quaternion.identity, sideA, sideB, radius, radius, 12, segments);
-        segments.Add((top + sideA * radius, bottom + sideA * radius));
-        segments.Add((top - sideA * radius, bottom - sideA * radius));
-        segments.Add((top + sideB * radius, bottom + sideB * radius));
-        segments.Add((top - sideB * radius, bottom - sideB * radius));
-        DrawSegments(segments, color, duration, viewers);
-    }
-
-    private static void AddCircleSegments(
-        Vector3 center,
-        Quaternion rotation,
-        Vector3 axisA,
-        Vector3 axisB,
-        float radiusA,
-        float radiusB,
-        int segmentsCount,
-        List<(Vector3 start, Vector3 end)> segments)
-    {
-        Vector3 previous = center + rotation * (axisA * radiusA);
-        for (int i = 1; i <= segmentsCount; i++)
-        {
-            float angle = Mathf.PI * 2f * i / segmentsCount;
-            Vector3 next = center + rotation * (axisA * (Mathf.Cos(angle) * radiusA) + axisB * (Mathf.Sin(angle) * radiusB));
-            segments.Add((previous, next));
-            previous = next;
-        }
-    }
-
-    private static void DrawSegments(IEnumerable<(Vector3 start, Vector3 end)> segments, Color color, float duration, IEnumerable<Player> viewers)
-    {
-        foreach ((Vector3 start, Vector3 end) in segments.Where(s => IsValidSegment(s.start, s.end)))
-            Draw.Line(start, end, color, duration, viewers);
     }
 
     private static int RenderPrimitiveHitboxes(HitboxDrawSession session, Collider[] colliders)
@@ -884,43 +703,11 @@ public class HitboxCommand : ICommand
         segments.Add((p010, p011));
     }
 
-    private static int EstimateDrawMessageCount(Collider collider)
+    private static IEnumerable<Collider> GetNearbyColliders(Player executor, float radius, string filter)
     {
-        switch (collider)
-        {
-            case BoxCollider:
-                return 6;
-            case SphereCollider:
-                return 2;
-            case CapsuleCollider:
-                return 10;
-            case MeshCollider meshCollider when meshCollider.sharedMesh != null:
-                return meshCollider.sharedMesh.triangles.Length / 3;
-            default:
-                return 0;
-        }
-    }
-
-    private static int EstimateDrawLineSegmentCount(Collider collider)
-    {
-        switch (collider)
-        {
-            case BoxCollider:
-                return 12;
-            case SphereCollider:
-                return 32;
-            case CapsuleCollider:
-                return 44;
-            case MeshCollider meshCollider when meshCollider.sharedMesh != null:
-                return meshCollider.sharedMesh.triangles.Length;
-            default:
-                return 0;
-        }
-    }
-
-    private static IEnumerable<Collider> GetNearbyColliders(Vector3 origin, float radius, string filter)
-    {
+        Vector3 origin = executor.Position;
         return Physics.OverlapSphere(origin, radius, ~0, QueryTriggerInteraction.Collide)
+            .Where(c => !ShouldIgnoreAreaCollider(executor, c))
             .Where(c => string.IsNullOrWhiteSpace(filter) || ColliderNameMatches(c, filter))
             .Where(IsDrawableCollider)
             .Distinct()
@@ -931,6 +718,7 @@ public class HitboxCommand : ICommand
     private static IEnumerable<Collider> GetNamedColliders(string filter, int max)
     {
         return UnityObject.FindObjectsByType<Collider>(FindObjectsSortMode.None)
+            .Where(c => !IsSessionPrimitiveCollider(c))
             .Where(c => ColliderNameMatches(c, filter))
             .Where(IsDrawableCollider)
             .Distinct()
@@ -986,43 +774,6 @@ public class HitboxCommand : ICommand
            (arguments.At(index).Equals("off", StringComparison.OrdinalIgnoreCase) ||
             arguments.At(index).Equals("stop", StringComparison.OrdinalIgnoreCase) ||
             arguments.At(index).Equals("clear", StringComparison.OrdinalIgnoreCase));
-
-    private static HitboxRenderBackend GetPreferredBackend(Player player)
-    {
-        if (player?.UserId != null && PlayerBackends.TryGetValue(player.UserId, out HitboxRenderBackend backend))
-            return backend;
-
-        return HitboxRenderBackend.Primitive;
-    }
-
-    private static bool TryParseBackend(string value, out HitboxRenderBackend backend)
-    {
-        switch (value.ToLowerInvariant())
-        {
-            case "draw":
-            case "line":
-            case "lines":
-            case "exiled":
-            case "default":
-                backend = HitboxRenderBackend.ExiledDraw;
-                return true;
-
-            case "primitive":
-            case "prim":
-            case "safe":
-            case "stable":
-            case "stability":
-                backend = HitboxRenderBackend.Primitive;
-                return true;
-
-            default:
-                backend = HitboxRenderBackend.ExiledDraw;
-                return false;
-        }
-    }
-
-    private static string FormatBackend(HitboxRenderBackend backend)
-        => backend == HitboxRenderBackend.Primitive ? "primitive" : "draw";
 
     private static string GetColliderName(Collider collider)
     {
@@ -1086,24 +837,12 @@ public class HitboxCommand : ICommand
     }
 
     private static string StartedMessage(int id, string mode, int colliders, float duration, bool visibleToAll)
-    {
-        string backend = Sessions.TryGetValue(id, out HitboxDrawSession session)
-            ? FormatBackend(session.Backend)
-            : "unknown";
-
-        return $"Started hitbox draw #{id} ({mode}) colliders={colliders} mode={backend} visible={(visibleToAll ? "all" : "self")} duration={(duration <= 0f ? "until clear" : $"{duration:0.#}s")}. Use `sl hitbox clear {id}` or `sl hitbox clear`.";
-    }
+        => $"Started hitbox draw #{id} ({mode}) colliders={colliders} visible={(visibleToAll ? "all" : "self")} duration={(duration <= 0f ? "until clear" : $"{duration:0.#}s")}. Use `sl hitbox clear {id}` or `sl hitbox clear`.";
 
     private static string FormatRemaining(HitboxDrawSession session)
         => float.IsPositiveInfinity(session.EndTime)
             ? "until clear"
             : $"{Mathf.Max(0f, session.EndTime - Time.time):0.#}s";
-
-    private enum HitboxRenderBackend
-    {
-        Primitive,
-        ExiledDraw,
-    }
 
     private sealed class HitboxDrawSession
     {
@@ -1116,8 +855,7 @@ public class HitboxCommand : ICommand
             float endTime,
             bool visibleToAll,
             Player selfViewer,
-            Color color,
-            HitboxRenderBackend backend)
+            Color color)
         {
             Id = id;
             OwnerUserId = ownerUserId;
@@ -1128,7 +866,6 @@ public class HitboxCommand : ICommand
             VisibleToAll = visibleToAll;
             SelfViewer = selfViewer;
             Color = color;
-            Backend = backend;
         }
 
         public int Id { get; }
@@ -1140,7 +877,6 @@ public class HitboxCommand : ICommand
         public bool VisibleToAll { get; }
         public Player SelfViewer { get; }
         public Color Color { get; }
-        public HitboxRenderBackend Backend { get; }
         public List<Primitive> PrimitiveLines { get; } = new();
         public CoroutineHandle Handle { get; set; }
         public int LastDrawCount { get; set; }
