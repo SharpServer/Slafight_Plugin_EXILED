@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using AdminToys;
 using CustomPlayerEffects;
-using Exiled.API.Extensions;
-using Exiled.API.Features.Items;
-using InventorySystem.Items.Keycards;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Features.Wrappers;
 using MEC;
@@ -19,9 +16,6 @@ using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;
 using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
-using Item = Exiled.API.Features.Items.Item;
-using KeycardPickup = Exiled.API.Features.Pickups.KeycardPickup;
-using Pickup = Exiled.API.Features.Pickups.Pickup;
 using Random = System.Random;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
@@ -37,7 +31,7 @@ public class Trashbox : ObjectPrefab
     public static int TriggeredEventCount => TriggeredEvents.Count;
     public static byte TriggeredSecretCount;
     public bool HimselfTriggered { get; private set; }
-    public static List<TrashboxEventType> TriggeredEvents { get; private set; }
+    public static List<TrashboxEventType> TriggeredEvents { get; private set; } = [];
 
     private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
         = EventHandler.CreateAndPlayAudio;
