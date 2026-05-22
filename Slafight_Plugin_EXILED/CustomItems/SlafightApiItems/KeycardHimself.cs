@@ -12,9 +12,9 @@ public class KeycardHimself : CItemKeycard
     protected override string KeycardLabel => "CONTAINMENT ENGINEER";
     protected override Color32? KeycardLabelColor => new Color32(238, 246, 255, 255);
 
-    protected override string KeycardName => "Containment Engineer";
+    protected override string KeycardName => "Eng. Redheart";
     protected override Color32? TintColor => new Color32(255, 0, 0, 255);
-    protected override Color32? KeycardPermissionsColor => new Color32(255, 255, 255, 255);
+    protected override Color32? KeycardPermissionsColor => new Color32(0, 0, 0, 255);
 
     protected override KeycardPermissions Permissions =>
         KeycardPermissions.ContainmentLevelOne |
