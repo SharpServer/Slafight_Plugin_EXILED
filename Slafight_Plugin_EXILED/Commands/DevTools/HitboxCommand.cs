@@ -16,7 +16,7 @@ namespace Slafight_Plugin_EXILED.Commands.DevTools;
 public class HitboxCommand : ICommand
 {
     private const float DefaultDuration = 300f;
-    private const float PrimitiveRedrawInterval = 1f;
+    private const float PrimitiveRedrawInterval = 0.1f;
     private const float DefaultLookRange = 80f;
     private const float DefaultNearRadius = 8f;
     private const int MaxCollidersPerSession = 64;
