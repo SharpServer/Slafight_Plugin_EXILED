@@ -28,10 +28,13 @@ public class Trashbox : ObjectPrefab
     private InteractableToy? _interactableToy;
     private static readonly Vector3 InteractableLocalOffset = Vector3.zero;
     private static readonly Vector3 InteractableBaseScale = Vector3.one + Vector3.up * 2f;
-    public int TriggeredEventCount => TriggeredEvents.Count;
-    public static byte TriggeredSecretCount;
+    private readonly Dictionary<int, List<TrashboxEventType>> _triggeredEventsByPlayer = [];
+    private static readonly Dictionary<int, byte> TriggeredSecretCountsByPlayer = [];
+
+    public int TriggeredEventCount => _triggeredEventsByPlayer.Values.Sum(events => events.Count);
+    public IReadOnlyDictionary<int, List<TrashboxEventType>> TriggeredEventsByPlayer => _triggeredEventsByPlayer;
+    public static IReadOnlyDictionary<int, byte> TriggeredSecretCounts => TriggeredSecretCountsByPlayer;
     public static bool HimselfTriggered { get; private set; }
-    public List<TrashboxEventType> TriggeredEvents { get; private set; } = [];
 
     private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
         = EventHandler.CreateAndPlayAudio;
@@ -39,8 +42,7 @@ public class Trashbox : ObjectPrefab
     protected override void OnCreate()
     {
          _schematicObject = SpawnManagedSchematic("trashbox");
-         TriggeredEvents.Clear();
-         HimselfTriggered = false;
+         _triggeredEventsByPlayer.Clear();
 
          Timing.CallDelayed(0.5f, CreateInteractableToy);
          base.OnCreate();
@@ -77,8 +79,13 @@ public class Trashbox : ObjectPrefab
     protected override void OnToySearchedNearby(PlayerSearchedToyEventArgs ev)
     {
         var player = Player.Get(ev.Player);
+        if (player == null)
+            return;
+
         var pos = _schematicObject?.Position ?? Position;
-        if (TriggeredEventCount >= 3)
+        var triggeredEvents = GetTriggeredEvents(player.Id);
+
+        if (triggeredEvents.Count >= 3)
         {
             player.ShowHint("<size=26>あなたはゴミ箱を漁った・・・\n" +
                             "しかし、何も見つからなかった。\n" +
@@ -95,7 +102,7 @@ public class Trashbox : ObjectPrefab
         {
             elected = TrashboxEventType.Secret;
         }
-        TriggeredEvents.Add(elected);
+        triggeredEvents.Add(elected);
 
         switch (elected)
         {
@@ -136,7 +143,8 @@ public class Trashbox : ObjectPrefab
                 HimselfTriggered = true;
                 break;
             case TrashboxEventType.Secret:
-                var text = TriggeredSecretCount switch
+                var triggeredSecretCount = GetTriggeredSecretCount(player.Id);
+                var text = triggeredSecretCount switch
                 {
                     0 => "何だか安心感を与える曲が流れてきた。",
                     1 => "頭が活性化するような曲が流れてきた。",
@@ -159,14 +167,43 @@ public class Trashbox : ObjectPrefab
                     _ => string.Empty
                 };
                 CreateAndPlayAudio(songName, "Trashbox___PLS_HL_55555", pos, true, null, false, 5f, 0f);
-                TriggeredSecretCount++;
-                if (TriggeredSecretCount >= 4)
+                triggeredSecretCount++;
+                if (triggeredSecretCount >= 4)
                 {
-                    TriggeredSecretCount = 0;
+                    TriggeredSecretCountsByPlayer[player.Id] = 0;
                     player.EnableEffect<Flashed>(255, 5);
                     Timing.CallDelayed(5, () => player?.SetRole(CRoleTypeId.FifthistConvert, RoleSpawnFlags.AssignInventory));
                 }
+                else
+                {
+                    TriggeredSecretCountsByPlayer[player.Id] = triggeredSecretCount;
+                }
                 break;
         }
+    }
+
+    protected override void OnRoundRestarting()
+    {
+        ResetSharedRoundState();
+        base.OnRoundRestarting();
+    }
+
+    private List<TrashboxEventType> GetTriggeredEvents(int playerId)
+    {
+        if (_triggeredEventsByPlayer.TryGetValue(playerId, out var triggeredEvents))
+            return triggeredEvents;
+
+        triggeredEvents = [];
+        _triggeredEventsByPlayer[playerId] = triggeredEvents;
+        return triggeredEvents;
+    }
+
+    private static byte GetTriggeredSecretCount(int playerId)
+        => TriggeredSecretCountsByPlayer.TryGetValue(playerId, out var count) ? count : (byte)0;
+
+    public static void ResetSharedRoundState()
+    {
+        TriggeredSecretCountsByPlayer.Clear();
+        HimselfTriggered = false;
     }
 }

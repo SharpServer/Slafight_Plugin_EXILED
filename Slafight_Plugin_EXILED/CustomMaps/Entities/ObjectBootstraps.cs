@@ -23,6 +23,8 @@ public class ObjectBootstraps : IBootstrapHandler
 
     private static void OnRoundStarted()
     {
+        Trashbox.ResetSharedRoundState();
+
         Timing.CallDelayed(2.25f, () =>
         {
             SetupObjectPrefabs();
