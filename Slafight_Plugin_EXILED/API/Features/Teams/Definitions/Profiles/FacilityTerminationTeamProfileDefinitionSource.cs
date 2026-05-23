@@ -8,6 +8,9 @@ public sealed class FacilityTerminationTeamProfileDefinitionSource : CTeamProfil
 {
     public override IEnumerable<CTeamProfileDefinition> GetDefinitions()
     {
+        // FacilityTermination 用 Profile。
+        // Normalcy と Humanity のどちらへ寄せるかはこの表だけで決める。
+        // Fifthists のように通常の個別勝利を優先したい勢力は Undefined にする。
         yield return Define(
             CTeamProfileManager.FacilityTerminationProfile,
             new[]

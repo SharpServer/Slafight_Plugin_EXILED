@@ -7,6 +7,9 @@ public sealed class DefaultTeamProfileDefinitionSource : CTeamProfileDefinitionS
 {
     public override IEnumerable<CTeamProfileDefinition> GetDefinitions()
     {
+        // 通常ラウンドの基本 Profile。
+        // victories: Group が単独で残った時に、どの CTeam の終了処理へ寄せるか。
+        // maps: 全 CTeam の所属表。Group 勝利に参加させないチームは Undefined にする。
         yield return Define(
             CTeamProfileManager.DefaultProfile,
             [
