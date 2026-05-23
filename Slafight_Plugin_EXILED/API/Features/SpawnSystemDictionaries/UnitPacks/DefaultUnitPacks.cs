@@ -166,6 +166,33 @@ public static class DefaultUnitPacks
         );
         UnitPackRegistry.Register(fifthBackupPack);
 
+        var lwsPack = new UnitPack(
+            "MTF_Lws",
+            new()
+            {
+                {
+                    SpawnTypeId.MtfLwsNormal,
+                    new()
+                    {
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.LwsJudgement), (1f, true) },
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.LwsLiaison),   (1f, false) },
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.LwsForensic),  (1f, false) },
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.LwsAgent),     (99f, false) },
+                    }
+                },
+                {
+                    SpawnTypeId.MtfLwsBackup,
+                    new()
+                    {
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.LwsLiaison),  (1f, true) },
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.LwsForensic), (1f, false) },
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.LwsAgent),    (99f, false) },
+                    }
+                }
+            }
+        );
+        UnitPackRegistry.Register(lwsPack);
+
         var securityTeamPack = new UnitPack(
             "SecurityTeam",
             new()

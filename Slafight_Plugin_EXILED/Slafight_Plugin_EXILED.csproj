@@ -406,6 +406,8 @@
         <Compile Include="CustomRoles\FoundationForces\SneOperator.cs" />
         <Compile Include="CustomRoles\FoundationForces\SnePurify.cs" />
         <Compile Include="CustomRoles\FoundationForces\AraOrun.cs" />
+        <Compile Include="CustomRoles\FoundationForces\LwsRoles.cs" />
+        <Compile Include="CustomRoles\FoundationForces\RrhRoles.cs" />
         <Compile Include="CustomRoles\GoC\GoCCommunications.cs" />
         <Compile Include="CustomRoles\GoC\GoCDeputy.cs" />
         <Compile Include="CustomRoles\GoC\GoCHoundDog.cs" />

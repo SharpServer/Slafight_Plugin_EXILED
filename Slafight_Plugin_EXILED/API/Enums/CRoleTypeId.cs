@@ -4,10 +4,10 @@ namespace Slafight_Plugin_EXILED.API.Enums;
 
 public enum CRoleTypeId
 {
-    // ==== None ====
+    // ==== None ==== //
     None,
     
-    // ==== SCP ==== 
+    // ==== SCP ==== //
     Scp096Anger,
     Scp3005,
     Scp966,
@@ -21,14 +21,14 @@ public enum CRoleTypeId
     Scp3125,
     Scp610,
     
-    // ==== Fifthists ====
+    // ==== Fifthists ==== //
     FifthistRescure,
     FifthistPriest,
     FifthistConvert,
     FifthistGuidance,
     FifthistMarionette,
     
-    // ==== Chaos ====
+    // ==== Chaos ==== //
     ChaosCommando,
     ChaosSignal,
     ChaosTacticalUnit,
@@ -36,14 +36,14 @@ public enum CRoleTypeId
     ChaosUndercoverAgent,
     ChaosSniper,
     
-    // ==== NTF ====
+    // ==== EPSILON-11 NINE-TAILED FOX ==== //
     NtfLieutenant,
     NtfGeneral,
     NtfSpecialist,
     NtfDetainer,
     NtfFieldMedic,
     
-    // ==== Hammer Down ====
+    // ==== NU-7 HAMMER DOWN ==== //
     HdInfantry,
     HdCommander,
     HdMarshal,
@@ -51,19 +51,34 @@ public enum CRoleTypeId
     HdDisarmer,
     HdShielder,
     
-    // ==== See No Evil ===
+    // ==== ETA-10 SEE NO EVIL ==== //
     SneOperator,
     SneGears,
     SneNeutralitist,
     SnePurify,
     
-    // ==== Guards ====
+    // ==== OMEGA-0 ARA ORUN ==== //
+    AraOrun,
+    
+    // ==== OMEGA-1 LAW'S LEFT HAND ==== //
+    LwsJudgement,
+    LwsLiaison,
+    LwsForensic,
+    LwsAgent,
+    
+    // ==== ALPHA-1 RED RIGHT HAND ==== //
+    RrhWarden,
+    RrhEnforcer,
+    RrhAegis,
+    RrhAssaulter,
+    
+    // ==== Guards ==== //
     EvacuationGuard,
     SecurityChief,
     ChamberGuard,
     SupplyManager,
     
-    // ==== Scientists ====
+    // ==== Scientists ==== //
     ZoneManager,
     FacilityManager,
     Engineer,
@@ -73,11 +88,11 @@ public enum CRoleTypeId
     CandyResearcher,
     MarionWheeler,
     
-    // ==== Class-D ====
+    // ==== Class-D ==== //
     Janitor,
     CandySubject,
     
-    // ==== GoC ====
+    // ==== GoC ==== //
     GoCSquadLeader,
     GoCDeputy,
     GoCMedic,
@@ -86,7 +101,7 @@ public enum CRoleTypeId
     GoCOperative,
     GoCHoundDog,
     
-    // ==== Others ====
+    // ==== Others ==== //
     SnowWarrier,
     CandyWarrierApril,
     CandyWarrierHalloween,
@@ -94,7 +109,6 @@ public enum CRoleTypeId
     Sculpture,
     SergeyMakarov,
     SergeyMakarovAwaken,
-    AraOrun,
     HideAdmin,
     HideWatch,
     

@@ -55,6 +55,22 @@ public static class CassieHelper
             "<color=#FF1493>シー・ノー・イーヴル 予備部隊</color>が施設に到着しました。",
             true);
     }
+
+    public static void AnnounceLwsArrival()
+    {
+        Exiled.API.Features.Cassie.MessageTranslated(
+            "MtfUnit Omega 1 designated Laws Left Hand HasEntered AllRemaining .",
+            "<color=#7ddcff>機動部隊Omega-1 \"Law's Left Hand\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。",
+            true);
+    }
+
+    public static void AnnounceLwsBackup()
+    {
+        Exiled.API.Features.Cassie.MessageTranslated(
+            "Laws Left Hand Backup unit has entered the facility .",
+            "<color=#7ddcff>Law's Left Hand 予備部隊</color>が施設に到着しました。",
+            true);
+    }
     
     public static void AnnounceChaos(int count)
     {

@@ -18,5 +18,6 @@ public enum CTeam
     O5,
     Sarkic,
     AWCY,
-    BlackQueen
+    BlackQueen,
+    
 }
