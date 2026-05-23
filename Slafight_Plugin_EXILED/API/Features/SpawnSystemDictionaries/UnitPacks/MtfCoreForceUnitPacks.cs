@@ -7,12 +7,12 @@ public static class MtfCoreForceUnitPacks
 {
     public static void Register()
     {
-        var sneNormalPack = new UnitPack(
+        var lwsNormalPack = new UnitPack(
             "MTF_Lws", 
             new()
             {
                 {
-                    SpawnTypeId.MtfSneNormal,
+                    SpawnTypeId.MtfLwsNormal,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.LwsJudgement), (1f, true) },
@@ -23,12 +23,12 @@ public static class MtfCoreForceUnitPacks
                 }
             }
         );
-        var sneBackupPack = new UnitPack(
+        var rrhNormalPack = new UnitPack(
             "MTF_Rrh", 
             new()
             {
                 {
-                    SpawnTypeId.MtfSneBackup,
+                    SpawnTypeId.MtfRrhNormal,
                     new()
                     {
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.RrhWarden), (1f, true) },
@@ -39,7 +39,7 @@ public static class MtfCoreForceUnitPacks
                 }
             }
         );
-        UnitPackRegistry.Register(sneNormalPack);
-        UnitPackRegistry.Register(sneBackupPack);
+        UnitPackRegistry.Register(lwsNormalPack);
+        UnitPackRegistry.Register(rrhNormalPack);
     }
 }
