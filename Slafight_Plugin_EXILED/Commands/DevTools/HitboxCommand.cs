@@ -25,6 +25,7 @@ public class HitboxCommand : ICommand
     private const int HardMaxCollidersPerSession = 256;
     private const float PrimitiveLineWidth = 0.035f;
     private const float PrimitiveVisibilityRefreshInterval = 0.5f;
+    private const int PrimitiveSegmentsPerColliderBudget = 48;
 
     private static readonly Dictionary<int, HitboxDrawSession> Sessions = new();
     private static int _nextSessionId = 1;
@@ -542,12 +543,12 @@ public class HitboxCommand : ICommand
                 continue;
             }
 
-            AddBoundsSegments(collider.bounds, segments);
+            AddColliderSegments(collider, segments);
         }
 
         segments = segments
             .Where(s => IsValidSegment(s.start, s.end))
-            .Take(session.MaxColliders * 12)
+            .Take(session.MaxColliders * PrimitiveSegmentsPerColliderBudget)
             .ToList();
 
         EnsurePrimitiveLineCount(session, segments.Count);
@@ -693,6 +694,169 @@ public class HitboxCommand : ICommand
         segments.Add((bottom + forward * radius, bottom - forward * radius));
     }
 
+    private static void AddColliderSegments(Collider collider, List<(Vector3 start, Vector3 end)> segments)
+    {
+        switch (collider)
+        {
+            case BoxCollider box:
+                AddBoxColliderSegments(box, segments);
+                break;
+            case CapsuleCollider capsule:
+                AddCapsuleColliderSegments(capsule, segments);
+                break;
+            case SphereCollider sphere:
+                AddSphereColliderSegments(sphere, segments);
+                break;
+            case CharacterController controller:
+                AddCharacterControllerSegments(controller, segments);
+                break;
+            case MeshCollider mesh when mesh.sharedMesh != null:
+                AddLocalBoundsSegments(mesh.transform, mesh.sharedMesh.bounds, segments);
+                break;
+            default:
+                AddBoundsSegments(collider.bounds, segments);
+                break;
+        }
+    }
+
+    private static void AddBoxColliderSegments(BoxCollider box, List<(Vector3 start, Vector3 end)> segments)
+        => AddLocalBoundsSegments(box.transform, new Bounds(box.center, box.size), segments);
+
+    private static void AddLocalBoundsSegments(Transform transform, Bounds localBounds, List<(Vector3 start, Vector3 end)> segments)
+    {
+        Vector3 c = localBounds.center;
+        Vector3 e = localBounds.extents;
+
+        Vector3 p000 = transform.TransformPoint(c + new Vector3(-e.x, -e.y, -e.z));
+        Vector3 p100 = transform.TransformPoint(c + new Vector3(e.x, -e.y, -e.z));
+        Vector3 p110 = transform.TransformPoint(c + new Vector3(e.x, -e.y, e.z));
+        Vector3 p010 = transform.TransformPoint(c + new Vector3(-e.x, -e.y, e.z));
+        Vector3 p001 = transform.TransformPoint(c + new Vector3(-e.x, e.y, -e.z));
+        Vector3 p101 = transform.TransformPoint(c + new Vector3(e.x, e.y, -e.z));
+        Vector3 p111 = transform.TransformPoint(c + new Vector3(e.x, e.y, e.z));
+        Vector3 p011 = transform.TransformPoint(c + new Vector3(-e.x, e.y, e.z));
+
+        AddBoxEdges(p000, p100, p110, p010, p001, p101, p111, p011, segments);
+    }
+
+    private static void AddCapsuleColliderSegments(CapsuleCollider capsule, List<(Vector3 start, Vector3 end)> segments)
+    {
+        Transform transform = capsule.transform;
+        Vector3 scale = Abs(transform.lossyScale);
+        Vector3 center = transform.TransformPoint(capsule.center);
+        GetCapsuleAxes(transform, capsule.direction, out Vector3 axis, out Vector3 right, out Vector3 forward);
+
+        float axisScale = capsule.direction switch
+        {
+            0 => scale.x,
+            1 => scale.y,
+            _ => scale.z,
+        };
+
+        float radialScale = capsule.direction switch
+        {
+            0 => Mathf.Max(scale.y, scale.z),
+            1 => Mathf.Max(scale.x, scale.z),
+            _ => Mathf.Max(scale.x, scale.y),
+        };
+
+        float radius = capsule.radius * radialScale;
+        float height = Mathf.Max(capsule.height * axisScale, radius * 2f);
+        AddCapsuleSegments(center, axis, right, forward, height, radius, segments);
+    }
+
+    private static void AddCharacterControllerSegments(CharacterController controller, List<(Vector3 start, Vector3 end)> segments)
+    {
+        Transform transform = controller.transform;
+        Vector3 scale = Abs(transform.lossyScale);
+        Vector3 center = transform.TransformPoint(controller.center);
+        float radius = controller.radius * Mathf.Max(scale.x, scale.z);
+        float height = Mathf.Max(controller.height * scale.y, radius * 2f);
+
+        AddCapsuleSegments(center, transform.up, transform.right, transform.forward, height, radius, segments);
+    }
+
+    private static void AddSphereColliderSegments(SphereCollider sphere, List<(Vector3 start, Vector3 end)> segments)
+    {
+        Transform transform = sphere.transform;
+        Vector3 scale = Abs(transform.lossyScale);
+        Vector3 center = transform.TransformPoint(sphere.center);
+        Vector3 right = transform.right * sphere.radius * scale.x;
+        Vector3 up = transform.up * sphere.radius * scale.y;
+        Vector3 forward = transform.forward * sphere.radius * scale.z;
+
+        AddEllipseSegments(center, right, up, segments);
+        AddEllipseSegments(center, right, forward, segments);
+        AddEllipseSegments(center, forward, up, segments);
+    }
+
+    private static void GetCapsuleAxes(Transform transform, int direction, out Vector3 axis, out Vector3 right, out Vector3 forward)
+    {
+        switch (direction)
+        {
+            case 0:
+                axis = transform.right;
+                right = transform.up;
+                forward = transform.forward;
+                break;
+            case 2:
+                axis = transform.forward;
+                right = transform.right;
+                forward = transform.up;
+                break;
+            default:
+                axis = transform.up;
+                right = transform.right;
+                forward = transform.forward;
+                break;
+        }
+    }
+
+    private static void AddEllipseSegments(
+        Vector3 center,
+        Vector3 axisA,
+        Vector3 axisB,
+        List<(Vector3 start, Vector3 end)> segments)
+    {
+        const int sides = 16;
+        Vector3 previous = center + axisA;
+        for (int i = 1; i <= sides; i++)
+        {
+            float angle = Mathf.PI * 2f * i / sides;
+            Vector3 current = center + axisA * Mathf.Cos(angle) + axisB * Mathf.Sin(angle);
+            segments.Add((previous, current));
+            previous = current;
+        }
+    }
+
+    private static Vector3 Abs(Vector3 value)
+        => new(Mathf.Abs(value.x), Mathf.Abs(value.y), Mathf.Abs(value.z));
+
+    private static void AddBoxEdges(
+        Vector3 p000,
+        Vector3 p100,
+        Vector3 p110,
+        Vector3 p010,
+        Vector3 p001,
+        Vector3 p101,
+        Vector3 p111,
+        Vector3 p011,
+        List<(Vector3 start, Vector3 end)> segments)
+    {
+        segments.Add((p000, p100));
+        segments.Add((p100, p110));
+        segments.Add((p110, p010));
+        segments.Add((p010, p000));
+        segments.Add((p001, p101));
+        segments.Add((p101, p111));
+        segments.Add((p111, p011));
+        segments.Add((p011, p001));
+        segments.Add((p000, p001));
+        segments.Add((p100, p101));
+        segments.Add((p110, p111));
+        segments.Add((p010, p011));
+    }
+
     private static void EnsurePrimitiveLineCount(HitboxDrawSession session, int count)
     {
         while (session.PrimitiveLines.Count < count)
@@ -790,18 +954,7 @@ public class HitboxCommand : ICommand
         Vector3 p111 = c + new Vector3(e.x, e.y, e.z);
         Vector3 p011 = c + new Vector3(-e.x, e.y, e.z);
 
-        segments.Add((p000, p100));
-        segments.Add((p100, p110));
-        segments.Add((p110, p010));
-        segments.Add((p010, p000));
-        segments.Add((p001, p101));
-        segments.Add((p101, p111));
-        segments.Add((p111, p011));
-        segments.Add((p011, p001));
-        segments.Add((p000, p001));
-        segments.Add((p100, p101));
-        segments.Add((p110, p111));
-        segments.Add((p010, p011));
+        AddBoxEdges(p000, p100, p110, p010, p001, p101, p111, p011, segments);
     }
 
     private static IEnumerable<Collider> GetNearbyColliders(Player executor, Vector3 origin, float radius, string filter, int max)
