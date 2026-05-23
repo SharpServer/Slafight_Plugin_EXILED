@@ -177,6 +177,24 @@ public class SpawningHandler : IBootstrapHandler, IDisposable
                 CreateAndPlayAudio("_w_sne.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceSneBackup();
                 break;
+            
+            case SpawnTypeId.MtfLwsNormal:
+                CreateAndPlayAudio("_w_lws.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                CassieHelper.AnnounceLwsArrival();
+                break;
+            case SpawnTypeId.MtfLwsBackup:
+                CreateAndPlayAudio("_w_lws.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                CassieHelper.AnnounceLwsBackup();
+                break;
+            
+            case SpawnTypeId.MtfRrhNormal:
+                CreateAndPlayAudio("_w_rrh.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                CassieHelper.AnnounceRrhArrival();
+                break;
+            case SpawnTypeId.MtfRrhBackup:
+                CreateAndPlayAudio("_w_rrh.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                CassieHelper.AnnounceRrhBackup();
+                break;
 
             // ==== Groups of Interests ====
             case SpawnTypeId.GoiChaosNormal:

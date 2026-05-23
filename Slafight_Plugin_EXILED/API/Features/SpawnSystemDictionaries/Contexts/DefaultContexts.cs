@@ -17,6 +17,7 @@ public static class DefaultContexts
         UnitPackRegistry.TryGet("MTF_HDBackup",       out var hdBackupPack);
         UnitPackRegistry.TryGet("MTF_SneBackup",      out var sneBackupPack);
         UnitPackRegistry.TryGet("MTF_Lws",            out var lwsPack);
+        UnitPackRegistry.TryGet("MTF_Rrh",            out var rrhPack);
         UnitPackRegistry.TryGet("GOI_ChaosBackup",    out var chaosBackupPack);
         UnitPackRegistry.TryGet("GOI_FifthistBackup", out var fifthBackupPack);
         
@@ -36,6 +37,7 @@ public static class DefaultContexts
             sneNormalPack,
             sneBackupPack,
             lwsPack,
+            rrhPack,
             chaosNormalPack,
             chaosBackupPack,
             fifthNormalPack,

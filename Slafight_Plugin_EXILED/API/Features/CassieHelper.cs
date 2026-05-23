@@ -72,6 +72,22 @@ public static class CassieHelper
             true);
     }
     
+    public static void AnnounceRrhArrival()
+    {
+        Exiled.API.Features.Cassie.MessageTranslated(
+            "MtfUnit Alpha 1 designated Red Right Hand HasEntered AllRemaining .",
+            "<color=#dc143c>機動部隊Alpha-1 \"Red Right Hand\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。",
+            true);
+    }
+
+    public static void AnnounceRrhBackup()
+    {
+        Exiled.API.Features.Cassie.MessageTranslated(
+            "Red Right Hand Backup unit has entered the facility .",
+            "<color=#dc143c>Red Right Hand 予備部隊</color>が施設に到着しました。",
+            true);
+    }
+    
     public static void AnnounceChaos(int count)
     {
         Exiled.API.Features.Cassie.MessageTranslated(

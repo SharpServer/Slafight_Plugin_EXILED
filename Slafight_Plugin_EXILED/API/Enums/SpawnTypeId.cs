@@ -17,6 +17,8 @@ public enum SpawnTypeId
     MtfSneBackup,
     MtfLwsNormal,
     MtfLwsBackup,
+    MtfRrhNormal,
+    MtfRrhBackup,
     
     // Groups of Interesting - Other Side
     GoiChaosNormal,
