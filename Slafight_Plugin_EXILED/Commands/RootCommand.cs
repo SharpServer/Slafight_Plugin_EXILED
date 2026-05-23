@@ -19,6 +19,7 @@ public class RootCommand : ParentCommand
         RegisterCommand(new HelpCommand(() => AllCommands.ToArray()));
         RegisterCommand(new ListCommand());
         RegisterCommand(new StatusCommand());
+        RegisterCommand(new RestartCommand());
         RegisterCommand(new QueueCommand());
         RegisterCommand(new PlayerCommand());
         RegisterCommand(new DebugStart());

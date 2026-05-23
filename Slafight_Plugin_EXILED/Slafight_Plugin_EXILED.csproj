@@ -272,6 +272,7 @@
         <Compile Include="Commands\DevTools\PlayAudioHere.cs" />
         <Compile Include="Commands\DevTools\PlayInstantSurfaceBombing.cs" />
         <Compile Include="Commands\DevTools\QueueCommand.cs" />
+        <Compile Include="Commands\DevTools\RestartCommand.cs" />
         <Compile Include="Commands\DevTools\RunEvent.cs" />
         <Compile Include="Commands\DevTools\SetQueue.cs" />
         <Compile Include="Commands\DevTools\SpawnBuiltInPrefab.cs" />
