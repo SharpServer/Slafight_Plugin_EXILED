@@ -34,7 +34,7 @@ public class RrhWarden : CRole
         [AmmoType.Nato556] = 260,
     };
     protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
-    protected override string SpawnCustomInfo => "Red Right Hand Warden";
+    protected override string SpawnCustomInfo => $"<color={ServerColors.Red}>Red Right Hand Warden</color>";
 }
 
 public class RrhEnforcer : CRole
@@ -61,7 +61,7 @@ public class RrhEnforcer : CRole
         [AmmoType.Nato556] = 220,
     };
     protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
-    protected override string SpawnCustomInfo => "Red Right Hand Enforcer";
+    protected override string SpawnCustomInfo => $"<color={ServerColors.Red}>Red Right Hand Enforcer</color>";
 }
 
 public class RrhAegis : CRole
@@ -89,7 +89,7 @@ public class RrhAegis : CRole
         [AmmoType.Nato9] = 200,
     };
     protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
-    protected override string SpawnCustomInfo => "Red Right Hand Aegis";
+    protected override string SpawnCustomInfo => $"<color={ServerColors.Red}>Red Right Hand Aegis</color>";
 }
 
 public class RrhAssaulter : CRole
@@ -117,5 +117,5 @@ public class RrhAssaulter : CRole
         [AmmoType.Nato9] = 180,
     };
     protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
-    protected override string SpawnCustomInfo => "Red Right Hand Assaulter";
+    protected override string SpawnCustomInfo => $"<color={ServerColors.Red}>Red Right Hand Assaulter</color>";
 }

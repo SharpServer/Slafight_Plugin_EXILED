@@ -35,7 +35,7 @@ public class LwsJudgement : CRole
         [AmmoType.Nato9] = 80,
     };
     protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
-    protected override string SpawnCustomInfo => "Law's Left Hand Judgement";
+    protected override string SpawnCustomInfo => $"<color={ServerColors.Nickel}>Law's Left Hand Judgement</color>";
 }
 
 public class LwsLiaison : CRole
@@ -62,7 +62,7 @@ public class LwsLiaison : CRole
         [AmmoType.Nato9] = 180,
     };
     protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
-    protected override string SpawnCustomInfo => "Law's Left Hand Liaison";
+    protected override string SpawnCustomInfo => $"<color={ServerColors.Nickel}>Law's Left Hand Liaison</color>";
 }
 
 public class LwsForensic : CRole
@@ -90,7 +90,7 @@ public class LwsForensic : CRole
         [AmmoType.Nato9] = 120,
     };
     protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
-    protected override string SpawnCustomInfo => "Law's Left Hand Forensic";
+    protected override string SpawnCustomInfo => $"<color={ServerColors.Nickel}>Law's Left Hand Forensic</color>";
 }
 
 public class LwsAgent : CRole
@@ -116,5 +116,5 @@ public class LwsAgent : CRole
         [AmmoType.Nato9] = 140,
     };
     protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
-    protected override string SpawnCustomInfo => "Law's Left Hand Agent";
+    protected override string SpawnCustomInfo => $"<color={ServerColors.Nickel}>Law's Left Hand Agent</color>";
 }
