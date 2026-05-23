@@ -123,7 +123,7 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
     
     private void OnTargetAdded(AddingTargetEventArgs ev)
     {
-        if (!Check(ev.Player)) return;
+        if (!Check(ev.Player) || ev.Target.GetTeam() is CTeam.SCPs) return;
         
         // ★TryGetValueで完全安全（例外ゼロ）
         var isInAnim = InTryNotToCryAnim.TryGetValue(ev.Player, out bool animValue) ? animValue : false;

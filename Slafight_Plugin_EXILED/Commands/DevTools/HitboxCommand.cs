@@ -7,6 +7,7 @@ using Exiled.API.Features;
 using Exiled.API.Features.Toys;
 using Exiled.Permissions.Extensions;
 using MEC;
+using PlayerRoles.FirstPersonControl;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using UnityObject = UnityEngine.Object;
@@ -19,8 +20,11 @@ public class HitboxCommand : ICommand
     private const float PrimitiveRedrawInterval = 0.1f;
     private const float DefaultLookRange = 80f;
     private const float DefaultNearRadius = 8f;
-    private const int MaxCollidersPerSession = 64;
+    private const int DefaultMaxCollidersPerSession = 64;
+    private const int DefaultAreaMaxCollidersPerSession = 128;
+    private const int HardMaxCollidersPerSession = 256;
     private const float PrimitiveLineWidth = 0.035f;
+    private const float PrimitiveVisibilityRefreshInterval = 0.5f;
 
     private static readonly Dictionary<int, HitboxDrawSession> Sessions = new();
     private static int _nextSessionId = 1;
@@ -43,7 +47,7 @@ public class HitboxCommand : ICommand
                 "Usage: sl hitbox <action> [...]\n" +
                 "  look [duration|on|off] [range] [self|all]\n" +
                 "  near [radius] [duration|on|off] [self|all] [nameFilter]\n" +
-                "  area [radius] [duration|on|off] [self|all]\n" +
+                "  area [radius] [duration|on|off] [self|all] [max]\n" +
                 "  name <nameFilter> [duration|on|off] [self|all] [max]\n" +
                 "  player [target|all] [duration|on|off] [self|all]\n" +
                 "  probe [range]\n" +
@@ -137,7 +141,7 @@ public class HitboxCommand : ICommand
         bool visibleToAll = ParseVisibility(arguments, 3);
         string filter = arguments.Count >= 5 ? string.Join(" ", arguments.Skip(4)) : string.Empty;
 
-        IEnumerable<Collider> Resolve() => GetNearbyColliders(executor, radius, filter);
+        IEnumerable<Collider> Resolve() => GetNearbyColliders(executor, executor.Position, radius, filter, DefaultMaxCollidersPerSession);
         Collider[] initial = Resolve().ToArray();
         if (initial.Length == 0)
         {
@@ -168,8 +172,9 @@ public class HitboxCommand : ICommand
 
         float duration = ParseDuration(arguments, 2, DefaultDuration);
         bool visibleToAll = ParseVisibility(arguments, 3);
+        int max = ParseInt(arguments, 4, DefaultAreaMaxCollidersPerSession, 1, HardMaxCollidersPerSession);
 
-        IEnumerable<Collider> Resolve() => GetNearbyColliders(executor, radius, string.Empty);
+        IEnumerable<Collider> Resolve() => GetNearbyColliders(executor, executor.Position, radius, string.Empty, max);
         Collider[] initial = Resolve().ToArray();
         if (initial.Length == 0)
         {
@@ -179,11 +184,12 @@ public class HitboxCommand : ICommand
 
         int id = StartSession(
             executor,
-            $"area:{radius:0.#}m",
+            $"area:{radius:0.#}m:max{max}",
             Resolve,
             duration,
             visibleToAll,
-            Color.yellow);
+            Color.yellow,
+            max);
 
         response = StartedMessage(id, "area", initial.Length, duration, visibleToAll);
         return true;
@@ -204,7 +210,7 @@ public class HitboxCommand : ICommand
 
         float duration = ParseDuration(arguments, 2, DefaultDuration);
         bool visibleToAll = ParseVisibility(arguments, 3);
-        int max = ParseInt(arguments, 4, MaxCollidersPerSession, 1, 128);
+        int max = ParseInt(arguments, 4, DefaultMaxCollidersPerSession, 1, HardMaxCollidersPerSession);
 
         IEnumerable<Collider> Resolve() => GetNamedColliders(filter, max);
         Collider[] initial = Resolve().ToArray();
@@ -241,7 +247,7 @@ public class HitboxCommand : ICommand
             IEnumerable<Collider> ResolveAll() => Player.List
                 .Where(p => p.GameObject != null)
                 .SelectMany(p => GetPlayerColliders(p))
-                .Take(MaxCollidersPerSession);
+                .Take(DefaultMaxCollidersPerSession);
 
             Collider[] initialAll = ResolveAll().ToArray();
             if (initialAll.Length == 0)
@@ -379,7 +385,8 @@ public class HitboxCommand : ICommand
         Func<IEnumerable<Collider>> resolveColliders,
         float duration,
         bool visibleToAll,
-        Color color)
+        Color color,
+        int maxColliders = DefaultMaxCollidersPerSession)
     {
         int id = _nextSessionId++;
         var session = new HitboxDrawSession(
@@ -391,7 +398,8 @@ public class HitboxCommand : ICommand
             duration <= 0f ? float.PositiveInfinity : Time.time + duration,
             visibleToAll,
             visibleToAll ? null : owner,
-            color);
+            color,
+            maxColliders);
 
         Sessions[id] = session;
         session.Handle = Timing.RunCoroutine(DrawLoop(session));
@@ -408,10 +416,11 @@ public class HitboxCommand : ICommand
             int count = 0;
             Collider[] colliders = session.ResolveColliders()
                 .Where(IsDrawableCollider)
-                .Take(MaxCollidersPerSession)
+                .Take(session.MaxColliders)
                 .ToArray();
 
             count = RenderPrimitiveHitboxes(session, colliders);
+            RefreshPrimitiveVisibilityIfNeeded(session);
 
             session.LastDrawCount = count;
             yield return Timing.WaitForSeconds(PrimitiveRedrawInterval);
@@ -521,26 +530,24 @@ public class HitboxCommand : ICommand
     private static int RenderPrimitiveHitboxes(HitboxDrawSession session, Collider[] colliders)
     {
         var segments = new List<(Vector3 start, Vector3 end)>();
-        Player[] targetPlayers = colliders
-            .Select(c => Player.Get(c.gameObject))
-            .Where(p => p != null)
-            .Distinct()
-            .ToArray();
+        var renderedPlayers = new HashSet<int>();
 
-        if (targetPlayers.Length > 0)
+        foreach (Collider collider in colliders)
         {
-            foreach (Player player in targetPlayers)
-                AddPlayerCapsuleSegments(player, segments);
-        }
-        else
-        {
-            foreach (Collider collider in colliders)
-                AddBoundsSegments(collider.bounds, segments);
+            if (TryGetColliderPlayer(collider, out Player player))
+            {
+                if (renderedPlayers.Add(player.Id))
+                    AddPlayerCollisionSegments(player, segments);
+
+                continue;
+            }
+
+            AddBoundsSegments(collider.bounds, segments);
         }
 
         segments = segments
             .Where(s => IsValidSegment(s.start, s.end))
-            .Take(MaxCollidersPerSession * 12)
+            .Take(session.MaxColliders * 12)
             .ToList();
 
         EnsurePrimitiveLineCount(session, segments.Count);
@@ -557,21 +564,115 @@ public class HitboxCommand : ICommand
         return colliders.Length;
     }
 
-    private static void AddPlayerCapsuleSegments(Player player, List<(Vector3 start, Vector3 end)> segments)
+    private static bool TryGetColliderPlayer(Collider collider, out Player player)
     {
-        Vector3 center = player.Position + Vector3.up * 0.9f;
-        float height = 1.8f;
-        float radius = 0.35f;
+        player = null;
+        if (collider == null)
+            return false;
+
+        player = Player.Get(collider.gameObject);
+        if (player != null)
+            return true;
+
+        foreach (Player candidate in Player.List)
+        {
+            if (candidate?.GameObject == null)
+                continue;
+
+            Transform playerTransform = candidate.GameObject.transform;
+            if (collider.transform.IsChildOf(playerTransform) || playerTransform.IsChildOf(collider.transform))
+            {
+                player = candidate;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private static void RefreshPrimitiveVisibilityIfNeeded(HitboxDrawSession session)
+    {
+        if (session.VisibleToAll || session.SelfViewer == null)
+            return;
+
+        if (Time.time < session.NextVisibilityRefreshTime)
+            return;
+
+        session.NextVisibilityRefreshTime = Time.time + PrimitiveVisibilityRefreshInterval;
+        foreach (Primitive primitive in session.PrimitiveLines)
+        {
+            if (primitive?.Base?.netIdentity == null)
+                continue;
+
+            primitive.ApplyShowState();
+        }
+    }
+
+    private static void AddPlayerCollisionSegments(Player player, List<(Vector3 start, Vector3 end)> segments)
+    {
+        if (TryAddCharacterControllerSegments(player, segments))
+            return;
+
+        AddFallbackPlayerCapsuleSegments(player, segments);
+    }
+
+    private static bool TryAddCharacterControllerSegments(Player player, List<(Vector3 start, Vector3 end)> segments)
+    {
+        if (player?.ReferenceHub?.roleManager?.CurrentRole is not IFpcRole fpcRole)
+            return false;
+
+        CharacterController controller = fpcRole.FpcModule?.CharController;
+        if (controller == null || !controller.enabled)
+            return false;
+
+        Transform transform = controller.transform;
+        Vector3 scale = transform.lossyScale;
+        float radius = controller.radius * Mathf.Max(Mathf.Abs(scale.x), Mathf.Abs(scale.z));
+        float height = controller.height * Mathf.Abs(scale.y);
+
+        if (radius <= 0.001f || height <= 0.001f)
+            return false;
+
+        height = Mathf.Max(height, radius * 2f);
+        Vector3 center = transform.TransformPoint(controller.center);
+        AddCapsuleSegments(
+            center,
+            transform.up,
+            transform.right,
+            transform.forward,
+            height,
+            radius,
+            segments);
+
+        return true;
+    }
+
+    private static void AddFallbackPlayerCapsuleSegments(Player player, List<(Vector3 start, Vector3 end)> segments)
+    {
+        Vector3 center = player.Position + Vector3.up * 0.4f;
+        AddCapsuleSegments(center, Vector3.up, Vector3.right, Vector3.forward, 1.8f, 0.35f, segments);
+    }
+
+    private static void AddCapsuleSegments(
+        Vector3 center,
+        Vector3 up,
+        Vector3 right,
+        Vector3 forward,
+        float height,
+        float radius,
+        List<(Vector3 start, Vector3 end)> segments)
+    {
         int sides = 8;
-        Vector3 bottom = center + Vector3.down * (height * 0.5f - radius);
-        Vector3 top = center + Vector3.up * (height * 0.5f - radius);
+        float cylinderHalfHeight = Mathf.Max(0f, height * 0.5f - radius);
+        Vector3 bottom = center - up * cylinderHalfHeight;
+        Vector3 top = center + up * cylinderHalfHeight;
 
         var bottomRing = new Vector3[sides];
         var topRing = new Vector3[sides];
         for (int i = 0; i < sides; i++)
         {
             float angle = Mathf.PI * 2f * i / sides;
-            Vector3 offset = new Vector3(Mathf.Cos(angle) * radius, 0f, Mathf.Sin(angle) * radius);
+            Vector3 offset = (right * Mathf.Cos(angle) + forward * Mathf.Sin(angle)) * radius;
             bottomRing[i] = bottom + offset;
             topRing[i] = top + offset;
         }
@@ -586,10 +687,10 @@ public class HitboxCommand : ICommand
         for (int i = 0; i < sides; i += 2)
             segments.Add((bottomRing[i], topRing[i]));
 
-        segments.Add((top + Vector3.left * radius, top + Vector3.right * radius));
-        segments.Add((top + Vector3.forward * radius, top + Vector3.back * radius));
-        segments.Add((bottom + Vector3.left * radius, bottom + Vector3.right * radius));
-        segments.Add((bottom + Vector3.forward * radius, bottom + Vector3.back * radius));
+        segments.Add((top - right * radius, top + right * radius));
+        segments.Add((top + forward * radius, top - forward * radius));
+        segments.Add((bottom - right * radius, bottom + right * radius));
+        segments.Add((bottom + forward * radius, bottom - forward * radius));
     }
 
     private static void EnsurePrimitiveLineCount(HitboxDrawSession session, int count)
@@ -703,16 +804,15 @@ public class HitboxCommand : ICommand
         segments.Add((p010, p011));
     }
 
-    private static IEnumerable<Collider> GetNearbyColliders(Player executor, float radius, string filter)
+    private static IEnumerable<Collider> GetNearbyColliders(Player executor, Vector3 origin, float radius, string filter, int max)
     {
-        Vector3 origin = executor.Position;
         return Physics.OverlapSphere(origin, radius, ~0, QueryTriggerInteraction.Collide)
             .Where(c => !ShouldIgnoreAreaCollider(executor, c))
             .Where(c => string.IsNullOrWhiteSpace(filter) || ColliderNameMatches(c, filter))
             .Where(IsDrawableCollider)
             .Distinct()
             .OrderBy(c => Vector3.SqrMagnitude(c.bounds.center - origin))
-            .Take(MaxCollidersPerSession);
+            .Take(max);
     }
 
     private static IEnumerable<Collider> GetNamedColliders(string filter, int max)
@@ -855,7 +955,8 @@ public class HitboxCommand : ICommand
             float endTime,
             bool visibleToAll,
             Player selfViewer,
-            Color color)
+            Color color,
+            int maxColliders)
         {
             Id = id;
             OwnerUserId = ownerUserId;
@@ -866,6 +967,7 @@ public class HitboxCommand : ICommand
             VisibleToAll = visibleToAll;
             SelfViewer = selfViewer;
             Color = color;
+            MaxColliders = maxColliders;
         }
 
         public int Id { get; }
@@ -877,9 +979,11 @@ public class HitboxCommand : ICommand
         public bool VisibleToAll { get; }
         public Player SelfViewer { get; }
         public Color Color { get; }
+        public int MaxColliders { get; }
         public List<Primitive> PrimitiveLines { get; } = [];
         public CoroutineHandle Handle { get; set; }
         public int LastDrawCount { get; set; }
+        public float NextVisibilityRefreshTime { get; set; }
         public bool IsExpired => !float.IsPositiveInfinity(EndTime) && Time.time >= EndTime;
     }
 }
