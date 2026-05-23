@@ -116,7 +116,8 @@ public class HitboxCommand : ICommand
         float range = ParseFloat(arguments, 2, DefaultLookRange, 1f, 500f);
         bool visibleToAll = ParseVisibility(arguments, 3);
         HitboxDrawPreferences preferences = GetPreferences(executor);
-        Color color = ParseColor(arguments, preferences.LineColor ?? Color.cyan);
+        Color defaultColor = Color.cyan;
+        Color color = ParseColor(arguments, preferences.LineColor ?? defaultColor);
         bool simplifyPlayers = ParseSimplifyPlayers(arguments, preferences.SimplifyPlayers);
 
         if (!TryRaycastLook(executor, range, out RaycastHit hit, out response))
@@ -136,6 +137,7 @@ public class HitboxCommand : ICommand
             duration,
             visibleToAll,
             color,
+            defaultColor,
             simplifyPlayers: simplifyPlayers);
 
         response = StartedMessage(id, "look", colliders.Length, duration, visibleToAll, color, simplifyPlayers);
@@ -152,7 +154,8 @@ public class HitboxCommand : ICommand
         float duration = ParseDuration(arguments, 2, DefaultDuration);
         bool visibleToAll = ParseVisibility(arguments, 3);
         HitboxDrawPreferences preferences = GetPreferences(executor);
-        Color color = ParseColor(arguments, preferences.LineColor ?? Color.yellow);
+        Color defaultColor = Color.yellow;
+        Color color = ParseColor(arguments, preferences.LineColor ?? defaultColor);
         bool simplifyPlayers = ParseSimplifyPlayers(arguments, preferences.SimplifyPlayers);
         string filter = GetOptionStrippedText(arguments, 4);
 
@@ -173,6 +176,7 @@ public class HitboxCommand : ICommand
             duration,
             visibleToAll,
             color,
+            defaultColor,
             simplifyPlayers: simplifyPlayers);
 
         response = StartedMessage(id, "near", initial.Length, duration, visibleToAll, color, simplifyPlayers);
@@ -190,7 +194,8 @@ public class HitboxCommand : ICommand
         bool visibleToAll = ParseVisibility(arguments, 3);
         int max = ParseInt(arguments, 4, DefaultAreaMaxCollidersPerSession, 1, HardMaxCollidersPerSession);
         HitboxDrawPreferences preferences = GetPreferences(executor);
-        Color color = ParseColor(arguments, preferences.LineColor ?? Color.yellow);
+        Color defaultColor = Color.yellow;
+        Color color = ParseColor(arguments, preferences.LineColor ?? defaultColor);
         bool simplifyPlayers = ParseSimplifyPlayers(arguments, preferences.SimplifyPlayers);
 
         IEnumerable<Collider> Resolve() => GetNearbyColliders(executor, executor.Position, radius, string.Empty, max);
@@ -208,6 +213,7 @@ public class HitboxCommand : ICommand
             duration,
             visibleToAll,
             color,
+            defaultColor,
             max,
             simplifyPlayers);
 
@@ -232,7 +238,8 @@ public class HitboxCommand : ICommand
         bool visibleToAll = ParseVisibility(arguments, 3);
         int max = ParseInt(arguments, 4, DefaultMaxCollidersPerSession, 1, HardMaxCollidersPerSession);
         HitboxDrawPreferences preferences = GetPreferences(executor);
-        Color color = ParseColor(arguments, preferences.LineColor ?? Color.magenta);
+        Color defaultColor = Color.magenta;
+        Color color = ParseColor(arguments, preferences.LineColor ?? defaultColor);
         bool simplifyPlayers = ParseSimplifyPlayers(arguments, preferences.SimplifyPlayers);
 
         IEnumerable<Collider> Resolve() => GetNamedColliders(filter, max);
@@ -250,6 +257,7 @@ public class HitboxCommand : ICommand
             duration,
             visibleToAll,
             color,
+            defaultColor,
             simplifyPlayers: simplifyPlayers);
 
         response = StartedMessage(id, "name", initial.Length, duration, visibleToAll, color, simplifyPlayers);
@@ -266,7 +274,8 @@ public class HitboxCommand : ICommand
         float duration = ParseDuration(arguments, 2, DefaultDuration);
         bool visibleToAll = ParseVisibility(arguments, 3);
         HitboxDrawPreferences preferences = GetPreferences(executor);
-        Color color = ParseColor(arguments, preferences.LineColor ?? Color.green);
+        Color defaultColor = Color.green;
+        Color color = ParseColor(arguments, preferences.LineColor ?? defaultColor);
         bool simplifyPlayers = ParseSimplifyPlayers(arguments, preferences.SimplifyPlayers);
 
         if (targetArg.Equals("all", StringComparison.OrdinalIgnoreCase))
@@ -283,7 +292,7 @@ public class HitboxCommand : ICommand
                 return false;
             }
 
-            int allId = StartSession(executor, "players:all", ResolveAll, duration, visibleToAll, color, simplifyPlayers: simplifyPlayers);
+            int allId = StartSession(executor, "players:all", ResolveAll, duration, visibleToAll, color, defaultColor, simplifyPlayers: simplifyPlayers);
             response = StartedMessage(allId, "player all", initialAll.Length, duration, visibleToAll, color, simplifyPlayers);
             return true;
         }
@@ -306,6 +315,7 @@ public class HitboxCommand : ICommand
             duration,
             visibleToAll,
             color,
+            defaultColor,
             simplifyPlayers: simplifyPlayers);
 
         response = StartedMessage(id, "player", initial.Length, duration, visibleToAll, color, simplifyPlayers);
@@ -329,7 +339,8 @@ public class HitboxCommand : ICommand
             value.Equals("mode", StringComparison.OrdinalIgnoreCase))
         {
             preferences.LineColor = null;
-            response = "Hitbox line color reset to per-mode defaults.";
+            int affected = ApplyPreferencesToOwnerSessions(executor, preferences);
+            response = $"Hitbox line color reset to per-mode defaults. Updated {affected} active session(s).";
             return true;
         }
 
@@ -340,7 +351,8 @@ public class HitboxCommand : ICommand
         }
 
         preferences.LineColor = color;
-        response = $"Hitbox line color set to {FormatColor(color)}.";
+        int updated = ApplyPreferencesToOwnerSessions(executor, preferences);
+        response = $"Hitbox line color set to {FormatColor(color)}. Updated {updated} active session(s).";
         return true;
     }
 
@@ -361,7 +373,8 @@ public class HitboxCommand : ICommand
         }
 
         preferences.SimplifyPlayers = simplifyPlayers;
-        response = $"Hitbox player mode set to {(simplifyPlayers ? "simple" : "full")}.";
+        int updated = ApplyPreferencesToOwnerSessions(executor, preferences);
+        response = $"Hitbox player mode set to {(simplifyPlayers ? "simple" : "full")}. Updated {updated} active session(s).";
         return true;
     }
 
@@ -477,6 +490,7 @@ public class HitboxCommand : ICommand
         float duration,
         bool visibleToAll,
         Color color,
+        Color defaultColor,
         int maxColliders = DefaultMaxCollidersPerSession,
         bool simplifyPlayers = true)
     {
@@ -491,6 +505,7 @@ public class HitboxCommand : ICommand
             visibleToAll,
             visibleToAll ? null : owner,
             color,
+            defaultColor,
             maxColliders,
             simplifyPlayers);
 
@@ -506,20 +521,41 @@ public class HitboxCommand : ICommand
             if (!session.VisibleToAll && !IsPlayerStillAvailable(session.SelfViewer))
                 break;
 
-            int count = 0;
-            Collider[] colliders = session.ResolveColliders()
-                .Where(IsDrawableCollider)
-                .Take(session.MaxColliders)
-                .ToArray();
-
-            count = RenderPrimitiveHitboxes(session, colliders);
-            RefreshPrimitiveVisibilityIfNeeded(session);
-
-            session.LastDrawCount = count;
+            RedrawSession(session);
             yield return Timing.WaitForSeconds(PrimitiveRedrawInterval);
         }
 
         StopSession(session.Id);
+    }
+
+    private static void RedrawSession(HitboxDrawSession session)
+    {
+        Collider[] colliders = session.ResolveColliders()
+            .Where(IsDrawableCollider)
+            .Take(session.MaxColliders)
+            .ToArray();
+
+        session.LastDrawCount = RenderPrimitiveHitboxes(session, colliders);
+        RefreshPrimitiveVisibilityIfNeeded(session);
+    }
+
+    private static int ApplyPreferencesToOwnerSessions(Player owner, HitboxDrawPreferences preferences)
+    {
+        if (owner == null)
+            return 0;
+
+        int updated = 0;
+        foreach (HitboxDrawSession session in Sessions.Values
+                     .Where(s => s.OwnerUserId == owner.UserId)
+                     .ToArray())
+        {
+            session.Color = preferences.LineColor ?? session.DefaultColor;
+            session.SimplifyPlayers = preferences.SimplifyPlayers;
+            RedrawSession(session);
+            updated++;
+        }
+
+        return updated;
     }
 
     private static bool StopSession(int id)
@@ -1384,6 +1420,7 @@ public class HitboxCommand : ICommand
             bool visibleToAll,
             Player selfViewer,
             Color color,
+            Color defaultColor,
             int maxColliders,
             bool simplifyPlayers)
         {
@@ -1396,6 +1433,7 @@ public class HitboxCommand : ICommand
             VisibleToAll = visibleToAll;
             SelfViewer = selfViewer;
             Color = color;
+            DefaultColor = defaultColor;
             MaxColliders = maxColliders;
             SimplifyPlayers = simplifyPlayers;
         }
@@ -1408,9 +1446,10 @@ public class HitboxCommand : ICommand
         public float EndTime { get; }
         public bool VisibleToAll { get; }
         public Player SelfViewer { get; }
-        public Color Color { get; }
+        public Color Color { get; set; }
+        public Color DefaultColor { get; }
         public int MaxColliders { get; }
-        public bool SimplifyPlayers { get; }
+        public bool SimplifyPlayers { get; set; }
         public List<Primitive> PrimitiveLines { get; } = [];
         public CoroutineHandle Handle { get; set; }
         public int LastDrawCount { get; set; }
