@@ -12,9 +12,14 @@ public static class RoundUtils
     /// 特殊勝利としてラウンドを終了させる。
     /// 呼び出し時に IsSpecialWinEnding を true にし、RoundLock 解除は呼び出し側で行う想定。
     /// </summary>
-    public static void EndRound(this CTeam team, string specificReason = null)
+    public static void EndRound(this CTeam team, string specificReason = null, bool tryUseTeamDefine = false)
     {
-        CustomRolesHandler.EndRound(team, specificReason);
+        CustomRolesHandler.EndRound(team, specificReason, tryUseTeamDefine);
+    }
+
+    public static void EndRound(this CTeamGroup group, string specificReason = null)
+    {
+        CustomRolesHandler.EndRound(group, specificReason);
     }
 
     /// <summary>

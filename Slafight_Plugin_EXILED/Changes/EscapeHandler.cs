@@ -7,12 +7,12 @@ using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features.Teams;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;
 using Slafight_Plugin_EXILED.API.Interface;
-using Slafight_Plugin_EXILED.SpecialEvents;
 
 namespace Slafight_Plugin_EXILED.Changes;
 
@@ -87,10 +87,22 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
     public static readonly List<Func<Player, EscapeTargetRole?>> DynamicOverrides = [];
 
     public static void AddEscapeOverride(Func<Player, EscapeTargetRole?> rule)
-        => DynamicOverrides.Add(rule);
+    {
+        DynamicOverrides.Add(rule);
+        CTeamEscapeRegistry.AddDynamicOverride(context =>
+        {
+            var result = rule(context.Player);
+            return result.HasValue
+                ? new CTeamEscapeTarget(result.Value.Vanilla, result.Value.Custom)
+                : null;
+        });
+    }
 
     public static void ClearEscapeOverrides()
-        => DynamicOverrides.Clear();
+    {
+        DynamicOverrides.Clear();
+        CTeamEscapeRegistry.ClearDynamicOverrides();
+    }
 
     public static void AddRoleEscapeOverride(RoleTypeId role, CRoleTypeId? custom = null, RoleTypeId? vanilla = null)
         => AddEscapeOverride(p => p.Role.Type == role
@@ -130,114 +142,12 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
         public CRoleTypeId? Custom;
     }
 
-    private EscapeTargetRole GetEscapeTarget(CTeam myTeam, CTeam cufferTeam)
-    {
-        return (myTeam, cufferTeam) switch
-        {
-            // Class-D Personnel
-            (CTeam.ClassD, CTeam.FoundationForces or CTeam.Scientists or CTeam.Guards)
-                => new EscapeTargetRole { Vanilla = RoleTypeId.NtfPrivate, Custom = null },
-            (CTeam.ClassD, CTeam.Fifthists)
-                => new EscapeTargetRole { Vanilla = null, Custom = CRoleTypeId.FifthistConvert },
-            (CTeam.ClassD, CTeam.GoC)
-                => new EscapeTargetRole { Vanilla = null, Custom = CRoleTypeId.GoCOperative },
-            (CTeam.ClassD, _)
-                => new EscapeTargetRole { Vanilla = RoleTypeId.ChaosConscript, Custom = null },
-
-            // Scientists
-            (CTeam.Scientists, CTeam.ChaosInsurgency or CTeam.ClassD)
-                => new EscapeTargetRole { Vanilla = RoleTypeId.ChaosConscript, Custom = null },
-            (CTeam.Scientists, CTeam.Fifthists)
-                => new EscapeTargetRole { Vanilla = null, Custom = CRoleTypeId.FifthistConvert },
-            (CTeam.Scientists, CTeam.GoC)
-                => new EscapeTargetRole { Vanilla = null, Custom = CRoleTypeId.GoCOperative },
-            (CTeam.Scientists, _)
-                => new EscapeTargetRole { Vanilla = RoleTypeId.NtfSpecialist, Custom = null },
-
-            // Chaos Insurgency
-            (CTeam.ChaosInsurgency, CTeam.FoundationForces or CTeam.Scientists or CTeam.Guards)
-                => new EscapeTargetRole { Vanilla = RoleTypeId.NtfPrivate, Custom = null },
-            (CTeam.ChaosInsurgency, CTeam.Fifthists)
-                => new EscapeTargetRole { Vanilla = null, Custom = CRoleTypeId.FifthistConvert },
-            (CTeam.ChaosInsurgency, CTeam.GoC)
-                => new EscapeTargetRole { Vanilla = null, Custom = CRoleTypeId.GoCOperative },
-
-            // Foundation Forces (with Guards)
-            (CTeam.FoundationForces or CTeam.Guards, CTeam.ChaosInsurgency or CTeam.ClassD)
-                => new EscapeTargetRole { Vanilla = RoleTypeId.ChaosConscript, Custom = null },
-            (CTeam.FoundationForces or CTeam.Guards, CTeam.Fifthists)
-                => new EscapeTargetRole { Vanilla = null, Custom = CRoleTypeId.FifthistConvert },
-            (CTeam.FoundationForces or CTeam.Guards, CTeam.GoC)
-                => new EscapeTargetRole { Vanilla = null, Custom = CRoleTypeId.GoCOperative },
-
-            // Fifthists
-            (CTeam.Fifthists, CTeam.ChaosInsurgency or CTeam.ClassD)
-                => new EscapeTargetRole { Vanilla = RoleTypeId.ChaosConscript, Custom = null },
-            (CTeam.Fifthists, CTeam.FoundationForces or CTeam.Scientists or CTeam.Guards)
-                => new EscapeTargetRole { Vanilla = RoleTypeId.NtfPrivate, Custom = null },
-
-            // GoC
-            (CTeam.Fifthists, CTeam.GoC)
-                => new EscapeTargetRole { Vanilla = null, Custom = CRoleTypeId.GoCOperative },
-
-            // デフォルト
-            _ => new EscapeTargetRole { Vanilla = null, Custom = null },
-        };
-    }
-
-    private EscapeTargetRole ApplyEventOverrides(EscapeTargetRole baseTarget, Player player)
-    {
-        var nowEvent = SpecialEventsHandler.Instance.NowEvent;
-
-        switch (nowEvent)
-        {
-            case SpecialEventType.FacilityTermination when player.GetTeam() == CTeam.Scientists:
-                return new EscapeTargetRole { Vanilla = null, Custom = CRoleTypeId.GoCOperative };
-
-            case SpecialEventType.None:
-            default:
-                return baseTarget;
-
-            // 他イベントもここへ
-        }
-    }
-
-    private EscapeTargetRole GetEscapeTarget(Player player)
-    {
-        var roleOverride = CheckRoleEscapeOverride(player);
-        if (roleOverride.Vanilla.HasValue || roleOverride.Custom.HasValue)
-            return roleOverride;
-
-        var myTeam = player.GetTeam();
-        var cufferTeam = player.Cuffer?.GetTeam() ?? CTeam.Null;
-        var baseTarget = GetEscapeTarget(myTeam, cufferTeam);
-
-        return ApplyEventOverrides(baseTarget, player);
-    }
-
-    private EscapeTargetRole CheckRoleEscapeOverride(Player player)
-    {
-        // 動的オーバーライドを最優先
-        foreach (var rule in DynamicOverrides)
-        {
-            var result = rule(player);
-            if (result.HasValue && (result.Value.Vanilla.HasValue || result.Value.Custom.HasValue))
-                return result.Value;
-        }
-
-        return player.GetCustomRole() switch
-        {
-            CRoleTypeId.Scp3005 => new EscapeTargetRole { Vanilla = null, Custom = CRoleTypeId.FifthistPriest },
-            _ => new EscapeTargetRole { Vanilla = null, Custom = null }
-        };
-    }
-
     public void Escape(Player player)
     {
         Log.Debug($"Escape: {player.Nickname} ({player.GetTeam()})");
 
-        var target = GetEscapeTarget(player);
-        if (target.Vanilla is null && target.Custom is null) return;
+        var target = CTeamEscapeRegistry.Resolve(player);
+        if (target.IsEmpty) return;
 
         var ev = new PlayerCustomEscapingEventArgs(player) { IsAllowed = true };
         PlayerCustomEscaping?.Invoke(null, ev);

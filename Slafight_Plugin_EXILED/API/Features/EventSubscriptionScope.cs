@@ -6,7 +6,7 @@ namespace Slafight_Plugin_EXILED.API.Features;
 
 public sealed class EventSubscriptionScope : IDisposable
 {
-    private readonly List<Action> _unsubscribers = new();
+    private readonly List<Action> _unsubscribers = [];
     private bool _disposed;
 
     public void Add(Action subscribe, Action unsubscribe)

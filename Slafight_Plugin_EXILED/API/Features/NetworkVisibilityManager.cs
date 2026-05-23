@@ -50,10 +50,10 @@ public class NetworkShowState
     // ---- 個別指定 ----
 
     /// <summary>強制的に表示するプレイヤーIDのセット。ExplicitHide より低優先。</summary>
-    public HashSet<int> ExplicitShow { get; } = new();
+    public HashSet<int> ExplicitShow { get; } = [];
 
     /// <summary>強制的に非表示にするプレイヤーIDのセット。最高優先。</summary>
-    public HashSet<int> ExplicitHide { get; } = new();
+    public HashSet<int> ExplicitHide { get; } = [];
 
     // ---- 優先順位に従って表示すべきか判定 ----
 

@@ -167,6 +167,7 @@
         <Compile Include="Abilities\SoundOfFifthAbility.cs" />
         <Compile Include="Abilities\TeleprotRandomAbility.cs" />
         <Compile Include="API\Enums\CTeam.cs" />
+        <Compile Include="API\Enums\CTeamGroup.cs" />
         <Compile Include="API\Enums\CustomColor.cs" />
         <Compile Include="API\Enums\ServerColors.cs" />
         <Compile Include="API\Enums\Scp035StateType.cs" />
@@ -203,6 +204,7 @@
         <Compile Include="API\Features\CRole.cs" />
         <Compile Include="API\Features\CRoom.cs" />
         <Compile Include="API\Features\CustomBooleans.cs" />
+        <Compile Include="API\Features\Common\DefinitionSourceLoader.cs" />
         <Compile Include="API\Features\GlobalVentManager.cs" />
         <Compile Include="API\Features\CItemNvg.cs" />
         <Compile Include="API\Features\ObjectPrefab.cs" />
@@ -213,8 +215,8 @@
         <Compile Include="API\Features\RoleTableDictionaries\Contexts\AprilRoleTableContext.cs" />
         <Compile Include="API\Features\RoleTableDictionaries\Contexts\NormalRoleTableContext.cs" />
         <Compile Include="API\Features\RoleParseHelper.cs" />
-        <Compile Include="API\Features\RoundVictory\RoundEndSystem.cs" />
-        <Compile Include="API\Features\RoundVictory\RoundVictorySystem.cs" />
+        <Compile Include="API\Features\RoundVictory\Core\*.cs" />
+        <Compile Include="API\Features\RoundVictory\Sources\*.cs" />
         <Compile Include="API\Features\RoleSpecificTextProvider.cs" />
         <Compile Include="API\Features\ServerSpecifics.cs" />
         <Compile Include="API\Features\SpawnContext.cs" />
@@ -231,8 +233,12 @@
         <Compile Include="API\Features\SpyKitRecords.cs" />
         <Compile Include="API\Features\SpyMorphDataCollections.cs" />
         <Compile Include="API\Features\Tips.cs" />
-        <Compile Include="API\Features\Teams\CTeamDefinition.cs" />
-        <Compile Include="API\Features\Teams\CTeamRegistry.cs" />
+        <Compile Include="API\Features\Teams\Core\*.cs" />
+        <Compile Include="API\Features\Teams\Escape\*.cs" />
+        <Compile Include="API\Features\Teams\Profiles\*.cs" />
+        <Compile Include="API\Features\Teams\Definitions\Escape\*.cs" />
+        <Compile Include="API\Features\Teams\Definitions\Profiles\*.cs" />
+        <Compile Include="API\Features\Teams\Definitions\Teams\*.cs" />
         <Compile Include="API\Features\UnitPack.cs" />
         <Compile Include="API\Features\SpawnSystemBootstrap.cs" />
         <Compile Include="API\Features\UnitPackRegistry.cs" />

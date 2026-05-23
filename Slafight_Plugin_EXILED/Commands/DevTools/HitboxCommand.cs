@@ -513,9 +513,9 @@ public class HitboxCommand : ICommand
     private static IEnumerable<Collider> GetHitCollider(Collider hitCollider)
     {
         if (!IsDrawableCollider(hitCollider))
-            return Enumerable.Empty<Collider>();
+            return [];
 
-        return new[] { hitCollider };
+        return [hitCollider];
     }
 
     private static int RenderPrimitiveHitboxes(HitboxDrawSession session, Collider[] colliders)
@@ -728,7 +728,7 @@ public class HitboxCommand : ICommand
     private static IEnumerable<Collider> GetPlayerColliders(Player player)
     {
         if (player?.GameObject == null)
-            return Enumerable.Empty<Collider>();
+            return [];
 
         return player.GameObject.GetComponentsInChildren<Collider>(false)
             .Where(IsDrawableCollider)
@@ -877,7 +877,7 @@ public class HitboxCommand : ICommand
         public bool VisibleToAll { get; }
         public Player SelfViewer { get; }
         public Color Color { get; }
-        public List<Primitive> PrimitiveLines { get; } = new();
+        public List<Primitive> PrimitiveLines { get; } = [];
         public CoroutineHandle Handle { get; set; }
         public int LastDrawCount { get; set; }
         public bool IsExpired => !float.IsPositiveInfinity(EndTime) && Time.time >= EndTime;

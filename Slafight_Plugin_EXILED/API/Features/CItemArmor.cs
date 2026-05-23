@@ -54,14 +54,14 @@ public abstract class CItemArmor : CItem
     /// 弾薬所持上限リスト。空なら変更しない。
     /// <see cref="Exiled.CustomItems.API.Features.CustomArmor.AmmoLimits"/> 互換。
     /// </summary>
-    protected virtual IReadOnlyList<ArmorAmmoLimit> AmmoLimits { get; } = Array.Empty<ArmorAmmoLimit>();
+    protected virtual IReadOnlyList<ArmorAmmoLimit> AmmoLimits { get; } = [];
 
     /// <summary>
     /// アイテムカテゴリ上限リスト。空なら変更しない。
     /// <see cref="Exiled.CustomItems.API.Features.CustomArmor.CategoryLimits"/> 互換。
     /// </summary>
     protected virtual IReadOnlyList<BodyArmor.ArmorCategoryLimitModifier> CategoryLimits { get; }
-        = Array.Empty<BodyArmor.ArmorCategoryLimitModifier>();
+        = [];
 
     // ======================================================
     // CustomizeItem — Armor 値の焼き付け

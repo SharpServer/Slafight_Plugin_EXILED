@@ -2,6 +2,7 @@ using Exiled.API.Features;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Features.Teams;
 
 namespace Slafight_Plugin_EXILED.Extensions;
 
@@ -35,6 +36,9 @@ public static class PlayerRoleHelpers
         public CTeam GetTeam()
         {
             if (player == null) return CTeam.Null;
+
+            if (CTeamPlayerState.TryGetTeamOverride(player, out var overrideTeam))
+                return overrideTeam;
 
             var info = player.GetRoleInfo();
 

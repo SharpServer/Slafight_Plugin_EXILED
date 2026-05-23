@@ -227,9 +227,14 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
         AbilityBase.RevokeAllPlayers();
     }
 
-    public static void EndRound(CTeam winnerTeam = CTeam.SCPs, string specificReason = null)
+    public static void EndRound(CTeam winnerTeam = CTeam.SCPs, string specificReason = null, bool tryUseTeamDefine = false)
     {
-        RoundEndExecutor.EndRound(winnerTeam, specificReason);
+        RoundEndExecutor.EndRound(winnerTeam, specificReason, tryUseTeamDefine);
+    }
+
+    public static void EndRound(CTeamGroup winnerGroup, string specificReason = null)
+    {
+        RoundEndExecutor.EndRound(winnerGroup, specificReason);
     }
 
     private static IEnumerator<float> DelayUnlessLobby(float delay, Action action)

@@ -35,7 +35,7 @@ public abstract class CRole
     private static readonly Dictionary<Type, CRole> TypeToRole = new();
     private static readonly Dictionary<int, TeamNpcInfo> TeamNpcs = new();
 
-    private static readonly IReadOnlyList<object> EmptyItems = Array.Empty<object>();
+    private static readonly IReadOnlyList<object> EmptyItems = [];
     private static readonly IReadOnlyDictionary<AmmoType, ushort> EmptyAmmo = new Dictionary<AmmoType, ushort>();
 
     private static bool _eventsSubscribed;
