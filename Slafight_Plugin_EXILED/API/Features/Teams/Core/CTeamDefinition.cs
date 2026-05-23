@@ -1,7 +1,7 @@
 using Slafight_Plugin_EXILED.API.Enums;
-using Slafight_Plugin_EXILED.API.Features.RoundVictory;
+using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 
-namespace Slafight_Plugin_EXILED.API.Features.Teams;
+namespace Slafight_Plugin_EXILED.API.Features.Teams.Core;
 
 /// <summary>
 /// <see cref="CTeam"/> に紐づく表示名・Cassie 読み・色・分類情報を表します。

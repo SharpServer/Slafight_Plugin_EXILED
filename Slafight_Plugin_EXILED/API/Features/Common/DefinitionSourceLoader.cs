@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Slafight_Plugin_EXILED.API.Features;
+namespace Slafight_Plugin_EXILED.API.Features.Common;
 
 internal static class DefinitionSourceLoader
 {

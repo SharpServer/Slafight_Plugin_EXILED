@@ -2,10 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Slafight_Plugin_EXILED.API.Enums;
-using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.API.Features.RoundVictory;
+using Slafight_Plugin_EXILED.API.Features.Common;
+using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 
-namespace Slafight_Plugin_EXILED.API.Features.Teams;
+namespace Slafight_Plugin_EXILED.API.Features.Teams.Core;
 
 public interface ICTeamDefinitionSource
 {

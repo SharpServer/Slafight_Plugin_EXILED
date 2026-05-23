@@ -1,6 +1,8 @@
 using System.Collections.Generic;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features.Teams.Escape;
+using Slafight_Plugin_EXILED.API.Features.Teams.Profiles;
 using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.API.Features.Teams.Definitions.Escape;

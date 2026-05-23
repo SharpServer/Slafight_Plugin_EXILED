@@ -4,7 +4,7 @@ using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
 
-namespace Slafight_Plugin_EXILED.API.Features.RoundVictory;
+namespace Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 
 /// <summary>
 /// チーム定義側から選べる通常勝利条件プリセットです。

@@ -4,11 +4,11 @@ using System.Linq;
 using Exiled.API.Features;
 using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
-using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.API.Features.Teams;
+using Slafight_Plugin_EXILED.API.Features.Common;
+using Slafight_Plugin_EXILED.API.Features.Teams.Profiles;
 using Slafight_Plugin_EXILED.Extensions;
 
-namespace Slafight_Plugin_EXILED.API.Features.RoundVictory;
+namespace Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 
 /// <summary>
 /// 独自ラウンド終了処理に渡す特殊理由をまとめます。

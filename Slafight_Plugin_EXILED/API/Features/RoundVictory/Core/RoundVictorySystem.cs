@@ -4,15 +4,15 @@ using System.Linq;
 using Exiled.API.Features;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
-using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.API.Features.Teams;
+using Slafight_Plugin_EXILED.API.Features.Common;
+using Slafight_Plugin_EXILED.API.Features.Teams.Profiles;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomRoles;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.SpecialEvents;
 
-namespace Slafight_Plugin_EXILED.API.Features.RoundVictory;
+namespace Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 
 /// <summary>
 /// 1 回の勝利判定で参照するラウンド状態をまとめます。

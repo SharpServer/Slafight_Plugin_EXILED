@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Enums;
 
-namespace Slafight_Plugin_EXILED.API.Features.Teams;
+namespace Slafight_Plugin_EXILED.API.Features.Teams.Core;
 
 public static class CTeamPlayerState
 {

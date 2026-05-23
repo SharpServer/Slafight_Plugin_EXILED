@@ -1,9 +1,10 @@
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features.Teams.Core;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.SpecialEvents;
 
-namespace Slafight_Plugin_EXILED.API.Features.Teams;
+namespace Slafight_Plugin_EXILED.API.Features.Teams.Profiles;
 
 public sealed class CTeamProfileManager : IBootstrapHandler
 {
