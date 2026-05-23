@@ -16,8 +16,8 @@ internal static class RoleHintsDictionary
     private const string FoundObj = "研究員を救出し、施設の秩序を守護せよ。";
     private const string ChaosObj = "Dクラス職員を救出し、施設を略奪せよ。";
     private const string GoCObj   = "人類第一に、財団に抵抗せよ。";
-    private const string AlphaObj = "秩序のために、必要な犠牲を厭わず施設を掌握せよ。";
-    private const string OmegaObj = "法のために、秩序の暴走を許さず施設を守護せよ。";
+    private const string AlphaObj = "<b>秩序のために、必要な犠牲を厭わず施設を掌握せよ。</b>";
+    private const string OmegaObj = "<b>法のために、秩序の暴走を許さず施設を守護せよ。</b>";
 
     // (role text, team text, objective text)
     internal static readonly Dictionary<CRoleTypeId, (string Role, string Team, string Objective)> Table =
@@ -70,14 +70,14 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.SneGears]       = ("<color=#FF1493>MTF Eta-10: Gears</color>",        FoundTeam, FoundObj),
         [CRoleTypeId.SneOperator]    = ("<color=#FF1493>MTF Eta-10: Operator</color>",     FoundTeam, FoundObj),
         [CRoleTypeId.AraOrun]        = ("<color=#ffff00>MTF Omega-0: Ará Orún</color>",    FoundTeam, "マリオン・ホイーラーを手助けし、反ミーム爆弾へと導け！"),
-        [CRoleTypeId.LwsJudgement]   = ($"<color={ServerColors.Silver}><b>MTF Omega-1: Judgement</color>",   FoundTeam + " - " + GoCTeam, OmegaObj),
-        [CRoleTypeId.LwsLiaison]     = ($"<color={ServerColors.Silver}><b>MTF Omega-1: Liaison</color>",     FoundTeam + " - " + GoCTeam, OmegaObj),
-        [CRoleTypeId.LwsForensic]    = ($"<color={ServerColors.Silver}><b>MTF Omega-1: Forensic</color>",    FoundTeam + " - " + GoCTeam, OmegaObj),
-        [CRoleTypeId.LwsAgent]       = ($"<color={ServerColors.Silver}><b>MTF Omega-1: Agent</color>",       FoundTeam + " - " + GoCTeam, OmegaObj),
-        [CRoleTypeId.RrhWarden]      = ($"<color={ServerColors.Red}><b>MTF Alpha-1: Warden</color>",      FoundTeam, AlphaObj),
-        [CRoleTypeId.RrhEnforcer]    = ($"<color={ServerColors.Red}><b>MTF Alpha-1: Enforcer</color>",    FoundTeam, AlphaObj),
-        [CRoleTypeId.RrhAegis]       = ($"<color={ServerColors.Red}><b>MTF Alpha-1: Aegis</color>",       FoundTeam, AlphaObj),
-        [CRoleTypeId.RrhAssaulter]   = ($"<color={ServerColors.Red}><b>MTF Alpha-1: Assaulter</color>",   FoundTeam, AlphaObj),
+        [CRoleTypeId.LwsJudgement]   = ($"<color={ServerColors.Silver}><b>MTF Omega-1: Judgement</b></color>",   FoundTeam + " - " + GoCTeam, OmegaObj),
+        [CRoleTypeId.LwsLiaison]     = ($"<color={ServerColors.Silver}><b>MTF Omega-1: Liaison</b></color>",     FoundTeam + " - " + GoCTeam, OmegaObj),
+        [CRoleTypeId.LwsForensic]    = ($"<color={ServerColors.Silver}><b>MTF Omega-1: Forensic</b></color>",    FoundTeam + " - " + GoCTeam, OmegaObj),
+        [CRoleTypeId.LwsAgent]       = ($"<color={ServerColors.Silver}><b>MTF Omega-1: Agent</b></color>",       FoundTeam + " - " + GoCTeam, OmegaObj),
+        [CRoleTypeId.RrhWarden]      = ($"<color={ServerColors.Red}><b>MTF Alpha-1: Warden</b></color>",      FoundTeam, AlphaObj),
+        [CRoleTypeId.RrhEnforcer]    = ($"<color={ServerColors.Red}><b>MTF Alpha-1: Enforcer</b></color>",    FoundTeam, AlphaObj),
+        [CRoleTypeId.RrhAegis]       = ($"<color={ServerColors.Red}><b>MTF Alpha-1: Aegis</b></color>",       FoundTeam, AlphaObj),
+        [CRoleTypeId.RrhAssaulter]   = ($"<color={ServerColors.Red}><b>MTF Alpha-1: Assaulter</b></color>",   FoundTeam, AlphaObj),
 
         // ── Guards ────────────────────────────────────────────────────────
         [CRoleTypeId.EvacuationGuard] = ("<color=#00b7eb>Emergency Evacuation Guard</color>", FoundTeam, "職員達を上部階層へ避難させ、施設の秩序を守護せよ。"),

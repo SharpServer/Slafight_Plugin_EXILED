@@ -34,7 +34,7 @@ public class LwsJudgement : CRole
         [AmmoType.Nato9] = 80,
     };
     protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
-    protected override string SpawnCustomInfo => $"<color={ServerColors.Silver}>Law's Left Hand Judgement</b></color>";
+    protected override string SpawnCustomInfo => $"<color={ServerColors.Silver}>Law's Left Hand Judgement</color>";
 }
 
 public class LwsLiaison : CRole
