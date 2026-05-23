@@ -11,7 +11,7 @@ namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces;
 
 public class RrhWarden : CRole
 {
-    protected override string RoleName { get; set; } = $"<color={ServerColors.Red}>Red Right Hand: Warden</color>";
+    protected override string RoleName { get; set; } = $"<color={ServerColors.Red}><b>Red Right Hand: Warden</b></color>";
     protected override string Description { get; set; } = "Alpha-1の監督官。\nO5の意思として現場を制圧し、財団側の勝利を確実にせよ。";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.RrhWarden;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
@@ -39,7 +39,7 @@ public class RrhWarden : CRole
 
 public class RrhEnforcer : CRole
 {
-    protected override string RoleName { get; set; } = $"<color={ServerColors.Red}>Red Right Hand: Enforcer</color>";
+    protected override string RoleName { get; set; } = $"<color={ServerColors.Red}><b>Red Right Hand: Enforcer</b></color>";
     protected override string Description { get; set; } = "Alpha-1の執行官。\n敵対勢力を迅速に排除し、機動部隊の前進を支援せよ。";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.RrhEnforcer;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
@@ -66,7 +66,7 @@ public class RrhEnforcer : CRole
 
 public class RrhAegis : CRole
 {
-    protected override string RoleName { get; set; } = $"<color={ServerColors.Red}>Red Right Hand: Aegis</color>";
+    protected override string RoleName { get; set; } = $"<color={ServerColors.Red}><b>Red Right Hand: Aegis</b></color>";
     protected override string Description { get; set; } = "Alpha-1の護衛担当。\n要員を守りながら、部隊の作戦継続を支援せよ。";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.RrhAegis;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
@@ -94,7 +94,7 @@ public class RrhAegis : CRole
 
 public class RrhAssaulter : CRole
 {
-    protected override string RoleName { get; set; } = $"<color={ServerColors.Red}>Red Right Hand: Assaulter</color>";
+    protected override string RoleName { get; set; } = $"<color={ServerColors.Red}><b>Red Right Hand: Assaulter</b></color>";
     protected override string Description { get; set; } = "Alpha-1の突入要員。\n強襲で敵の戦線を崩し、財団の優位を作れ。";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.RrhAssaulter;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
