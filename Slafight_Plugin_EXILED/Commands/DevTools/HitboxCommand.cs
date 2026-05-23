@@ -28,6 +28,7 @@ public class HitboxCommand : ICommand
     private const int PrimitiveSegmentsPerColliderBudget = 48;
 
     private static readonly Dictionary<int, HitboxDrawSession> Sessions = new();
+    private static readonly Dictionary<string, HitboxDrawPreferences> Preferences = new();
     private static int _nextSessionId = 1;
 
     public string Command => "hitbox";
@@ -51,10 +52,13 @@ public class HitboxCommand : ICommand
                 "  area [radius] [duration|on|off] [self|all] [max]\n" +
                 "  name <nameFilter> [duration|on|off] [self|all] [max]\n" +
                 "  player [target|all] [duration|on|off] [self|all]\n" +
+                "  color [#RRGGBB|name|reset]\n" +
+                "  playermode [simple|full]\n" +
+                "  options\n" +
                 "  probe [range]\n" +
                 "  list\n" +
                 "  clear [all|sessionId]\n" +
-                "Default visibility is self. Use duration `on` to draw until cleared.";
+                "Default visibility is self. Use duration `on` to draw until cleared. Color names: red/green/blue/yellow/cyan/magenta/white/black.";
             return false;
         }
 
@@ -76,6 +80,9 @@ public class HitboxCommand : ICommand
             "area" or "all" or "allnear" or "range" => DrawArea(arguments, executor, out response),
             "name" or "find" or "search" => DrawName(arguments, executor, out response),
             "player" or "players" or "pl" => DrawPlayer(arguments, executor, out response),
+            "color" or "colour" or "linecolor" => SetColorPreference(arguments, executor, out response),
+            "playermode" or "playerstyle" or "playerhitbox" or "simplifyplayers" => SetPlayerModePreference(arguments, executor, out response),
+            "options" or "prefs" or "settings" => ShowPreferences(executor, out response),
             _ => UnknownAction(action, out response),
         };
     }
@@ -108,6 +115,9 @@ public class HitboxCommand : ICommand
         float duration = ParseDuration(arguments, 1, DefaultDuration);
         float range = ParseFloat(arguments, 2, DefaultLookRange, 1f, 500f);
         bool visibleToAll = ParseVisibility(arguments, 3);
+        HitboxDrawPreferences preferences = GetPreferences(executor);
+        Color color = ParseColor(arguments, preferences.LineColor ?? Color.cyan);
+        bool simplifyPlayers = ParseSimplifyPlayers(arguments, preferences.SimplifyPlayers);
 
         if (!TryRaycastLook(executor, range, out RaycastHit hit, out response))
             return false;
@@ -125,9 +135,10 @@ public class HitboxCommand : ICommand
             () => colliders,
             duration,
             visibleToAll,
-            Color.cyan);
+            color,
+            simplifyPlayers: simplifyPlayers);
 
-        response = StartedMessage(id, "look", colliders.Length, duration, visibleToAll);
+        response = StartedMessage(id, "look", colliders.Length, duration, visibleToAll, color, simplifyPlayers);
         return true;
     }
 
@@ -140,7 +151,10 @@ public class HitboxCommand : ICommand
 
         float duration = ParseDuration(arguments, 2, DefaultDuration);
         bool visibleToAll = ParseVisibility(arguments, 3);
-        string filter = arguments.Count >= 5 ? string.Join(" ", arguments.Skip(4)) : string.Empty;
+        HitboxDrawPreferences preferences = GetPreferences(executor);
+        Color color = ParseColor(arguments, preferences.LineColor ?? Color.yellow);
+        bool simplifyPlayers = ParseSimplifyPlayers(arguments, preferences.SimplifyPlayers);
+        string filter = GetOptionStrippedText(arguments, 4);
 
         IEnumerable<Collider> Resolve() => GetNearbyColliders(executor, executor.Position, radius, filter, DefaultMaxCollidersPerSession);
         Collider[] initial = Resolve().ToArray();
@@ -158,9 +172,10 @@ public class HitboxCommand : ICommand
             Resolve,
             duration,
             visibleToAll,
-            Color.yellow);
+            color,
+            simplifyPlayers: simplifyPlayers);
 
-        response = StartedMessage(id, "near", initial.Length, duration, visibleToAll);
+        response = StartedMessage(id, "near", initial.Length, duration, visibleToAll, color, simplifyPlayers);
         return true;
     }
 
@@ -174,6 +189,9 @@ public class HitboxCommand : ICommand
         float duration = ParseDuration(arguments, 2, DefaultDuration);
         bool visibleToAll = ParseVisibility(arguments, 3);
         int max = ParseInt(arguments, 4, DefaultAreaMaxCollidersPerSession, 1, HardMaxCollidersPerSession);
+        HitboxDrawPreferences preferences = GetPreferences(executor);
+        Color color = ParseColor(arguments, preferences.LineColor ?? Color.yellow);
+        bool simplifyPlayers = ParseSimplifyPlayers(arguments, preferences.SimplifyPlayers);
 
         IEnumerable<Collider> Resolve() => GetNearbyColliders(executor, executor.Position, radius, string.Empty, max);
         Collider[] initial = Resolve().ToArray();
@@ -189,10 +207,11 @@ public class HitboxCommand : ICommand
             Resolve,
             duration,
             visibleToAll,
-            Color.yellow,
-            max);
+            color,
+            max,
+            simplifyPlayers);
 
-        response = StartedMessage(id, "area", initial.Length, duration, visibleToAll);
+        response = StartedMessage(id, "area", initial.Length, duration, visibleToAll, color, simplifyPlayers);
         return true;
     }
 
@@ -212,6 +231,9 @@ public class HitboxCommand : ICommand
         float duration = ParseDuration(arguments, 2, DefaultDuration);
         bool visibleToAll = ParseVisibility(arguments, 3);
         int max = ParseInt(arguments, 4, DefaultMaxCollidersPerSession, 1, HardMaxCollidersPerSession);
+        HitboxDrawPreferences preferences = GetPreferences(executor);
+        Color color = ParseColor(arguments, preferences.LineColor ?? Color.magenta);
+        bool simplifyPlayers = ParseSimplifyPlayers(arguments, preferences.SimplifyPlayers);
 
         IEnumerable<Collider> Resolve() => GetNamedColliders(filter, max);
         Collider[] initial = Resolve().ToArray();
@@ -227,9 +249,10 @@ public class HitboxCommand : ICommand
             Resolve,
             duration,
             visibleToAll,
-            Color.magenta);
+            color,
+            simplifyPlayers: simplifyPlayers);
 
-        response = StartedMessage(id, "name", initial.Length, duration, visibleToAll);
+        response = StartedMessage(id, "name", initial.Length, duration, visibleToAll, color, simplifyPlayers);
         return true;
     }
 
@@ -242,6 +265,9 @@ public class HitboxCommand : ICommand
 
         float duration = ParseDuration(arguments, 2, DefaultDuration);
         bool visibleToAll = ParseVisibility(arguments, 3);
+        HitboxDrawPreferences preferences = GetPreferences(executor);
+        Color color = ParseColor(arguments, preferences.LineColor ?? Color.green);
+        bool simplifyPlayers = ParseSimplifyPlayers(arguments, preferences.SimplifyPlayers);
 
         if (targetArg.Equals("all", StringComparison.OrdinalIgnoreCase))
         {
@@ -257,8 +283,8 @@ public class HitboxCommand : ICommand
                 return false;
             }
 
-            int allId = StartSession(executor, "players:all", ResolveAll, duration, visibleToAll, Color.green);
-            response = StartedMessage(allId, "player all", initialAll.Length, duration, visibleToAll);
+            int allId = StartSession(executor, "players:all", ResolveAll, duration, visibleToAll, color, simplifyPlayers: simplifyPlayers);
+            response = StartedMessage(allId, "player all", initialAll.Length, duration, visibleToAll, color, simplifyPlayers);
             return true;
         }
 
@@ -279,9 +305,73 @@ public class HitboxCommand : ICommand
             ResolveTarget,
             duration,
             visibleToAll,
-            Color.green);
+            color,
+            simplifyPlayers: simplifyPlayers);
 
-        response = StartedMessage(id, "player", initial.Length, duration, visibleToAll);
+        response = StartedMessage(id, "player", initial.Length, duration, visibleToAll, color, simplifyPlayers);
+        return true;
+    }
+
+    private static bool SetColorPreference(ArraySegment<string> arguments, Player executor, out string response)
+    {
+        HitboxDrawPreferences preferences = GetPreferences(executor);
+        if (arguments.Count < 2)
+        {
+            response = preferences.LineColor.HasValue
+                ? $"Hitbox line color: {FormatColor(preferences.LineColor.Value)}. Usage: sl hitbox color #RRGGBB|name|reset"
+                : "Hitbox line color: mode default. Usage: sl hitbox color #RRGGBB|name|reset";
+            return true;
+        }
+
+        string value = arguments.At(1);
+        if (value.Equals("reset", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("default", StringComparison.OrdinalIgnoreCase) ||
+            value.Equals("mode", StringComparison.OrdinalIgnoreCase))
+        {
+            preferences.LineColor = null;
+            response = "Hitbox line color reset to per-mode defaults.";
+            return true;
+        }
+
+        if (!TryParseColor(value, out Color color))
+        {
+            response = $"Invalid hitbox color: {value}. Use #RRGGBB, #RRGGBBAA, or red/green/blue/yellow/cyan/magenta/white/black/gray.";
+            return false;
+        }
+
+        preferences.LineColor = color;
+        response = $"Hitbox line color set to {FormatColor(color)}.";
+        return true;
+    }
+
+    private static bool SetPlayerModePreference(ArraySegment<string> arguments, Player executor, out string response)
+    {
+        HitboxDrawPreferences preferences = GetPreferences(executor);
+        if (arguments.Count < 2)
+        {
+            response = $"Hitbox player mode: {(preferences.SimplifyPlayers ? "simple" : "full")}. Usage: sl hitbox playermode simple|full";
+            return true;
+        }
+
+        string value = arguments.At(1);
+        if (!TryParseSimplifyPlayers(value, out bool simplifyPlayers))
+        {
+            response = $"Invalid hitbox player mode: {value}. Use simple or full.";
+            return false;
+        }
+
+        preferences.SimplifyPlayers = simplifyPlayers;
+        response = $"Hitbox player mode set to {(simplifyPlayers ? "simple" : "full")}.";
+        return true;
+    }
+
+    private static bool ShowPreferences(Player executor, out string response)
+    {
+        HitboxDrawPreferences preferences = GetPreferences(executor);
+        response =
+            "Hitbox options\n" +
+            $"  Color: {(preferences.LineColor.HasValue ? FormatColor(preferences.LineColor.Value) : "mode default")}\n" +
+            $"  Player mode: {(preferences.SimplifyPlayers ? "simple" : "full")}";
         return true;
     }
 
@@ -370,7 +460,7 @@ public class HitboxCommand : ICommand
         response = "Active hitbox draw sessions:\n" + string.Join("\n", sessions
             .OrderBy(s => s.Id)
             .Select(s =>
-                $"  #{s.Id} {s.Label} owner={s.OwnerName} visible={(s.VisibleToAll ? "all" : "self")} last={s.LastDrawCount} remaining={FormatRemaining(s)}"));
+                $"  #{s.Id} {s.Label} owner={s.OwnerName} visible={(s.VisibleToAll ? "all" : "self")} color={FormatColor(s.Color)} players={(s.SimplifyPlayers ? "simple" : "full")} last={s.LastDrawCount} remaining={FormatRemaining(s)}"));
         return true;
     }
 
@@ -387,7 +477,8 @@ public class HitboxCommand : ICommand
         float duration,
         bool visibleToAll,
         Color color,
-        int maxColliders = DefaultMaxCollidersPerSession)
+        int maxColliders = DefaultMaxCollidersPerSession,
+        bool simplifyPlayers = true)
     {
         int id = _nextSessionId++;
         var session = new HitboxDrawSession(
@@ -400,7 +491,8 @@ public class HitboxCommand : ICommand
             visibleToAll,
             visibleToAll ? null : owner,
             color,
-            maxColliders);
+            maxColliders,
+            simplifyPlayers);
 
         Sessions[id] = session;
         session.Handle = Timing.RunCoroutine(DrawLoop(session));
@@ -535,7 +627,7 @@ public class HitboxCommand : ICommand
 
         foreach (Collider collider in colliders)
         {
-            if (TryGetColliderPlayer(collider, out Player player))
+            if (session.SimplifyPlayers && TryGetColliderPlayer(collider, out Player player))
             {
                 if (renderedPlayers.Add(player.Id))
                     AddPlayerCollisionSegments(player, segments);
@@ -1089,13 +1181,196 @@ public class HitboxCommand : ICommand
                value.Equals("everyone", StringComparison.OrdinalIgnoreCase);
     }
 
-    private static string StartedMessage(int id, string mode, int colliders, float duration, bool visibleToAll)
-        => $"Started hitbox draw #{id} ({mode}) colliders={colliders} visible={(visibleToAll ? "all" : "self")} duration={(duration <= 0f ? "until clear" : $"{duration:0.#}s")}. Use `sl hitbox clear {id}` or `sl hitbox clear`.";
+    private static Color ParseColor(ArraySegment<string> arguments, Color fallback)
+    {
+        foreach (string optionValue in GetOptionValues(arguments, "color", "colour", "c", "linecolor"))
+        {
+            if (TryParseColor(optionValue, out Color color))
+                return color;
+        }
+
+        return fallback;
+    }
+
+    private static bool TryParseColor(string value, out Color color)
+    {
+        color = default;
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        value = value.Trim();
+        if (value[0] == '#')
+            return TryParseHexColor(value, out color);
+
+        return value.ToLowerInvariant() switch
+        {
+            "red" => SetColor(Color.red, out color),
+            "green" => SetColor(Color.green, out color),
+            "blue" => SetColor(Color.blue, out color),
+            "yellow" => SetColor(Color.yellow, out color),
+            "cyan" => SetColor(Color.cyan, out color),
+            "magenta" => SetColor(Color.magenta, out color),
+            "white" => SetColor(Color.white, out color),
+            "black" => SetColor(Color.black, out color),
+            "gray" or "grey" => SetColor(Color.gray, out color),
+            _ => false,
+        };
+    }
+
+    private static bool TryParseHexColor(string value, out Color color)
+    {
+        color = default;
+        string hex = value[1..];
+        if (hex.Length != 6 && hex.Length != 8)
+            return false;
+
+        if (!byte.TryParse(hex[..2], NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte r) ||
+            !byte.TryParse(hex.Substring(2, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte g) ||
+            !byte.TryParse(hex.Substring(4, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out byte b))
+        {
+            return false;
+        }
+
+        byte a = 255;
+        if (hex.Length == 8 &&
+            !byte.TryParse(hex.Substring(6, 2), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out a))
+        {
+            return false;
+        }
+
+        color = new Color32(r, g, b, a);
+        return true;
+    }
+
+    private static bool SetColor(Color value, out Color color)
+    {
+        color = value;
+        return true;
+    }
+
+    private static HitboxDrawPreferences GetPreferences(Player player)
+    {
+        string key = player?.UserId ?? string.Empty;
+        if (!Preferences.TryGetValue(key, out HitboxDrawPreferences preferences))
+        {
+            preferences = new HitboxDrawPreferences();
+            Preferences[key] = preferences;
+        }
+
+        return preferences;
+    }
+
+    private static bool ParseSimplifyPlayers(ArraySegment<string> arguments, bool fallback)
+    {
+        foreach (string optionValue in GetOptionValues(arguments, "players", "playerhitbox", "playerhitboxes", "simplifyplayers"))
+        {
+            if (TryParseSimplifyPlayers(optionValue, out bool simplifyPlayers))
+                return simplifyPlayers;
+        }
+
+        return fallback;
+    }
+
+    private static bool TryParseSimplifyPlayers(string value, out bool simplifyPlayers)
+    {
+        simplifyPlayers = true;
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        switch (value.Trim().ToLowerInvariant())
+        {
+            case "simple":
+            case "simplified":
+            case "simplify":
+            case "true":
+            case "on":
+            case "1":
+                simplifyPlayers = true;
+                return true;
+            case "full":
+            case "raw":
+            case "exact":
+            case "detailed":
+            case "false":
+            case "off":
+            case "0":
+                simplifyPlayers = false;
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static IEnumerable<string> GetOptionValues(ArraySegment<string> arguments, params string[] names)
+    {
+        for (int i = 0; i < arguments.Count; i++)
+        {
+            string arg = arguments.At(i);
+            int split = arg.IndexOf('=');
+            if (split <= 0)
+                continue;
+
+            string name = arg[..split];
+            if (names.Any(n => name.Equals(n, StringComparison.OrdinalIgnoreCase)))
+                yield return arg[(split + 1)..];
+        }
+    }
+
+    private static string GetOptionStrippedText(ArraySegment<string> arguments, int startIndex)
+    {
+        if (arguments.Count <= startIndex)
+            return string.Empty;
+
+        return string.Join(" ", arguments
+            .Skip(startIndex)
+            .Where(arg => !IsDrawOption(arg)));
+    }
+
+    private static bool IsDrawOption(string arg)
+    {
+        int split = arg.IndexOf('=');
+        if (split <= 0)
+            return false;
+
+        string name = arg[..split];
+        return name.Equals("color", StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("colour", StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("c", StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("linecolor", StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("players", StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("playerhitbox", StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("playerhitboxes", StringComparison.OrdinalIgnoreCase) ||
+               name.Equals("simplifyplayers", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string StartedMessage(
+        int id,
+        string mode,
+        int colliders,
+        float duration,
+        bool visibleToAll,
+        Color color,
+        bool simplifyPlayers)
+        => $"Started hitbox draw #{id} ({mode}) colliders={colliders} visible={(visibleToAll ? "all" : "self")} color={FormatColor(color)} players={(simplifyPlayers ? "simple" : "full")} duration={(duration <= 0f ? "until clear" : $"{duration:0.#}s")}. Use `sl hitbox clear {id}` or `sl hitbox clear`.";
+
+    private static string FormatColor(Color color)
+    {
+        var color32 = (Color32)color;
+        return color32.a == 255
+            ? $"#{color32.r:X2}{color32.g:X2}{color32.b:X2}"
+            : $"#{color32.r:X2}{color32.g:X2}{color32.b:X2}{color32.a:X2}";
+    }
 
     private static string FormatRemaining(HitboxDrawSession session)
         => float.IsPositiveInfinity(session.EndTime)
             ? "until clear"
             : $"{Mathf.Max(0f, session.EndTime - Time.time):0.#}s";
+
+    private sealed class HitboxDrawPreferences
+    {
+        public Color? LineColor { get; set; }
+        public bool SimplifyPlayers { get; set; } = true;
+    }
 
     private sealed class HitboxDrawSession
     {
@@ -1109,7 +1384,8 @@ public class HitboxCommand : ICommand
             bool visibleToAll,
             Player selfViewer,
             Color color,
-            int maxColliders)
+            int maxColliders,
+            bool simplifyPlayers)
         {
             Id = id;
             OwnerUserId = ownerUserId;
@@ -1121,6 +1397,7 @@ public class HitboxCommand : ICommand
             SelfViewer = selfViewer;
             Color = color;
             MaxColliders = maxColliders;
+            SimplifyPlayers = simplifyPlayers;
         }
 
         public int Id { get; }
@@ -1133,6 +1410,7 @@ public class HitboxCommand : ICommand
         public Player SelfViewer { get; }
         public Color Color { get; }
         public int MaxColliders { get; }
+        public bool SimplifyPlayers { get; }
         public List<Primitive> PrimitiveLines { get; } = [];
         public CoroutineHandle Handle { get; set; }
         public int LastDrawCount { get; set; }
