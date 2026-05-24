@@ -33,6 +33,8 @@ public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
     public override bool UseCooldown => true;
     public override float CooldownSeconds => 300f;
 
+    private static SpeakerApi.Playback AlertPlayback;
+
     public override void ResetState()
     {
         if (_bombingHandle.IsRunning)
@@ -81,8 +83,8 @@ public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
             "[防衛部隊から管制室へ]地上爆撃を承認しました。これより攻撃を開始します・・・",
             true, false));
 
-        SpeakerApi.Play("sbialert.ogg", "SurfaceBombing",
-            Player.List.GetRandomValue(p => p.Zone is ZoneType.Surface).Position, true, 
+        AlertPlayback = SpeakerApi.PlayLoop("sbialert.ogg", "SurfaceBombing",
+            Player.List.GetRandomValue(p => p.Zone is ZoneType.Surface).Position, 
             maxDistance: 250f,
             minDistance: 0f);
         _bombingHandle = Timing.RunCoroutine(SurfaceBombingCoroutine(skipStartupDelay));
@@ -109,6 +111,8 @@ public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
 
             yield return Timing.WaitForSeconds(BombInterval);
         }
+
+        SpeakerApi.StopClip(AlertPlayback.AudioPlayer.Name, AlertPlayback.ClipName);
     }
 
     private static void SpawnTimeGrenade(Vector3 position)
