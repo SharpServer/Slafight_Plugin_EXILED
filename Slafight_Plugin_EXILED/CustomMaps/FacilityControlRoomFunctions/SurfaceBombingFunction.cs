@@ -5,6 +5,7 @@ using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.API.Features.Pickups.Projectiles;
 using MEC;
+using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -80,6 +81,10 @@ public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
             "[防衛部隊から管制室へ]地上爆撃を承認しました。これより攻撃を開始します・・・",
             true, false));
 
+        SpeakerApi.Play("sbialert.ogg", "SurfaceBombing",
+            Player.List.GetRandomValue(p => p.Zone is ZoneType.Surface).Position, true, 
+            maxDistance: 250f,
+            minDistance: 0f);
         _bombingHandle = Timing.RunCoroutine(SurfaceBombingCoroutine(skipStartupDelay));
     }
 
