@@ -26,15 +26,23 @@ public class AuthDoor : ObjectPrefab
 
     public KeycardPermissions KeycardPermissions { get; set; } = KeycardPermissions.None;
     public bool RequireAllPermissions { get; set; } = true;
+
+    /// <summary>
+    /// trueの場合、開いた後に再度インタラクトで閉じることができる。
+    /// falseの場合、一度開けたら閉じられない（door1のまま）。
+    /// </summary>
+    public bool CanClose { get; set; } = false;
+
     public bool IsOpen
     {
-        get;
+        get => _isOpen;
         set
         {
-            field = value;
+            _isOpen = value;
             SwitchDoor(value);
         }
-    } = false;
+    }
+    private bool _isOpen = false;
 
     private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
         = EventHandler.CreateAndPlayAudio;
@@ -48,7 +56,8 @@ public class AuthDoor : ObjectPrefab
         Timing.CallDelayed(0.5f, () =>
         {
             CreateInteractableToy();
-            _schematicObject?.AnimationController.Play(IsOpen ? "door1" : "door3");
+            // IsOpen=true → OpenIdle(door2) / IsOpen=false → CloseIdle(door0)
+            _schematicObject?.AnimationController.Play(IsOpen ? "door2" : "door0");
         });
         base.OnCreate();
     }
@@ -77,8 +86,18 @@ public class AuthDoor : ObjectPrefab
         if (player == null)
             return;
 
-        if (IsOpen) return;
+        // 開いていて閉じられない場合はスキップ
+        if (IsOpen && !CanClose) return;
 
+        if (IsOpen)
+        {
+            // CanClose = true のとき、開いていたら閉じる（認証不要）
+            player.PlayKeycardInteractSound(true);
+            IsOpen = false;
+            return;
+        }
+
+        // 閉じている場合は認証チェック
         if (player.HasPermission(KeycardPermissions, RequireAllPermissions))
         {
             player.PlayKeycardInteractSound(true);
@@ -95,6 +114,9 @@ public class AuthDoor : ObjectPrefab
     {
         if (isOpen)
             SpeakerApi.Play("ElevatorOpen1.ogg", "KeycardDoorOpeningSound", _schematicObject?.Position ?? Position, true);
+
+        // 開く: CloseToOpen(door1) → Animator側でOpenIdle(door2)に遷移
+        // 閉じる: OpenToClose(door3) → Animator側でCloseIdle(door0)に遷移
         _schematicObject?.AnimationController.Play(isOpen ? "door1" : "door3");
     }
 
@@ -106,6 +128,7 @@ public class AuthDoor : ObjectPrefab
         {
             ["KeycardPermissions"]    = KeycardPermissions.ToString(),
             ["RequireAllPermissions"] = RequireAllPermissions.ToString(),
+            ["CanClose"]              = CanClose.ToString(),
             ["IsOpen"]                = IsOpen.ToString()
         };
     }
@@ -124,12 +147,18 @@ public class AuthDoor : ObjectPrefab
             RequireAllPermissions = requireAll;
         }
 
+        if (options.TryGetValue("CanClose", out var cc)
+            && bool.TryParse(cc, out var canClose))
+        {
+            CanClose = canClose;
+        }
+
         // IsOpenはOnCreate後のCallDelayed内でアニメーションが再生されるため、
-        // フィールドを直接セットしてアニメーションはOnCreate側に任せる
+        // バッキングフィールドを直接セットしてアニメーションはOnCreate側に任せる
         if (options.TryGetValue("IsOpen", out var io)
             && bool.TryParse(io, out var isOpen))
         {
-            IsOpen = isOpen;
+            _isOpen = isOpen;
         }
     }
 
@@ -149,7 +178,6 @@ public class AuthDoor : ObjectPrefab
                                    $"Available: {string.Join(", ", Enum.GetNames(typeof(KeycardPermissions)))}";
                         return true;
                     }
-                    // args[2以降] を "|" でjoinしてカンマ区切りに変換してパース
                     var permRaw = string.Join("|", args.Skip(2)).Replace("|", ", ");
                     if (!Enum.TryParse<KeycardPermissions>(permRaw, true, out var newPerm))
                     {
@@ -174,6 +202,21 @@ public class AuthDoor : ObjectPrefab
                     }
                     RequireAllPermissions = requireAll;
                     response = $"Set RequireAllPermissions to {requireAll}.";
+                    return true;
+
+                case "canclose":
+                    if (args.Count < 3)
+                    {
+                        response = $"Current: {CanClose}\nUsage: mod canclose <true|false>";
+                        return true;
+                    }
+                    if (!bool.TryParse(args.At(2), out var canClose))
+                    {
+                        response = $"Invalid value '{args.At(2)}'. Use true or false.";
+                        return true;
+                    }
+                    CanClose = canClose;
+                    response = $"Set CanClose to {canClose}.";
                     return true;
 
                 case "isopen":

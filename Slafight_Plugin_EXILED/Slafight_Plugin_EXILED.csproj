@@ -378,7 +378,7 @@
         <Compile Include="CustomMaps\ObjectPrefabs\AntiMemeBomb.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\HIDTurretObject.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Document.cs" />
-        <Compile Include="CustomMaps\ObjectPrefabs\OneAuthDoor.cs" />
+        <Compile Include="CustomMaps\ObjectPrefabs\AuthDoor.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Tentacle.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Trashbox.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Vent.cs" />
