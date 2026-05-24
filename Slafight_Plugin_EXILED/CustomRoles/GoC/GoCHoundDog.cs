@@ -10,7 +10,6 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
-using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Scp1344 = CustomPlayerEffects.Scp1344;
 

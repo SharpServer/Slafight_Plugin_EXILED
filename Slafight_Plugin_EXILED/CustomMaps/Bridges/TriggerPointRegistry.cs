@@ -2,7 +2,6 @@ using System;
 using Exiled.API.Features;
 using MEC;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.CustomMaps;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
 

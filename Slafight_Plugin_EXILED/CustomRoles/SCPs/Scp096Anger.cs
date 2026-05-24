@@ -57,7 +57,7 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
         if (ev.Player != null)
         {
             ShyGuyPositions.Remove(ev.Player);
-            InTryNotToCryAnim.Remove(ev.Player);  // ★安全クリーンアップ
+            _inTryNotToCryAnim.Remove(ev.Player);  // ★安全クリーンアップ
         }
         CassieHelper.AnnounceTermination(ev, "SCP 0 9 6", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
         base.OnRoleDying(ev);
@@ -82,7 +82,7 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
     private void OnEnraging(EnragingEventArgs ev)
     {
         if (ev.Player?.GetCustomRole() != CRoleTypeId.Scp096Anger) return;
-        bool isInAnim = InTryNotToCryAnim.TryGetValue(ev.Player, out bool animValue) ? animValue : false;
+        bool isInAnim = _inTryNotToCryAnim.TryGetValue(ev.Player, out bool animValue) ? animValue : false;
         if (isInAnim)
         {
             ev.IsAllowed = false;
@@ -100,7 +100,7 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
     public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
     {
         base.SpawnRole(player, roleSpawnFlags);
-        InTryNotToCryAnim[player!] = false;  // ★セット
+        _inTryNotToCryAnim[player!] = false;  // ★セット
         
         player!.Role.Set(RoleTypeId.Scp096);
         player.UniqueRole = UniqueRoleKey;
@@ -119,25 +119,24 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
         Timing.CallDelayed(0.1f, () => StartAnger(player));
     }
 
-    private Dictionary<Player, bool> InTryNotToCryAnim = [];  // そのまま
+    private readonly Dictionary<Player, bool> _inTryNotToCryAnim = [];  // そのまま
     
     private void OnTargetAdded(AddingTargetEventArgs ev)
     {
         if (!Check(ev.Player) || ev.Target.GetTeam() is CTeam.SCPs) return;
         
-        // ★TryGetValueで完全安全（例外ゼロ）
-        var isInAnim = InTryNotToCryAnim.TryGetValue(ev.Player, out bool animValue) ? animValue : false;
+        var isInAnim = _inTryNotToCryAnim.GetValueOrDefault(ev.Player, false);
         if (ev.Scp096.RageManager.IsEnraged || isInAnim) return;
         
         Log.Debug("Scp096Anger: TargetAdded Triggered");
-        InTryNotToCryAnim[ev.Player] = true;
+        _inTryNotToCryAnim[ev.Player] = true;
         ev.Player.EnableEffect(EffectType.Slowness, 95);
         ev.Player.EnableEffect(EffectType.DamageReduction, 90);
         CreateAndPlayAudio("096Angered.ogg", "Scp096", ev.Player.Position, true, ev.Player.Transform, false, 80f, 0f);
         Timing.CallDelayed(35f, () =>
         {
             if (!Check(ev.Player)) return;
-            InTryNotToCryAnim.Remove(ev.Player);  // 安全削除
+            _inTryNotToCryAnim.Remove(ev.Player);  // 安全削除
             ChangeSpeedState(ev.Player, true);
             ev.Player.DisableEffect(EffectType.DamageReduction);
             ev.Scp096.Enrage(999f);

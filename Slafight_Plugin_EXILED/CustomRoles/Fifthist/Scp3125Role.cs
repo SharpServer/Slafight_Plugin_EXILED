@@ -12,7 +12,6 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
-using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.ProximityChat;
 using UnityEngine;
 

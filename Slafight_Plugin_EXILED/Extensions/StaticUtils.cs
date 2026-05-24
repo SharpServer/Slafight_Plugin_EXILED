@@ -346,4 +346,10 @@ public static class StaticUtils
         AudioClipStorage.LoadClip(Path.Combine(Plugin.Singleton.Config.AudioReferences, fileName), fileName);
         audioPlayer.AddClip(fileName, destroyOnEnd: destroyOnEnd);
     }
+
+    public static void PlayKeycardInteractSound(this Player? player, bool isSuccess)
+    {
+        if (player is null) return;
+        SpeakerApi.Play(isSuccess ? "KeycardUse1.ogg" : "KeycardUse2.ogg", "KeycardDoor", player.Position, true);
+    }
 }

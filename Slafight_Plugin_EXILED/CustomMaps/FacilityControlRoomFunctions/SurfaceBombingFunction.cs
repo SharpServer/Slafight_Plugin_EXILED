@@ -3,10 +3,8 @@ using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Extensions;
 using Exiled.API.Features;
-using Exiled.API.Features.Pickups;
 using Exiled.API.Features.Pickups.Projectiles;
 using MEC;
-using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
@@ -17,11 +15,13 @@ public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
     private static readonly Vector3 BombingStartPoint = new(138f, 299f, -41f);
     private static readonly Vector3 BombingEndPoint = new(-20f, 305f, -41f);
 
-    private const int BombCount = 64;
-    private const float BombInterval = 0.25f;
+    private const float BombDurationSeconds = 3f;  // 爆撃総時間（秒）
+    private const int BombCount = 200;               // 爆弾の総数
     private const float BombScatterRadius = 10f;
     private const float BombFuseSeconds = 1.25f;
     private const float DownwardVelocity = 18f;
+
+    private static float BombInterval => BombDurationSeconds / BombCount;
 
     private static CoroutineHandle _bombingHandle;
 
@@ -68,7 +68,7 @@ public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
             return false;
         }
 
-        StartBombing(skipStartupDelay: true);
+        StartBombing(skipStartupDelay: false);
         failureReason = string.Empty;
         return true;
     }

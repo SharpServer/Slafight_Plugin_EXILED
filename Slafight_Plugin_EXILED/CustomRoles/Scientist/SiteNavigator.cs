@@ -1,10 +1,8 @@
 using System.Collections.Generic;
-using Exiled.API.Features;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
-using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.Scientist;
 

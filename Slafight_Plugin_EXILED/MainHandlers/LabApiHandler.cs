@@ -127,8 +127,6 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
             playerScale: Vector3.one,
             afterAttach: (player, schem) =>
             {
-                schem.AnimationController.Play("candy");
-
                 if (player.GameObject != null)
                     schem.transform.position = player.GameObject.transform.position;
             });

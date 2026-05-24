@@ -14,7 +14,6 @@ using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Entities;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
-using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.Patches;
 using UserSettings.ServerSpecific;

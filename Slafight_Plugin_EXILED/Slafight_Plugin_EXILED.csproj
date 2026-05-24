@@ -112,6 +112,9 @@
         <Reference Include="UnityEngine.PhysicsModule">
             <HintPath>$(SL_References)\UnityEngine.PhysicsModule.dll</HintPath>
         </Reference>
+        <Reference Include="UnityEngine.AnimationModule">
+            <HintPath>$(SL_References)\UnityEngine.AnimationModule.dll</HintPath>
+        </Reference>
         <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
             <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\Assembly-CSharp-Publicized.dll</HintPath>
         </Reference>
@@ -375,6 +378,7 @@
         <Compile Include="CustomMaps\ObjectPrefabs\AntiMemeBomb.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\HIDTurretObject.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Document.cs" />
+        <Compile Include="CustomMaps\ObjectPrefabs\OneAuthDoor.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Tentacle.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Trashbox.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Vent.cs" />

@@ -3,7 +3,6 @@ using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
-using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
 

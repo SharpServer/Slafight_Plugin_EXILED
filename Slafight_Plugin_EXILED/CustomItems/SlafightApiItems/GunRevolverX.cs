@@ -1,7 +1,3 @@
-using Exiled.API.Enums;
-using Exiled.API.Features.DamageHandlers;
-using Exiled.Events.EventArgs.Player;
-using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;

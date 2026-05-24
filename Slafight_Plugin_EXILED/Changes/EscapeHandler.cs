@@ -7,7 +7,6 @@ using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
-using Slafight_Plugin_EXILED.API.Features.Teams;
 using Slafight_Plugin_EXILED.API.Features.Teams.Escape;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;

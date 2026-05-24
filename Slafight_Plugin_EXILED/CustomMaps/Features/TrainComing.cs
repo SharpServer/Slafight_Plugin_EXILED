@@ -3,7 +3,6 @@ using Exiled.API.Features;
 using MEC;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
-using Slafight_Plugin_EXILED.CustomMaps;
 using UnityEngine;
 using Random = UnityEngine.Random;
 

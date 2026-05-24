@@ -1,5 +1,4 @@
 using Slafight_Plugin_EXILED.API.Enums;
-using Slafight_Plugin_EXILED.API.Features.Teams;
 using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Features.Teams.Core;
 using Slafight_Plugin_EXILED.API.Features.Teams.Profiles;

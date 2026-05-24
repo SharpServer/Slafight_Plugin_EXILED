@@ -4,7 +4,6 @@ using CommandSystem;
 using Exiled.API.Features;
 using Exiled.Permissions.Extensions;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.Commands;
 
 namespace Slafight_Plugin_EXILED.Commands.DevTools;
 

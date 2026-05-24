@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Exiled.API.Features;
-using MEC;
 using ProjectMER.Features.Objects;
 using UnityEngine;
 
