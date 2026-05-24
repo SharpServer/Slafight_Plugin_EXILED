@@ -112,8 +112,8 @@ public class AuthDoor : ObjectPrefab
 
     private void SwitchDoor(bool isOpen)
     {
-        if (isOpen)
-            SpeakerApi.Play("ElevatorOpen1.ogg", "KeycardDoorOpeningSound", _schematicObject?.Position ?? Position, true);
+        SpeakerApi.Play(isOpen ? "ElevatorOpen1.ogg" : "ElevatorClose1.ogg", "KeycardDoorOpeningSound",
+            _schematicObject?.Position ?? Position, true);
 
         // 開く: CloseToOpen(door1) → Animator側でOpenIdle(door2)に遷移
         // 閉じる: OpenToClose(door3) → Animator側でCloseIdle(door0)に遷移
