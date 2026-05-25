@@ -8,7 +8,7 @@ public class GunRevolverX : CItemWeapon
 {
     public override string DisplayName => "Revolver-X";
     public override string Description =>
-        "W.I.P";
+        "強化されたリボルバー。ある博士の特注品らしい";
     protected override string UniqueKey => "GunRevolverX";
     protected override ItemType BaseItem => ItemType.GunRevolver;
     protected override float Damage => 50f;

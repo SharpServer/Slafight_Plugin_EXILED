@@ -34,25 +34,25 @@ internal sealed class SpecialDoorAccessController(float positionToleranceSq)
         _rulesByDoorPosition[MapFlags.CDoorO1] = new()
         {
             // Dr. Masoi
-            RequiredCode = "",
+            RequiredCode = "1217",
         };
 
         _rulesByDoorPosition[MapFlags.CDoorO2] = new()
         {
             // Dr. Samuels
-            RequiredCode = "",
+            RequiredCode = "1979",
         };
 
         _rulesByDoorPosition[MapFlags.CDoorO3] = new()
         {
             // Dr. Galia
-            RequiredCode = "",
+            RequiredCode = "1236",
         };
 
         _rulesByDoorPosition[MapFlags.CDoorO4] = new()
         {
             // Dr. Jlolldo
-            RequiredCode = "",
+            RequiredCode = "3125",
         };
     }
 

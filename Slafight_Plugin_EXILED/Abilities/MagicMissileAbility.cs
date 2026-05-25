@@ -95,9 +95,9 @@ public class MagicMissileAbility : AbilityBase
                 if (player == pushPlayer) continue;
                 try
                 {
-                    player.EnableEffect<Burned>(255);
-                    player.EnableEffect<Concussed>(255);
-                    player.EnableEffect<Asphyxiated>(1);
+                    player.EnableEffect<Burned>(255, 35);
+                    player.EnableEffect<Concussed>(255, 35);
+                    player.EnableEffect<Asphyxiated>(1, 35);
                     player.Hurt(pushPlayer, 10f, DamageType.Unknown, null,
                         !pushPlayer.IsSergeyMarkov()
                             ? "<color=#ff00fa>第五的</color>な力による影響"

@@ -36,10 +36,10 @@ public class SoundOfFifthAbility : AbilityBase
             if (targetPlayer.GetTeam() != CTeam.Fifthists)
             {
                 targetPlayer.Explode(ProjectileType.Flashbang,player);
-                targetPlayer.EnableEffect<Deafened>(255);
-                targetPlayer.EnableEffect<Hemorrhage>(255);
-                targetPlayer.EnableEffect<Blindness>(40);
-                targetPlayer.EnableEffect<Blurred>(255);
+                targetPlayer.EnableEffect<Deafened>(255, 45);
+                targetPlayer.EnableEffect<Hemorrhage>(255, 45);
+                targetPlayer.EnableEffect<Blindness>(40, 45);
+                targetPlayer.EnableEffect<Blurred>(255, 45);
             }
             else
             {

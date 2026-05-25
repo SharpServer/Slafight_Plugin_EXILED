@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CustomPlayerEffects;
 using Exiled.API.Features;
 using Exiled.API.Features.Toys;
 using Exiled.Events.EventArgs.Player;
@@ -22,7 +23,7 @@ public readonly struct NvgProfile
     public Color LightColor     { get; init; }
     public float LightRange     { get; init; }
     public float LightIntensity { get; init; }
-    /// <summary>true のとき、電池切れで黒いキューブを被せて視界を塞ぐ。</summary>
+    /// <summary>true のとき、電池切れで Blindness を最大強度で付与する。</summary>
     public bool  UseBlackout    { get; init; }
 
     public static NvgProfile Default => new()
@@ -36,7 +37,7 @@ public readonly struct NvgProfile
 }
 
 /// <summary>
-/// NVG のライト・ブラックアウトとバッテリー管理を行うマネージャ。
+/// NVG のライト・視界効果とバッテリー管理を行うマネージャ。
 /// NetworkVisibilityManager の Owner / Spectator API を使って可視管理を行う。
 /// </summary>
 public static class NvgManager
@@ -172,7 +173,6 @@ public static class NvgManager
         if (Player.TryGet(data.OwnerId, out var owner))
         {
             SyncSpectatorsForOwner(owner, data.NvgLight?.Base?.netIdentity, show: false);
-            SyncSpectatorsForOwner(owner, data.Blackout?.Base?.netIdentity,  show: false);
         }
 
         ActiveData.Remove(serial);
@@ -273,9 +273,6 @@ public static class NvgManager
 
         data.NvgLight?.SafeDestroy();
         data.NvgLight = null;
-
-        data.Blackout?.SafeDestroy();
-        data.Blackout = null;
     }
 
     private static IEnumerator<float> BatteryLoop(Player player, ushort serial)
@@ -314,7 +311,7 @@ public static class NvgManager
                 data.NvgLight = null;
 
                 if (prof.UseBlackout)
-                    EnsureBlackout(player, data);
+                    player.EnableEffect<Blindness>(255);
 
                 player.ShowHint("NVGの電池が切れた…視界が真っ暗になった。", 5f);
 
@@ -338,51 +335,11 @@ public static class NvgManager
         }
     }
 
-    // --------------------------------------------------------
-    // ブラックアウト
-    // --------------------------------------------------------
-
-    private static void EnsureBlackout(Player player, NvgRuntimeData data)
-    {
-        if (data.Blackout != null) return;
-
-        var blackout = NetworkVisibilityManager.CreateBlackoutForPlayer(
-            player,
-            player.Position + Vector3.up * 0.85f);
-
-        if (blackout == null)
-        {
-            Log.Error($"[NvgManager] EnsureBlackout: CreateBlackoutForPlayer 失敗 ({player.Nickname})");
-            return;
-        }
-
-        // Transform 親付け・観戦者同期は Spawn 後に行う
-        Timing.CallDelayed(0f, () =>
-        {
-            if (!player.IsConnected || blackout.Base == null) return;
-
-            var t = blackout.Base.gameObject.transform;
-            t.SetParent(player.Transform);
-            t.localPosition = Vector3.up * 0.85f;
-            t.localRotation = Quaternion.identity;
-
-            // ブラックアウト生成後も観戦者へ明示同期
-            SyncSpectatorsForOwner(player, blackout.Base.netIdentity, show: true);
-        });
-
-        data.Blackout = blackout;
-    }
-
-    // --------------------------------------------------------
-    // 内部データ
-    // --------------------------------------------------------
-
     private class NvgRuntimeData
     {
         public ushort          Serial          { get; set; }
         public int             OwnerId         { get; set; }
         public Light?          NvgLight        { get; set; }
-        public Primitive?      Blackout        { get; set; }
         public CoroutineHandle CoroutineHandle { get; set; }
         public NvgProfile      Profile         { get; set; }
     }
