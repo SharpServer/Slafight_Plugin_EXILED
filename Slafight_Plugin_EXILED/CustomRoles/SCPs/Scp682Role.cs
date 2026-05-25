@@ -36,8 +36,8 @@ public class Scp682Role : CRole
         player.UniqueRole = UniqueRoleKey;
         player.MaxHealth = 999;
         player.Health = player.MaxHealth;
-        player.MaxHumeShield = 1800;
-        player.HumeShieldRegenerationMultiplier = 15f;
+        player.MaxHumeShield = 1200;
+        player.HumeShieldRegenerationMultiplier = 13.5f;
         player.ClearInventory();
 
         SpeedLevels[player] = 1f;
@@ -81,7 +81,7 @@ public class Scp682Role : CRole
             player.EnableEffect(EffectType.FocusedVision);
             player.EnableEffect(EffectType.NightVision, 255);
             
-            SpeedLevels[player] *= 1.001f;
+            SpeedLevels[player] *= 1.0005f;
             
             // ★ 修正: RoleSpecificTextProvider を使用
             RoleSpecificTextProvider.Set(

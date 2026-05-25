@@ -61,13 +61,11 @@ public class Scp999Role : CRole
         player.MaxHealth = 999;
         player.Health = player.MaxHealth;
         player.ClearInventory();
-        player.AddItem(ItemType.GunCOM15);
-        player.SetAmmoLimit(AmmoType.Nato9, Nato9Limit);
-        player.SetAmmo(AmmoType.Nato9, Nato9Limit);
         RememberNato9(player);
 
         player.EnableEffect<Fade>(255);
 
+        player.TryAddFlag(SpecificFlagType.GunsDisabled);
         player.SetCustomInfo("SCP-999");
         LabApiHandler.Schem999(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
     }
