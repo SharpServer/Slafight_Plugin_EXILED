@@ -7,6 +7,7 @@ using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 using Slafight_Plugin_EXILED.API.Features.Teams.Escape;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
@@ -26,7 +27,12 @@ public class PlayerCustomEscapingEventArgs : EventArgs
 public class PlayerCustomEscapedEventArgs : EventArgs
 {
     public Player Player { get; }
-    public PlayerCustomEscapedEventArgs(Player player) => Player = player;
+    public CTeam EscapedTeam { get; }
+    public PlayerCustomEscapedEventArgs(Player player, CTeam escapedTeam)
+    {
+        Player = player;
+        EscapedTeam = escapedTeam;
+    }
 }
 
 public class EscapeHandler : IBootstrapHandler, IDisposable
@@ -144,7 +150,8 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
 
     public void Escape(Player player)
     {
-        Log.Debug($"Escape: {player.Nickname} ({player.GetTeam()})");
+        var escapedTeam = player.GetTeam();
+        Log.Debug($"Escape: {player.Nickname} ({escapedTeam})");
 
         var target = CTeamEscapeRegistry.Resolve(player);
         if (target.IsEmpty) return;
@@ -158,7 +165,8 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
         if (target.Custom is { } custom) player.SetRole(custom);
         else if (target.Vanilla is { } vanilla) player.SetRole(vanilla);
 
-        PlayerCustomEscaped?.Invoke(null, new PlayerCustomEscapedEventArgs(player));
+        EvacuationRoundEndState.RecordEscape(escapedTeam);
+        PlayerCustomEscaped?.Invoke(null, new PlayerCustomEscapedEventArgs(player, escapedTeam));
     }
 
     private CoroutineHandle _escapeCoroutine;
@@ -183,6 +191,7 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
             Timing.KillCoroutines(_setupCoroutine);
 
         ClearEscapeOverrides();
+        EvacuationRoundEndState.Reset();
     }
 
     private IEnumerator<float> EscapeCoroutine()

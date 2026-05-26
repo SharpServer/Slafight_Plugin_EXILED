@@ -12,8 +12,10 @@ using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.CustomMaps;
+using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
@@ -194,12 +196,18 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
             door.Lock(DoorLockType.Warhead);
         }
 
+        EvacuationRoundEndState.Begin();
         EscapeHandler.AddEscapeOverride(p => new EscapeHandler.EscapeTargetRole { Vanilla = RoleTypeId.Spectator });
         Exiled.API.Features.Cassie.MessageTranslated(
             "This is O5 Message from the Site 1, For All personnel, Please escape from the facility .",
             "[Site-01, O5からの通信]全職員へ通達：救助部隊を派遣しました。直ちに<color=green>脱出口</color>から<color=yellow>脱出</color>してください。");
 
-        yield return Timing.WaitForSeconds(145f);
+        yield return Timing.WaitForSeconds(140f);
+        if (CancelIfOutdated()) yield break;
+
+        WarheadDoorLockdown.LockAllDoorsClosed();
+
+        yield return Timing.WaitForSeconds(5f);
         if (CancelIfOutdated()) yield break;
 
         foreach (var player in Player.List)

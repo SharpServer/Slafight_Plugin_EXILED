@@ -371,6 +371,7 @@
         <Compile Include="CustomMaps\Features\TerminalRift.cs" />
         <Compile Include="CustomMaps\Features\TrainComing.cs" />
         <Compile Include="CustomMaps\Features\VentControl.cs" />
+        <Compile Include="CustomMaps\Features\WarheadDoorLockdown.cs" />
         <Compile Include="CustomMaps\Features\WarheadBoomEffectHandler.cs" />
         <Compile Include="CustomMaps\Features\WarheadBoomEffectUtil.cs" />
         <Compile Include="CustomMaps\GateAEnding.cs" />

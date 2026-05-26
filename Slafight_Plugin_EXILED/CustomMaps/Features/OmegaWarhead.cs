@@ -6,6 +6,7 @@ using Exiled.API.Features.Doors;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.Changes;
+using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
 using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
@@ -93,11 +94,24 @@ public static class OmegaWarhead
             $"O5評議会の指令に基づいた操作により、<color=blue>OMEGA WARHEAD</color>シーケンスが開始されました。施設の全てを{Plugin.Singleton.Config.OwBoomTime}秒後に爆破します。<split>直ちに施設外に避難してください。",
             true);
         
+        EvacuationRoundEndState.Begin();
         EscapeHandler.AddEscapeOverride(p => new EscapeHandler.EscapeTargetRole { Vanilla = RoleTypeId.Spectator });
 
         CreateAndPlayAudio("omega_v2.ogg", "OmegaWarhead", Vector3.zero, true, null, false, 999999999, 0);
 
-        yield return Timing.WaitForSeconds(Plugin.Singleton.Config.OwBoomTime);
+        var boomTime = Math.Max(0f, Plugin.Singleton.Config.OwBoomTime);
+        var preLockWait = Math.Max(0f, boomTime - 5f);
+
+        if (preLockWait > 0f)
+            yield return Timing.WaitForSeconds(preLockWait);
+
+        if (!Round.InProgress) yield break;
+
+        WarheadDoorLockdown.LockAllDoorsClosed();
+
+        var finalWait = Math.Min(5f, boomTime);
+        if (finalWait > 0f)
+            yield return Timing.WaitForSeconds(finalWait);
 
         if (!Round.InProgress) yield break;
 
@@ -116,6 +130,7 @@ public static class OmegaWarhead
     {
         if (_warheadCoroutine.IsRunning)
             Timing.KillCoroutines(_warheadCoroutine);
+        EvacuationRoundEndState.End();
         IsWarheadStarted = false;
         StartedPlayer = null;
     }

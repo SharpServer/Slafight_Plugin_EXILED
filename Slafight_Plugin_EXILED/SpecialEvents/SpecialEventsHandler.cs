@@ -5,6 +5,7 @@ using Exiled.API.Features;
 using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.MainHandlers;
@@ -358,6 +359,7 @@ public class SpecialEventsHandler : IBootstrapHandler, IDisposable
         EventHandler.Instance.DeconCancellFlag = false;
         Warhead.IsLocked = false;
         EscapeHandler.ClearEscapeOverrides();
+        EvacuationRoundEndState.Reset();
         SpawnSystem.Disable = false;
         if (SpawnContextRegistry.TryGet("Default", out _))
             SpawnContextRegistry.SetActive("Default");

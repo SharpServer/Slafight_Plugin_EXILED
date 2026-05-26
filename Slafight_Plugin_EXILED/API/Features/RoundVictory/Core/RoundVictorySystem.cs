@@ -318,6 +318,14 @@ public sealed class RoundVictoryResult
             group.WinnerTeam,
             true,
             () => CustomRolesHandler.EndRound(group.WinnerTeam, group.SpecificReason));
+
+    public static RoundVictoryResult ForTeam(string debugName, CTeam team, string? specificReason = null) =>
+        new(
+            true,
+            debugName,
+            team,
+            true,
+            () => CustomRolesHandler.EndRound(team, specificReason));
 }
 
 public interface IRoundVictoryDefinitionSource
@@ -514,6 +522,13 @@ public static class RoundVictoryEvaluator
 
     private static RoundVictoryResult EvaluateGroupDominance(RoundVictoryContext context)
     {
+        if (EvacuationRoundEndState.ShouldDeferRoundEnd(context.AlivePlayers))
+            return RoundVictoryResult.None;
+
+        if (context.AlivePlayers.Count == 0 &&
+            EvacuationRoundEndState.TryCreateAllEscapedResult(out var allEscapedResult))
+            return allEscapedResult;
+
         var groups = RoundVictoryDefinitions.GetGroups(context)
             .Where(group => group.CanRun(context))
             .OrderBy(group => group.Priority)

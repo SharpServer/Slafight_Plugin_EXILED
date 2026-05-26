@@ -135,7 +135,7 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
 
     private void CancelEnd(EndingRoundEventArgs ev)
     {
-        if (!HasSpecificWinPlayers())
+        if (!ShouldLockRoundEnd())
             return;
 
         ev.IsAllowed = false;
@@ -149,7 +149,7 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
     {
         for (;;)
         {
-            if (Round.IsLobby || !HasSpecificWinPlayers())
+            if (Round.IsLobby || !ShouldLockRoundEnd())
             {
                 Round.IsLocked = false;
                 yield break;
@@ -162,6 +162,12 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
     private static bool HasSpecificWinPlayers()
     {
         return Player.List.Any(player => player != null && player.HasSpecificWinMethod());
+    }
+
+    private static bool ShouldLockRoundEnd()
+    {
+        return HasSpecificWinPlayers() ||
+               EvacuationRoundEndState.ShouldDeferRoundEnd(GetAliveRoundPlayers());
     }
 
     private static void OnHurting(HurtingEventArgs ev)
