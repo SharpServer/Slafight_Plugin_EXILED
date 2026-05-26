@@ -32,5 +32,16 @@ public sealed class CustomTriggerPoint
                 TriggerPointManager.GetWorldPosition(point),
                 point.transform.rotation);
         }
+
+        foreach (var point in TriggerPointManager.GetAllSchematic())
+        {
+            if (string.IsNullOrEmpty(point.Tag))
+                continue;
+
+            yield return new CustomTriggerPoint(
+                point.Tag,
+                TriggerPointManager.GetWorldPosition(point),
+                point.transform.rotation);
+        }
     }
 }

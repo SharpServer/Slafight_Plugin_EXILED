@@ -66,6 +66,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     public virtual bool AutoDestroyEnabled { get; set; } = false;
     public virtual float AutoDestroyTime { get; set; } = -1f;
     public virtual CoroutineHandle AutoDestroyCoroutineHandle { get; set; } = new CoroutineHandle();
+    public virtual bool IsSaveable { get; set; } = true;
 
     /// <summary>
     /// Save/Load 用の MaxRooms。デフォルト 1。

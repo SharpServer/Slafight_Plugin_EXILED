@@ -465,7 +465,7 @@ public class SpawnObjectPrefab : ICommand
 
         string mapName = args.At(1);
 
-        var prefabs = InstanceManager.GetAll().ToList();
+        var prefabs = InstanceManager.GetAll().Where(p => p.IsSaveable).ToList();
         if (!prefabs.Any())
         {
             response = "No ObjectPrefab instances to save.";
@@ -531,7 +531,7 @@ public class SpawnObjectPrefab : ICommand
         string? baseMapName = args.Count >= 3 ? args.At(2) : ObjectPrefabLoader.LastLoadedMapName;
 
         // --- 1. 現在の InstanceManager のオブジェクトを PrefabSaveData に変換 ---
-        var currentPrefabs = InstanceManager.GetAll().ToList();
+        var currentPrefabs = InstanceManager.GetAll().Where(p => p.IsSaveable).ToList();
         var currentSaveDataList = new List<PrefabSaveData>();
 
         foreach (var p in currentPrefabs)

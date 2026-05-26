@@ -1,6 +1,7 @@
 using System;
 using Exiled.API.Features;
 using MEC;
+using ProjectMER.Events.Arguments;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
@@ -9,19 +10,45 @@ namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
 
 public class TriggerPointRegistry : SlafightLabApiHandler
 {
+    private static int _refreshGeneration;
+
     protected override void RegisterEvents(EventSubscriptionScope subscriptions)
     {
         subscriptions.Add(
             () => LabApi.Events.Handlers.ServerEvents.WaitingForPlayers += OnWaitingForPlayers,
             () => LabApi.Events.Handlers.ServerEvents.WaitingForPlayers -= OnWaitingForPlayers);
+        subscriptions.Add(
+            () => ProjectMER.Events.Handlers.Schematic.SchematicSpawned += OnSchematicSpawned,
+            () => ProjectMER.Events.Handlers.Schematic.SchematicSpawned -= OnSchematicSpawned);
     }
 
     private static void OnWaitingForPlayers()
     {
         Logger.Info("LabApi Loader: Green");
-        MapFlags.ResetTriggerPoints();
+        ScheduleRefresh(5.0f);
+    }
 
-        Timing.CallDelayed(5.0f, RegisterTriggerPoints);
+    private static void OnSchematicSpawned(SchematicSpawnedEventArgs ev)
+    {
+        ScheduleRefresh(0.1f);
+    }
+
+    private static void ScheduleRefresh(float delay)
+    {
+        int generation = ++_refreshGeneration;
+        Timing.CallDelayed(delay, () =>
+        {
+            if (generation != _refreshGeneration)
+                return;
+
+            RefreshTriggerPoints();
+        });
+    }
+
+    private static void RefreshTriggerPoints()
+    {
+        MapFlags.ResetTriggerPoints();
+        RegisterTriggerPoints();
     }
 
     private static void RegisterTriggerPoints()
