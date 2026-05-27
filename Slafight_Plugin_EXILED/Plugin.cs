@@ -44,6 +44,7 @@ public class Plugin : Plugin<Config>
     {
         Singleton = this;
         ProximityChat.Handler.RegisterEvents();
+        VoiceRecordingApi.RegisterEvents();
 
         NetworkVisibilityManager.Register();
         NvgManager.Register();
@@ -110,6 +111,7 @@ public class Plugin : Plugin<Config>
         }
             
         ProximityChat.Handler.UnregisterEvents();
+        VoiceRecordingApi.UnregisterEvents();
 
         NetworkVisibilityManager.Unregister();
         NvgManager.Unregister();

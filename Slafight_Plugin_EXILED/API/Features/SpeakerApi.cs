@@ -2,12 +2,36 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
+using VoiceChat.Networking;
 
 using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 public static class SpeakerApi
 {
+    public readonly struct LivePlayback
+    {
+        public LivePlayback(AudioPlayer audioPlayer, Speaker speaker)
+        {
+            AudioPlayer = audioPlayer;
+            Speaker = speaker;
+        }
+
+        public AudioPlayer AudioPlayer { get; }
+        public Speaker Speaker { get; }
+        public string AudioPlayerName => AudioPlayer?.Name ?? string.Empty;
+        public bool IsValid => AudioPlayer != null && Speaker != null;
+
+        public bool DestroyAudioPlayer()
+            => SpeakerApi.TryDestroy(AudioPlayerName);
+
+        public void SetTransform(Vector3 position, Transform? parent = null)
+            => SpeakerApi.SetTransform(Speaker, position, parent);
+
+        public int SendFrame(byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
+            => SpeakerApi.SendAudioFrame(AudioPlayer, data, dataLength, targets);
+    }
+
     public readonly struct Playback
     {
         public Playback(AudioPlayer audioPlayer, Speaker speaker, string clipName)
@@ -35,6 +59,33 @@ public static class SpeakerApi
 
     public static string AudioDirectory => Plugin.Singleton.Config.AudioReferences;
 
+    public static LivePlayback CreateLiveSpeaker(
+        string audioPlayerName,
+        Vector3 position,
+        Transform? parent = null,
+        string? speakerName = null,
+        bool isSpatial = true,
+        float maxDistance = 5f,
+        float minDistance = 0f,
+        float volume = 1f)
+    {
+        if (string.IsNullOrWhiteSpace(audioPlayerName))
+            throw new ArgumentException("Audio player name cannot be empty.", nameof(audioPlayerName));
+
+        var audioPlayer = AudioPlayer.CreateOrGet(audioPlayerName);
+        var speaker = CreateOrGetSpeaker(
+            audioPlayer,
+            speakerName ?? audioPlayerName,
+            position,
+            parent,
+            isSpatial,
+            maxDistance,
+            minDistance,
+            volume);
+
+        return new LivePlayback(audioPlayer, speaker);
+    }
+
     public static Speaker CreateOrGetSpeaker(
         string audioPlayerName,
         Vector3 position,
@@ -42,10 +93,11 @@ public static class SpeakerApi
         string? speakerName = null,
         bool isSpatial = false,
         float maxDistance = 5f,
-        float minDistance = 5f)
+        float minDistance = 5f,
+        float volume = 1f)
     {
         var audioPlayer = AudioPlayer.CreateOrGet(audioPlayerName);
-        return CreateOrGetSpeaker(audioPlayer, speakerName ?? audioPlayerName, position, parent, isSpatial, maxDistance, minDistance);
+        return CreateOrGetSpeaker(audioPlayer, speakerName ?? audioPlayerName, position, parent, isSpatial, maxDistance, minDistance, volume);
     }
 
     public static Speaker CreateOrGetSpeaker(
@@ -55,7 +107,8 @@ public static class SpeakerApi
         Transform? parent = null,
         bool isSpatial = false,
         float maxDistance = 5f,
-        float minDistance = 5f)
+        float minDistance = 5f,
+        float volume = 1f)
     {
         if (audioPlayer == null)
             throw new ArgumentNullException(nameof(audioPlayer));
@@ -67,9 +120,17 @@ public static class SpeakerApi
         {
             speaker = audioPlayer.AddSpeaker(
                 speakerName,
+                volume: volume,
                 isSpatial: isSpatial,
-                maxDistance: maxDistance,
-                minDistance: minDistance);
+                minDistance: minDistance,
+                maxDistance: maxDistance);
+        }
+        else
+        {
+            speaker.Volume = volume;
+            speaker.IsSpatial = isSpatial;
+            speaker.MinDistance = minDistance;
+            speaker.MaxDistance = maxDistance;
         }
 
         SetTransform(speaker, position, parent);
@@ -367,6 +428,39 @@ public static class SpeakerApi
 
         SetTransform(playback.Speaker, position, parent);
         return true;
+    }
+
+    public static int SendAudioFrame(string audioPlayerName, byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
+        => TryGetAudioPlayer(audioPlayerName, out var audioPlayer)
+            ? SendAudioFrame(audioPlayer, data, dataLength, targets)
+            : 0;
+
+    public static int SendAudioFrame(LivePlayback playback, byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
+        => playback.IsValid ? SendAudioFrame(playback.AudioPlayer, data, dataLength, targets) : 0;
+
+    public static int SendAudioFrame(AudioPlayer audioPlayer, byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
+    {
+        if (audioPlayer == null || data == null || dataLength <= 0 || dataLength > data.Length || targets == null)
+            return 0;
+
+        var audioMessage = new AudioMessage
+        {
+            ControllerId = audioPlayer.ControllerID,
+            Data = data,
+            DataLength = dataLength
+        };
+
+        int sent = 0;
+        foreach (var target in targets)
+        {
+            if (target?.connectionToClient == null)
+                continue;
+
+            target.connectionToClient.Send(audioMessage);
+            sent++;
+        }
+
+        return sent;
     }
 
     public static bool TryGetAudioPlayer(string audioPlayerName, out AudioPlayer audioPlayer)

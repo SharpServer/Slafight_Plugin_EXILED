@@ -205,6 +205,7 @@
         <Compile Include="API\Features\Scp914\Scp914Registry.cs" />
         <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\MtfCoreForceUnitPacks.cs" />
         <Compile Include="API\Features\SpeakerApi.cs" />
+        <Compile Include="API\Features\VoiceRecordingApi.cs" />
         <Compile Include="API\Features\CRole.cs" />
         <Compile Include="API\Features\CRoom.cs" />
         <Compile Include="API\Features\CustomBooleans.cs" />

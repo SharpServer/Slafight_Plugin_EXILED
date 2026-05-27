@@ -18,6 +18,7 @@ public class Scp3114Role : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp3114;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "Scp3114";
+    public override bool CanUseProximityChat => true;
 
     public override void RegisterEvents()
     {

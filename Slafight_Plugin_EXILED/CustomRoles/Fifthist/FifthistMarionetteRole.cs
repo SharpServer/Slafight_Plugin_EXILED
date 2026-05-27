@@ -5,7 +5,6 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
-using Slafight_Plugin_EXILED.ProximityChat;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.Fifthist;
@@ -22,6 +21,8 @@ public class FifthistMarionetteRole : CRole
     protected override float? SpawnMaxHealth => 100f;
     protected override bool SpawnClearsInventory => true;
     protected override string SpawnCustomInfo => "<color=#FF0090>Fifthist Marionette</color>";
+    public override bool CanUseProximityChat => true;
+    public override bool ProximityChatEnabledByDefault => true;
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
@@ -37,15 +38,6 @@ public class FifthistMarionetteRole : CRole
         else
         {
             player.Position += Vector3.up * 0.85f;
-        }
-        if (!Handler.CanUsePlayers.Contains(player))
-        {
-            Handler.CanUsePlayers.Add(player);
-        }
-
-        if (!Handler.ActivatedPlayers.Contains(player))
-        {
-            Handler.ActivatedPlayers.Add(player);
         }
     }
 }

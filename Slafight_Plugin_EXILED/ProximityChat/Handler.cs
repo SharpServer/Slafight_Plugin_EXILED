@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
@@ -7,8 +6,7 @@ using HintServiceMeow.Core.Extension;
 using MEC;
 using PlayerRoles;
 using PlayerRoles.Spectating;
-using Slafight_Plugin_EXILED.API.Enums;
-using Slafight_Plugin_EXILED.Extensions;
+using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using VoiceChat;
 using VoiceChat.Networking;
@@ -33,48 +31,33 @@ public static class Handler
         Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarted;
 
         Exiled.Events.Handlers.Player.ChangingRole -= OnPlayerChangingRole;
+        DestroyAllProximitySpeakers();
     }
     public static readonly List<Player> ActivatedPlayers = [];
     public static readonly List<Player> CanUsePlayers = [];
-    
-    public static readonly List<CRoleTypeId> AllowedUniqueRoles =
-    [
-        CRoleTypeId.Zombified,
-        CRoleTypeId.Scp3114,
-        CRoleTypeId.FifthistMarionette,
-        CRoleTypeId.Scp3125,
-    ];
-    public static readonly List<CRoleTypeId> OnlyProximityUnique = [
-        CRoleTypeId.Zombified,
-        CRoleTypeId.FifthistMarionette,
-    ];
-    
+
     public static readonly List<RoleTypeId> AllowedRoleTypes =
     [
         RoleTypeId.Scp049,
         RoleTypeId.Scp939,
         RoleTypeId.Scp3114
     ];
-    public static readonly List<RoleTypeId> OnlyProximity = 
-    [
-    
-    ];
 
     private static void OnPlayerChangingRole(ChangingRoleEventArgs ev)
     {
+        DestroyProximitySpeaker(ev.Player);
         Timing.CallDelayed(1.1f, () =>
         {
             ActivatedPlayers.Remove(ev.Player);
             CanUsePlayers.Remove(ev.Player);
-            if (ev.Player.GetCustomRole() == CRoleTypeId.None)
-            {
-                if (AllowedRoleTypes.Contains(ev.Player.Role))
-                    CanUsePlayers.Add(ev.Player);
-            }
-            else if (AllowedUniqueRoles.Contains(ev.Player.GetCustomRole()))
+            if (CanPlayerUseProximityChat(ev.Player))
             {
                 CanUsePlayers.Add(ev.Player);
+
+                if (ShouldEnableProximityChatByDefault(ev.Player))
+                    ActivatedPlayers.Add(ev.Player);
             }
+
             if (CanUsePlayers.Contains(ev.Player))
             {
                 var listText = string.Join(", ", CanUsePlayers.ConvertAll(p => $"{p.Nickname}({p.Id})"));
@@ -94,21 +77,28 @@ public static class Handler
     {
         ActivatedPlayers.Clear();
         CanUsePlayers.Clear();
+        DestroyAllProximitySpeakers();
     }
-    
-    // Handler クラス内のどこかに追加
-    private static readonly List<(int NetId, long Ticks)> ResentMessages = [];
 
-    // 古いエントリを捨てるための有効時間（ms）
-    private const int SignatureLifetimeMs = 2000;
-
-    private static void CleanupOldSignatures()
+    public static bool CanPlayerUseProximityChat(Player player)
     {
-        long threshold = DateTime.UtcNow.AddMilliseconds(-SignatureLifetimeMs).Ticks;
-        ResentMessages.RemoveAll(sig => sig.Ticks < threshold);
+        if (player == null)
+            return false;
+
+        if (!string.IsNullOrEmpty(player.UniqueRole))
+            return CRole.TryGetByUniqueRole(player.UniqueRole, out var role) && role.CanUseProximityChat;
+
+        return AllowedRoleTypes.Contains(player.Role);
     }
 
-    
+    public static bool ShouldEnableProximityChatByDefault(Player player)
+    {
+        if (player == null || string.IsNullOrEmpty(player.UniqueRole))
+            return false;
+
+        return CRole.TryGetByUniqueRole(player.UniqueRole, out var role) && role.ProximityChatEnabledByDefault;
+    }
+
     public static void OnPlayerUsingVoiceChat(VoiceChattingEventArgs args)
     {
         // 自分が再送した Proximity は一切触らない
@@ -120,7 +110,7 @@ public static class Handler
             return;
 
         // 対象ロールか？
-        if (!CanUsePlayers.Contains(args.Player))
+        if (!CanPlayerUseProximityChat(args.Player))
             return;
 
         // トグルONにしているか？
@@ -128,19 +118,14 @@ public static class Handler
             return;
 
         // ここまで来た人だけ近接に変換
-        SendProximityMessage(args.VoiceMessage, 5f);
-
-        // 「OnlyProximity」の人だけ元のSCPチャットを殺すならこう
-        if (OnlyProximity.Contains(args.Player.Role) ||
-            OnlyProximityUnique.Contains(args.Player.GetCustomRole()))
-            args.IsAllowed = false;
+        SendProximityMessage(args.Player, args.VoiceMessage, 5f);
     }
 
-    
-    private static readonly HashSet<int> ResentIds = [];
+    private static readonly Dictionary<int, SpeakerApi.LivePlayback> ProximitySpeakers = [];
 
-    private static void SendProximityMessage(VoiceMessage msg, float maxRange = 5f)
+    private static void SendProximityMessage(Player speakerPlayer, VoiceMessage msg, float maxRange = 5f)
     {
+        var targets = new List<ReferenceHub>();
         foreach (var referenceHub in ReferenceHub.AllHubs)
         {
             if (referenceHub.roleManager.CurrentRole is SpectatorRole spectator
@@ -157,11 +142,56 @@ public static class Handler
                 is VoiceChatChannel.None)
                 continue;
 
-            var newMsg = msg;                       // struct コピー
-            newMsg.Channel = VoiceChatChannel.Proximity;
-            referenceHub.connectionToClient.Send(newMsg);
+            targets.Add(referenceHub);
         }
+
+        if (targets.Count == 0)
+            return;
+
+        var liveSpeaker = GetOrCreateProximitySpeaker(speakerPlayer, maxRange);
+        liveSpeaker.SetTransform(speakerPlayer.Position, speakerPlayer.Transform);
+        liveSpeaker.SendFrame(msg.Data, msg.DataLength, targets);
     }
 
+    private static SpeakerApi.LivePlayback GetOrCreateProximitySpeaker(Player player, float maxRange)
+    {
+        if (ProximitySpeakers.TryGetValue(player.Id, out var playback) && playback.IsValid)
+            return playback;
+
+        playback = SpeakerApi.CreateLiveSpeaker(
+            GetAudioPlayerName(player),
+            player.Position,
+            player.Transform,
+            speakerName: "Voice",
+            isSpatial: true,
+            maxDistance: maxRange,
+            minDistance: 0f);
+
+        ProximitySpeakers[player.Id] = playback;
+        return playback;
+    }
+
+    public static void DestroyProximitySpeaker(Player player)
+    {
+        if (player == null)
+            return;
+
+        if (!ProximitySpeakers.TryGetValue(player.Id, out var playback))
+            return;
+
+        playback.DestroyAudioPlayer();
+        ProximitySpeakers.Remove(player.Id);
+    }
+
+    private static void DestroyAllProximitySpeakers()
+    {
+        foreach (var playback in ProximitySpeakers.Values)
+            playback.DestroyAudioPlayer();
+
+        ProximitySpeakers.Clear();
+    }
+
+    private static string GetAudioPlayerName(Player player)
+        => $"ProximityChat_{player.Id}";
 
 }

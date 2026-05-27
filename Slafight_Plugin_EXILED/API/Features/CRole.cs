@@ -464,6 +464,8 @@ public abstract class CRole
     public string Name => RoleName;
     public string RoleDescription => Description;
     public string RoleDisplayName => DisplayName;
+    public virtual bool CanUseProximityChat => false;
+    public virtual bool ProximityChatEnabledByDefault => CanUseProximityChat;
 
 
     // ==== 逆引き ====

@@ -3,7 +3,6 @@ using Exiled.API.Features;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.ProximityChat;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
@@ -21,6 +20,8 @@ public class ZombifiedRole : CRole
     protected override float? SpawnMaxHealth => 125f;
     protected override bool SpawnClearsInventory => true;
     protected override string SpawnCustomInfo => "<color=#C50000>Zombified Subject</color>";
+    public override bool CanUseProximityChat => true;
+    public override bool ProximityChatEnabledByDefault => true;
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
@@ -31,15 +32,6 @@ public class ZombifiedRole : CRole
         else
         {
             player.Position += Vector3.up * 0.85f;
-        }
-        if (!Handler.CanUsePlayers.Contains(player))
-        {
-            Handler.CanUsePlayers.Add(player);
-        }
-
-        if (!Handler.ActivatedPlayers.Contains(player))
-        {
-            Handler.ActivatedPlayers.Add(player);
         }
     }
 }

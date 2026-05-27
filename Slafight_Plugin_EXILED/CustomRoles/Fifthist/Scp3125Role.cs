@@ -12,7 +12,6 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
-using Slafight_Plugin_EXILED.ProximityChat;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.Fifthist;
@@ -26,6 +25,8 @@ public class Scp3125Role : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp3125;
     protected override CTeam Team { get; set; } = CTeam.Fifthists;
     protected override string UniqueRoleKey { get; set; } = "SCP-3125";
+    public override bool CanUseProximityChat => true;
+    public override bool ProximityChatEnabledByDefault => true;
 
     public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
     {
@@ -43,15 +44,6 @@ public class Scp3125Role : CRole
         player.AddAbility<MemeWaveAbility>();
         Timing.CallDelayed(3f, () =>
         {
-            if (!Handler.CanUsePlayers.Contains(player))
-            {
-                Handler.CanUsePlayers.Add(player);
-            }
-
-            if (!Handler.ActivatedPlayers.Contains(player))
-            {
-                Handler.ActivatedPlayers.Add(player);
-            }
             Timing.RunCoroutine(Scp3125HintSyncCoroutine(player));
             Timing.RunCoroutine(Scp3125Coroutine(player));
         });
