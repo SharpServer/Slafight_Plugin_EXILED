@@ -46,9 +46,6 @@
         <Reference Include="Assembly-CSharp-firstpass">
             <HintPath>$(SL_References)\Assembly-CSharp-firstpass.dll</HintPath>
         </Reference>
-        <Reference Include="AudioPlayerApi">
-            <HintPath>$(SL_References)\AudioPlayerApi.dll</HintPath>
-        </Reference>
         <Reference Include="CommandSystem.Core, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
           <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\CommandSystem.Core.dll</HintPath>
         </Reference>
@@ -93,6 +90,9 @@
         </Reference>
         <Reference Include="NorthwoodLib, Version=1.4.0.0, Culture=neutral, processorArchitecture=MSIL">
           <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\NorthwoodLib.dll</HintPath>
+        </Reference>
+        <Reference Include="NVorbis">
+          <HintPath>..\packages\NVorbis.0.10.5\lib\net45\NVorbis.dll</HintPath>
         </Reference>
         <Reference Include="Pooling">
             <HintPath>$(SL_References)\Pooling.dll</HintPath>

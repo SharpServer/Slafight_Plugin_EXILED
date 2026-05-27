@@ -1,60 +1,89 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using Exiled.API.Features;
+using MEC;
+using NVorbis;
 using UnityEngine;
+using VoiceChat;
 using VoiceChat.Networking;
+using VoiceChat.Playbacks;
+using LabSpeakerToy = LabApi.Features.Wrappers.SpeakerToy;
 
-using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 public static class SpeakerApi
 {
-    public readonly struct LivePlayback
-    {
-        public LivePlayback(AudioPlayer audioPlayer, Speaker speaker)
-        {
-            AudioPlayer = audioPlayer;
-            Speaker = speaker;
-        }
-
-        public AudioPlayer AudioPlayer { get; }
-        public Speaker Speaker { get; }
-        public string AudioPlayerName => AudioPlayer?.Name ?? string.Empty;
-        public bool IsValid => AudioPlayer != null && Speaker != null;
-
-        public bool DestroyAudioPlayer()
-            => SpeakerApi.TryDestroy(AudioPlayerName);
-
-        public void SetTransform(Vector3 position, Transform? parent = null)
-            => SpeakerApi.SetTransform(Speaker, position, parent);
-
-        public int SendFrame(byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
-            => SpeakerApi.SendAudioFrame(AudioPlayer, data, dataLength, targets);
-    }
+    private const int TargetSampleRate = VoiceChatSettings.SampleRate;
+    private static readonly Dictionary<string, CachedClip> ClipCache = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<string, List<Playback>> PlaybacksByName = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly HashSet<byte> AllocatedControllerIds = [];
 
     public readonly struct Playback
     {
-        public Playback(AudioPlayer audioPlayer, Speaker speaker, string clipName)
+        public Playback(string audioPlayerName, string clipName, LabSpeakerToy speaker, byte controllerId, CoroutineHandle cleanupHandle = default)
         {
-            AudioPlayer = audioPlayer;
-            Speaker = speaker;
+            AudioPlayerName = audioPlayerName;
             ClipName = clipName;
+            Speaker = speaker;
+            ControllerId = controllerId;
+            CleanupHandle = cleanupHandle;
         }
 
-        public AudioPlayer AudioPlayer { get; }
-        public Speaker Speaker { get; }
+        public string AudioPlayerName { get; }
         public string ClipName { get; }
-        public string AudioPlayerName => AudioPlayer?.Name ?? string.Empty;
-        public bool IsValid => AudioPlayer != null && !string.IsNullOrWhiteSpace(ClipName);
+        public LabSpeakerToy Speaker { get; }
+        public byte ControllerId { get; }
+        public CoroutineHandle CleanupHandle { get; }
+        public bool IsValid => Speaker != null && !Speaker.IsDestroyed && ControllerId != 0;
 
         public bool Stop()
             => SpeakerApi.Stop(this);
 
         public bool DestroyAudioPlayer()
-            => SpeakerApi.TryDestroy(AudioPlayerName);
+            => Stop();
 
         public void SetTransform(Vector3 position, Transform? parent = null)
             => SpeakerApi.SetTransform(this, position, parent);
+    }
+
+    public readonly struct LivePlayback
+    {
+        public LivePlayback(string audioPlayerName, LabSpeakerToy speaker, byte controllerId)
+        {
+            AudioPlayerName = audioPlayerName;
+            Speaker = speaker;
+            ControllerId = controllerId;
+        }
+
+        public string AudioPlayerName { get; }
+        public LabSpeakerToy Speaker { get; }
+        public byte ControllerId { get; }
+        public bool IsValid => Speaker != null && !Speaker.IsDestroyed && ControllerId != 0;
+
+        public bool DestroyAudioPlayer()
+            => SpeakerApi.DestroyLiveSpeaker(this);
+
+        public void SetTransform(Vector3 position, Transform? parent = null)
+            => SpeakerApi.SetTransform(this, position, parent);
+
+        public int SendFrame(byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
+            => SpeakerApi.SendAudioFrame(this, data, dataLength, targets);
+    }
+
+    private sealed class CachedClip
+    {
+        public CachedClip(string name, float[] samples)
+        {
+            Name = name;
+            Samples = samples;
+            Duration = samples.Length * VoiceChatSettings.SampleToDuartionRate;
+        }
+
+        public string Name { get; }
+        public float[] Samples { get; }
+        public float Duration { get; }
     }
 
     public static string AudioDirectory => Plugin.Singleton.Config.AudioReferences;
@@ -72,69 +101,8 @@ public static class SpeakerApi
         if (string.IsNullOrWhiteSpace(audioPlayerName))
             throw new ArgumentException("Audio player name cannot be empty.", nameof(audioPlayerName));
 
-        var audioPlayer = AudioPlayer.CreateOrGet(audioPlayerName);
-        var speaker = CreateOrGetSpeaker(
-            audioPlayer,
-            speakerName ?? audioPlayerName,
-            position,
-            parent,
-            isSpatial,
-            maxDistance,
-            minDistance,
-            volume);
-
-        return new LivePlayback(audioPlayer, speaker);
-    }
-
-    public static Speaker CreateOrGetSpeaker(
-        string audioPlayerName,
-        Vector3 position,
-        Transform? parent = null,
-        string? speakerName = null,
-        bool isSpatial = false,
-        float maxDistance = 5f,
-        float minDistance = 5f,
-        float volume = 1f)
-    {
-        var audioPlayer = AudioPlayer.CreateOrGet(audioPlayerName);
-        return CreateOrGetSpeaker(audioPlayer, speakerName ?? audioPlayerName, position, parent, isSpatial, maxDistance, minDistance, volume);
-    }
-
-    public static Speaker CreateOrGetSpeaker(
-        AudioPlayer audioPlayer,
-        string speakerName,
-        Vector3 position,
-        Transform? parent = null,
-        bool isSpatial = false,
-        float maxDistance = 5f,
-        float minDistance = 5f,
-        float volume = 1f)
-    {
-        if (audioPlayer == null)
-            throw new ArgumentNullException(nameof(audioPlayer));
-
-        if (string.IsNullOrWhiteSpace(speakerName))
-            throw new ArgumentException("Speaker name cannot be empty.", nameof(speakerName));
-
-        if (!audioPlayer.TryGetSpeaker(speakerName, out Speaker speaker))
-        {
-            speaker = audioPlayer.AddSpeaker(
-                speakerName,
-                volume: volume,
-                isSpatial: isSpatial,
-                minDistance: minDistance,
-                maxDistance: maxDistance);
-        }
-        else
-        {
-            speaker.Volume = volume;
-            speaker.IsSpatial = isSpatial;
-            speaker.MinDistance = minDistance;
-            speaker.MaxDistance = maxDistance;
-        }
-
-        SetTransform(speaker, position, parent);
-        return speaker;
+        var speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, volume);
+        return new LivePlayback(audioPlayerName, speaker, speaker.ControllerId);
     }
 
     public static Playback Play(
@@ -153,50 +121,7 @@ public static class SpeakerApi
         if (string.IsNullOrWhiteSpace(audioPlayerName))
             throw new ArgumentException("Audio player name cannot be empty.", nameof(audioPlayerName));
 
-        var audioPlayer = AudioPlayer.CreateOrGet(audioPlayerName);
-        return PlayCore(
-            fileName,
-            audioPlayer,
-            position,
-            parent,
-            isSpatial,
-            maxDistance,
-            minDistance,
-            loadClip,
-            speakerName ?? audioPlayerName,
-            clipName,
-            loop: false,
-            destroyOnEnd: destroyOnEnd,
-            restartIfAlreadyPlaying: false);
-    }
-
-    public static Playback Play(
-        string fileName,
-        AudioPlayer audioPlayer,
-        Vector3 position,
-        bool destroyOnEnd = false,
-        Transform? parent = null,
-        bool isSpatial = false,
-        float maxDistance = 5f,
-        float minDistance = 5f,
-        bool loadClip = true,
-        string? speakerName = null,
-        string? clipName = null)
-    {
-        return PlayCore(
-            fileName,
-            audioPlayer,
-            position,
-            parent,
-            isSpatial,
-            maxDistance,
-            minDistance,
-            loadClip,
-            speakerName,
-            clipName,
-            loop: false,
-            destroyOnEnd: destroyOnEnd,
-            restartIfAlreadyPlaying: false);
+        return PlayCore(fileName, audioPlayerName, position, parent, isSpatial, maxDistance, minDistance, loadClip, clipName, loop: false, destroyOnEnd);
     }
 
     public static Playback PlayLoop(
@@ -212,95 +137,51 @@ public static class SpeakerApi
         string? clipName = null,
         bool restartIfAlreadyPlaying = true)
     {
-        if (string.IsNullOrWhiteSpace(audioPlayerName))
-            throw new ArgumentException("Audio player name cannot be empty.", nameof(audioPlayerName));
+        if (restartIfAlreadyPlaying)
+            TryDestroy(audioPlayerName);
 
-        var audioPlayer = AudioPlayer.CreateOrGet(audioPlayerName);
-        return PlayCore(
-            fileName,
-            audioPlayer,
-            position,
-            parent,
-            isSpatial,
-            maxDistance,
-            minDistance,
-            loadClip,
-            speakerName ?? audioPlayerName,
-            clipName,
-            loop: true,
-            destroyOnEnd: false,
-            restartIfAlreadyPlaying: restartIfAlreadyPlaying);
-    }
-
-    public static Playback PlayLoop(
-        string fileName,
-        AudioPlayer audioPlayer,
-        Vector3 position,
-        Transform? parent = null,
-        bool isSpatial = false,
-        float maxDistance = 5f,
-        float minDistance = 5f,
-        bool loadClip = true,
-        string? speakerName = null,
-        string? clipName = null,
-        bool restartIfAlreadyPlaying = true)
-    {
-        return PlayCore(
-            fileName,
-            audioPlayer,
-            position,
-            parent,
-            isSpatial,
-            maxDistance,
-            minDistance,
-            loadClip,
-            speakerName,
-            clipName,
-            loop: true,
-            destroyOnEnd: false,
-            restartIfAlreadyPlaying: restartIfAlreadyPlaying);
+        return PlayCore(fileName, audioPlayerName, position, parent, isSpatial, maxDistance, minDistance, loadClip, clipName, loop: true, destroyOnEnd: false);
     }
 
     private static Playback PlayCore(
         string fileName,
-        AudioPlayer audioPlayer,
+        string audioPlayerName,
         Vector3 position,
         Transform? parent,
         bool isSpatial,
         float maxDistance,
         float minDistance,
         bool loadClip,
-        string? speakerName,
         string? clipName,
         bool loop,
-        bool destroyOnEnd,
-        bool restartIfAlreadyPlaying)
+        bool destroyOnEnd)
     {
-        if (audioPlayer == null)
-            throw new ArgumentNullException(nameof(audioPlayer));
-
         if (string.IsNullOrWhiteSpace(fileName))
             throw new ArgumentException("Audio file name cannot be empty.", nameof(fileName));
 
+        if (string.IsNullOrWhiteSpace(audioPlayerName))
+            throw new ArgumentException("Audio player name cannot be empty.", nameof(audioPlayerName));
+
         clipName ??= fileName;
-
-        var speaker = CreateOrGetSpeaker(
-            audioPlayer,
-            speakerName ?? audioPlayer.Name,
-            position,
-            parent,
-            isSpatial,
-            maxDistance,
-            minDistance);
-
-        if (loadClip)
+        if (loadClip || !ClipCache.ContainsKey(clipName))
             LoadClip(fileName, clipName);
 
-        if (restartIfAlreadyPlaying)
-            audioPlayer.RemoveClipByName(clipName);
+        if (!ClipCache.TryGetValue(clipName, out var clip))
+            throw new InvalidOperationException($"Audio clip is not loaded: {clipName}");
 
-        audioPlayer.AddClip(clipName, loop: loop, destroyOnEnd: destroyOnEnd);
-        return new Playback(audioPlayer, speaker, clipName);
+        var speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, 1f);
+        speaker.Play(clip.Samples, queue: false, loop: loop);
+
+        var playback = new Playback(audioPlayerName, clipName, speaker, speaker.ControllerId);
+        AddPlayback(playback);
+
+        if (destroyOnEnd && !loop)
+        {
+            var cleanup = Timing.CallDelayed(clip.Duration + 0.75f, () => Stop(playback));
+            playback = new Playback(audioPlayerName, clipName, speaker, speaker.ControllerId, cleanup);
+        }
+
+        return playback;
     }
 
     public static void LoadClip(string fileName, string? clipName = null)
@@ -309,20 +190,17 @@ public static class SpeakerApi
             throw new ArgumentException("Audio file name cannot be empty.", nameof(fileName));
 
         clipName ??= fileName;
-        if (AudioClipStorage.AudioClips.ContainsKey(clipName))
+        if (ClipCache.ContainsKey(clipName))
             return;
 
-        AudioClipStorage.LoadClip(Path.Combine(AudioDirectory, fileName), clipName);
-    }
+        var fullPath = Path.Combine(AudioDirectory, fileName);
+        if (!File.Exists(fullPath))
+            throw new FileNotFoundException($"Audio file not found: {fullPath}", fullPath);
 
-    public static bool StopClip(string audioPlayerName, string clipName)
-    {
-        if (string.IsNullOrWhiteSpace(audioPlayerName) || string.IsNullOrWhiteSpace(clipName))
-            return false;
-
-        return AudioPlayer.TryGet(audioPlayerName, out AudioPlayer audioPlayer) &&
-               audioPlayer != null &&
-               audioPlayer.RemoveClipByName(clipName);
+        using var reader = new VorbisReader(fullPath);
+        var samples = new float[reader.TotalSamples * reader.Channels];
+        reader.ReadSamples(samples, 0, samples.Length);
+        ClipCache[clipName] = new CachedClip(clipName, ConvertToMono48k(samples, reader.SampleRate, reader.Channels));
     }
 
     public static bool Stop(Playback playback)
@@ -330,7 +208,26 @@ public static class SpeakerApi
         if (!playback.IsValid)
             return false;
 
-        return playback.AudioPlayer.RemoveClipByName(playback.ClipName);
+        playback.Speaker.Stop();
+        playback.Speaker.Destroy();
+        AllocatedControllerIds.Remove(playback.ControllerId);
+        RemovePlayback(playback);
+        return true;
+    }
+
+    public static bool StopClip(string audioPlayerName, string clipName)
+    {
+        if (string.IsNullOrWhiteSpace(audioPlayerName) || string.IsNullOrWhiteSpace(clipName))
+            return false;
+
+        if (!PlaybacksByName.TryGetValue(audioPlayerName, out var playbacks))
+            return false;
+
+        var targets = playbacks.Where(p => string.Equals(p.ClipName, clipName, StringComparison.OrdinalIgnoreCase)).ToArray();
+        foreach (var playback in targets)
+            Stop(playback);
+
+        return targets.Length > 0;
     }
 
     public static int StopClip(string clipName)
@@ -339,9 +236,9 @@ public static class SpeakerApi
             return 0;
 
         int stopped = 0;
-        foreach (var audioPlayerName in GetAudioPlayerNames())
+        foreach (var playback in PlaybacksByName.Values.SelectMany(p => p).Where(p => string.Equals(p.ClipName, clipName, StringComparison.OrdinalIgnoreCase)).ToArray())
         {
-            if (StopClip(audioPlayerName, clipName))
+            if (Stop(playback))
                 stopped++;
         }
 
@@ -380,76 +277,58 @@ public static class SpeakerApi
 
     public static bool TryDestroy(string audioPlayerName)
     {
-        if (string.IsNullOrWhiteSpace(audioPlayerName))
+        if (string.IsNullOrWhiteSpace(audioPlayerName) || !PlaybacksByName.TryGetValue(audioPlayerName, out var playbacks))
             return false;
 
-        if (!AudioPlayer.TryGet(audioPlayerName, out AudioPlayer audioPlayer) || audioPlayer == null)
-            return false;
+        foreach (var playback in playbacks.ToArray())
+            Stop(playback);
 
-        audioPlayer.Destroy();
         return true;
     }
 
     public static int DestroyAll()
     {
-        var names = new List<string>(AudioPlayer.AudioPlayerByName.Count);
-        foreach (var name in AudioPlayer.AudioPlayerByName.Keys)
-        {
-            if (!string.IsNullOrEmpty(name))
-                names.Add(name);
-        }
+        var playbacks = PlaybacksByName.Values.SelectMany(p => p).ToArray();
+        foreach (var playback in playbacks)
+            Stop(playback);
 
-        foreach (var name in names)
-            TryDestroy(name);
-
-        return names.Count;
+        PlaybacksByName.Clear();
+        AllocatedControllerIds.Clear();
+        return playbacks.Length;
     }
 
-    public static void SetTransform(Speaker speaker, Vector3 position, Transform? parent = null)
+    public static void SetTransform(Playback playback, Vector3 position, Transform? parent = null)
     {
-        if (speaker == null)
-            throw new ArgumentNullException(nameof(speaker));
-
-        if (parent)
-        {
-            speaker.transform.SetParent(parent);
-            speaker.transform.localPosition = Vector3.zero;
-            speaker.transform.localRotation = Quaternion.identity;
+        if (!playback.IsValid)
             return;
-        }
-
-        speaker.Position = position;
-    }
-
-    public static bool SetTransform(Playback playback, Vector3 position, Transform? parent = null)
-    {
-        if (playback.Speaker == null)
-            return false;
 
         SetTransform(playback.Speaker, position, parent);
+    }
+
+    public static void SetTransform(LivePlayback playback, Vector3 position, Transform? parent = null)
+    {
+        if (!playback.IsValid)
+            return;
+
+        SetTransform(playback.Speaker, position, parent);
+    }
+
+    public static bool DestroyLiveSpeaker(LivePlayback playback)
+    {
+        if (!playback.IsValid)
+            return false;
+
+        playback.Speaker.Destroy();
+        AllocatedControllerIds.Remove(playback.ControllerId);
         return true;
     }
 
-    public static int SendAudioFrame(string audioPlayerName, byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
-        => TryGetAudioPlayer(audioPlayerName, out var audioPlayer)
-            ? SendAudioFrame(audioPlayer, data, dataLength, targets)
-            : 0;
-
     public static int SendAudioFrame(LivePlayback playback, byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
-        => playback.IsValid ? SendAudioFrame(playback.AudioPlayer, data, dataLength, targets) : 0;
-
-    public static int SendAudioFrame(AudioPlayer audioPlayer, byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
     {
-        if (audioPlayer == null || data == null || dataLength <= 0 || dataLength > data.Length || targets == null)
+        if (!playback.IsValid || data == null || dataLength <= 0 || dataLength > data.Length || targets == null)
             return 0;
 
-        var audioMessage = new AudioMessage
-        {
-            ControllerId = audioPlayer.ControllerID,
-            Data = data,
-            DataLength = dataLength
-        };
-
+        var audioMessage = new AudioMessage(playback.ControllerId, data, dataLength);
         int sent = 0;
         foreach (var target in targets)
         {
@@ -463,26 +342,111 @@ public static class SpeakerApi
         return sent;
     }
 
-    public static bool TryGetAudioPlayer(string audioPlayerName, out AudioPlayer audioPlayer)
-    {
-        if (string.IsNullOrWhiteSpace(audioPlayerName))
-        {
-            audioPlayer = null;
-            return false;
-        }
-
-        return AudioPlayer.TryGet(audioPlayerName, out audioPlayer) && audioPlayer != null;
-    }
-
-    public static bool TryGetSpeaker(string audioPlayerName, string speakerName, out Speaker speaker)
-    {
-        speaker = null;
-        return TryGetAudioPlayer(audioPlayerName, out var audioPlayer) &&
-               !string.IsNullOrWhiteSpace(speakerName) &&
-               audioPlayer.TryGetSpeaker(speakerName, out speaker) &&
-               speaker != null;
-    }
+    public static int SendAudioFrame(string audioPlayerName, byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
+        => 0;
 
     public static IEnumerable<string> GetAudioPlayerNames()
-        => new List<string>(AudioPlayer.AudioPlayerByName.Keys);
+        => PlaybacksByName.Keys.ToArray();
+
+    private static LabSpeakerToy CreateSpeaker(Vector3 position, Transform? parent, bool isSpatial, float maxDistance, float minDistance, float volume)
+    {
+        var speaker = LabSpeakerToy.Create(position, Quaternion.identity, Vector3.one, parent);
+        speaker.ControllerId = AllocateControllerId();
+        speaker.IsSpatial = isSpatial;
+        speaker.MaxDistance = maxDistance;
+        speaker.MinDistance = minDistance;
+        speaker.Volume = volume;
+        return speaker;
+    }
+
+    private static void SetTransform(LabSpeakerToy speaker, Vector3 position, Transform? parent)
+    {
+        if (parent)
+        {
+            speaker.Transform.SetParent(parent);
+            speaker.Transform.localPosition = Vector3.zero;
+            speaker.Transform.localRotation = Quaternion.identity;
+            return;
+        }
+
+        speaker.Position = position;
+    }
+
+    private static byte AllocateControllerId()
+    {
+        var used = new HashSet<byte>(AllocatedControllerIds);
+
+        foreach (var speaker in LabSpeakerToy.List)
+            used.Add(speaker.ControllerId);
+
+        foreach (var playback in SpeakerToyPlaybackBase.AllInstances)
+            used.Add(playback.ControllerId);
+
+        for (byte id = 1; id < byte.MaxValue; id++)
+        {
+            if (used.Contains(id))
+                continue;
+
+            AllocatedControllerIds.Add(id);
+            return id;
+        }
+
+        throw new InvalidOperationException("No available SpeakerToy controller IDs.");
+    }
+
+    private static void AddPlayback(Playback playback)
+    {
+        if (!PlaybacksByName.TryGetValue(playback.AudioPlayerName, out var list))
+        {
+            list = [];
+            PlaybacksByName[playback.AudioPlayerName] = list;
+        }
+
+        list.Add(playback);
+    }
+
+    private static void RemovePlayback(Playback playback)
+    {
+        if (!PlaybacksByName.TryGetValue(playback.AudioPlayerName, out var list))
+            return;
+
+        list.RemoveAll(p => p.ControllerId == playback.ControllerId);
+        if (list.Count == 0)
+            PlaybacksByName.Remove(playback.AudioPlayerName);
+    }
+
+    private static float[] ConvertToMono48k(float[] input, int sampleRate, int channels)
+    {
+        if (input == null || input.Length == 0)
+            return [];
+
+        channels = Math.Max(1, channels);
+        int frameCount = input.Length / channels;
+        var mono = new float[frameCount];
+        for (int frame = 0; frame < frameCount; frame++)
+        {
+            float sample = 0f;
+            int offset = frame * channels;
+            for (int channel = 0; channel < channels; channel++)
+                sample += input[offset + channel];
+
+            mono[frame] = sample / channels;
+        }
+
+        if (sampleRate <= 0 || sampleRate == TargetSampleRate)
+            return mono;
+
+        int outputLength = Mathf.Max(1, Mathf.RoundToInt(mono.Length * (TargetSampleRate / (float)sampleRate)));
+        var output = new float[outputLength];
+        float ratio = (mono.Length - 1) / (float)Math.Max(1, outputLength - 1);
+        for (int i = 0; i < outputLength; i++)
+        {
+            float source = i * ratio;
+            int left = Mathf.FloorToInt(source);
+            int right = Mathf.Min(left + 1, mono.Length - 1);
+            output[i] = Mathf.Lerp(mono[left], mono[right], source - left);
+        }
+
+        return output;
+    }
 }

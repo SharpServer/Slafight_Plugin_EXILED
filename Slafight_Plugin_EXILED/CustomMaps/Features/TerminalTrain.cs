@@ -132,7 +132,7 @@ public static class TerminalTrain
             );
 
             _playback.Stop();
-            _playback = SpeakerApi.Play("Train_Enter.ogg","TerminalTrain",checkpointPos, maxDistance: 20f, minDistance: 0f);
+            _playback = SpeakerApi.Play("Train_Enter.ogg","TerminalTrain",checkpointPos, maxDistance: 20f, minDistance: 0f, isSpatial: true);
 
             // かなり余裕を持った待機。途中でラウンド終了したら抜ける。
             float wait = 35f;
@@ -157,7 +157,7 @@ public static class TerminalTrain
             );
 
             _playback.Stop();
-            _playback = SpeakerApi.Play("Train_Leave.ogg","TerminalTrain",checkpointPos, maxDistance: 20f, minDistance: 0f);
+            _playback = SpeakerApi.Play("Train_Leave.ogg","TerminalTrain",checkpointPos, maxDistance: 20f, minDistance: 0f, isSpatial: true);
 
             // 念のため少し待つ（同じくラウンド状態を見る）
             wait = 2f;

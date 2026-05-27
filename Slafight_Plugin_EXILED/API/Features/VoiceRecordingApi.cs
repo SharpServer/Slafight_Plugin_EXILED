@@ -8,7 +8,10 @@ using Exiled.Events.EventArgs.Player;
 using MEC;
 using UnityEngine;
 using VoiceChat;
+using VoiceChat.Codec;
 using VoiceChat.Networking;
+using VoiceChat.Playbacks;
+using LabSpeakerToy = LabApi.Features.Wrappers.SpeakerToy;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -102,6 +105,9 @@ public static class VoiceRecordingApi
 
     public static void ClearAll()
     {
+        foreach (var session in SessionsByKey.Values)
+            session.Recording.MarkCompleted();
+
         SessionsByKey.Clear();
         RecordingsByKey.Clear();
     }
@@ -115,12 +121,14 @@ public static class VoiceRecordingApi
         float maxDistance = 10f,
         float minDistance = 0f,
         IEnumerable<Player>? targets = null,
-        bool destroyOnEnd = true)
+        bool destroyOnEnd = true,
+        float startupDelay = 0.5f,
+        float destroyDelay = 0.75f)
     {
         if (!TryGetRecording(key, out var recording))
             return default;
 
-        return Play(recording, position, audioPlayerName, parent, isSpatial, maxDistance, minDistance, targets, destroyOnEnd);
+        return Play(recording, position, audioPlayerName, parent, isSpatial, maxDistance, minDistance, targets, destroyOnEnd, startupDelay, destroyDelay);
     }
 
     public static CoroutineHandle Play(
@@ -132,7 +140,9 @@ public static class VoiceRecordingApi
         float maxDistance = 10f,
         float minDistance = 0f,
         IEnumerable<Player>? targets = null,
-        bool destroyOnEnd = true)
+        bool destroyOnEnd = true,
+        float startupDelay = 0.5f,
+        float destroyDelay = 0.75f)
     {
         if (recording == null || recording.FrameCount == 0)
             return default;
@@ -147,7 +157,9 @@ public static class VoiceRecordingApi
             maxDistance,
             minDistance,
             targets,
-            destroyOnEnd));
+            destroyOnEnd,
+            startupDelay,
+            destroyDelay));
     }
 
     private static void OnVoiceChatting(VoiceChattingEventArgs ev)
@@ -173,39 +185,53 @@ public static class VoiceRecordingApi
         float maxDistance,
         float minDistance,
         IEnumerable<Player>? targets,
-        bool destroyOnEnd)
+        bool destroyOnEnd,
+        float startupDelay,
+        float destroyDelay)
     {
-        var playback = SpeakerApi.CreateLiveSpeaker(
-            audioPlayerName,
-            position,
-            parent,
-            speakerName: "Recording",
-            isSpatial: isSpatial,
-            maxDistance: maxDistance,
-            minDistance: minDistance);
+        var speaker = LabSpeakerToy.Create(position, Quaternion.identity, Vector3.one, parent);
+        speaker.ControllerId = AllocateControllerId();
+        speaker.IsSpatial = isSpatial;
+        speaker.Volume = 1f;
+        speaker.MinDistance = minDistance;
+        speaker.MaxDistance = maxDistance;
+        var targetUserIds = targets?
+            .Where(player => !string.IsNullOrEmpty(player.UserId))
+            .Select(player => player.UserId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        speaker.ValidPlayers = targetUserIds == null ? null : player => targetUserIds.Contains(player.UserId);
 
-        var hubs = ResolveTargets(targets).ToArray();
-        foreach (var frame in recording.GetFramesSnapshot())
-        {
-            if (frame.DelaySeconds > 0f)
-                yield return Timing.WaitForSeconds(frame.DelaySeconds);
+        if (startupDelay > 0f)
+            yield return Timing.WaitForSeconds(startupDelay);
 
-            playback.SetTransform(position, parent);
-            playback.SendFrame(frame.Data, frame.DataLength, hubs);
-        }
+        speaker.Position = position;
+        speaker.Play(recording.GetSamplesSnapshot(), queue: false, loop: false);
 
         if (destroyOnEnd)
-            playback.DestroyAudioPlayer();
+        {
+            yield return Timing.WaitForSeconds(recording.DurationSeconds + destroyDelay);
+
+            speaker.Destroy();
+        }
     }
 
-    private static IEnumerable<ReferenceHub> ResolveTargets(IEnumerable<Player>? targets)
+    private static byte AllocateControllerId()
     {
-        if (targets == null)
-            return ReferenceHub.AllHubs;
+        var used = new HashSet<byte>();
 
-        return targets
-            .Where(player => player?.ReferenceHub != null)
-            .Select(player => player.ReferenceHub);
+        foreach (var speaker in LabSpeakerToy.List)
+            used.Add(speaker.ControllerId);
+
+        foreach (var playback in SpeakerToyPlaybackBase.AllInstances)
+            used.Add(playback.ControllerId);
+
+        for (byte id = 1; id < byte.MaxValue; id++)
+        {
+            if (!used.Contains(id))
+                return id;
+        }
+
+        throw new InvalidOperationException("No available SpeakerToy controller IDs.");
     }
 
     private sealed class RecordingSession
@@ -249,7 +275,9 @@ public static class VoiceRecordingApi
 
 public sealed class VoiceRecording
 {
-    private readonly List<VoiceRecordingFrame> _frames = [];
+    private readonly List<float> _samples = [];
+    private readonly OpusDecoder _decoder = new();
+    private readonly float[] _decodeBuffer = new float[VoiceChatSettings.BufferLength];
     private float _lastFrameTime;
     private string? _cachedHash;
 
@@ -262,59 +290,64 @@ public sealed class VoiceRecording
     public string Key { get; }
     public DateTime CreatedAtUtc { get; }
     public bool IsCompleted { get; private set; }
-    public int FrameCount => _frames.Count;
+    public int FrameCount { get; private set; }
+    public int SampleCount => _samples.Count;
     public float DurationSeconds { get; private set; }
     public string Hash => _cachedHash ??= ComputeHash();
 
-    public IReadOnlyList<VoiceRecordingFrame> GetFramesSnapshot()
-        => _frames.ToArray();
+    public float[] GetSamplesSnapshot()
+        => _samples.ToArray();
 
     internal void AddFrame(VoiceMessage message)
     {
+        if (IsCompleted)
+            return;
+
         float now = Time.unscaledTime;
-        float delay = _frames.Count == 0 ? 0f : Mathf.Max(0f, now - _lastFrameTime);
+        float delay = FrameCount == 0 ? 0f : Mathf.Max(0f, now - _lastFrameTime);
         _lastFrameTime = now;
 
-        var data = new byte[message.DataLength];
-        Buffer.BlockCopy(message.Data, 0, data, 0, message.DataLength);
-        _frames.Add(new VoiceRecordingFrame(data, message.DataLength, delay));
-        DurationSeconds += delay;
+        if (delay > 0f)
+        {
+            int silenceSamples = Mathf.RoundToInt(delay * VoiceChatSettings.SampleRate);
+            if (silenceSamples > 0)
+                _samples.AddRange(new float[silenceSamples]);
+        }
+
+        int decodedLength = _decoder.Decode(message.Data, message.DataLength, _decodeBuffer);
+        if (decodedLength <= 0)
+            return;
+
+        for (int i = 0; i < decodedLength; i++)
+            _samples.Add(_decodeBuffer[i]);
+
+        FrameCount++;
+        DurationSeconds = _samples.Count * VoiceChatSettings.SampleToDuartionRate;
         _cachedHash = null;
     }
 
     internal void MarkCompleted()
-        => IsCompleted = true;
+    {
+        if (IsCompleted)
+            return;
+
+        IsCompleted = true;
+        _decoder.Dispose();
+    }
 
     private string ComputeHash()
     {
         using var sha = SHA256.Create();
-        var seed = Encoding.UTF8.GetBytes($"{Key}:{CreatedAtUtc.Ticks}:{FrameCount}:{DurationSeconds:F4}");
+        var seed = Encoding.UTF8.GetBytes($"{Key}:{CreatedAtUtc.Ticks}:{FrameCount}:{SampleCount}:{DurationSeconds:F4}");
         sha.TransformBlock(seed, 0, seed.Length, null, 0);
 
-        foreach (var frame in _frames)
+        foreach (var sample in _samples)
         {
-            var delay = BitConverter.GetBytes(frame.DelaySeconds);
-            var length = BitConverter.GetBytes(frame.DataLength);
-            sha.TransformBlock(delay, 0, delay.Length, null, 0);
-            sha.TransformBlock(length, 0, length.Length, null, 0);
-            sha.TransformBlock(frame.Data, 0, frame.DataLength, null, 0);
+            var bytes = BitConverter.GetBytes(sample);
+            sha.TransformBlock(bytes, 0, bytes.Length, null, 0);
         }
 
         sha.TransformFinalBlock([], 0, 0);
         return BitConverter.ToString(sha.Hash).Replace("-", string.Empty).ToLowerInvariant();
     }
-}
-
-public readonly struct VoiceRecordingFrame
-{
-    public VoiceRecordingFrame(byte[] data, int dataLength, float delaySeconds)
-    {
-        Data = data;
-        DataLength = dataLength;
-        DelaySeconds = delaySeconds;
-    }
-
-    public byte[] Data { get; }
-    public int DataLength { get; }
-    public float DelaySeconds { get; }
 }
