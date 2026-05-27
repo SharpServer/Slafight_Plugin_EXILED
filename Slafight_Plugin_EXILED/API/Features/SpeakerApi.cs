@@ -7,6 +7,8 @@ using MEC;
 using NVorbis;
 using UnityEngine;
 using VoiceChat;
+using VoiceChat.Codec;
+using VoiceChat.Codec.Enums;
 using VoiceChat.Networking;
 using VoiceChat.Playbacks;
 using LabSpeakerToy = LabApi.Features.Wrappers.SpeakerToy;
@@ -16,8 +18,10 @@ namespace Slafight_Plugin_EXILED.API.Features;
 public static class SpeakerApi
 {
     private const int TargetSampleRate = VoiceChatSettings.SampleRate;
+    private const int PacketSize = VoiceChatSettings.PacketSizePerChannel;
     private static readonly Dictionary<string, CachedClip> ClipCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, List<Playback>> PlaybacksByName = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<byte, CoroutineHandle> PlaybackStreams = new();
     private static readonly HashSet<byte> AllocatedControllerIds = [];
 
     public readonly struct Playback
@@ -170,15 +174,53 @@ public static class SpeakerApi
             throw new InvalidOperationException($"Audio clip is not loaded: {clipName}");
 
         var speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, 1f);
-        speaker.Play(clip.Samples, queue: false, loop: loop);
-
-        var playback = new Playback(audioPlayerName, clipName, speaker, speaker.ControllerId);
+        var stream = Timing.RunCoroutine(TransmitSamples(speaker.ControllerId, clip.Samples, loop, 1f, null));
+        var playback = new Playback(audioPlayerName, clipName, speaker, speaker.ControllerId, stream);
+        PlaybackStreams[speaker.ControllerId] = stream;
         AddPlayback(playback);
 
         if (destroyOnEnd && !loop)
         {
-            var cleanup = Timing.CallDelayed(clip.Duration + 0.75f, () => Stop(playback));
-            playback = new Playback(audioPlayerName, clipName, speaker, speaker.ControllerId, cleanup);
+            Timing.CallDelayed(clip.Duration + 0.75f, () => Stop(playback));
+        }
+
+        return playback;
+    }
+
+    public static Playback PlaySamples(
+        string audioPlayerName,
+        float[] samples,
+        Vector3 position,
+        Transform? parent = null,
+        bool isSpatial = true,
+        float maxDistance = 10f,
+        float minDistance = 0f,
+        float volume = 1f,
+        bool loop = false,
+        IEnumerable<Player>? targets = null,
+        bool destroyOnEnd = true)
+    {
+        if (string.IsNullOrWhiteSpace(audioPlayerName))
+            throw new ArgumentException("Audio player name cannot be empty.", nameof(audioPlayerName));
+
+        if (samples == null || samples.Length == 0)
+            throw new ArgumentException("Samples cannot be empty.", nameof(samples));
+
+        var speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, volume);
+        var targetIds = targets?
+            .Where(player => !string.IsNullOrEmpty(player.UserId))
+            .Select(player => player.UserId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+        var stream = Timing.RunCoroutine(TransmitSamples(speaker.ControllerId, samples, loop, volume, targetIds));
+        var playback = new Playback(audioPlayerName, audioPlayerName, speaker, speaker.ControllerId, stream);
+        PlaybackStreams[speaker.ControllerId] = stream;
+        AddPlayback(playback);
+
+        if (destroyOnEnd && !loop)
+        {
+            float duration = samples.Length * VoiceChatSettings.SampleToDuartionRate;
+            Timing.CallDelayed(duration + 0.75f, () => Stop(playback));
         }
 
         return playback;
@@ -208,6 +250,10 @@ public static class SpeakerApi
         if (!playback.IsValid)
             return false;
 
+        if (PlaybackStreams.TryGetValue(playback.ControllerId, out var stream) && stream.IsRunning)
+            Timing.KillCoroutines(stream);
+
+        PlaybackStreams.Remove(playback.ControllerId);
         playback.Speaker.Stop();
         playback.Speaker.Destroy();
         AllocatedControllerIds.Remove(playback.ControllerId);
@@ -350,12 +396,13 @@ public static class SpeakerApi
 
     private static LabSpeakerToy CreateSpeaker(Vector3 position, Transform? parent, bool isSpatial, float maxDistance, float minDistance, float volume)
     {
-        var speaker = LabSpeakerToy.Create(position, Quaternion.identity, Vector3.one, parent);
+        var speaker = LabSpeakerToy.Create(position, Quaternion.identity, Vector3.one, parent, networkSpawn: false);
         speaker.ControllerId = AllocateControllerId();
         speaker.IsSpatial = isSpatial;
         speaker.MaxDistance = maxDistance;
         speaker.MinDistance = minDistance;
         speaker.Volume = volume;
+        speaker.Spawn();
         return speaker;
     }
 
@@ -413,6 +460,71 @@ public static class SpeakerApi
         list.RemoveAll(p => p.ControllerId == playback.ControllerId);
         if (list.Count == 0)
             PlaybacksByName.Remove(playback.AudioPlayerName);
+    }
+
+    private static IEnumerator<float> TransmitSamples(
+        byte controllerId,
+        float[] samples,
+        bool loop,
+        float volume,
+        HashSet<string>? targetUserIds)
+    {
+        using var encoder = new OpusEncoder(OpusApplicationType.Audio);
+        var pcm = new float[PacketSize];
+        var encoded = new byte[512];
+        int offset = 0;
+        double lastSend = Time.unscaledTimeAsDouble;
+        const double interval = PacketSize / (double)TargetSampleRate;
+
+        while (samples.Length > 0)
+        {
+            double now = Time.unscaledTimeAsDouble;
+            if (now - lastSend < interval)
+            {
+                yield return Timing.WaitForOneFrame;
+                continue;
+            }
+
+            lastSend += interval;
+            int remaining = samples.Length - offset;
+            if (remaining <= 0)
+            {
+                if (!loop)
+                    yield break;
+
+                offset = 0;
+                remaining = samples.Length;
+            }
+
+            int count = Math.Min(PacketSize, remaining);
+            Array.Copy(samples, offset, pcm, 0, count);
+            if (count < PacketSize)
+                Array.Clear(pcm, count, PacketSize - count);
+
+            for (int i = 0; i < PacketSize; i++)
+                pcm[i] = Mathf.Clamp(pcm[i] * volume, -1f, 1f);
+
+            offset += count;
+            int encodedLength = encoder.Encode(pcm, encoded);
+            if (encodedLength <= 0)
+                continue;
+
+            var message = new AudioMessage(controllerId, encoded, encodedLength);
+            foreach (var hub in ReferenceHub.AllHubs)
+            {
+                if (hub?.connectionToClient == null)
+                    continue;
+
+                if (targetUserIds != null)
+                {
+                    var player = Player.Get(hub);
+                    if (player == null || !targetUserIds.Contains(player.UserId))
+                        continue;
+                }
+
+                hub.connectionToClient.Send(message);
+            }
+        }
     }
 
     private static float[] ConvertToMono48k(float[] input, int sampleRate, int channels)

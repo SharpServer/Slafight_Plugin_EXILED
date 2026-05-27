@@ -37,13 +37,6 @@ public static class Handler
     public static readonly List<Player> CanUsePlayers = [];
     private static readonly HashSet<int> ForcedCanUsePlayers = [];
 
-    public static readonly List<RoleTypeId> AllowedRoleTypes =
-    [
-        RoleTypeId.Scp049,
-        RoleTypeId.Scp939,
-        RoleTypeId.Scp3114
-    ];
-
     private static void OnPlayerChangingRole(ChangingRoleEventArgs ev)
     {
         DestroyProximitySpeaker(ev.Player);
@@ -90,10 +83,9 @@ public static class Handler
         if (ForcedCanUsePlayers.Contains(player.Id))
             return true;
 
-        if (!string.IsNullOrEmpty(player.UniqueRole))
-            return CRole.TryGetByUniqueRole(player.UniqueRole, out var role) && role.CanUseProximityChat;
-
-        return AllowedRoleTypes.Contains(player.Role);
+        return !string.IsNullOrEmpty(player.UniqueRole)
+               && CRole.TryGetByUniqueRole(player.UniqueRole, out var role)
+               && role.CanUseProximityChat;
     }
 
     public static bool ShouldEnableProximityChatByDefault(Player player)
@@ -183,7 +175,7 @@ public static class Handler
             return;
 
         var liveSpeaker = GetOrCreateProximitySpeaker(speakerPlayer, maxRange);
-        liveSpeaker.SetTransform(speakerPlayer.Position, speakerPlayer.Transform);
+        liveSpeaker.SetTransform(speakerPlayer.Position);
         liveSpeaker.SendFrame(msg.Data, msg.DataLength, targets);
     }
 
@@ -195,7 +187,7 @@ public static class Handler
         playback = SpeakerApi.CreateLiveSpeaker(
             GetAudioPlayerName(player),
             player.Position,
-            player.Transform,
+            parent: null,
             speakerName: "Voice",
             isSpatial: true,
             maxDistance: maxRange,

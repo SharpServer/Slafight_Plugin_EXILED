@@ -189,49 +189,24 @@ public static class VoiceRecordingApi
         float startupDelay,
         float destroyDelay)
     {
-        var speaker = LabSpeakerToy.Create(position, Quaternion.identity, Vector3.one, parent);
-        speaker.ControllerId = AllocateControllerId();
-        speaker.IsSpatial = isSpatial;
-        speaker.Volume = 1f;
-        speaker.MinDistance = minDistance;
-        speaker.MaxDistance = maxDistance;
-        var targetUserIds = targets?
-            .Where(player => !string.IsNullOrEmpty(player.UserId))
-            .Select(player => player.UserId)
-            .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        speaker.ValidPlayers = targetUserIds == null ? null : player => targetUserIds.Contains(player.UserId);
-
         if (startupDelay > 0f)
             yield return Timing.WaitForSeconds(startupDelay);
 
-        speaker.Position = position;
-        speaker.Play(recording.GetSamplesSnapshot(), queue: false, loop: false);
+        SpeakerApi.PlaySamples(
+            audioPlayerName,
+            recording.GetSamplesSnapshot(),
+            position,
+            parent,
+            isSpatial,
+            maxDistance,
+            minDistance,
+            volume: 1f,
+            loop: false,
+            targets,
+            destroyOnEnd);
 
         if (destroyOnEnd)
-        {
             yield return Timing.WaitForSeconds(recording.DurationSeconds + destroyDelay);
-
-            speaker.Destroy();
-        }
-    }
-
-    private static byte AllocateControllerId()
-    {
-        var used = new HashSet<byte>();
-
-        foreach (var speaker in LabSpeakerToy.List)
-            used.Add(speaker.ControllerId);
-
-        foreach (var playback in SpeakerToyPlaybackBase.AllInstances)
-            used.Add(playback.ControllerId);
-
-        for (byte id = 1; id < byte.MaxValue; id++)
-        {
-            if (!used.Contains(id))
-                return id;
-        }
-
-        throw new InvalidOperationException("No available SpeakerToy controller IDs.");
     }
 
     private sealed class RecordingSession
