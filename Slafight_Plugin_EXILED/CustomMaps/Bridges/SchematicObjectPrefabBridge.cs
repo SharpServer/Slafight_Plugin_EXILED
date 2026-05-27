@@ -130,7 +130,7 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
                 prefab.ApplyOptions(data.Options);
 
             prefab.Create();
-            MarkerBindings[markerId] = new MarkerBinding(data.Transform, prefab.ObjectInstanceID, data.PrefabType);
+            MarkerBindings[markerId] = new MarkerBinding(data.Transform, prefab.ObjectInstanceID, data.PrefabType, data.Options);
             spawned++;
         }
 
@@ -161,7 +161,18 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
         }
 
         SyncPrefabTransform(prefab, data.Transform);
+        SyncPrefabOptions(markerId, prefab, binding, data.Options);
         return true;
+    }
+
+    private static void SyncPrefabOptions(int markerId, ObjectPrefab prefab, MarkerBinding binding, Dictionary<string, string> options)
+    {
+        if (AreOptionsEqual(binding.Options, options))
+            return;
+
+        prefab.ApplyOptions(options);
+        prefab.SyncManagedObjects();
+        MarkerBindings[markerId] = binding.WithOptions(options);
     }
 
     private static void RemoveMissingMarkerPrefabs(HashSet<int> seenMarkers)
@@ -250,6 +261,20 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
         prefab.Scale = markerTransform.lossyScale;
     }
 
+    private static bool AreOptionsEqual(IReadOnlyDictionary<string, string> left, IReadOnlyDictionary<string, string> right)
+    {
+        if (left.Count != right.Count)
+            return false;
+
+        foreach (KeyValuePair<string, string> pair in left)
+        {
+            if (!right.TryGetValue(pair.Key, out string value) || value != pair.Value)
+                return false;
+        }
+
+        return true;
+    }
+
     private static Type GetMarkerType()
         => Type.GetType("ProjectMER.Features.Objects.SchematicObjectPrefabObject, ProjectMER");
 
@@ -310,11 +335,12 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
 
     private readonly struct MarkerBinding
     {
-        public MarkerBinding(Transform transform, string prefabId, string prefabType)
+        public MarkerBinding(Transform transform, string prefabId, string prefabType, Dictionary<string, string> options)
         {
             Transform = transform;
             PrefabId = prefabId;
             PrefabType = prefabType;
+            Options = CopyOptions(options);
         }
 
         public Transform Transform { get; }
@@ -322,5 +348,12 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
         public string PrefabId { get; }
 
         public string PrefabType { get; }
+
+        public IReadOnlyDictionary<string, string> Options { get; }
+
+        public MarkerBinding WithOptions(Dictionary<string, string> options) => new(Transform, PrefabId, PrefabType, options);
+
+        private static Dictionary<string, string> CopyOptions(Dictionary<string, string> options)
+            => options.Count == 0 ? new Dictionary<string, string>() : new Dictionary<string, string>(options);
     }
 }
