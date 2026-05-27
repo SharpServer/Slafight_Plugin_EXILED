@@ -21,11 +21,6 @@ internal sealed class SpecialDoorAccessController(float positionToleranceSq)
             RequiredCItemType = typeof(OmegaWarheadAccess)
         };
 
-        _rulesByDoorPosition[new Vector3(-18.614f, 257.005f, -91.739f)] = new()
-        {
-            RequiredCode = "55555"
-        };
-
         _rulesByDoorPosition[MapFlags.SqDoorPoint] = new()
         {
             RequiredCode = "0727"
