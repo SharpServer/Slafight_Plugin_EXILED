@@ -131,6 +131,7 @@ public static class TerminalTrain
                 "TrainFirstAnim"
             );
 
+            _playback.Stop();
             _playback = SpeakerApi.Play("Train_Enter.ogg","TerminalTrain",checkpointPos, maxDistance: 20f, minDistance: 0f);
 
             // かなり余裕を持った待機。途中でラウンド終了したら抜ける。
