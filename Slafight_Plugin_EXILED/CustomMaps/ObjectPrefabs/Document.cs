@@ -10,7 +10,6 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
@@ -32,10 +31,6 @@ public class Document : ObjectPrefab
     private InteractableToy? _interactableToy;
     private static readonly Vector3 InteractableLocalOffset = Vector3.zero;
     private static readonly Vector3 InteractableBaseScale = Vector3.one;
-
-    private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
-        = EventHandler.CreateAndPlayAudio;
-
     protected override void OnCreate()
     {
         if (ShowModel)
@@ -68,7 +63,7 @@ public class Document : ObjectPrefab
     {
         var player = Player.Get(ev.Player);
         var pos = _schematicObject?.Position ?? Position;
-        CreateAndPlayAudio("PickItem0.ogg", "Vent", pos, true, null, false, 2.5f, 0f);
+        SpeakerApi.Play("PickItem0.ogg", "Vent", pos, true, null, false, 2.5f, 0f);
         
         player.ShowHint(DocumentDictionary.Get(DocumentType), 10f);
     }

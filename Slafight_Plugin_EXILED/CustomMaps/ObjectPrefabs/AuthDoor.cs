@@ -10,7 +10,6 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 using InteractableToy = LabApi.Features.Wrappers.InteractableToy;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
@@ -43,10 +42,6 @@ public class AuthDoor : ObjectPrefab
         }
     }
     private bool _isOpen = false;
-
-    private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
-        = EventHandler.CreateAndPlayAudio;
-
     // ===== Lifecycle =====
 
     protected override void OnCreate()

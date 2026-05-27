@@ -6,8 +6,8 @@ using Exiled.Events.EventArgs.Warhead;
 using MEC;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
+using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 
 public static class WarheadBoomEffectHandler
@@ -26,9 +26,6 @@ public static class WarheadBoomEffectHandler
         WarheadBoomEffectUtil.StopAllEffects();
         IsBooming = false;
     }
-
-    private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
-        = EventHandler.CreateAndPlayAudio;
     private static CoroutineHandle _handle;
 
     public static bool IsBooming = false;
@@ -107,7 +104,7 @@ public static class WarheadBoomEffectHandler
                     RoomType.HczNuke, new Vector3(30f, -80f, 0f), Vector3.zero).worldPosition;
 
                 WarheadBoomEffectUtil.CreateAndStartEffect(effectPos, 10f, 0.15f, 0.03f);
-                CreateAndPlayAudio("warheaddrama.ogg", "WarheadDrama", Vector3.zero, true, null, false, 99999999f, 0f);
+                SpeakerApi.Play("warheaddrama.ogg", "WarheadDrama", Vector3.zero, true, null, false, 99999999f, 0f);
 
                 // 残り 0.3秒になるまで待ってからフラッシュ
                 float flashDelay = estimatedRemaining - 0.3f;

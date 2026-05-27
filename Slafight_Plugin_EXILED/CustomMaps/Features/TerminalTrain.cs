@@ -3,22 +3,26 @@ using Exiled.API.Features;
 using MEC;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
+using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 
-public static class TrainComing
+public static class TerminalTrain
 {
     // 進行中のコルーチンハンドル管理
     private static CoroutineHandle _mainLoopHandle;
     private static CoroutineHandle _firstAnimHandle;
     private static CoroutineHandle _secondAnimHandle;
+    
+    // Playback
+    private static SpeakerApi.Playback _playback;
 
     // 直近の列車オブジェクト参照（クリーンアップ用）
     private static SchematicObject _currentTrain;
 
-    // 最後に指定された座標（引数なし Start() 用）
+    // 最後に指定された座標
     private static Vector3 _lastStartPos;
     private static Vector3 _lastCheckpointPos;
     private static Vector3 _lastEndPos;
@@ -44,20 +48,20 @@ public static class TrainComing
     }
 
     /// <summary>
-    /// 前回と同じ座標でメインループを再開する。
-    /// Start(Vector3...) を一度も呼んでいない場合は警告を出して何もしない。
+    /// MapFlags に登録された座標でメインループを開始する。
+    /// 座標が揃っていない場合は警告を出して何もしない。
     /// </summary>
     public static void Start()
     {
-        if (MapFlags.TrainStartPoint == default &&
-            MapFlags.TrainCheckpointPoint == default &&
+        if (MapFlags.TrainStartPoint == default ||
+            MapFlags.TrainCheckpointPoint == default ||
             MapFlags.TrainEndPoint == default)
         {
-            Log.Warn("[Train] Start() called but no coordinates have been set yet. Call Start(Vector3, Vector3, Vector3) first.");
+            Log.Warn("[Train] Start() called but train coordinates are not ready.");
             return;
         }
 
-        Start(_lastStartPos, _lastCheckpointPos, _lastEndPos);
+        Start(MapFlags.TrainStartPoint, MapFlags.TrainCheckpointPoint, MapFlags.TrainEndPoint);
     }
 
     /// <summary>
@@ -77,6 +81,8 @@ public static class TrainComing
         _mainLoopHandle = default;
         _firstAnimHandle = default;
         _secondAnimHandle = default;
+
+        _playback.Stop();
 
         // 列車残骸があればここで片付け
         if (_currentTrain != null)
@@ -125,6 +131,8 @@ public static class TrainComing
                 "TrainFirstAnim"
             );
 
+            _playback = SpeakerApi.Play("Train_Enter.ogg","TerminalTrain",checkpointPos, maxDistance: 20f, minDistance: 0f);
+
             // かなり余裕を持った待機。途中でラウンド終了したら抜ける。
             float wait = 35f;
             while (wait > 0f)
@@ -146,6 +154,8 @@ public static class TrainComing
                 Segment.Update,
                 "TrainSecondAnim"
             );
+            
+            _playback = SpeakerApi.Play("Train_Leave.ogg","TerminalTrain",checkpointPos, maxDistance: 20f, minDistance: 0f);
 
             // 念のため少し待つ（同じくラウンド状態を見る）
             wait = 2f;

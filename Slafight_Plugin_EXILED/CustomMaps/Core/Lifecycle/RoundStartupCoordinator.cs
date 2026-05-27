@@ -83,7 +83,7 @@ internal sealed class RoundStartupCoordinator : IDisposable
     private void StopCoroutines()
     {
         _femurBreaker.StopMonitoring();
-        TrainComing.StopAll();
+        TerminalTrain.StopAll();
 
         if (_trainCoroutine.IsRunning)
             Timing.KillCoroutines(_trainCoroutine);
@@ -184,7 +184,7 @@ internal sealed class RoundStartupCoordinator : IDisposable
             if (!IsCurrentStartup(generation))
                 return;
 
-            _trainCoroutine = Timing.RunCoroutine(TrainComing.SpawnTrainAndAnim(
+            _trainCoroutine = Timing.RunCoroutine(TerminalTrain.SpawnTrainAndAnim(
                 MapFlags.TrainStartPoint,
                 MapFlags.TrainCheckpointPoint,
                 MapFlags.TrainEndPoint));

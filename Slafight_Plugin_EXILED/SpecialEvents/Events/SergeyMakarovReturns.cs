@@ -11,7 +11,6 @@ using Slafight_Plugin_EXILED.CustomRoles.Others.SergeyMakarov;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -24,11 +23,6 @@ public class SergeyMakarovReturns : SpecialEvent
     public override string TriggerRequirement => "April Fools";
 
     // ===== ショートカット =====
-    private EventHandler EventHandler => EventHandler.Instance;
-
-    private Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio =>
-        EventHandler.CreateAndPlayAudio;
-
     // ===== 実行本体 =====
     public override bool IsReadyToExecute()
     {

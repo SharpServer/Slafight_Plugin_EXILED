@@ -112,7 +112,7 @@ public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
             yield return Timing.WaitForSeconds(BombInterval);
         }
 
-        SpeakerApi.StopClip(AlertPlayback.AudioPlayer.Name, AlertPlayback.ClipName);
+        AlertPlayback.Stop();
     }
 
     private static void SpawnTimeGrenade(Vector3 position)

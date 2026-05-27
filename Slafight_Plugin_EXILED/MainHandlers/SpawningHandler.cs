@@ -135,94 +135,90 @@ public class SpawningHandler : IBootstrapHandler, IDisposable
 
         var spawnType = ev.SpawnType.Value;
         int spawnCount = ev.SpawnCount;
-
-        Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio =
-            EventHandler.CreateAndPlayAudio;
-
         switch (spawnType)
         {
             // Mobile Task Forces
             case SpawnTypeId.MtfNtfNormal:
-                CreateAndPlayAudio("_w_ntf.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_ntf.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceNtfArrival();
                 break;
             case SpawnTypeId.MtfNtfBackup:
-                CreateAndPlayAudio("_w_ntf.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_ntf.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceNtfBackup();
                 break;
 
             case SpawnTypeId.MtfHdNormal:
-                CreateAndPlayAudio("_w_hd.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_hd.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceHdArrival();
                 break;
             case SpawnTypeId.MtfHdBackup:
-                CreateAndPlayAudio("_w_hd.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_hd.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceHdBackup();
                 break;
             
             case SpawnTypeId.MtfLastOperationNormal:
-                CreateAndPlayAudio("_w_lo.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_lo.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceLastOperationArrival();
                 break;
             case SpawnTypeId.MtfLastOperationBackup:
-                CreateAndPlayAudio("_w_lo.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_lo.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceLastOperationBackup();
                 break;
             
             case SpawnTypeId.MtfSneNormal:
-                CreateAndPlayAudio("_w_sne.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_sne.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceSneArrival();
                 break;
             case SpawnTypeId.MtfSneBackup:
-                CreateAndPlayAudio("_w_sne.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_sne.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceSneBackup();
                 break;
             
             case SpawnTypeId.MtfLwsNormal:
-                CreateAndPlayAudio("_w_lws.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_lws.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceLwsArrival();
                 break;
             case SpawnTypeId.MtfLwsBackup:
-                CreateAndPlayAudio("_w_lws.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_lws.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceLwsBackup();
                 break;
             
             case SpawnTypeId.MtfRrhNormal:
-                CreateAndPlayAudio("_w_rrh.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_rrh.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceRrhArrival();
                 break;
             case SpawnTypeId.MtfRrhBackup:
-                CreateAndPlayAudio("_w_rrh.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_rrh.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceRrhBackup();
                 break;
 
             // ==== Groups of Interests ====
             case SpawnTypeId.GoiChaosNormal:
             case SpawnTypeId.GoiChaosBackup:
-                CreateAndPlayAudio("_w_chaos.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_chaos.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceChaos(spawnCount);
                 break;
 
             case SpawnTypeId.GoiFifthistNormal:
             case SpawnTypeId.GoiFifthistBackup:
-                CreateAndPlayAudio("_w_fifthists.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_fifthists.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceFifthist(spawnCount);
                 break;
 
             case SpawnTypeId.GoiGoCNormal:
             case SpawnTypeId.GoiGoCBackup:
-                CreateAndPlayAudio("_w_ungoc.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("_w_ungoc.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceGoCEnter(spawnCount);
                 break;
             
             // ==== EXPERIMENTAL FEATURES ==== //
             case SpawnTypeId.SecurityTeam:
-                TrainComing.Start();
+                TerminalTrain.Start();
                 CassieHelper.AnnounceSecurityTeamEnter(spawnCount);
                 break;
             
             case SpawnTypeId.ChaosAgents:
-                TrainComing.Start();
+                TerminalTrain.Start();
                 break;
         }
     }

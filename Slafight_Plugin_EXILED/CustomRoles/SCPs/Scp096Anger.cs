@@ -13,7 +13,6 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -30,10 +29,6 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
     protected override string UniqueRoleKey { get; set; } = "Scp096_Anger";
 
     private static readonly Dictionary<Player, Vector3> ShyGuyPositions = new();
-    
-    private Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio =>
-        EventHandler.CreateAndPlayAudio;
-    
     public override void RegisterEvents()
     {
         Log.Info("[Scp096Anger] RegisterEvents");  // 確認用
@@ -132,7 +127,7 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
         _inTryNotToCryAnim[ev.Player] = true;
         ev.Player.EnableEffect(EffectType.Slowness, 95);
         ev.Player.EnableEffect(EffectType.DamageReduction, 90);
-        CreateAndPlayAudio("096Angered.ogg", "Scp096", ev.Player.Position, true, ev.Player.Transform, false, 80f, 0f);
+        SpeakerApi.Play("096Angered.ogg", "Scp096", ev.Player.Position, true, ev.Player.Transform, false, 80f, 0f);
         Timing.CallDelayed(35f, () =>
         {
             if (!Check(ev.Player)) return;

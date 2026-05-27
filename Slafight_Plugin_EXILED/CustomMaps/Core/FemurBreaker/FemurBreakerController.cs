@@ -6,6 +6,7 @@ using MEC;
 using PlayerRoles;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.Core.Utilities;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
@@ -16,7 +17,6 @@ internal sealed class FemurBreakerController
 {
     private readonly float _joinRadiusSq;
     private readonly float _buttonToleranceSq;
-    private readonly Action<string, string, Vector3, bool, Transform, bool, float, float> _createAndPlayAudio;
     private readonly List<Player> _capturedPlayers = [];
     private CoroutineHandle _monitoringCoroutine;
     private SchematicObject _door;
@@ -28,12 +28,10 @@ internal sealed class FemurBreakerController
 
     public FemurBreakerController(
         float joinRadiusSq,
-        float buttonToleranceSq,
-        Action<string, string, Vector3, bool, Transform, bool, float, float> createAndPlayAudio)
+        float buttonToleranceSq)
     {
         _joinRadiusSq = joinRadiusSq;
         _buttonToleranceSq = buttonToleranceSq;
-        _createAndPlayAudio = createAndPlayAudio;
     }
 
     public void SetDoor(SchematicObject door)
@@ -101,7 +99,7 @@ internal sealed class FemurBreakerController
         IsActivated = true;
         KillCapturedPlayers();
         ScheduleScp106Recontainment();
-        _createAndPlayAudio("FemurBreaker.ogg", "FemurBreaker", Vector3.zero, true, null, false, 999999999, 0);
+        SpeakerApi.Play("FemurBreaker.ogg", "FemurBreaker", Vector3.zero, true, null, false, 999999999, 0);
         Timing.CallDelayed(28f, AnnounceResult);
     }
 

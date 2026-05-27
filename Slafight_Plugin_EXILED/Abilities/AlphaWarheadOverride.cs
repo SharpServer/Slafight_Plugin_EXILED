@@ -9,7 +9,6 @@ using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.Abilities;
 
@@ -29,9 +28,6 @@ public class AlphaWarheadOverride : AbilityBase
 
     public AlphaWarheadOverride(Player owner, float cooldownSeconds, int maxUses)
         : base(owner, cooldownSeconds, maxUses) { }
-    
-    private static Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio = EventHandler.CreateAndPlayAudio;
-
     protected override void ExecuteAbility(Player player)
     {
         if (!OmegaWarhead.CanBeStart() || Warhead.IsInProgress || MapFlags.IsOverrideActivated)
@@ -47,7 +43,7 @@ public class AlphaWarheadOverride : AbilityBase
             "<color=red><b>BY ORDER OF FACILITY SYSTEM CONTROL, ALPHA WARHEAD FORCE OPERATION ACTIVATED. DETONATE IN T-90 SECONDS. </b></color>");
         Timing.CallDelayed(5f, () =>
         {
-            CreateAndPlayAudio("warhead079.ogg", "AlphaWarhead", Vector3.zero, true, null, false, 999999999, 0);
+            SpeakerApi.Play("warhead079.ogg", "AlphaWarhead", Vector3.zero, true, null, false, 999999999, 0);
             Timing.RunCoroutine(Coroutine());
             player.RemoveAbility<AlphaWarheadOverride>();
         });

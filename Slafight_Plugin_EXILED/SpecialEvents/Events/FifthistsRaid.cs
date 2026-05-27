@@ -6,7 +6,6 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features; // SpecialEvent 基底
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -19,11 +18,6 @@ public class FifthistsRaidEvent : SpecialEvent
     public override string TriggerRequirement => "4人以上のプレイヤー";
 
     // ===== ショートカット =====
-    private EventHandler EventHandler => EventHandler.Instance;
-
-    private Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio =>
-        EventHandler.CreateAndPlayAudio;
-
     // ===== 実行本体 =====
     protected override void OnExecute(int eventPid)
     {
@@ -78,7 +72,7 @@ public class FifthistsRaidEvent : SpecialEvent
                 return;
 
             // BGM 再生
-            CreateAndPlayAudio("_w_fifthists.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999f, 0f);
+            SpeakerApi.Play("_w_fifthists.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999f, 0f);
 
             // Cassie アナウンス（元コードのヘルパー）
             CassieHelper.AnnounceFifthist(convertedCount);

@@ -28,10 +28,6 @@ public class DeltaWarheadEvent : SpecialEvent
 
     // ===== ショートカット =====
     private EventHandler EventHandler => EventHandler.Instance;
-
-    private Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio =>
-        EventHandler.CreateAndPlayAudio;
-
     // ===== 実行本体 =====
     protected override void OnExecute(int eventPid)
     {
@@ -86,7 +82,7 @@ public class DeltaWarheadEvent : SpecialEvent
                     }
 
                     // DELTA 用 BGM
-                    CreateAndPlayAudio("delta.ogg", "Exiled.API.Features.Cassie", Vector3.zero, true, null, false, 999999999f, 0f);
+                    SpeakerApi.Play("delta.ogg", "Exiled.API.Features.Cassie", Vector3.zero, true, null, false, 999999999f, 0f);
 
                     // DwBoomTime 後に実際の爆破処理
                     Timing.CallDelayed(boomTime, () =>

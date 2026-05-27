@@ -11,7 +11,6 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.Others.SergeyMakarov;
 
@@ -25,10 +24,6 @@ public class SergeyMakarovAwakenRole : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SergeyMakarovAwaken;
     protected override CTeam Team { get; set; } = CTeam.Others;
     protected override string UniqueRoleKey { get; set; } = "TheSergeyHimSelfAwaken";
-
-    private readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
-        = EventHandler.CreateAndPlayAudio;
-
     public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
     {
         base.SpawnRole(player, roleSpawnFlags);
@@ -53,7 +48,7 @@ public class SergeyMakarovAwakenRole : CRole
 
     protected override void OnRoleDying(DyingEventArgs ev)
     {
-        CreateAndPlayAudio("FemurBreaker.ogg", "SergeyVoice", Vector3.zero, true, null, false, 999999999, 0);
+        SpeakerApi.Play("FemurBreaker.ogg", "SergeyVoice", Vector3.zero, true, null, false, 999999999, 0);
         Timing.CallDelayed(3,
             () => Exiled.API.Features.Cassie.MessageTranslated("Anomaly It is successfully terminated.",
                 "「霊的実体「セルゲイ・マカロフ」は終了されました」", true));

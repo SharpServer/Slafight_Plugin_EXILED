@@ -25,9 +25,6 @@ public class FacilityTermination : SpecialEvent
     private CoroutineHandle _mainCoroutine;
 
     private static EventHandler EventHandler => EventHandler.Instance;
-    private Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio =>
-        EventHandler.CreateAndPlayAudio;
-
     // ===== エントリーポイント =====
 
     protected override void OnExecute(int eventPid)
@@ -182,7 +179,7 @@ public class FacilityTermination : SpecialEvent
 
         // 全ゾーン開放
         OpenAllZones();
-        CreateAndPlayAudio("newdelta.ogg", "DeltaWarhead", Vector3.zero, true, null, false, 999999999f, 0f);
+        SpeakerApi.Play("newdelta.ogg", "DeltaWarhead", Vector3.zero, true, null, false, 999999999f, 0f);
 
         // ===== LCZ 除染フェーズ =====
         yield return Timing.WaitForSeconds(10f);

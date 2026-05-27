@@ -7,7 +7,6 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps; // SpecialEvent 基底クラス
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -20,11 +19,6 @@ public class SpeedUpEvent : SpecialEvent
     public override string TriggerRequirement => "Only available in April fools.";
 
     // ===== ショートカット =====
-    private EventHandler EventHandler => EventHandler.Instance;
-
-    private Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio =>
-        EventHandler.CreateAndPlayAudio;
-
     // ===== 実行本体 =====
     public override bool IsReadyToExecute()
     {

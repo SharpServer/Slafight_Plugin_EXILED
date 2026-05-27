@@ -11,7 +11,6 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.MainHandlers;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 using Random = UnityEngine.Random;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
@@ -26,12 +25,6 @@ public class Scp1509BattleFieldEvent : SpecialEvent
 
     // ===== 内部状態 =====
     private int _eventPid;
-
-    private EventHandler EventHandler => EventHandler.Instance;
-
-    private Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio =>
-        EventHandler.CreateAndPlayAudio;
-
     // ===== 実行エントリポイント =====
     protected override void OnExecute(int eventPID)
     {

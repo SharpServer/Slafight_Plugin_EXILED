@@ -7,7 +7,6 @@ using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
@@ -19,10 +18,6 @@ public class AntiMemeBomb : ObjectPrefab
     private InteractableToy? _interactableToy;
     private static readonly Vector3 InteractableLocalOffset = Vector3.up * 2.05f;
     private static readonly Vector3 InteractableBaseScale = Vector3.one * 3f;
-
-    private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
-        = EventHandler.CreateAndPlayAudio;
-
     protected override void OnCreate()
     {
          _schematicObject = SpawnManagedSchematic("AntiMemeBomb");

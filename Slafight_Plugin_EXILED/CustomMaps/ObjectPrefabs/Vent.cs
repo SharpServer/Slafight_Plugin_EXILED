@@ -13,7 +13,6 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
@@ -25,10 +24,6 @@ public class Vent : ObjectPrefab
     private InteractableToy? _interactableToy;
     private static readonly Vector3 InteractableLocalOffset = Vector3.zero;
     private static readonly Vector3 InteractableBaseScale = Vector3.one;
-
-    private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
-        = EventHandler.CreateAndPlayAudio;
-
     private Dictionary<int, byte> _touchedDictionary = [];
     private Dictionary<int, double> _lastTouchTime = [];   // LocalTime 用
     private const double TouchTimeout = 30d;               // 30秒でリセット
@@ -146,7 +141,7 @@ public class Vent : ObjectPrefab
         if (_schematicObject == null)
             return;
     
-        CreateAndPlayAudio("ventsound.ogg", "Vent", _schematicObject.Position, true, null, false, 10f, 0f);
+        SpeakerApi.Play("ventsound.ogg", "Vent", _schematicObject.Position, true, null, false, 10f, 0f);
 
         var currentRoomType = player.CurrentRoom?.Type ?? RoomType.Unknown;
 
@@ -167,7 +162,7 @@ public class Vent : ObjectPrefab
             exitSoundPos = player.Position;
 
         Timing.CallDelayed(0.1f, () =>
-            CreateAndPlayAudio("ventsound.ogg", "Vent", exitSoundPos, true, null, false, 10f, 0f));
+            SpeakerApi.Play("ventsound.ogg", "Vent", exitSoundPos, true, null, false, 10f, 0f));
     }
 
     protected override void OnRoundStarted()

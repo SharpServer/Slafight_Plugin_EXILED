@@ -15,7 +15,6 @@ using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 using Random = System.Random;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
@@ -35,10 +34,6 @@ public class Trashbox : ObjectPrefab
     public IReadOnlyDictionary<int, List<TrashboxEventType>> TriggeredEventsByPlayer => _triggeredEventsByPlayer;
     public static IReadOnlyDictionary<int, byte> TriggeredSecretCounts => TriggeredSecretCountsByPlayer;
     public static bool HimselfTriggered { get; private set; }
-
-    private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
-        = EventHandler.CreateAndPlayAudio;
-    
     protected override void OnCreate()
     {
          _schematicObject = SpawnManagedSchematic("trashbox");
@@ -166,7 +161,7 @@ public class Trashbox : ObjectPrefab
                     4 => "5egg_4.ogg",
                     _ => string.Empty
                 };
-                CreateAndPlayAudio(songName, "Trashbox___PLS_HL_55555", pos, true, null, false, 5f, 0f);
+                SpeakerApi.Play(songName, "Trashbox___PLS_HL_55555", pos, true, null, false, 5f, 0f);
                 triggeredSecretCount++;
                 if (triggeredSecretCount >= 4)
                 {

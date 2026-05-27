@@ -2,7 +2,6 @@ using System;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features; // SpecialEvent 基底クラス
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -15,11 +14,6 @@ public class DailyFoundationEvent : SpecialEvent
     public override string TriggerRequirement => "無し";
 
     // ===== ショートカット =====
-    private EventHandler EventHandler => EventHandler.Instance;
-
-    private Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio =>
-        EventHandler.CreateAndPlayAudio;
-
     // ===== 実行本体 =====
     public override bool IsReadyToExecute()
     {

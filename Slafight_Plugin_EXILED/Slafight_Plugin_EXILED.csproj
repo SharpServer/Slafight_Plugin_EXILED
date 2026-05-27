@@ -369,7 +369,7 @@
         <Compile Include="CustomMaps\Features\Scp012_033.cs" />
         <Compile Include="CustomMaps\Features\Sinkhole.cs" />
         <Compile Include="CustomMaps\Features\TerminalRift.cs" />
-        <Compile Include="CustomMaps\Features\TrainComing.cs" />
+        <Compile Include="CustomMaps\Features\TerminalTrain.cs" />
         <Compile Include="CustomMaps\Features\VentControl.cs" />
         <Compile Include="CustomMaps\Features\WarheadDoorLockdown.cs" />
         <Compile Include="CustomMaps\Features\WarheadBoomEffectHandler.cs" />

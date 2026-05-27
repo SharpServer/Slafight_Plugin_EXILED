@@ -20,10 +20,6 @@ public class OmegaWarheadEvent : SpecialEvent
 
     // ===== ショートカット =====
     private EventHandler EventHandler => EventHandler.Instance;
-
-    private Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio =>
-        EventHandler.CreateAndPlayAudio;
-
     // ===== 実行本体 =====
     protected override void OnExecute(int eventPid)
     {

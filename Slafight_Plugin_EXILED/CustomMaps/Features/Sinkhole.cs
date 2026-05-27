@@ -7,10 +7,10 @@ using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 using Slafight_Plugin_EXILED.API.Interface;
 
+using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 
 public class Sinkhole : IBootstrapHandler, IDisposable
@@ -52,10 +52,6 @@ public class Sinkhole : IBootstrapHandler, IDisposable
     private readonly List<Vector3> Sinkholes = [];
     private readonly List<Player> JoiningPlayers = [];
     private CoroutineHandle _sinkholeHandle;
-
-    private readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio 
-        = EventHandler.CreateAndPlayAudio;
-
     private List<CTeam> DistargetTeams =
     [
         CTeam.SCPs
@@ -110,7 +106,7 @@ public class Sinkhole : IBootstrapHandler, IDisposable
                     {
                         if (!JoiningPlayers.Contains(player))
                         {
-                            CreateAndPlayAudio("SinkholeFall.ogg", "Sinkhole", player.Position, true, null, false, 10, 0);
+                            SpeakerApi.Play("SinkholeFall.ogg", "Sinkhole", player.Position, true, null, false, 10, 0);
                             JoiningPlayers.Add(player);
                             player.IsGodModeEnabled = true;
 

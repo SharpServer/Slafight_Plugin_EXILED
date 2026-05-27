@@ -7,8 +7,6 @@ using Slafight_Plugin_EXILED.CustomMaps.Core.FemurBreaker;
 using Slafight_Plugin_EXILED.CustomMaps.Core.Interactions;
 using Slafight_Plugin_EXILED.CustomMaps.Core.Lifecycle;
 using Slafight_Plugin_EXILED.CustomMaps.Core.SurfaceGate;
-using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 using MapHandler = Exiled.Events.Handlers.Map;
 using PlayerHandler = Exiled.Events.Handlers.Player;
 using ServerHandler = Exiled.Events.Handlers.Server;
@@ -33,10 +31,6 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
 
     public static bool _femurSetup => Instance?._femurBreaker.HasCapturedVictim ?? false;
     public static bool _femurBreaked => Instance?._femurBreaker.IsActivated ?? false;
-
-    private readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
-        = EventHandler.CreateAndPlayAudio;
-
     public static void Register()
     {
         Unregister();
@@ -58,7 +52,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
     {
         _doorAccess = new SpecialDoorAccessController(PositionToleranceSq);
         _surfaceGateBarrier = new SurfaceGateBarrierController(PositionToleranceSq);
-        _femurBreaker = new FemurBreakerController(FemurJoinRadiusSq, PositionToleranceSq, CreateAndPlayAudio);
+        _femurBreaker = new FemurBreakerController(FemurJoinRadiusSq, PositionToleranceSq);
         _toyInteractions = new MapToyInteractionRouter(_surfaceGateBarrier, _femurBreaker, PositionToleranceSq);
         _roundStartup = new RoundStartupCoordinator(_doorAccess, _surfaceGateBarrier, _femurBreaker);
 

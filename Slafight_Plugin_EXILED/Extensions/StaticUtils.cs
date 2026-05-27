@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Extensions;
@@ -323,30 +322,6 @@ public static class StaticUtils
         }
     }
     
-    public static void CreateAndPlayAudio(string fileName, string audioPlayerName, Vector3 position, bool destroyOnEnd = false, Transform parent = null, bool isSpatial = false, float maxDistance = 5, float minDistance = 5)
-    {
-        var audioPlayer = AudioPlayer.CreateOrGet(audioPlayerName);
-
-        if (!audioPlayer.TryGetSpeaker(audioPlayerName, out var speaker))
-        {
-            speaker = audioPlayer.AddSpeaker(audioPlayerName, isSpatial: isSpatial, maxDistance: maxDistance, minDistance: minDistance);
-        }
-
-        if (parent)
-        {
-            speaker.transform.SetParent(parent);
-            speaker.transform.localPosition = Vector3.zero;
-            speaker.transform.localRotation = Quaternion.identity;
-        }
-        else
-        {
-            speaker.Position = position;
-        }
-
-        AudioClipStorage.LoadClip(Path.Combine(Plugin.Singleton.Config.AudioReferences, fileName), fileName);
-        audioPlayer.AddClip(fileName, destroyOnEnd: destroyOnEnd);
-    }
-
     public static void PlayKeycardInteractSound(this Player? player, bool isSuccess)
     {
         if (player is null) return;

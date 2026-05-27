@@ -310,9 +310,6 @@ public class EventHandler : IBootstrapHandler, IDisposable
         });
     }
 
-    public static void CreateAndPlayAudio(string fileName, string audioPlayerName, Vector3 position, bool destroyOnEnd = false, Transform parent = null, bool isSpatial = false, float maxDistance = 5, float minDistance = 5)
-        => SpeakerApi.Play(fileName, audioPlayerName, position, destroyOnEnd, parent, isSpatial, maxDistance, minDistance);
-
     private void DeadmanCancel(DeadmanSwitchInitiatingEventArgs? ev)
     {
         if (ev is null) return;

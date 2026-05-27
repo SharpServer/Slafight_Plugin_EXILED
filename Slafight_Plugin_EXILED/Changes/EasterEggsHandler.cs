@@ -44,12 +44,6 @@ public class EasterEggsHandler : IBootstrapHandler, System.IDisposable
         ClearSpeakers();
         System.GC.SuppressFinalize(this);
     }
-    public static void CreateAndPlayAudio(string fileName, string audioPlayerName, Vector3 position, bool destroyOnEnd = false, Transform parent = null, bool isSpatial = false, float maxDistance = 5, float minDistance = 5, bool loadClip = true)
-        => SpeakerApi.Play(fileName, audioPlayerName, position, destroyOnEnd, parent, isSpatial, maxDistance, minDistance, loadClip);
-
-    public static void CreateAndLoopAudio(string fileName, string audioPlayerName, Vector3 position, Transform parent = null, bool isSpatial = false, float maxDistance = 5, float minDistance = 5, bool loadClip = true)
-        => SpeakerApi.PlayLoop(fileName, audioPlayerName, position, parent, isSpatial, maxDistance, minDistance, loadClip);
-
     public void ClearSpeakers()
         => SpeakerApi.DestroyAll();
 
@@ -65,6 +59,6 @@ public class EasterEggsHandler : IBootstrapHandler, System.IDisposable
         Log.Debug(spawnRoom.Position);
         Vector3 offset = new Vector3(-2.25f,-5.65f,0f);
         Vector3 position = spawnRoom.Position + spawnRoom.Rotation * offset;
-        CreateAndLoopAudio(MelancholyClip, MelancholyAudioPlayer, position, null, false, 5.99999f, 0, false);
+        SpeakerApi.PlayLoop(MelancholyClip, MelancholyAudioPlayer, position, null, false, 5.99999f, 0, false);
     }
 }

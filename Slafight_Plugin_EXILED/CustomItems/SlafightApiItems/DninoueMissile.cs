@@ -8,7 +8,6 @@ using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
@@ -82,7 +81,7 @@ public class DninoueMissile : CItemKeycard
                         player.EnableEffect(EffectType.Ghostly, 255, 5f);
                         player.EnableEffect(EffectType.DamageReduction, 255, 5f);
                         pushPlayer?.ShowHitMarker();
-                        EventHandler.CreateAndPlayAudio("healsound.ogg", "Nyaaaaa", player.Position, true, schem.transform, false, 5f, 0f);
+                        SpeakerApi.Play("healsound.ogg", "Nyaaaaa", player.Position, true, schem.transform, false, 5f, 0f);
                     }
                     catch (Exception ex)
                     {

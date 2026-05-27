@@ -29,10 +29,6 @@ public class SnowWarriersAttackEvent : SpecialEvent
     private bool _teslaDisabled = false;
 
     private EventHandler EventHandler => EventHandler.Instance;
-
-    private Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio =>
-        EventHandler.CreateAndPlayAudio;
-
     // ===== 実行エントリポイント =====
     public override bool IsReadyToExecute()
     {
@@ -162,7 +158,7 @@ public class SnowWarriersAttackEvent : SpecialEvent
         yield return Timing.WaitForSeconds(10f);
         if (CancelIfOutdated()) yield break;
 
-        CreateAndPlayAudio("cir.ogg", "Cassie", Vector3.zero, true, null, false, 999999999f, 0f);
+        SpeakerApi.Play("cir.ogg", "Cassie", Vector3.zero, true, null, false, 999999999f, 0f);
 
         SchematicObject schematicObject;
         try

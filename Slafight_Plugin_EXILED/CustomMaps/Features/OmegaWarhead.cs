@@ -11,6 +11,7 @@ using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
 using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
+using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 
 public class OmegaWarheadStartingEventArgs : EventArgs
@@ -35,8 +36,6 @@ public static class OmegaWarhead
     public static Player StartedPlayer;
 
     private static SpecialEventsHandler SpecialEventsHandler => SpecialEventsHandler.Instance;
-    private static Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio = EventHandler.CreateAndPlayAudio;
-
     public static event EventHandler<OmegaWarheadStartingEventArgs> OmegaWarheadStarting;
 
     public static bool CanBeStart() => !IsWarheadStarted && SpecialEventsHandler.IsWarheadable();
@@ -97,7 +96,7 @@ public static class OmegaWarhead
         EvacuationRoundEndState.Begin();
         EscapeHandler.AddEscapeOverride(p => new EscapeHandler.EscapeTargetRole { Vanilla = RoleTypeId.Spectator });
 
-        CreateAndPlayAudio("omega_v2.ogg", "OmegaWarhead", Vector3.zero, true, null, false, 999999999, 0);
+        SpeakerApi.Play("omega_v2.ogg", "OmegaWarhead", Vector3.zero, true, null, false, 999999999, 0);
 
         var boomTime = Math.Max(0f, Plugin.Singleton.Config.OwBoomTime);
         var preLockWait = Math.Max(0f, boomTime - 5f);

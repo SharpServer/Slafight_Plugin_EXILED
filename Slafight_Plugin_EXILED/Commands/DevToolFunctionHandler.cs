@@ -12,17 +12,14 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 using OmegaWarhead = Slafight_Plugin_EXILED.CustomMaps.Features.OmegaWarhead;
 using Npc = Exiled.API.Features.Npc;
 
+using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.Commands;
 
 public class DevToolFunctionHandler
 {
-    private readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio =
-        EventHandler.CreateAndPlayAudio;
-
     public void PlaySurfaceAttack()
     {
         Exiled.API.Features.Cassie.MessageTranslated(
@@ -39,7 +36,7 @@ public class DevToolFunctionHandler
 
             Timing.CallDelayed(10f, () =>
             {
-                CreateAndPlayAudio("cir.ogg", "Exiled.API.Features.Cassie",
+                SpeakerApi.Play("cir.ogg", "Exiled.API.Features.Cassie",
                     Vector3.zero, true, null, false, 999999999, 0);
 
                 SchematicObject schematicObject;

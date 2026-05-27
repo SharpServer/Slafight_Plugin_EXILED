@@ -7,14 +7,12 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
+using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.CustomRoles.Others.SergeyMakarov;
 
 public static class SergeyMakarovExtensionAndUtils
 {
-    private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
-        = EventHandler.CreateAndPlayAudio;
     public static bool IsSergeyMarkov(this Player? player)
     {
         if (player == null) return false;
@@ -32,7 +30,7 @@ public static class SergeyMakarovExtensionAndUtils
         player.EnableEffect(EffectType.SinkHole, 99);
         player.EnableEffect(EffectType.Fade, 200);
         player.Handcuff();
-        CreateAndPlayAudio("DeathBell.ogg", "SergeyDeath", player.Position, true, null, false, 10, 0);
+        SpeakerApi.Play("DeathBell.ogg", "SergeyDeath", player.Position, true, null, false, 10, 0);
         player.Broadcast(999, "\n<size=120>死亡した</size>");
         player.ShowHint("<size=20>「薄汚い裏切り者共が... 二度も私を殺すとは...」</size>");
         yield return Timing.WaitForSeconds(3f);
@@ -46,7 +44,7 @@ public static class SergeyMakarovExtensionAndUtils
         player.ShowHint("<size=20><color=red><b>「サイト-02は私の場所だ！私の牙城に踏み込んだことを後悔するがいい...!」</b></color></size>");
         yield return Timing.WaitForSeconds(8f);
         if (!player.IsSergeyMarkov() || !Round.InProgress) yield break;
-        CreateAndPlayAudio("SpawnBell.ogg", "SergeySpawn", player.Position, true, null, false, 10, 0);
+        SpeakerApi.Play("SpawnBell.ogg", "SergeySpawn", player.Position, true, null, false, 10, 0);
         foreach (var room in Room.List)
         {
             room.Blackout(5);

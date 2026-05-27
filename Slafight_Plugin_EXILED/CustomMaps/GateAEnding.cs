@@ -12,8 +12,8 @@ using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
+using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.CustomMaps;
 
 public static class GateAEnding
@@ -30,9 +30,6 @@ public static class GateAEnding
 
     private static SchematicObject? _triggerObject;
     public static bool NowPlayingSound = false;
-    private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio 
-        = EventHandler.CreateAndPlayAudio;
-
     private static Npc npc1;
     private static Npc npc2;
     private static Npc npc3;
@@ -97,7 +94,7 @@ public static class GateAEnding
             else if (!NowPlayingSound)
             {
                 NowPlayingSound = true;
-                CreateAndPlayAudio("SpawnBell.ogg", "GateAEnding", _triggerObject.Position, true, null, false, 10, 0);
+                SpeakerApi.Play("SpawnBell.ogg", "GateAEnding", _triggerObject.Position, true, null, false, 10, 0);
                 var players = Player.List
                     .Where(player => Vector3.Distance(player.Position, _triggerObject.Position) <= 2.5f).ToList();
                 players.ForEach(player =>
@@ -116,7 +113,7 @@ public static class GateAEnding
                     player.EnableEffect(EffectType.Invigorated, 255);
                     player.EnableEffect(EffectType.Slowness, 95);
                 });
-                CreateAndPlayAudio("CI.ogg", "GateAEnding", _triggerObject.Position, true, null, false, 10, 0);
+                SpeakerApi.Play("CI.ogg", "GateAEnding", _triggerObject.Position, true, null, false, 10, 0);
                 yield return Timing.WaitForSeconds(4.15f);
                 if (!Round.InProgress) yield break;
                 players = Player.List
@@ -127,7 +124,7 @@ public static class GateAEnding
                     player.EnableEffect(EffectType.Invigorated, 255);
                     player.EnableEffect(EffectType.Slowness, 95);
                 });
-                CreateAndPlayAudio("DeathBell.ogg", "GateAEnding", _triggerObject.Position, true, null, false, 10, 0);
+                SpeakerApi.Play("DeathBell.ogg", "GateAEnding", _triggerObject.Position, true, null, false, 10, 0);
                 players.ForEach(player =>
                 {
                     player.EnableEffect(EffectType.Blinded, 255, 2f);

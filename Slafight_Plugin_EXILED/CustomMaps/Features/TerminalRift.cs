@@ -13,7 +13,6 @@ using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 
@@ -35,9 +34,6 @@ public static class TerminalRift
     private static Waypoint? _riftWaypoint;
 
     public static bool Invoking { get; private set; } = false;
-    private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
-        = EventHandler.CreateAndPlayAudio;
-
     public static void Register()
     {
         if (_registered) return;
@@ -169,7 +165,7 @@ public static class TerminalRift
             return;
         }
         
-        CreateAndPlayAudio("Moving.ogg", "RiftElevator", RiftObjectPosition, true, RiftObject.transform, false, 30f, 0);
+        SpeakerApi.Play("Moving.ogg", "RiftElevator", RiftObjectPosition, true, RiftObject.transform, false, 30f, 0);
 
         _animCoroutineHandle = Timing.RunCoroutine(AnimSet());
         _timeoutHandle = Timing.CallDelayed(50f, () => ForceReset("timeout"));
@@ -249,7 +245,7 @@ public static class TerminalRift
         if (!Invoking) yield break;
 
         yield return Timing.WaitForSeconds(0.2f);
-        CreateAndPlayAudio("Beep.ogg", "RiftElevator", RiftObjectPosition, true, RiftObject.transform, false, 30f, 0);
+        SpeakerApi.Play("Beep.ogg", "RiftElevator", RiftObjectPosition, true, RiftObject.transform, false, 30f, 0);
 
         if (Round.IsLobby || Round.IsEnded)
         {
@@ -267,13 +263,13 @@ public static class TerminalRift
             yield break;
         }
 
-        CreateAndPlayAudio("Moving.ogg", "RiftElevator", RiftObjectPosition, true, RiftObject.transform, false, 30f, 0);
+        SpeakerApi.Play("Moving.ogg", "RiftElevator", RiftObjectPosition, true, RiftObject.transform, false, 30f, 0);
         yield return Timing.WaitUntilDone(AnimToPosition(RiftObject.Position, RiftObjectPosition, 12.5f));
 
         if (!Invoking) yield break;
 
         yield return Timing.WaitForSeconds(0.2f);
-        CreateAndPlayAudio("Beep.ogg", "RiftElevator", RiftObjectPosition, true, RiftObject.transform, false, 30f, 0);
+        SpeakerApi.Play("Beep.ogg", "RiftElevator", RiftObjectPosition, true, RiftObject.transform, false, 30f, 0);
         
         Invoking = false;
     }

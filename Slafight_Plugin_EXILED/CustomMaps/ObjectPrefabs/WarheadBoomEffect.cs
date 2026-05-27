@@ -5,7 +5,6 @@ using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
@@ -37,10 +36,6 @@ public class WarheadBoomEffect : ObjectPrefab
     private bool             _isAnimating;
 
     private readonly System.Random _rng = new();
-
-    private static readonly Action<string, string, Vector3, bool, Transform, bool, float, float> CreateAndPlayAudio
-        = EventHandler.CreateAndPlayAudio;
-
     // ================================================================
     //  Position / Rotation / Scale — バッキングフィールド経由で管理
     // ================================================================
