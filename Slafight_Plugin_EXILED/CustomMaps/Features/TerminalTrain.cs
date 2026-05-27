@@ -154,7 +154,8 @@ public static class TerminalTrain
                 Segment.Update,
                 "TrainSecondAnim"
             );
-            
+
+            _playback.Stop();
             _playback = SpeakerApi.Play("Train_Leave.ogg","TerminalTrain",checkpointPos, maxDistance: 20f, minDistance: 0f);
 
             // 念のため少し待つ（同じくラウンド状態を見る）
