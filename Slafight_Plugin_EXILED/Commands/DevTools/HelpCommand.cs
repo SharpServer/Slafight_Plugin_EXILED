@@ -43,27 +43,19 @@ public class HelpCommand : ICommand
             }
 
             response =
-                $"{command.Command}\n" +
-                $"  Aliases: {(command.Aliases.Length == 0 ? "none" : string.Join(", ", command.Aliases))}\n" +
-                $"  Permission: slperm.{command.Command}\n" +
-                $"  Description: {command.Description}";
+                $"<size=24><color=#7bdcff><b>{command.Command}</b></color></size>\n" +
+                $"<color=#ffb347>Aliases</color>: <color=#d7dee8>{(command.Aliases.Length == 0 ? "none" : string.Join(", ", command.Aliases))}</color>\n" +
+                $"<color=#ffb347>Permission</color>: <color=#d7dee8>slperm.{command.Command}</color>\n" +
+                $"<color=#ffb347>Description</color>: <color=#d7dee8>{command.Description}</color>";
             return true;
         }
 
         var sb = new StringBuilder();
-        sb.AppendLine("Slafight Commands");
-        sb.AppendLine("Usage: sl <command> [args]");
-        sb.AppendLine("Useful first commands: sl list, sl status, sl player help, sl queue help");
-        sb.AppendLine();
-
-        foreach (var command in commands.OrderBy(c => c.Command))
-        {
-            if (sender.CheckPermission($"slperm.{command.Command}") ||
-                command.Command is "help" or "list")
-            {
-                sb.AppendLine($"  {CommandTools.FormatCommand(command)}");
-            }
-        }
+        sb.AppendLine(CommandTools.BuildRichHeader("Slafight Help", "sl <command> [args]"));
+        sb.AppendLine("<size=18><color=#9fb0c3>Useful: <color=#7bdcff>sl list</color> / <color=#7bdcff>sl status</color> / <color=#7bdcff>sl player help</color> / <color=#7bdcff>sl queue help</color></color></size>");
+        sb.AppendLine("<size=18><line-height=92%>");
+        sb.AppendLine(CommandTools.BuildCommandCatalog(commands, sender, true));
+        sb.AppendLine("</line-height></size>");
 
         response = sb.ToString().TrimEnd();
         return true;

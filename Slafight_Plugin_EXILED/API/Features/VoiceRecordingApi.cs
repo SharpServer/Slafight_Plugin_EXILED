@@ -88,6 +88,9 @@ public static class VoiceRecordingApi
         return !string.IsNullOrWhiteSpace(key) && RecordingsByKey.TryGetValue(key, out recording);
     }
 
+    public static bool IsRecording(string key)
+        => !string.IsNullOrWhiteSpace(key) && SessionsByKey.ContainsKey(key);
+
     public static bool RemoveRecording(string key)
     {
         if (string.IsNullOrWhiteSpace(key))

@@ -116,4 +116,85 @@ internal static class CommandTools
 
         return $"{command.Command}{aliases} - {command.Description}";
     }
+
+    public static string BuildCommandCatalog(
+        IEnumerable<ICommand> commands,
+        ICommandSender sender,
+        bool alwaysShowHelpAndList = false)
+    {
+        var visibleCommands = commands
+            .Where(c => sender.CheckPermission($"slperm.{c.Command}") ||
+                        alwaysShowHelpAndList && c.Command is "help" or "list")
+            .OrderBy(c => GetCommandCategory(c.Command))
+            .ThenBy(c => c.Command)
+            .ToArray();
+
+        var sb = new StringBuilder();
+
+        foreach (var group in visibleCommands.GroupBy(c => GetCommandCategory(c.Command)))
+        {
+            sb.AppendLine();
+            sb.AppendLine($"<color=#ffb347><b>{GetCommandCategoryTitle(group.Key)}</b></color>");
+
+            foreach (var command in group)
+                sb.AppendLine(FormatRichCommand(command));
+        }
+
+        return sb.ToString().TrimEnd();
+    }
+
+    public static string FormatRichCommand(ICommand command)
+    {
+        var aliases = command.Aliases is { Length: > 0 }
+            ? $" <color=#8fa3b8>[{string.Join(", ", command.Aliases)}]</color>"
+            : string.Empty;
+
+        return
+            $"  <color=#7bdcff><b>{command.Command}</b></color>{aliases}\n" +
+            $"    <color=#d7dee8>{NormalizeForSingleLine(command.Description)}</color>";
+    }
+
+    public static string BuildRichHeader(string title, string usage)
+    {
+        return
+            $"<size=26><b><color=#ffa31a>{title}</color></b></size>\n" +
+            $"<size=18><color=#c7d0dd>Usage: <color=#7bdcff>{usage}</color>  |  Details: <color=#7bdcff>sl help <command></color></color></size>";
+    }
+
+    private static int GetCommandCategory(string command)
+    {
+        return command switch
+        {
+            "help" or "list" or "status" or "restart" => 0,
+            "player" or "spawn" or "giveitem" or "giveability" => 1,
+            "queue" or "getqueue" or "addqueue" or "setqueue" or "rerollqueue" or "rerollspecial" or "run" => 2,
+            "debugstart" or "debugmode" or "mapeditmode" or "objprefab" or "hitbox" or "prefab" or "spawnwave" => 3,
+            "proximity" or "voicerec" or "playsurfaceattack" or "surfacebombinginstant" or "playhere" or "playomega" or "activategenerator" => 4,
+            _ => 5
+        };
+    }
+
+    private static string GetCommandCategoryTitle(int category)
+    {
+        return category switch
+        {
+            0 => "Core",
+            1 => "Players / Content",
+            2 => "Events / Queue",
+            3 => "Map / Debug",
+            4 => "World / Effects",
+            _ => "Other"
+        };
+    }
+
+    private static string NormalizeForSingleLine(string value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return string.Empty;
+
+        return string.Join(" ", value
+            .Replace("\r", "\n")
+            .Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .Select(part => part.Trim()));
+    }
 }

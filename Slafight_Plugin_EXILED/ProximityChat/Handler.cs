@@ -35,6 +35,7 @@ public static class Handler
     }
     public static readonly List<Player> ActivatedPlayers = [];
     public static readonly List<Player> CanUsePlayers = [];
+    private static readonly HashSet<int> ForcedCanUsePlayers = [];
 
     public static readonly List<RoleTypeId> AllowedRoleTypes =
     [
@@ -54,7 +55,7 @@ public static class Handler
             {
                 CanUsePlayers.Add(ev.Player);
 
-                if (ShouldEnableProximityChatByDefault(ev.Player))
+                if (IsProximityChatForced(ev.Player) || ShouldEnableProximityChatByDefault(ev.Player))
                     ActivatedPlayers.Add(ev.Player);
             }
 
@@ -77,6 +78,7 @@ public static class Handler
     {
         ActivatedPlayers.Clear();
         CanUsePlayers.Clear();
+        ForcedCanUsePlayers.Clear();
         DestroyAllProximitySpeakers();
     }
 
@@ -84,6 +86,9 @@ public static class Handler
     {
         if (player == null)
             return false;
+
+        if (ForcedCanUsePlayers.Contains(player.Id))
+            return true;
 
         if (!string.IsNullOrEmpty(player.UniqueRole))
             return CRole.TryGetByUniqueRole(player.UniqueRole, out var role) && role.CanUseProximityChat;
@@ -97,6 +102,35 @@ public static class Handler
             return false;
 
         return CRole.TryGetByUniqueRole(player.UniqueRole, out var role) && role.ProximityChatEnabledByDefault;
+    }
+
+    public static bool IsProximityChatForced(Player player)
+        => player != null && ForcedCanUsePlayers.Contains(player.Id);
+
+    public static void SetProximityChatForced(Player player, bool forced, bool activate = true)
+    {
+        if (player == null)
+            return;
+
+        if (forced)
+        {
+            ForcedCanUsePlayers.Add(player.Id);
+            if (!CanUsePlayers.Contains(player))
+                CanUsePlayers.Add(player);
+
+            if (activate && !ActivatedPlayers.Contains(player))
+                ActivatedPlayers.Add(player);
+
+            return;
+        }
+
+        ForcedCanUsePlayers.Remove(player.Id);
+        if (!CanPlayerUseProximityChat(player))
+        {
+            CanUsePlayers.Remove(player);
+            ActivatedPlayers.Remove(player);
+            DestroyProximitySpeaker(player);
+        }
     }
 
     public static void OnPlayerUsingVoiceChat(VoiceChattingEventArgs args)

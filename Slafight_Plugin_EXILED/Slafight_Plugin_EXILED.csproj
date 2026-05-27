@@ -501,7 +501,9 @@
         <Compile Include="Commands\CommandTools.cs" />
         <Compile Include="Commands\DevToolFunctionHandler.cs" />
         <Compile Include="Commands\DevTools\PlayOmegaWarhead.cs" />
+        <Compile Include="Commands\DevTools\ProximityChatCommand.cs" />
         <Compile Include="Commands\DevTools\PlaySurfaceAttack.cs" />
+        <Compile Include="Commands\DevTools\VoiceRecordingCommand.cs" />
         <Compile Include="Commands\DevTools\ReRollSetQueue.cs" />
         <Compile Include="Commands\DevTools\ReRollSpecial.cs" />
         <Compile Include="Commands\DevTools\SpawnDebugToolRole.cs" />

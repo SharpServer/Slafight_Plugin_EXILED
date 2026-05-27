@@ -37,6 +37,8 @@ public class RootCommand : ParentCommand
         RegisterCommand(new SpawnBuiltInPrefab());
         RegisterCommand(new SpawnObjectPrefab());
         RegisterCommand(new HitboxCommand());
+        RegisterCommand(new ProximityChatCommand());
+        RegisterCommand(new VoiceRecordingCommand());
         RegisterCommand(new SpawnWave());
         RegisterCommand(new PlaySurfaceAttack());
         RegisterCommand(new PlayInstantSurfaceBombing());
@@ -48,29 +50,11 @@ public class RootCommand : ParentCommand
     protected override bool ExecuteParent(ArraySegment<string> arguments, ICommandSender sender, out string response)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("Slafight Commands");
-        sb.AppendLine("Usage: sl <command> [args]");
-        sb.AppendLine();
-        sb.AppendLine("Main:");
-        sb.AppendLine("  help/list/status/player/queue");
-        sb.AppendLine("  Examples:");
-        sb.AppendLine("    sl list roles scp");
-        sb.AppendLine("    sl player info @me");
-        sb.AppendLine("    sl player role Scp173 5");
-        sb.AppendLine("    sl player item KeycardSiteDirector @me");
-        sb.AppendLine("    sl queue list");
-        sb.AppendLine("    sl hitbox look on");
-        sb.AppendLine("    sl hitbox clear");
-        sb.AppendLine();
-        sb.AppendLine("Available subcommands:");
-
-        foreach (ICommand command in AllCommands.OrderBy(c => c.Command))
-        {
-            if (sender.CheckPermission($"slperm.{command.Command}"))
-            {
-                sb.AppendLine($"  {CommandTools.FormatCommand(command)}");
-            }
-        }
+        sb.AppendLine(CommandTools.BuildRichHeader("Slafight Commands", "sl <command> [args]"));
+        sb.AppendLine("<size=18><color=#9fb0c3>Quick: <color=#7bdcff>sl list roles scp</color> / <color=#7bdcff>sl player info @me</color> / <color=#7bdcff>sl queue list</color> / <color=#7bdcff>sl hitbox look on</color></color></size>");
+        sb.AppendLine("<size=18><line-height=92%>");
+        sb.AppendLine(CommandTools.BuildCommandCatalog(AllCommands, sender));
+        sb.AppendLine("</line-height></size>");
 
         response = sb.ToString().TrimEnd();
         return false;
