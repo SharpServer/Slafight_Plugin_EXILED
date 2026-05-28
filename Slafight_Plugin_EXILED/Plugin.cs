@@ -32,7 +32,7 @@ public class Plugin : Plugin<Config>
     public override string Name => "Slafight_Plugin_EXILED";
     public override string Author => "Slaviaaa_2";
     public override string Prefix => "Slafight_Plugin_EXILED";
-    public override Version Version => new(1, 8, 0, 4);
+    public override Version Version => new(1, 8, 0, 5);
         
     public override Version RequiredExiledVersion { get; } = new(9, 13, 3);
 

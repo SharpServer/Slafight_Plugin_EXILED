@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
@@ -9,6 +10,7 @@ using PlayerRoles.Spectating;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using VoiceChat;
+using VoiceChat.Codec;
 using VoiceChat.Networking;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
 using SpectatorRole = PlayerRoles.Spectating.SpectatorRole;
@@ -35,6 +37,11 @@ public static class Handler
     public static readonly List<Player> ActivatedPlayers = [];
     public static readonly List<Player> CanUsePlayers = [];
     private static readonly HashSet<int> ForcedCanUsePlayers = [];
+
+    // Audio Settings
+    public static float AudioMaxDistance = 20f;
+    public static float AudioMinDistance = 7.5f;
+    public static bool AudioIsSpatial = true;
 
     public static readonly List<RoleTypeId> AllowedRoleTypes =
     [
@@ -137,35 +144,26 @@ public static class Handler
         if (args.VoiceMessage.Channel != VoiceChatChannel.ScpChat)
             return;
 
-        Log.Debug($"[ProximityChat] OnPlayerUsingVoiceChat: Captured ScpChat voice from {args.Player.Nickname}");
-
         if (!CanPlayerUseProximityChat(args.Player))
-        {
-            Log.Debug($"[ProximityChat] OnPlayerUsingVoiceChat: {args.Player.Nickname} cannot use proximity chat (Role: {args.Player.Role})");
             return;
-        }
 
         if (!ActivatedPlayers.Contains(args.Player))
-        {
-            Log.Debug($"[ProximityChat] OnPlayerUsingVoiceChat: {args.Player.Nickname} has proximity chat toggled OFF");
             return;
-        }
 
-        Log.Debug($"[ProximityChat] OnPlayerUsingVoiceChat: Processing ProximityChat for {args.Player.Nickname} (maxRange: 20f)");
-        SendProximityMessage(args.Player, args.VoiceMessage, 20f);
+        SendProximityMessage(args.Player, args.VoiceMessage, AudioMaxDistance);
     }
 
-    private static void SendProximityMessage(Player speakerPlayer, VoiceMessage msg, float maxRange = 20f)
+    private static void SendProximityMessage(Player speakerPlayer, VoiceMessage msg, float maxRange)
     {
         var targets = new List<ReferenceHub>();
         var speakerPosition = speakerPlayer.Position;
 
         foreach (var referenceHub in ReferenceHub.AllHubs)
         {
-            if (referenceHub == null || referenceHub.connectionToClient == null || referenceHub == speakerPlayer.ReferenceHub)
+            if (referenceHub == null || referenceHub.connectionToClient == null)
                 continue;
 
-            if (referenceHub.roleManager.CurrentRole is SpectatorRole spectator)
+            if (referenceHub.roleManager.CurrentRole is SpectatorRole)
             {
                 if (!speakerPlayer.ReferenceHub.IsSpectatedBy(referenceHub))
                     continue;
@@ -174,30 +172,22 @@ public static class Handler
             {
                 float dist = Vector3.Distance(speakerPosition, referenceHub.transform.position);
                 if (dist >= maxRange)
-                {
-                    Log.Debug($"[ProximityChat] SendProximityMessage: Excluding {referenceHub.nicknameSync} (distance: {dist:F2}m >= {maxRange}m)");
                     continue;
-                }
-                Log.Debug($"[ProximityChat] SendProximityMessage: Including {referenceHub.nicknameSync} (distance: {dist:F2}m < {maxRange}m)");
             }
 
             targets.Add(referenceHub);
         }
 
         if (targets.Count == 0)
+            return;
+
+        if (!PlayerSpeakerManager.TryGetSpeaker(speakerPlayer, out var liveSpeaker))
         {
-            Log.Debug($"[ProximityChat] SendProximityMessage: No valid targets in range for {speakerPlayer.Nickname}");
+            Log.Warn($"[ProximityChat] SendProximityMessage: No speaker for {speakerPlayer.Nickname}");
             return;
         }
 
-        if (PlayerSpeakerManager.TryGetSpeaker(speakerPlayer, out var liveSpeaker))
-        {
-            int sent = liveSpeaker.SendFrame(msg.Data, msg.DataLength, targets);
-            Log.Debug($"[ProximityChat] SendProximityMessage: Sent audio frame of size {msg.DataLength} bytes from {speakerPlayer.Nickname} (ControllerId: {liveSpeaker.ControllerId}) to {sent}/{targets.Count} targets.");
-        }
-        else
-        {
-            Log.Warn($"[ProximityChat] SendProximityMessage: Failed to get/find speaker for {speakerPlayer.Nickname}!");
-        }
+        // Stream raw Opus frames directly to clients to prevent CPU load and choppiness
+        liveSpeaker.SendFrame(msg.Data, msg.DataLength, targets);
     }
 }

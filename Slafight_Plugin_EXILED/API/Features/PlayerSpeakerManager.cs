@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
@@ -62,9 +63,9 @@ public static class PlayerSpeakerManager
             player.Position,
             null, 
             speakerName: "Voice",
-            isSpatial: true,
-            maxDistance: 20f,
-            minDistance: 1f);
+            isSpatial: ProximityChat.Handler.AudioIsSpatial,
+            maxDistance: ProximityChat.Handler.AudioMaxDistance,
+            minDistance: ProximityChat.Handler.AudioMinDistance);
 
         PersonalSpeakers[player.Id] = speaker;
         Log.Debug($"[PlayerSpeakerManager] GetOrCreateSpeaker: Created new speaker for {player.Nickname} (ID: {player.Id}, ControllerId: {speaker.ControllerId}) at {player.Position}");
@@ -85,20 +86,40 @@ public static class PlayerSpeakerManager
     {
         if (player == null) return;
 
-        Log.Debug($"[PlayerSpeakerManager] DestroySpeaker: Request to destroy speaker for {player.Nickname} (ID: {player.Id})");
-
-        if (FollowCoroutines.TryGetValue(player.Id, out var handle))
+        int playerId;
+        string nickname;
+        try
         {
-            Timing.KillCoroutines(handle);
-            FollowCoroutines.Remove(player.Id);
-            Log.Debug($"[PlayerSpeakerManager] DestroySpeaker: Killed follow coroutine for {player.Nickname}");
+            playerId = player.Id;
+            nickname = player.Nickname;
+        }
+        catch
+        {
+            // Player may be partially disposed; skip safely
+            return;
         }
 
-        if (PersonalSpeakers.TryGetValue(player.Id, out var speaker))
+        Log.Debug($"[PlayerSpeakerManager] DestroySpeaker: Request to destroy speaker for {nickname} (ID: {playerId})");
+
+        if (FollowCoroutines.TryGetValue(playerId, out var handle))
         {
-            speaker.DestroyAudioPlayer();
-            PersonalSpeakers.Remove(player.Id);
-            Log.Debug($"[PlayerSpeakerManager] DestroySpeaker: Destroyed speaker for {player.Nickname} (ControllerId: {speaker.ControllerId})");
+            Timing.KillCoroutines(handle);
+            FollowCoroutines.Remove(playerId);
+            Log.Debug($"[PlayerSpeakerManager] DestroySpeaker: Killed follow coroutine for {nickname}");
+        }
+
+        if (PersonalSpeakers.TryGetValue(playerId, out var speaker))
+        {
+            try
+            {
+                speaker.DestroyAudioPlayer();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[PlayerSpeakerManager] DestroySpeaker: Failed to destroy speaker: {ex.Message}");
+            }
+            PersonalSpeakers.Remove(playerId);
+            Log.Debug($"[PlayerSpeakerManager] DestroySpeaker: Destroyed speaker for {nickname} (ControllerId: {speaker.ControllerId})");
         }
     }
 
@@ -125,7 +146,20 @@ public static class PlayerSpeakerManager
 
         if (ev.Player.IsAlive && ev.Player.Role != PlayerRoles.RoleTypeId.Spectator && ev.Player.Role != PlayerRoles.RoleTypeId.None)
         {
-            GetOrCreateSpeaker(ev.Player);
+            // Delay creation so player position stabilizes (avoids (0,0,0) leaks)
+            var player = ev.Player;
+            Timing.CallDelayed(1.5f, () =>
+            {
+                try
+                {
+                    if (player != null && player.IsAlive && player.IsConnected)
+                        GetOrCreateSpeaker(player);
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"[PlayerSpeakerManager] OnPlayerSpawned delayed creation error: {ex}");
+                }
+            });
         }
         else
         {
@@ -160,11 +194,26 @@ public static class PlayerSpeakerManager
     private static IEnumerator<float> FollowPlayerCoroutine(Player player, SpeakerApi.LivePlayback liveSpeaker)
     {
         Log.Debug($"[PlayerSpeakerManager] FollowPlayerCoroutine: Started for {player.Nickname} (Speaker ControllerId: {liveSpeaker.ControllerId})");
-        while (player != null && player.IsAlive && liveSpeaker.IsValid)
+        while (true)
         {
-            liveSpeaker.SetTransform(player.Position, null);
+            bool shouldContinue;
+            try
+            {
+                shouldContinue = player != null && player.IsAlive && player.IsConnected && liveSpeaker.IsValid;
+                if (shouldContinue)
+                    liveSpeaker.SetTransform(player.Position, null);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[PlayerSpeakerManager] FollowPlayerCoroutine: Error: {ex.Message}");
+                shouldContinue = false;
+            }
+
+            if (!shouldContinue)
+                break;
+
             yield return Timing.WaitForSeconds(0.1f);
         }
-        Log.Debug($"[PlayerSpeakerManager] FollowPlayerCoroutine: Stopped for {player?.Nickname ?? "Unknown"} (Player IsAlive: {player?.IsAlive ?? false}, Speaker Valid: {liveSpeaker.IsValid})");
+        Log.Debug($"[PlayerSpeakerManager] FollowPlayerCoroutine: Stopped for {player?.Nickname ?? "Unknown"}");
     }
 }
