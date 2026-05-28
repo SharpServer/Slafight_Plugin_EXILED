@@ -198,6 +198,7 @@
         <Compile Include="API\Features\GeneratorPrefab.cs" />
         <Compile Include="API\Features\LabApiHandlerRegistry.cs" />
         <Compile Include="API\Features\NetworkVisibilityManager.cs" />
+        <Compile Include="API\Features\PlayerSpeakerManager.cs" />
         <Compile Include="API\Features\Scp914\Scp914Context.cs" />
         <Compile Include="API\Features\Scp914\Scp914Rule.cs" />
         <Compile Include="API\Features\Scp914\Scp914RuleSet.cs" />

@@ -65,7 +65,7 @@ public class PlayAudioHere : ICommand
         }
 
         var maxDistance = 15f;
-        var minDistance = 0f;
+        var minDistance = 1f;
 
         if (arguments.Count >= 2 && !TryParseDistance(arguments.At(1), out maxDistance))
         {
@@ -78,6 +78,8 @@ public class PlayAudioHere : ICommand
             response = $"Invalid minDistance: {arguments.At(2)}";
             return false;
         }
+
+        minDistance = Math.Max(1f, minDistance);
 
         if (minDistance > maxDistance)
         {

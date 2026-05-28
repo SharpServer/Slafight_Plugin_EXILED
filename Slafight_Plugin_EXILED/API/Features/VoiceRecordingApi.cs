@@ -119,7 +119,7 @@ public static class VoiceRecordingApi
         Transform? parent = null,
         bool isSpatial = true,
         float maxDistance = 10f,
-        float minDistance = 0f,
+        float minDistance = 1f,
         IEnumerable<Player>? targets = null,
         bool destroyOnEnd = true,
         float startupDelay = 0.5f,
@@ -138,7 +138,7 @@ public static class VoiceRecordingApi
         Transform? parent = null,
         bool isSpatial = true,
         float maxDistance = 10f,
-        float minDistance = 0f,
+        float minDistance = 1f,
         IEnumerable<Player>? targets = null,
         bool destroyOnEnd = true,
         float startupDelay = 0.5f,
@@ -251,9 +251,11 @@ public static class VoiceRecordingApi
 public sealed class VoiceRecording
 {
     private readonly List<float> _samples = [];
-    private readonly OpusDecoder _decoder = new();
+    private readonly Dictionary<int, OpusDecoder> _decodersByPlayerId = [];
     private readonly float[] _decodeBuffer = new float[VoiceChatSettings.BufferLength];
-    private float _lastFrameTime;
+    private readonly Dictionary<int, int> _nextSampleByPlayerId = new();
+    private readonly Dictionary<int, float> _lastPacketTimeByPlayerId = new();
+    private float _recordingStartTime;
     private string? _cachedHash;
 
     public VoiceRecording(string key)
@@ -279,22 +281,47 @@ public sealed class VoiceRecording
             return;
 
         float now = Time.unscaledTime;
-        float delay = FrameCount == 0 ? 0f : Mathf.Max(0f, now - _lastFrameTime);
-        _lastFrameTime = now;
+        if (FrameCount == 0)
+            _recordingStartTime = now;
 
-        if (delay > 0f)
+        int playerId = message.Speaker == null ? 0 : message.Speaker.PlayerId;
+        if (!_decodersByPlayerId.TryGetValue(playerId, out var decoder))
         {
-            int silenceSamples = Mathf.RoundToInt(delay * VoiceChatSettings.SampleRate);
-            if (silenceSamples > 0)
-                _samples.AddRange(new float[silenceSamples]);
+            decoder = new OpusDecoder();
+            _decodersByPlayerId[playerId] = decoder;
         }
 
-        int decodedLength = _decoder.Decode(message.Data, message.DataLength, _decodeBuffer);
+        int decodedLength = decoder.Decode(message.Data, message.DataLength, _decodeBuffer);
         if (decodedLength <= 0)
             return;
 
+        int startSample;
+        float elapsed = now - _recordingStartTime;
+        int calculatedStartSample = Mathf.Max(0, Mathf.RoundToInt(elapsed * VoiceChatSettings.SampleRate));
+
+        if (_nextSampleByPlayerId.TryGetValue(playerId, out var nextSample) &&
+            _lastPacketTimeByPlayerId.TryGetValue(playerId, out var lastTime) &&
+            (now - lastTime) < 0.1f) // 100ms threshold
+        {
+            startSample = nextSample;
+        }
+        else
+        {
+            startSample = calculatedStartSample;
+        }
+
+        int requiredLength = startSample + decodedLength;
+        while (_samples.Count < requiredLength)
+            _samples.Add(0f);
+
         for (int i = 0; i < decodedLength; i++)
-            _samples.Add(_decodeBuffer[i]);
+        {
+            int sampleIndex = startSample + i;
+            _samples[sampleIndex] = Mathf.Clamp(_samples[sampleIndex] + _decodeBuffer[i], -1f, 1f);
+        }
+
+        _nextSampleByPlayerId[playerId] = startSample + decodedLength;
+        _lastPacketTimeByPlayerId[playerId] = now;
 
         FrameCount++;
         DurationSeconds = _samples.Count * VoiceChatSettings.SampleToDuartionRate;
@@ -307,7 +334,12 @@ public sealed class VoiceRecording
             return;
 
         IsCompleted = true;
-        _decoder.Dispose();
+        foreach (var decoder in _decodersByPlayerId.Values)
+            decoder.Dispose();
+
+        _decodersByPlayerId.Clear();
+        _nextSampleByPlayerId.Clear();
+        _lastPacketTimeByPlayerId.Clear();
     }
 
     private string ComputeHash()

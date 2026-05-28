@@ -31,7 +31,6 @@ public static class Handler
         Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarted;
 
         Exiled.Events.Handlers.Player.ChangingRole -= OnPlayerChangingRole;
-        DestroyAllProximitySpeakers();
     }
     public static readonly List<Player> ActivatedPlayers = [];
     public static readonly List<Player> CanUsePlayers = [];
@@ -46,7 +45,6 @@ public static class Handler
 
     private static void OnPlayerChangingRole(ChangingRoleEventArgs ev)
     {
-        DestroyProximitySpeaker(ev.Player);
         Timing.CallDelayed(1.1f, () =>
         {
             ActivatedPlayers.Remove(ev.Player);
@@ -79,7 +77,6 @@ public static class Handler
         ActivatedPlayers.Clear();
         CanUsePlayers.Clear();
         ForcedCanUsePlayers.Clear();
-        DestroyAllProximitySpeakers();
     }
 
     public static bool CanPlayerUseProximityChat(Player player)
@@ -129,103 +126,78 @@ public static class Handler
         {
             CanUsePlayers.Remove(player);
             ActivatedPlayers.Remove(player);
-            DestroyProximitySpeaker(player);
         }
     }
 
     public static void OnPlayerUsingVoiceChat(VoiceChattingEventArgs args)
     {
-        // 自分が再送した Proximity は一切触らない
         if (args.VoiceMessage.Channel == VoiceChatChannel.Proximity)
             return;
 
-        // SCPチャット以外は触らない
         if (args.VoiceMessage.Channel != VoiceChatChannel.ScpChat)
             return;
 
-        // 対象ロールか？
+        Log.Debug($"[ProximityChat] OnPlayerUsingVoiceChat: Captured ScpChat voice from {args.Player.Nickname}");
+
         if (!CanPlayerUseProximityChat(args.Player))
+        {
+            Log.Debug($"[ProximityChat] OnPlayerUsingVoiceChat: {args.Player.Nickname} cannot use proximity chat (Role: {args.Player.Role})");
             return;
+        }
 
-        // トグルONにしているか？
         if (!ActivatedPlayers.Contains(args.Player))
+        {
+            Log.Debug($"[ProximityChat] OnPlayerUsingVoiceChat: {args.Player.Nickname} has proximity chat toggled OFF");
             return;
+        }
 
-        // ここまで来た人だけ近接に変換
-        SendProximityMessage(args.Player, args.VoiceMessage, 5f);
+        Log.Debug($"[ProximityChat] OnPlayerUsingVoiceChat: Processing ProximityChat for {args.Player.Nickname} (maxRange: 20f)");
+        SendProximityMessage(args.Player, args.VoiceMessage, 20f);
     }
 
-    private static readonly Dictionary<int, SpeakerApi.LivePlayback> ProximitySpeakers = [];
-
-    private static void SendProximityMessage(Player speakerPlayer, VoiceMessage msg, float maxRange = 5f)
+    private static void SendProximityMessage(Player speakerPlayer, VoiceMessage msg, float maxRange = 20f)
     {
         var targets = new List<ReferenceHub>();
+        var speakerPosition = speakerPlayer.Position;
+
         foreach (var referenceHub in ReferenceHub.AllHubs)
         {
-            if (referenceHub.roleManager.CurrentRole is SpectatorRole spectator
-                && !msg.Speaker.IsSpectatedBy(referenceHub))
+            if (referenceHub == null || referenceHub.connectionToClient == null || referenceHub == speakerPlayer.ReferenceHub)
                 continue;
 
-            if (referenceHub.roleManager.CurrentRole is not PlayerRoles.Voice.IVoiceRole voiceRole2)
-                continue;
-
-            if (Vector3.Distance(msg.Speaker.transform.position, referenceHub.transform.position) >= maxRange)
-                continue;
-
-            if (voiceRole2.VoiceModule.ValidateReceive(msg.Speaker, VoiceChatChannel.Proximity)
-                is VoiceChatChannel.None)
-                continue;
+            if (referenceHub.roleManager.CurrentRole is SpectatorRole spectator)
+            {
+                if (!speakerPlayer.ReferenceHub.IsSpectatedBy(referenceHub))
+                    continue;
+            }
+            else
+            {
+                float dist = Vector3.Distance(speakerPosition, referenceHub.transform.position);
+                if (dist >= maxRange)
+                {
+                    Log.Debug($"[ProximityChat] SendProximityMessage: Excluding {referenceHub.nicknameSync} (distance: {dist:F2}m >= {maxRange}m)");
+                    continue;
+                }
+                Log.Debug($"[ProximityChat] SendProximityMessage: Including {referenceHub.nicknameSync} (distance: {dist:F2}m < {maxRange}m)");
+            }
 
             targets.Add(referenceHub);
         }
 
         if (targets.Count == 0)
+        {
+            Log.Debug($"[ProximityChat] SendProximityMessage: No valid targets in range for {speakerPlayer.Nickname}");
             return;
+        }
 
-        var liveSpeaker = GetOrCreateProximitySpeaker(speakerPlayer, maxRange);
-        liveSpeaker.SetTransform(speakerPlayer.Position, speakerPlayer.Transform);
-        liveSpeaker.SendFrame(msg.Data, msg.DataLength, targets);
+        if (PlayerSpeakerManager.TryGetSpeaker(speakerPlayer, out var liveSpeaker))
+        {
+            int sent = liveSpeaker.SendFrame(msg.Data, msg.DataLength, targets);
+            Log.Debug($"[ProximityChat] SendProximityMessage: Sent audio frame of size {msg.DataLength} bytes from {speakerPlayer.Nickname} (ControllerId: {liveSpeaker.ControllerId}) to {sent}/{targets.Count} targets.");
+        }
+        else
+        {
+            Log.Warn($"[ProximityChat] SendProximityMessage: Failed to get/find speaker for {speakerPlayer.Nickname}!");
+        }
     }
-
-    private static SpeakerApi.LivePlayback GetOrCreateProximitySpeaker(Player player, float maxRange)
-    {
-        if (ProximitySpeakers.TryGetValue(player.Id, out var playback) && playback.IsValid)
-            return playback;
-
-        playback = SpeakerApi.CreateLiveSpeaker(
-            GetAudioPlayerName(player),
-            player.Position,
-            player.Transform,
-            speakerName: "Voice",
-            isSpatial: true,
-            maxDistance: maxRange,
-            minDistance: 0f);
-
-        ProximitySpeakers[player.Id] = playback;
-        return playback;
-    }
-
-    public static void DestroyProximitySpeaker(Player player)
-    {
-        if (player == null)
-            return;
-
-        if (!ProximitySpeakers.TryGetValue(player.Id, out var playback))
-            return;
-
-        playback.DestroyAudioPlayer();
-        ProximitySpeakers.Remove(player.Id);
-    }
-
-    private static void DestroyAllProximitySpeakers()
-    {
-        foreach (var playback in ProximitySpeakers.Values)
-            playback.DestroyAudioPlayer();
-
-        ProximitySpeakers.Clear();
-    }
-
-    private static string GetAudioPlayerName(Player player)
-        => $"ProximityChat_{player.Id}";
-
 }

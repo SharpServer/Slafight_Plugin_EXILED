@@ -24,17 +24,15 @@ using Exiled.API.Features;
 public class Plugin : Plugin<Config>
 {
     public static Plugin Singleton { get; set; } = null!;
-    // Plugin クラスのフィールド宣言部（既存の public EventHandler たちの近く）に追加
     private CancellationTokenSource _playerCountCts;
     private static readonly HttpClient HttpClient = new()
     {
-        Timeout = TimeSpan.FromSeconds(10) // デフォルトより短く/長く調整
+        Timeout = TimeSpan.FromSeconds(10)
     };
-    // Plugin Info
     public override string Name => "Slafight_Plugin_EXILED";
     public override string Author => "Slaviaaa_2";
     public override string Prefix => "Slafight_Plugin_EXILED";
-    public override Version Version => new(1,8, 0, 4);
+    public override Version Version => new(1, 8, 0, 4);
         
     public override Version RequiredExiledVersion { get; } = new(9, 13, 3);
 
@@ -43,12 +41,11 @@ public class Plugin : Plugin<Config>
     public override void OnEnabled()
     {
         Singleton = this;
+        PlayerSpeakerManager.RegisterEvents();
         ProximityChat.Handler.RegisterEvents();
         VoiceRecordingApi.RegisterEvents();
 
         NetworkVisibilityManager.Register();
-        NvgManager.Register();
-        SpecificFlagsHandler.Register();
             
         WearsHandler.Register();
         CRole.RegisterAllEvents();
@@ -110,6 +107,7 @@ public class Plugin : Plugin<Config>
             _playerCountCts = null;
         }
             
+        PlayerSpeakerManager.UnregisterEvents();
         ProximityChat.Handler.UnregisterEvents();
         VoiceRecordingApi.UnregisterEvents();
 

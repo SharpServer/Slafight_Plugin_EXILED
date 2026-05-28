@@ -7,8 +7,6 @@ using MEC;
 using NVorbis;
 using UnityEngine;
 using VoiceChat;
-using VoiceChat.Codec;
-using VoiceChat.Codec.Enums;
 using VoiceChat.Networking;
 using VoiceChat.Playbacks;
 using LabSpeakerToy = LabApi.Features.Wrappers.SpeakerToy;
@@ -19,8 +17,10 @@ public static class SpeakerApi
 {
     private const int TargetSampleRate = VoiceChatSettings.SampleRate;
     private const int PacketSize = VoiceChatSettings.PacketSizePerChannel;
+    private const float MinimumAudibleDistance = 1f;
     private static readonly Dictionary<string, CachedClip> ClipCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, List<Playback>> PlaybacksByName = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<string, List<LivePlayback>> LivePlaybacksByName = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<byte, CoroutineHandle> PlaybackStreams = new();
     private static readonly HashSet<byte> AllocatedControllerIds = [];
 
@@ -99,14 +99,16 @@ public static class SpeakerApi
         string? speakerName = null,
         bool isSpatial = true,
         float maxDistance = 5f,
-        float minDistance = 0f,
+        float minDistance = MinimumAudibleDistance,
         float volume = 1f)
     {
         if (string.IsNullOrWhiteSpace(audioPlayerName))
             throw new ArgumentException("Audio player name cannot be empty.", nameof(audioPlayerName));
 
         var speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, volume);
-        return new LivePlayback(audioPlayerName, speaker, speaker.ControllerId);
+        var playback = new LivePlayback(audioPlayerName, speaker, speaker.ControllerId);
+        AddLivePlayback(playback);
+        return playback;
     }
 
     public static Playback Play(
@@ -174,9 +176,8 @@ public static class SpeakerApi
             throw new InvalidOperationException($"Audio clip is not loaded: {clipName}");
 
         var speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, 1f);
-        var stream = Timing.RunCoroutine(TransmitSamples(speaker.ControllerId, clip.Samples, loop, 1f, null));
-        var playback = new Playback(audioPlayerName, clipName, speaker, speaker.ControllerId, stream);
-        PlaybackStreams[speaker.ControllerId] = stream;
+        speaker.Play(clip.Samples, queue: false, loop);
+        var playback = new Playback(audioPlayerName, clipName, speaker, speaker.ControllerId);
         AddPlayback(playback);
 
         if (destroyOnEnd && !loop)
@@ -194,7 +195,7 @@ public static class SpeakerApi
         Transform? parent = null,
         bool isSpatial = true,
         float maxDistance = 10f,
-        float minDistance = 0f,
+        float minDistance = MinimumAudibleDistance,
         float volume = 1f,
         bool loop = false,
         IEnumerable<Player>? targets = null,
@@ -212,9 +213,9 @@ public static class SpeakerApi
             .Select(player => player.UserId)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        var stream = Timing.RunCoroutine(TransmitSamples(speaker.ControllerId, samples, loop, volume, targetIds));
-        var playback = new Playback(audioPlayerName, audioPlayerName, speaker, speaker.ControllerId, stream);
-        PlaybackStreams[speaker.ControllerId] = stream;
+        speaker.ValidPlayers = targetIds == null ? null : player => player != null && targetIds.Contains(player.UserId);
+        speaker.Play(samples, queue: false, loop);
+        var playback = new Playback(audioPlayerName, audioPlayerName, speaker, speaker.ControllerId);
         AddPlayback(playback);
 
         if (destroyOnEnd && !loop)
@@ -338,9 +339,14 @@ public static class SpeakerApi
         foreach (var playback in playbacks)
             Stop(playback);
 
+        var livePlaybacks = LivePlaybacksByName.Values.SelectMany(p => p).ToArray();
+        foreach (var playback in livePlaybacks)
+            DestroyLiveSpeaker(playback);
+
         PlaybacksByName.Clear();
+        LivePlaybacksByName.Clear();
         AllocatedControllerIds.Clear();
-        return playbacks.Length;
+        return playbacks.Length + livePlaybacks.Length;
     }
 
     public static void SetTransform(Playback playback, Vector3 position, Transform? parent = null)
@@ -366,13 +372,17 @@ public static class SpeakerApi
 
         playback.Speaker.Destroy();
         AllocatedControllerIds.Remove(playback.ControllerId);
+        RemoveLivePlayback(playback);
         return true;
     }
 
     public static int SendAudioFrame(LivePlayback playback, byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
     {
         if (!playback.IsValid || data == null || dataLength <= 0 || dataLength > data.Length || targets == null)
+        {
+            Log.Debug($"[SpeakerApi] SendAudioFrame: Validation failed. Playback Valid: {playback.IsValid}, Data null: {data == null}, DataLength: {dataLength}, targets null: {targets == null}");
             return 0;
+        }
 
         var audioMessage = new AudioMessage(playback.ControllerId, data, dataLength);
         int sent = 0;
@@ -389,19 +399,56 @@ public static class SpeakerApi
     }
 
     public static int SendAudioFrame(string audioPlayerName, byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
-        => 0;
+    {
+        if (string.IsNullOrWhiteSpace(audioPlayerName) || data == null || dataLength <= 0 || dataLength > data.Length || targets == null)
+            return 0;
+
+        if (!LivePlaybacksByName.TryGetValue(audioPlayerName, out var playbacks))
+            return 0;
+
+        int sent = 0;
+        foreach (var playback in playbacks.ToArray())
+        {
+            if (!playback.IsValid)
+            {
+                RemoveLivePlayback(playback);
+                continue;
+            }
+
+            sent += SendAudioFrame(playback, data, dataLength, targets);
+        }
+
+        return sent;
+    }
 
     public static IEnumerable<string> GetAudioPlayerNames()
         => PlaybacksByName.Keys.ToArray();
 
     private static LabSpeakerToy CreateSpeaker(Vector3 position, Transform? parent, bool isSpatial, float maxDistance, float minDistance, float volume)
     {
-        var speaker = LabSpeakerToy.Create(position, Quaternion.identity, Vector3.one, parent, networkSpawn: false);
+        minDistance = Mathf.Max(MinimumAudibleDistance, minDistance);
+        maxDistance = Mathf.Max(minDistance, maxDistance);
+
+        var speaker = LabSpeakerToy.Create(parent ? Vector3.zero : position, Quaternion.identity, Vector3.one, parent, networkSpawn: false);
         speaker.ControllerId = AllocateControllerId();
         speaker.IsSpatial = isSpatial;
         speaker.MaxDistance = maxDistance;
         speaker.MinDistance = minDistance;
         speaker.Volume = volume;
+        speaker.ValidPlayers = null;
+
+        // Force SyncVar values on the base NetworkBehaviour so they are synchronized to clients during Spawn
+        speaker.Base.NetworkControllerId = speaker.ControllerId;
+        speaker.Base.NetworkIsSpatial = isSpatial;
+        speaker.Base.NetworkMaxDistance = maxDistance;
+        speaker.Base.NetworkMinDistance = minDistance;
+        speaker.Base.NetworkVolume = volume;
+
+        if (parent == null)
+        {
+            speaker.Base.NetworkPosition = position;
+        }
+
         speaker.Spawn();
         return speaker;
     }
@@ -416,6 +463,7 @@ public static class SpeakerApi
             return;
         }
 
+        speaker.Base.NetworkPosition = position;
         speaker.Position = position;
     }
 
@@ -462,69 +510,25 @@ public static class SpeakerApi
             PlaybacksByName.Remove(playback.AudioPlayerName);
     }
 
-    private static IEnumerator<float> TransmitSamples(
-        byte controllerId,
-        float[] samples,
-        bool loop,
-        float volume,
-        HashSet<string>? targetUserIds)
+    private static void AddLivePlayback(LivePlayback playback)
     {
-        using var encoder = new OpusEncoder(OpusApplicationType.Audio);
-        var pcm = new float[PacketSize];
-        var encoded = new byte[512];
-        int offset = 0;
-        double lastSend = Time.unscaledTimeAsDouble;
-        const double interval = PacketSize / (double)TargetSampleRate;
-
-        while (samples.Length > 0)
+        if (!LivePlaybacksByName.TryGetValue(playback.AudioPlayerName, out var list))
         {
-            double now = Time.unscaledTimeAsDouble;
-            if (now - lastSend < interval)
-            {
-                yield return Timing.WaitForOneFrame;
-                continue;
-            }
-
-            lastSend += interval;
-            int remaining = samples.Length - offset;
-            if (remaining <= 0)
-            {
-                if (!loop)
-                    yield break;
-
-                offset = 0;
-                remaining = samples.Length;
-            }
-
-            int count = Math.Min(PacketSize, remaining);
-            Array.Copy(samples, offset, pcm, 0, count);
-            if (count < PacketSize)
-                Array.Clear(pcm, count, PacketSize - count);
-
-            for (int i = 0; i < PacketSize; i++)
-                pcm[i] = Mathf.Clamp(pcm[i] * volume, -1f, 1f);
-
-            offset += count;
-            int encodedLength = encoder.Encode(pcm, encoded);
-            if (encodedLength <= 0)
-                continue;
-
-            var message = new AudioMessage(controllerId, encoded, encodedLength);
-            foreach (var hub in ReferenceHub.AllHubs)
-            {
-                if (hub?.connectionToClient == null)
-                    continue;
-
-                if (targetUserIds != null)
-                {
-                    var player = Player.Get(hub);
-                    if (player == null || !targetUserIds.Contains(player.UserId))
-                        continue;
-                }
-
-                hub.connectionToClient.Send(message);
-            }
+            list = [];
+            LivePlaybacksByName[playback.AudioPlayerName] = list;
         }
+
+        list.Add(playback);
+    }
+
+    private static void RemoveLivePlayback(LivePlayback playback)
+    {
+        if (!LivePlaybacksByName.TryGetValue(playback.AudioPlayerName, out var list))
+            return;
+
+        list.RemoveAll(p => p.ControllerId == playback.ControllerId);
+        if (list.Count == 0)
+            LivePlaybacksByName.Remove(playback.AudioPlayerName);
     }
 
     private static float[] ConvertToMono48k(float[] input, int sampleRate, int channels)
