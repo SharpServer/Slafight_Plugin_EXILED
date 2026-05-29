@@ -221,6 +221,7 @@
         <Compile Include="API\Features\RoleTableDictionaries\Contexts\AprilRoleTableContext.cs" />
         <Compile Include="API\Features\RoleTableDictionaries\Contexts\NormalRoleTableContext.cs" />
         <Compile Include="API\Features\RoleParseHelper.cs" />
+        <Compile Include="API\Features\RueiRuntimeBootstrap.cs" />
         <Compile Include="API\Features\RespawnTimer\RespawnTimerDisplay.cs" />
         <Compile Include="API\Features\RespawnTimer\WaveManagerExtension.cs" />
         <Compile Include="API\Features\RoundVictory\Core\*.cs" />

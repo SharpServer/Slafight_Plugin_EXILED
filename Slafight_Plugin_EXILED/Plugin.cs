@@ -41,6 +41,8 @@ public class Plugin : Plugin<Config>
     public override void OnEnabled()
     {
         Singleton = this;
+        RueiRuntimeBootstrap.Register();
+
         PlayerSpeakerManager.RegisterEvents();
         ProximityChat.Handler.RegisterEvents();
         VoiceRecordingApi.RegisterEvents();
@@ -138,6 +140,8 @@ public class Plugin : Plugin<Config>
         OmegaWarhead.Shutdown();
         
         AutoHandlerBootstrapRegister.Unregister();
+        RueiRuntimeBootstrap.Unregister();
+
         ServerSpecificsHandler.Unregister();
         CustomShieldState.UnregisterEvents();
         RoleSpecificTextProvider.ClearAll();
