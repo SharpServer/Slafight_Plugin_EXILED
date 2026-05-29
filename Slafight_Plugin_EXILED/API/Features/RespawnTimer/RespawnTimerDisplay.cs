@@ -20,12 +20,12 @@ public sealed class RespawnTimerDisplay : IBootstrapHandler, IDisposable
     private static readonly Tag SpecTimerTag = new("SpecTimer");
     private static readonly Tag SpawnSituationTag = new("SpawnSituation");
 
-    private static readonly DynamicElement SpecTimer = new(910, GetTimers)
+    public static DynamicElement SpecTimer { get; } = new(910, GetTimers)
     {
         UpdateInterval = TimeSpan.FromSeconds(1)
     };
 
-    private static readonly DynamicElement SpecSpawn = new(900, GetRespawnSituation)
+    public static DynamicElement SpecSpawn { get; } = new(900, GetRespawnSituation)
     {
         UpdateInterval = TimeSpan.FromTicks(500)
     };
