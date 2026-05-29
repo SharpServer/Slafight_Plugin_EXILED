@@ -40,12 +40,16 @@
         <Reference Include="0Harmony, Version=2.2.2.0, Culture=neutral, processorArchitecture=MSIL">
           <HintPath>..\packages\Lib.Harmony.2.2.2\lib\net48\0Harmony.dll</HintPath>
         </Reference>
+        <Reference Include="HintServiceMeow-Exiled, Version=5.5.0.0, Culture=neutral, processorArchitecture=Amd64">
+          <HintPath>..\packages\HintServiceMeow-Exiled.5.5.0\lib\net48\HintServiceMeow-Exiled.dll</HintPath>
+        </Reference>
         <Reference Include="LabApi, Version=1.1.1.0, Culture=neutral, processorArchitecture=Amd64">
           <HintPath>..\packages\Northwood.LabAPI.1.1.1\lib\net48\LabApi.dll</HintPath>
         </Reference>
         <Reference Include="RueI, Version=3.1.2.0, Culture=neutral, processorArchitecture=MSIL">
           <HintPath>..\packages\RueI.3.1.2\lib\net48\RueI.dll</HintPath>
         </Reference>
+        <Reference Include="System.IO.Compression" />
         <Reference Include="YamlDotNet, Version=11.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
           <HintPath>..\packages\YamlDotNet.11.0.1\lib\net45\YamlDotNet.dll</HintPath>
         </Reference>
@@ -521,7 +525,6 @@
         <Compile Include="Commands\DevTools\ReRollSetQueue.cs" />
         <Compile Include="Commands\DevTools\ReRollSpecial.cs" />
         <Compile Include="Commands\DevTools\SpawnDebugToolRole.cs" />
-        <Compile Include="Commands\DevTools\SpawnMapEditRole.cs" />
         <Compile Include="Commands\RootCommand.cs" />
         <Compile Include="Config.cs" />
         <Compile Include="CustomRoles\CustomRolesHandler.cs" />
