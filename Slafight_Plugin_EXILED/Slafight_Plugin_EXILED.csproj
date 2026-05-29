@@ -37,8 +37,21 @@
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
     <ItemGroup>
-        <Reference Include="0Harmony">
-            <HintPath>$(SL_References)\0Harmony.dll</HintPath>
+        <Reference Include="0Harmony, Version=2.2.2.0, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>..\packages\Lib.Harmony.2.2.2\lib\net48\0Harmony.dll</HintPath>
+        </Reference>
+        <Reference Include="HintServiceMeow-Exiled, Version=5.5.0.0, Culture=neutral, processorArchitecture=Amd64">
+          <HintPath>..\packages\HintServiceMeow-Exiled.5.5.0\lib\net48\HintServiceMeow-Exiled.dll</HintPath>
+        </Reference>
+        <Reference Include="LabApi, Version=1.1.1.0, Culture=neutral, processorArchitecture=Amd64">
+          <HintPath>..\packages\Northwood.LabAPI.1.1.1\lib\net48\LabApi.dll</HintPath>
+        </Reference>
+        <Reference Include="RueI, Version=3.1.2.0, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>..\packages\RueI.3.1.2\lib\net48\RueI.dll</HintPath>
+        </Reference>
+        <Reference Include="System.IO.Compression" />
+        <Reference Include="YamlDotNet, Version=11.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
+          <HintPath>..\packages\YamlDotNet.11.0.1\lib\net45\YamlDotNet.dll</HintPath>
         </Reference>
         <Reference Include="ZAMERT">
             <HintPath>$(SL_References)\ZAMERT.dll</HintPath>
@@ -69,12 +82,6 @@
         </Reference>
         <Reference Include="Exiled.Permissions, Version=9.13.3.0, Culture=neutral, processorArchitecture=Amd64">
           <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\Exiled.Permissions.dll</HintPath>
-        </Reference>
-        <Reference Include="HintServiceMeow">
-            <HintPath>$(SL_References)\HintServiceMeow-Exiled.dll</HintPath>
-        </Reference>
-        <Reference Include="LabApi, Version=1.1.6.0, Culture=neutral, processorArchitecture=Amd64">
-          <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\LabApi.dll</HintPath>
         </Reference>
         <Reference Include="Mirror">
             <HintPath>$(SL_References)\Mirror_publicized.dll</HintPath>
@@ -153,9 +160,6 @@
         <Reference Include="System.Net.Http.WebRequest" />
         <Reference Include="System.Numerics" />
         <Reference Include="System.Xml" />
-        <Reference Include="YamlDotNet, Version=11.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
-          <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\YamlDotNet.dll</HintPath>
-        </Reference>
     </ItemGroup>
     <ItemGroup>
         <Compile Include="Abilities\AllowEscapeAbility.cs" />
@@ -221,6 +225,9 @@
         <Compile Include="API\Features\RoleTableDictionaries\Contexts\AprilRoleTableContext.cs" />
         <Compile Include="API\Features\RoleTableDictionaries\Contexts\NormalRoleTableContext.cs" />
         <Compile Include="API\Features\RoleParseHelper.cs" />
+        <Compile Include="API\Features\RueiRuntimeBootstrap.cs" />
+        <Compile Include="API\Features\RespawnTimer\RespawnTimerDisplay.cs" />
+        <Compile Include="API\Features\RespawnTimer\WaveManagerExtension.cs" />
         <Compile Include="API\Features\RoundVictory\Core\*.cs" />
         <Compile Include="API\Features\RoundVictory\Sources\*.cs" />
         <Compile Include="API\Features\RoleSpecificTextProvider.cs" />
@@ -472,6 +479,7 @@
         <Compile Include="Extensions\PlayerAbilityExtensions.cs" />
         <Compile Include="Extensions\PlayerCItemBaseExtensions.cs" />
         <Compile Include="Extensions\PlayerExtensions.cs" />
+        <Compile Include="Extensions\RueiHintExtensions.cs" />
         <Compile Include="Extensions\PlayerRoleHelpers.cs" />
         <Compile Include="Extensions\RoomSpawner.cs" />
         <Compile Include="Extensions\RoomUtils.cs" />
@@ -517,7 +525,6 @@
         <Compile Include="Commands\DevTools\ReRollSetQueue.cs" />
         <Compile Include="Commands\DevTools\ReRollSpecial.cs" />
         <Compile Include="Commands\DevTools\SpawnDebugToolRole.cs" />
-        <Compile Include="Commands\DevTools\SpawnMapEditRole.cs" />
         <Compile Include="Commands\RootCommand.cs" />
         <Compile Include="Config.cs" />
         <Compile Include="CustomRoles\CustomRolesHandler.cs" />

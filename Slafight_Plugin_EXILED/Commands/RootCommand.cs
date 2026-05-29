@@ -24,7 +24,6 @@ public class RootCommand : ParentCommand
         RegisterCommand(new PlayerCommand());
         RegisterCommand(new DebugStart());
         RegisterCommand(new SpawnDebugToolRole());
-        RegisterCommand(new SpawnMapEditRole());
         RegisterCommand(new ReRollSpecial());
         RegisterCommand(new ReRollSetQueue());
         RegisterCommand(new GetQueue());
