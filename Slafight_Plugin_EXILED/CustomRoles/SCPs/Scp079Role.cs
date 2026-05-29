@@ -21,6 +21,9 @@ public class Scp079Role : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp079;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "Scp079";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp079;
+    protected override bool SpawnClearsInventory => true;
+    protected override string SpawnCustomInfo => "SCP-079";
 
     public override void RegisterEvents()
     {
@@ -34,15 +37,8 @@ public class Scp079Role : CRole
         base.UnregisterEvents();
     }
     
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Scp079);
-        player.UniqueRole = UniqueRoleKey;
-        //player.MaxHealth = 100f;
-        //player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.SetCustomInfo("SCP-079");
         MapFlags.IsOverrideActivated = false;
 
         if (player.Role is Exiled.API.Features.Roles.Scp079Role role)

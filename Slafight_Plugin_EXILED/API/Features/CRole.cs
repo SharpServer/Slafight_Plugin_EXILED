@@ -21,6 +21,19 @@ using MapEvents = Exiled.Events.EventArgs.Map;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
+public readonly record struct CRoleEffect(EffectType EffectType, byte Intensity = 1, float Duration = 0f)
+{
+    public void Apply(Player player)
+    {
+        if (player == null) return;
+
+        if (Duration > 0f)
+            player.EnableEffect(EffectType, Intensity, Duration);
+        else
+            player.EnableEffect(EffectType, Intensity);
+    }
+}
+
 public abstract class CRole
 {
     // 全インスタンスを追跡（主に自動生成分）
@@ -34,9 +47,12 @@ public abstract class CRole
     private static readonly Dictionary<CRoleTypeId, CRole> RoleIdToRole = new();
     private static readonly Dictionary<Type, CRole> TypeToRole = new();
     private static readonly Dictionary<int, TeamNpcInfo> TeamNpcs = new();
+    private static readonly Dictionary<int, CoroutineHandle> RoleEffectCoroutines = new();
 
     private static readonly IReadOnlyList<object> EmptyItems = [];
     private static readonly IReadOnlyDictionary<AmmoType, ushort> EmptyAmmo = new Dictionary<AmmoType, ushort>();
+    private static readonly IReadOnlyList<CRoleEffect> EmptyEffects = [];
+    private static readonly IReadOnlyList<SpecificFlagType> EmptySpecificFlags = [];
 
     private static bool _eventsSubscribed;
 
@@ -139,6 +155,7 @@ public abstract class CRole
         RoleIdToRole.Clear();
         TypeToRole.Clear();
         CleanupAllTeamNpcs();
+        CleanupAllRoleEffectCoroutines();
 
         if (_eventsSubscribed)
         {
@@ -237,6 +254,8 @@ public abstract class CRole
         if (ev?.Player == null) return;
 
         Dispatch(ev.Player, role => role.OnRoleChanging(ev), nameof(OnRoleChanging));
+        Dispatch(ev.Player, role => role.RemoveSpawnSpecificFlags(ev.Player), nameof(RemoveSpawnSpecificFlags));
+        StopRoleEffectCoroutine(ev.Player);
 
         if (!TeamNpcs.TryGetValue(ev.Player.Id, out var oldInfo)) return;
 
@@ -254,6 +273,7 @@ public abstract class CRole
         if (ev?.Player == null) return;
 
         Dispatch(ev.Player, role => role.OnRoleLeft(ev), nameof(OnRoleLeft));
+        StopRoleEffectCoroutine(ev.Player);
         CleanupTeamNpc(ev.Player);
     }
 
@@ -577,6 +597,9 @@ public abstract class CRole
     protected virtual float? SpawnMaxHealth => null;
     protected virtual IReadOnlyList<object> SpawnItems => EmptyItems;
     protected virtual IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => EmptyAmmo;
+    protected virtual IReadOnlyList<CRoleEffect> SpawnEffects => EmptyEffects;
+    protected virtual IReadOnlyList<SpecificFlagType> SpawnSpecificFlags => EmptySpecificFlags;
+    protected virtual float SpawnEffectRefreshInterval => 1f;
     protected virtual string SpawnCustomInfo => null;
     protected virtual Vector3? SpawnPosition => null;
     protected virtual bool SpawnClearsInventory => SpawnItems.Count > 0;
@@ -630,13 +653,18 @@ public abstract class CRole
         RunCommonSpawnLifecycle(player, roleSpawnFlags);
         OnRoleSpawnStarting(player, roleSpawnFlags);
         ApplyConfiguredSpawn(player, roleSpawnFlags);
+        AssignIdentity(player);
         OnRoleSpawned(player, roleSpawnFlags);
+        AssignIdentity(player);
+        ApplySpawnSpecificFlags(player);
+        StartRoleEffectCoroutine(player);
     }
 
     protected void RunCommonSpawnLifecycle(Player player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
     {
         if (player == null) return;
 
+        StopRoleEffectCoroutine(player);
         player.ShowHint(string.Empty);
         player.DisableAllEffects();
 
@@ -731,7 +759,6 @@ public abstract class CRole
         if (!UseConfiguredSpawn) return;
 
         ApplyBaseRole(player, roleSpawnFlags);
-        AssignIdentity(player);
         ApplyHealth(player);
 
         if (SpawnClearsInventory)
@@ -872,6 +899,79 @@ public abstract class CRole
         player.Position = SpawnPosition.Value;
     }
 
+    protected void ApplySpawnSpecificFlags(Player player)
+    {
+        if (player == null || SpawnSpecificFlags == null) return;
+
+        foreach (var flag in SpawnSpecificFlags)
+            player.TryAddFlag(flag);
+    }
+
+    protected void RemoveSpawnSpecificFlags(Player player)
+    {
+        if (player == null || SpawnSpecificFlags == null) return;
+
+        foreach (var flag in SpawnSpecificFlags)
+            player.TryRemoveFlag(flag);
+    }
+
+    private void StartRoleEffectCoroutine(Player player)
+    {
+        if (player == null) return;
+
+        StopRoleEffectCoroutine(player);
+
+        var effects = SpawnEffects;
+        if (effects == null || effects.Count <= 0) return;
+
+        RoleEffectCoroutines[player.Id] = Timing.RunCoroutine(RoleEffectCoroutine(player, effects));
+    }
+
+    private IEnumerator<float> RoleEffectCoroutine(Player player, IReadOnlyList<CRoleEffect> effects)
+    {
+        var wait = Math.Max(0.1f, SpawnEffectRefreshInterval);
+
+        while (player != null && player.IsConnected && player.IsAlive && Check(player))
+        {
+            ApplyRoleEffects(player, effects);
+            yield return Timing.WaitForSeconds(wait);
+        }
+
+        if (player != null)
+            RoleEffectCoroutines.Remove(player.Id);
+    }
+
+    private void ApplyRoleEffects(Player player, IReadOnlyList<CRoleEffect> effects)
+    {
+        if (player == null || effects == null) return;
+
+        foreach (var effect in effects)
+        {
+            try
+            {
+                effect.Apply(player);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"CRole.ApplyRoleEffects: failed to apply {effect.EffectType} for {DisplayName}: {ex.Message}");
+            }
+        }
+    }
+
+    private static void StopRoleEffectCoroutine(Player player)
+    {
+        if (player == null) return;
+        StopRoleEffectCoroutine(player.Id);
+    }
+
+    private static void StopRoleEffectCoroutine(int playerId)
+    {
+        if (!RoleEffectCoroutines.TryGetValue(playerId, out var handle)) return;
+
+        Timing.KillCoroutines(handle);
+        RoleEffectCoroutines.Remove(playerId);
+    }
+
     private void TryCreateTeamNpc(Player player)
     {
         if (TeamNpcRoleTypeId == null) return;
@@ -931,5 +1031,13 @@ public abstract class CRole
         }
 
         TeamNpcs.Clear();
+    }
+
+    private static void CleanupAllRoleEffectCoroutines()
+    {
+        foreach (var handle in RoleEffectCoroutines.Values.ToList())
+            Timing.KillCoroutines(handle);
+
+        RoleEffectCoroutines.Clear();
     }
 }

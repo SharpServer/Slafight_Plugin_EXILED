@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
@@ -24,26 +25,25 @@ public class SergeyMakarovRole : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SergeyMakarov;
     protected override CTeam Team { get; set; } = CTeam.Others;
     protected override string UniqueRoleKey { get; set; } = "TheSergeyHimSelf";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scientist;
+    protected override float? SpawnMaxHealth => 100f;
+    protected override bool SpawnClearsInventory => true;
+    protected override IReadOnlyList<object> SpawnItems =>
+    [
+        ItemType.GunCrossvec,
+        ItemType.KeycardFacilityManager,
+        ItemType.Medkit,
+        ItemType.Medkit,
+        ItemType.ArmorCombat,
+        ItemType.Radio,
+    ];
+    protected override string SpawnCustomInfo => "Facility Manager";
 
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Scientist);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 100;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-        player.AddItem(ItemType.GunCrossvec);
-        player.AddItem(ItemType.KeycardFacilityManager);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.Medkit);
-        player.AddItem(ItemType.ArmorCombat);
-        player.AddItem(ItemType.Radio);
         var pos = Room.Get(RoomType.HczIncineratorWayside).WorldPosition(new Vector3(0f,12.55f,0f));
         player.Position = pos;
-            
-        player.SetCustomInfo("Facility Manager");
-        
+
         UnitPackRegistry.TryGet("MTF_NtfNormal", out var ntfpack);
         UnitPackRegistry.TryGet("GOI_ChaosBackup", out var ntfbackupPack);
         UnitPackRegistry.TryGet("GOI_ChaosNormal", out var chaospack);

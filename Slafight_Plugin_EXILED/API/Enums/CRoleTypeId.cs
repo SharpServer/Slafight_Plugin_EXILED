@@ -111,6 +111,7 @@ public enum CRoleTypeId
     SergeyMakarovAwaken,
     HideAdmin,
     HideWatch,
+    Capybara,
     
     // ==== EXPERIMENTAL STAFF ==== //
     SecurityTeamGuard,

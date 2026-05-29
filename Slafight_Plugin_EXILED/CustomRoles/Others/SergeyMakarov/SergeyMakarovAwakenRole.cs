@@ -24,19 +24,17 @@ public class SergeyMakarovAwakenRole : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SergeyMakarovAwaken;
     protected override CTeam Team { get; set; } = CTeam.Others;
     protected override string UniqueRoleKey { get; set; } = "TheSergeyHimSelfAwaken";
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp0492;
+    protected override float? SpawnMaxHealth => 5000f;
+    protected override bool SpawnClearsInventory => true;
+    protected override string SpawnCustomInfo => "SPIRIT OF CURSEMASTER";
+
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Scp0492);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 5000;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
         player.DisableAllEffects();
         var pos = Door.Get(DoorType.Scp106Primary).Position + Vector3.up * 0.15f;
         player.Position = pos;
-            
-        player.SetCustomInfo("SPIRIT OF CURSEMASTER");
+
         player.AddAbility(new CreateSinkholeAbility(player));
         player.AddAbility(new MagicMissileAbility(player));
         player.AddAbility(new SoundOfFifthAbility(player));

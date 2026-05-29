@@ -311,7 +311,7 @@ public static class NvgManager
                 data.NvgLight = null;
 
                 if (prof.UseBlackout)
-                    player.EnableEffect<Blindness>(255);
+                    player.EnableEffect<Blindness>(255, 2.5f);
 
                 player.ShowHint("NVGの電池が切れた…視界が真っ暗になった。", 5f);
 

@@ -27,6 +27,8 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp096Anger;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "Scp096_Anger";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp096;
+    protected override string SpawnCustomInfo => "SCP-096: ANGER";
 
     private static readonly Dictionary<Player, Vector3> ShyGuyPositions = new();
     public override void RegisterEvents()
@@ -92,14 +94,10 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
         }
     }
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        _inTryNotToCryAnim[player!] = false;  // ★セット
-        
-        player!.Role.Set(RoleTypeId.Scp096);
-        player.UniqueRole = UniqueRoleKey;
-        player.SetCustomInfo("SCP-096: ANGER");
+        _inTryNotToCryAnim[player] = false;  // ★セット
+
         player.MaxArtificialHealth = 1000;
         player.MaxHealth = 8000;
         player.Health = 8000;

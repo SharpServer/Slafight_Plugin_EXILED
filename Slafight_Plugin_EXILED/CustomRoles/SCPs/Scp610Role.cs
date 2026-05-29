@@ -24,24 +24,26 @@ public class Scp610Role : CRole
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "Scp610";
     protected override RoleTypeId? TeamNpcRoleTypeId { get; set; } = RoleTypeId.Scp0492;
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Tutorial;
+    protected override float? SpawnMaxHealth => 800f;
+    protected override bool SpawnClearsInventory => true;
+    protected override IReadOnlyList<object> SpawnItems => [ItemType.SCP1509];
+    protected override string SpawnCustomInfo => "<color=#C50000>SCP-610</color>";
+    protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
+    [
+        new(EffectType.Fade, 255),
+        new(EffectType.DamageReduction, 80)
+    ];
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override IReadOnlyList<SpecificFlagType> SpawnSpecificFlags =>
+    [
+        SpecificFlagType.PickingDisabled,
+        SpecificFlagType.DroppingDisabled
+    ];
+
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-
-        player!.Role.Set(RoleTypeId.Tutorial);
-        player.MaxHealth = 800f;
-        player.Health = player.MaxHealth;
-        player.UniqueRole = UniqueRoleKey;
-        player.ClearInventory();
-        player.AddItem(ItemType.SCP1509);
-        player.SetCustomInfo("<color=#C50000>SCP-610</color>");
-        player.TryAddFlag(SpecificFlagType.PickingDisabled);
-        player.TryAddFlag(SpecificFlagType.DroppingDisabled);
-
         player.Position = Room.Get(RoomType.Hcz939).WorldPosition(Vector3.up * 0.65f);
-        player.EnableEffect<Fade>(255);
-        player.EnableEffect<DamageReduction>(80);
 
         player.TryWear("scp-610", player.Transform, out var schematicObject, (Vector3.down * 1f));
         //schematicObject.Scale *= 1.185f;

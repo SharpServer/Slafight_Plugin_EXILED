@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using InventorySystem.Items.Usables.Scp330;
@@ -17,24 +18,28 @@ public class CandyWarrierApril : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.CandyWarrierApril;
     protected override CTeam Team { get; set; } = CTeam.Others;
     protected override string UniqueRoleKey { get; set; } = "CandyWarrierApril";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosRifleman;
+    protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
+    [
+        new(EffectType.Slowness, 10)
+    ];
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override IReadOnlyList<SpecificFlagType> SpawnSpecificFlags =>
+    [
+        SpecificFlagType.SpecialWeaponsDisabled
+    ];
+
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-
-        player!.Role.Set(RoleTypeId.ChaosRifleman, RoleSpawnFlags.All);
         player.Role.Set(RoleTypeId.Tutorial, RoleSpawnFlags.AssignInventory);
-        player.UniqueRole = UniqueRoleKey;
 
         const int maxHealth = 1000;
 
         Timing.CallDelayed(0.05f, () =>
         {
-            player.TryAddFlag(SpecificFlagType.SpecialWeaponsDisabled);
             player.SetCustomInfo("<color=#FF96DE>CANDY WARRIER</color>");
             player.MaxHealth = maxHealth;
             player.Health = maxHealth;
-            player.EnableEffect(EffectType.Slowness, 10);
 
             player.ClearInventory();
             player.AddItem(ItemType.SCP1509);

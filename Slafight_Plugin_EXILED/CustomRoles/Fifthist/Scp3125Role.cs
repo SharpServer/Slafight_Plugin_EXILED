@@ -25,16 +25,13 @@ public class Scp3125Role : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp3125;
     protected override CTeam Team { get; set; } = CTeam.Fifthists;
     protected override string UniqueRoleKey { get; set; } = "SCP-3125";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfCaptain;
     public override bool CanUseProximityChat => true;
     public override bool ProximityChatEnabledByDefault => true;
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-
-        player!.Role.Set(RoleTypeId.NtfCaptain);
         player.Role.Set(RoleTypeId.Scp049, RoleSpawnFlags.AssignInventory);
-        player.UniqueRole = UniqueRoleKey;
         player.SetCustomInfo("<color=#FF0090>SCP-3125</color>");
         const int maxHealth = 55555;
         player.MaxHealth = maxHealth;

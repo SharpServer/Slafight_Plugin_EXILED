@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using MEC;
@@ -15,25 +16,29 @@ public class SnowWarrier : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SnowWarrier;
     protected override CTeam Team { get; set; } = CTeam.Others;
     protected override string UniqueRoleKey { get; set; } = "SnowWarrier";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosRifleman;
+    protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
+    [
+        new(EffectType.Slowness, 10)
+    ];
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override IReadOnlyList<SpecificFlagType> SpawnSpecificFlags =>
+    [
+        SpecificFlagType.SpecialWeaponsDisabled
+    ];
+
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-
-        player!.Role.Set(RoleTypeId.ChaosRifleman, RoleSpawnFlags.All);
         player.Role.Set(RoleTypeId.Tutorial, RoleSpawnFlags.AssignInventory);
-        player.UniqueRole = UniqueRoleKey;
         LabApiHandler.SchemSnowWarrier(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
 
         const int maxHealth = 1000;
 
         Timing.CallDelayed(0.05f, () =>
         {
-            player.TryAddFlag(SpecificFlagType.SpecialWeaponsDisabled);
             CustomInfoDisplay.Apply(player, "<color=#FFFFFF>SNOW WARRIER</color>");
             player.MaxHealth = maxHealth;
             player.Health = maxHealth;
-            player.EnableEffect(EffectType.Slowness, 10);
 
             player.AddItem(ItemType.SCP1509);
             player.AddItem(ItemType.GunCOM18);

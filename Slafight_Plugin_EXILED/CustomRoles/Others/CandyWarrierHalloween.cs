@@ -18,14 +18,20 @@ public class CandyWarrierHalloween : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.CandyWarrierHalloween;
     protected override CTeam Team { get; set; } = CTeam.Others;
     protected override string UniqueRoleKey { get; set; } = "CandyWarrierHalloween";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosRifleman;
+    protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
+    [
+        new(EffectType.Slowness, 10)
+    ];
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override IReadOnlyList<SpecificFlagType> SpawnSpecificFlags =>
+    [
+        SpecificFlagType.SpecialWeaponsDisabled
+    ];
+
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-
-        player!.Role.Set(RoleTypeId.ChaosRifleman, RoleSpawnFlags.All);
         player.Role.Set(RoleTypeId.Tutorial, RoleSpawnFlags.AssignInventory);
-        player.UniqueRole = UniqueRoleKey;
 
         const int maxHealth = 1000;
 
@@ -34,7 +40,6 @@ public class CandyWarrierHalloween : CRole
             player.SetCustomInfo("<color=#EE7600>CANDY WARRIER</color>");
             player.MaxHealth = maxHealth;
             player.Health = maxHealth;
-            player.EnableEffect(EffectType.Slowness, 10);
 
             player.ClearInventory();
             player.AddItem(ItemType.SCP1509);
@@ -64,7 +69,6 @@ public class CandyWarrierHalloween : CRole
                 }
             });
 
-            player.TryAddFlag(SpecificFlagType.SpecialWeaponsDisabled);
             player.SetAmmo(AmmoType.Nato9, 50);
             LabApiHandler.SchemCandyWarrier(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
         });

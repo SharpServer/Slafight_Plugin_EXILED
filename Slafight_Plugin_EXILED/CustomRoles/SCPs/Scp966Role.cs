@@ -22,6 +22,10 @@ public class Scp966Role : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp966;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "Scp966";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp3114;
+    protected override float? SpawnMaxHealth => 1500f;
+    protected override bool SpawnClearsInventory => true;
+    protected override string SpawnCustomInfo => "SCP-966";
 
     private static readonly Dictionary<Player, int> SpeedLevels = new();
     
@@ -37,19 +41,11 @@ public class Scp966Role : CRole
         base.UnregisterEvents();
     }
     
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Scp3114);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 1500;
-        player.Health = player.MaxHealth;
         player.MaxHumeShield = 100;
         SpeedLevels[player] = 0;
-        player.ClearInventory();
 
-        player.SetCustomInfo("SCP-966");
-            
         var spawnRoom = Room.Get(RoomType.LczGlassBox);
         Log.Debug(spawnRoom.Position);
         var offset = new Vector3(0f, 1.5f, 0f);

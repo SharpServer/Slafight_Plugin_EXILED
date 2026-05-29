@@ -22,6 +22,10 @@ public class Scp173Role : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp173;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "Scp173";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp173;
+    protected override float? SpawnMaxHealth => 4500f;
+    protected override bool SpawnClearsInventory => true;
+    protected override string SpawnCustomInfo => "SCP-173";
 
     public override void RegisterEvents()
     {
@@ -35,20 +39,13 @@ public class Scp173Role : CRole
         base.UnregisterEvents();
     }
     
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Scp173);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 4500f;
-        player.Health = player.MaxHealth;
         player.MaxHumeShield = 1500f;
         player.HumeShield = player.MaxHumeShield;
-        player.ClearInventory();
-        player.SetCustomInfo("SCP-173");
-        
+
         player.EnableEffect(EffectType.Slowness, 95, 60f);
-        
+
         player.AddAbility(new TeleportRandomAbility(player));
         player.AddAbility(new PlaceTantrumAbility(player));
         Timing.RunCoroutine(WaitAndTeleport(player));

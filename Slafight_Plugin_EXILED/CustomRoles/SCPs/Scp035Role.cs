@@ -36,6 +36,15 @@ public class Scp035Role : CRole
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "Scp035";
     protected override RoleTypeId? TeamNpcRoleTypeId { get; set; } = RoleTypeId.Scp0492;
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Tutorial;
+    protected override float? SpawnMaxHealth => 2500f;
+    protected override bool SpawnClearsInventory => true;
+    protected override IReadOnlyList<object> SpawnItems => [ItemType.KeycardScientist, ItemType.Painkillers];
+    protected override string SpawnCustomInfo => "<color=#C50000>SCP-035</color>";
+    protected override IReadOnlyList<SpecificFlagType> SpawnSpecificFlags =>
+    [
+        SpecificFlagType.SpecialWeaponsDisabled
+    ];
 
     // 全SCP-035共有状態
     private static readonly Dictionary<int, Scp035State> GlobalStates = new();
@@ -68,22 +77,11 @@ public class Scp035Role : CRole
         base.UnregisterEvents();
     }
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-
-        player!.Role.Set(RoleTypeId.Tutorial);
         player.ChangeAppearance(RoleTypeId.Scientist);
-        player.MaxHealth = 2500f;
-        player.Health = player.MaxHealth;
         player.MaxArtificialHealth = 500f;
         player.ArtificialHealth = 500f;
-        player.UniqueRole = UniqueRoleKey;
-        player.ClearInventory();
-        player.AddItem(ItemType.KeycardScientist);
-        player.AddItem(ItemType.Painkillers);
-        player.SetCustomInfo("<color=#C50000>SCP-035</color>");
-        player.TryAddFlag(SpecificFlagType.SpecialWeaponsDisabled);
 
         TryChangeState(player, new Scp035State
         {

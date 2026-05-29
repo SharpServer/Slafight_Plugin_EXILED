@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Pickups;
@@ -29,6 +28,16 @@ public class Scp999Role : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp999;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "Scp999";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp173;
+    protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
+    [
+        new(EffectType.Fade, 255)
+    ];
+
+    protected override IReadOnlyList<SpecificFlagType> SpawnSpecificFlags =>
+    [
+        SpecificFlagType.GunsDisabled
+    ];
 
     public override void RegisterEvents()
     {
@@ -52,20 +61,14 @@ public class Scp999Role : CRole
         base.UnregisterEvents();
     }
 
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Scp173);
         player.Role.Set(RoleTypeId.Tutorial,RoleSpawnFlags.AssignInventory);
-        player.UniqueRole = UniqueRoleKey;
         player.MaxHealth = 999;
         player.Health = player.MaxHealth;
         player.ClearInventory();
         RememberNato9(player);
 
-        player.EnableEffect<Fade>(255);
-
-        player.TryAddFlag(SpecificFlagType.GunsDisabled);
         player.SetCustomInfo("SCP-999");
         LabApiHandler.Schem999(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
     }
@@ -113,8 +116,6 @@ public class Scp999Role : CRole
 
     private void RememberNato9(Player player)
     {
-        if (!Check(player)) return;
-
         _reserveNato9ByPlayerId[player.Id] = player.GetAmmo(AmmoType.Nato9);
     }
 

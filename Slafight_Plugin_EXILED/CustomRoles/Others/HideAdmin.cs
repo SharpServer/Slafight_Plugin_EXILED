@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using CustomPlayerEffects;
+using Exiled.API.Enums;
 using Exiled.API.Features;
 using MEC;
 using PlayerRoles;
@@ -24,14 +24,17 @@ public class HideAdmin : CRole
         ItemType.KeycardO5,
     ];
     protected override string SpawnCustomInfo => "<color=#FF1493>THE ADMINISTRATOR</color>";
+    protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
+    [
+        new(EffectType.DamageReduction, 255),
+        new(EffectType.Fade, 255),
+        new(EffectType.NightVision, 255)
+    ];
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
         Timing.CallDelayed(0.05f, () =>
         {
-            player.EnableEffect<DamageReduction>(255);
-            player.EnableEffect<Fade>(255);
-            player.EnableEffect<NightVision>(255);
             player.IsBypassModeEnabled = true;
             player.IsNoclipPermitted = true;
             player.IsSpectatable = false;

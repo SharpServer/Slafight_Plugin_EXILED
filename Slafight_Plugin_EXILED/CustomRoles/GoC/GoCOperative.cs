@@ -1,8 +1,6 @@
 using System.Collections.Generic;
-using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
-using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
@@ -34,22 +32,9 @@ public class GoCOperative : CRole
         [AmmoType.Nato9] = 140,
     };
     protected override string SpawnCustomInfo => "Global Occult Collision: Broken Dagger Operative";
-
-    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
-    {
-        Timing.RunCoroutine(Coroutine(player));
-    }
-    
-    private IEnumerator<float> Coroutine(Player player)
-    {
-        while (true)
-        {
-            if (!Check(player)) yield break;
-            if (!player.IsEffectActive<Scp1344>())
-            {
-                player.EnableEffect(EffectType.Scp1344, 1);
-            }
-            yield return Timing.WaitForSeconds(3f);
-        }
-    }
+    protected override float SpawnEffectRefreshInterval => 3f;
+    protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
+    [
+        new(EffectType.Scp1344)
+    ];
 }

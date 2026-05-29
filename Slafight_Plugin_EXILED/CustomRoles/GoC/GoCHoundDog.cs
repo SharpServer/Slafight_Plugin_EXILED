@@ -1,17 +1,14 @@
 using System.Collections.Generic;
-using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Pickups;
 using Exiled.API.Features.Pickups.Projectiles;
 using Exiled.Events.EventArgs.Player;
-using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using UnityEngine;
-using Scp1344 = CustomPlayerEffects.Scp1344;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.GoC;
 
@@ -48,6 +45,12 @@ public class GoCHoundDog : CRole
         [AmmoType.Nato762] = 140,
     };
     protected override string SpawnCustomInfo => "Global Occult Collision: Hound Dog Mark II Combat Garment White Suit";
+    protected override float SpawnEffectRefreshInterval => 3f;
+    protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
+    [
+        new(EffectType.MovementBoost, 25),
+        new(EffectType.Scp1344)
+    ];
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
@@ -55,8 +58,6 @@ public class GoCHoundDog : CRole
         player.CustomHumeShieldStat.CurValue = player.CustomHumeShieldStat.MaxValue;
         player.CustomHumeShieldStat.ShieldRegenerationMultiplier = 3.5f;
         player.IsBypassModeEnabled = true;
-
-        Timing.RunCoroutine(Coroutine(player));
     }
 
     protected override void OnRoleDying(DyingEventArgs ev)
@@ -81,20 +82,4 @@ public class GoCHoundDog : CRole
         }
     }
 
-    private IEnumerator<float> Coroutine(Player player)
-    {
-        while (true)
-        {
-            if (!Check(player)) yield break;
-            if (!player.IsEffectActive<MovementBoost>())
-            {
-                player.EnableEffect(EffectType.MovementBoost, 25);
-            }
-            if (!player.IsEffectActive<Scp1344>())
-            {
-                player.EnableEffect(EffectType.Scp1344, 1);
-            }
-            yield return Timing.WaitForSeconds(3f);
-        }
-    }
 }

@@ -30,6 +30,9 @@ public class Scp3005Role : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp3005;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "SCP-3005";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp0492;
+    protected override float? SpawnMaxHealth => 55556f;
+    protected override string SpawnCustomInfo => "SCP-3005";
 
     public override void RegisterEvents()
     {
@@ -43,16 +46,9 @@ public class Scp3005Role : CRole
         base.UnregisterEvents();
     }
 
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-
-        player!.Role.Set(RoleTypeId.Scp0492);
-        player.UniqueRole = UniqueRoleKey;
-        player.SetCustomInfo("SCP-3005");
-        const int maxHealth = 55556;
-        player.MaxHealth = maxHealth;
-        player.Health = maxHealth-1;
+        player.Health = player.MaxHealth - 1;
         player.EnableEffect(EffectType.MovementBoost, 50);
 
         // ★ Scale は触らない

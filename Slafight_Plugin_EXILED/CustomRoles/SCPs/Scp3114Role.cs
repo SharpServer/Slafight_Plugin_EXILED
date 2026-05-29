@@ -18,6 +18,9 @@ public class Scp3114Role : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp3114;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "Scp3114";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp3114;
+    protected override float? SpawnMaxHealth => 3114f;
+    protected override bool SpawnClearsInventory => true;
     public override bool CanUseProximityChat => true;
 
     public override void RegisterEvents()
@@ -32,15 +35,8 @@ public class Scp3114Role : CRole
         base.UnregisterEvents();
     }
     
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Scp3114);
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 3114;
-        player.Health = player.MaxHealth;
-        player.ClearInventory();
-            
         Room SpawnRoom = Room.Get(RoomType.Hcz127);
         Log.Debug(SpawnRoom.Position);
         Vector3 offset = new Vector3(0f,13f,0f);

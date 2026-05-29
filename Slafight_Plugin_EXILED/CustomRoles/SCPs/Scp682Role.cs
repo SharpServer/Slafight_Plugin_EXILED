@@ -25,25 +25,25 @@ public class Scp682Role : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp682;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "Scp682";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp939;
+    protected override float? SpawnMaxHealth => 999f;
+    protected override bool SpawnClearsInventory => true;
+    protected override string SpawnCustomInfo => "SCP-682";
+    protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
+    [
+        new(EffectType.FocusedVision),
+        new(EffectType.NightVision, 255)
+    ];
     
     private static readonly Dictionary<Player, float> SpeedLevels = new();
     
-    public override void SpawnRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Scp939);
-
-        player.UniqueRole = UniqueRoleKey;
-        player.MaxHealth = 999;
-        player.Health = player.MaxHealth;
         player.MaxHumeShield = 1200;
         player.HumeShieldRegenerationMultiplier = 13.5f;
-        player.ClearInventory();
 
         SpeedLevels[player] = 1f;
         player.SetScale(new Vector3(0.7f, 0.65f, 1.2f));
-
-        player.SetCustomInfo("SCP-682");
         
         Timing.RunCoroutine(WaitAndTeleport(player));
         Timing.RunCoroutine(Coroutine(player));
@@ -77,9 +77,6 @@ public class Scp682Role : CRole
 
             if (!SpeedLevels.TryGetValue(player, out float speedLevel))
                 speedLevel = SpeedLevels[player] = 1f;
-
-            player.EnableEffect(EffectType.FocusedVision);
-            player.EnableEffect(EffectType.NightVision, 255);
             
             SpeedLevels[player] *= 1.0005f;
             

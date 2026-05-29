@@ -15,7 +15,7 @@ namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
 public class Scp106Role : CRole
 {
-    protected override string RoleName { get; set; } = "SCP-173";
+    protected override string RoleName { get; set; } = "SCP-106";
 
     protected override string Description { get; set; } = MapFlags.GetSeason() == SeasonTypeId.April
         ? "若者の叫び声大好き爺。いっぱいPDに送り込もう！\nアビリティで糞まみれの爺街道を創り出せるぞ！\n施設中に糞を垂れ流す奴二号機になりましょう！"
@@ -24,6 +24,9 @@ public class Scp106Role : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp106;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "Scp106";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp106;
+    protected override bool SpawnClearsInventory => true;
+    protected override string SpawnCustomInfo => "SCP-106";
 
     public override void RegisterEvents()
     {
@@ -35,17 +38,8 @@ public class Scp106Role : CRole
         base.UnregisterEvents();
     }
     
-    public override void SpawnRole(Player? player,RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
+    protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        base.SpawnRole(player, roleSpawnFlags);
-        player!.Role.Set(RoleTypeId.Scp106);
-        player.UniqueRole = UniqueRoleKey;
-        //player.MaxHealth = 1400;
-        //player.Health = player.MaxHealth;
-        //player.MaxHumeShield = 500;
-        player.ClearInventory();
-        player.SetCustomInfo("SCP-106");
-
         if (MapFlags.GetSeason() == SeasonTypeId.April)
         {
             player.AddAbility(new DropBiggerShitAbility(player));
