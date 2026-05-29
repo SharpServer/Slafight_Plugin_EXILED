@@ -4,6 +4,7 @@ using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using Slafight_Plugin_EXILED.CustomMaps.Core;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;

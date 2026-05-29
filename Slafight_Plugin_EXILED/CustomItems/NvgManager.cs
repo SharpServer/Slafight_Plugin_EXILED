@@ -8,6 +8,7 @@ using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers.Wearables;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Light = Exiled.API.Features.Toys.Light;
 

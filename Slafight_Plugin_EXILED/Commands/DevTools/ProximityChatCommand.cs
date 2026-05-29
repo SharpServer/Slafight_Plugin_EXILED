@@ -1,6 +1,7 @@
 using System;
 using CommandSystem;
 using Exiled.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.ProximityChat;
 
 namespace Slafight_Plugin_EXILED.Commands.DevTools;

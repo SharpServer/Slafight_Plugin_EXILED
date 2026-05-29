@@ -6,6 +6,7 @@ using MEC;
 using PlayerRoles;
 using PlayerRoles.Spectating;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using VoiceChat;
 using VoiceChat.Codec;

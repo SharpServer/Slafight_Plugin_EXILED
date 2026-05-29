@@ -8,6 +8,7 @@ using MEC;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;
 

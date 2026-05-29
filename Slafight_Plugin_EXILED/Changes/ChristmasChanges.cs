@@ -13,6 +13,7 @@ using UnityEngine;
 using EffectType = Exiled.API.Enums.EffectType;
 
 using Slafight_Plugin_EXILED.API.Interface;
+using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.Changes;
 

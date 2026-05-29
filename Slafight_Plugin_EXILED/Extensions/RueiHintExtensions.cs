@@ -1,12 +1,12 @@
 using System;
-using System.Collections.Generic;
 using System.Collections;
+using System.Collections.Generic;
 using Exiled.API.Features;
 using RueI.API;
 using RueI.API.Elements;
 using UnityEngine;
 
-namespace Exiled.API.Features;
+namespace Slafight_Plugin_EXILED.Extensions;
 
 public static class RueiHintExtensions
 {

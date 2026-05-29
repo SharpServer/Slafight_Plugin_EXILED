@@ -10,6 +10,7 @@ using MEC;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps.FacilityControlRoomFunctions;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;

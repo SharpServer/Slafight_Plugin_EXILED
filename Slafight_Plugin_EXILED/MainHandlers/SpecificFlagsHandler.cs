@@ -2,6 +2,7 @@ using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 

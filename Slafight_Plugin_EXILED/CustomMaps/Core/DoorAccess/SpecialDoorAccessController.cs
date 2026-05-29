@@ -5,6 +5,7 @@ using Exiled.API.Features.Doors;
 using Exiled.Events.EventArgs.Player;
 using Interactables.Interobjects.DoorUtils;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Core.DoorAccess;

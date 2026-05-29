@@ -3,7 +3,7 @@ using Respawning;
 using Respawning.Waves;
 using Respawning.Waves.Generic;
 
-namespace RespawnTimer.API.Extensions;
+namespace Slafight_Plugin_EXILED.API.Features.RespawnTimer;
 
 public static class WaveManagerExtension
 {

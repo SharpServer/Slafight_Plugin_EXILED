@@ -6,6 +6,7 @@ using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine; // ← 追加（Time.time 用）
 
 namespace Slafight_Plugin_EXILED.API.Features;
