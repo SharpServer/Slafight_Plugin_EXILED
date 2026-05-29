@@ -50,6 +50,8 @@ public sealed class RespawnTimerDisplay : IBootstrapHandler, IDisposable
     {
         Exiled.Events.Handlers.Player.Verified += OnVerified;
         Exiled.Events.Handlers.Player.ChangingRole += OnChangingRole;
+        Exiled.Events.Handlers.Player.Spawned += OnSpawned;
+        Exiled.Events.Handlers.Player.Died += OnDied;
         Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
         Exiled.Events.Handlers.Server.RestartingRound += OnRestartingRound;
     }
@@ -62,6 +64,8 @@ public sealed class RespawnTimerDisplay : IBootstrapHandler, IDisposable
         _disposed = true;
         Exiled.Events.Handlers.Player.Verified -= OnVerified;
         Exiled.Events.Handlers.Player.ChangingRole -= OnChangingRole;
+        Exiled.Events.Handlers.Player.Spawned -= OnSpawned;
+        Exiled.Events.Handlers.Player.Died -= OnDied;
         Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
         Exiled.Events.Handlers.Server.RestartingRound -= OnRestartingRound;
 
@@ -85,6 +89,22 @@ public sealed class RespawnTimerDisplay : IBootstrapHandler, IDisposable
             return;
 
         Timing.CallDelayed(0.1f, () => ApplyForRole(ev.Player, ev.NewRole));
+    }
+
+    private static void OnSpawned(SpawnedEventArgs ev)
+    {
+        if (ev?.Player == null)
+            return;
+
+        Timing.CallDelayed(0.1f, () => ApplyForRole(ev.Player, ev.Player.Role.Type));
+    }
+
+    private static void OnDied(DiedEventArgs ev)
+    {
+        if (ev?.Player == null)
+            return;
+
+        Timing.CallDelayed(0.2f, () => ApplyForRole(ev.Player, ev.Player.Role.Type));
     }
 
     private static void OnRoundStarted()
