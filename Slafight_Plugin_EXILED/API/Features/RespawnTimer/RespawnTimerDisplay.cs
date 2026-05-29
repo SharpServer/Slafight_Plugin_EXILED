@@ -1,5 +1,6 @@
 using System;
 using System.Text;
+using Exiled.API.Enums;
 using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;

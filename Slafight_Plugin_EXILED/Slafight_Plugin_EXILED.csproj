@@ -37,8 +37,17 @@
         <WarningLevel>4</WarningLevel>
     </PropertyGroup>
     <ItemGroup>
-        <Reference Include="0Harmony">
-            <HintPath>$(SL_References)\0Harmony.dll</HintPath>
+        <Reference Include="0Harmony, Version=2.2.2.0, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>..\packages\Lib.Harmony.2.2.2\lib\net48\0Harmony.dll</HintPath>
+        </Reference>
+        <Reference Include="LabApi, Version=1.1.1.0, Culture=neutral, processorArchitecture=Amd64">
+          <HintPath>..\packages\Northwood.LabAPI.1.1.1\lib\net48\LabApi.dll</HintPath>
+        </Reference>
+        <Reference Include="RueI, Version=3.1.2.0, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>..\packages\RueI.3.1.2\lib\net48\RueI.dll</HintPath>
+        </Reference>
+        <Reference Include="YamlDotNet, Version=11.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
+          <HintPath>..\packages\YamlDotNet.11.0.1\lib\net45\YamlDotNet.dll</HintPath>
         </Reference>
         <Reference Include="ZAMERT">
             <HintPath>$(SL_References)\ZAMERT.dll</HintPath>
@@ -70,9 +79,6 @@
         <Reference Include="Exiled.Permissions, Version=9.13.3.0, Culture=neutral, processorArchitecture=Amd64">
           <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\Exiled.Permissions.dll</HintPath>
         </Reference>
-        <Reference Include="LabApi, Version=1.1.6.0, Culture=neutral, processorArchitecture=Amd64">
-          <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\LabApi.dll</HintPath>
-        </Reference>
         <Reference Include="Mirror">
             <HintPath>$(SL_References)\Mirror_publicized.dll</HintPath>
         </Reference>
@@ -96,9 +102,6 @@
         </Reference>
         <Reference Include="ProjectMER">
             <HintPath>$(SL_References)\ProjectMER.dll</HintPath>
-        </Reference>
-        <Reference Include="RueI">
-            <HintPath>$(UserProfile)\.nuget\packages\ruei\3.1.2\lib\net48\RueI.dll</HintPath>
         </Reference>
         <Reference Include="Unity.TextMeshPro">
             <HintPath>$(SL_References)\Unity.TextMeshPro.dll</HintPath>
@@ -153,9 +156,6 @@
         <Reference Include="System.Net.Http.WebRequest" />
         <Reference Include="System.Numerics" />
         <Reference Include="System.Xml" />
-        <Reference Include="YamlDotNet, Version=11.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
-          <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\YamlDotNet.dll</HintPath>
-        </Reference>
     </ItemGroup>
     <ItemGroup>
         <Compile Include="Abilities\AllowEscapeAbility.cs" />

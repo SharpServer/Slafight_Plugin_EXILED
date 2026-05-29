@@ -17,6 +17,7 @@ using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;
 using Random = System.Random;
+using Ragdoll = LabApi.Features.Wrappers.Ragdoll;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
