@@ -12,7 +12,7 @@ public class HideWatch : CRole
     protected override string RoleName { get; set; } = $"<color={ServerColors.Cyan}><b>THE HIDEWATCH</b></color>";
     protected override string Description { get; set; } = "ぐへへへへ";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.HideWatch;
-    protected override CTeam Team { get; set; } = CTeam.Others;
+    protected override CTeam Team { get; set; } = CTeam.Moderators;
     protected override string UniqueRoleKey { get; set; } = "HideWatch";
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Overwatch;
     protected override string SpawnCustomInfo => $"<color={ServerColors.Cyan}>THE HIDEWATCH</color>";

@@ -14,7 +14,7 @@ public class HideAdmin : CRole
     protected override string RoleName { get; set; } = "<color=#FF1493><b>THE ADMINISTRATOR</b></color>";
     protected override string Description { get; set; } = "なぁ～んでもできる！";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.HideAdmin;
-    protected override CTeam Team { get; set; } = CTeam.Others;
+    protected override CTeam Team { get; set; } = CTeam.Moderators;
     protected override string UniqueRoleKey { get; set; } = "HideAdmin";
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Tutorial;
     protected override float? SpawnMaxHealth => 99999f;

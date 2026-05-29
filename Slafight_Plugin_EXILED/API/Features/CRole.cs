@@ -253,8 +253,10 @@ public abstract class CRole
     {
         if (ev?.Player == null) return;
 
+        // フラグのクリアは CustomRoleRemover の player.Clear() に任せる。
+        // ここで RemoveSpawnSpecificFlags を呼ぶと SpawnRole 中の Role.Set() 発火でも
+        // フラグが消えてしまい、直後の ApplySpawnSpecificFlags と競合するため削除。
         Dispatch(ev.Player, role => role.OnRoleChanging(ev), nameof(OnRoleChanging));
-        Dispatch(ev.Player, role => role.RemoveSpawnSpecificFlags(ev.Player), nameof(RemoveSpawnSpecificFlags));
         StopRoleEffectCoroutine(ev.Player);
 
         if (!TeamNpcs.TryGetValue(ev.Player.Id, out var oldInfo)) return;
@@ -653,11 +655,24 @@ public abstract class CRole
         RunCommonSpawnLifecycle(player, roleSpawnFlags);
         OnRoleSpawnStarting(player, roleSpawnFlags);
         ApplyConfiguredSpawn(player, roleSpawnFlags);
-        AssignIdentity(player);
-        OnRoleSpawned(player, roleSpawnFlags);
+
+        // ApplyBaseRole (Role.Set) が ChangingRole を発火させ CustomRoleRemover が
+        // player.Clear() でフラグを全消しするため、Role.Set() の直後に同期で付け直す。
+        // これが旧版で SpawnRole override 内に TryAddFlag を直書きしていたのと等価。
         AssignIdentity(player);
         ApplySpawnSpecificFlags(player);
-        StartRoleEffectCoroutine(player);
+
+        OnRoleSpawned(player, roleSpawnFlags);
+        AssignIdentity(player);
+
+        Timing.CallDelayed(0.25f, () =>
+        {
+            if (player is null) return;
+            ApplyCustomInfo(player, SpawnCustomInfo);
+            // 遅延後にも再適用。0.25秒以内に何らかの理由で消えた場合の保険。
+            ApplySpawnSpecificFlags(player);
+            StartRoleEffectCoroutine(player);
+        });
     }
 
     protected void RunCommonSpawnLifecycle(Player player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
@@ -768,7 +783,6 @@ public abstract class CRole
         GiveCustomItems(player);
         ApplyAmmo(player, SpawnAmmo);
         ApplySpawnPosition(player);
-        ApplyCustomInfo(player, SpawnCustomInfo);
     }
 
     protected void ApplyBaseRole(Player player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
@@ -901,15 +915,17 @@ public abstract class CRole
 
     protected void ApplySpawnSpecificFlags(Player player)
     {
-        if (player == null || SpawnSpecificFlags == null) return;
+        if (player == null || SpawnSpecificFlags == null || SpawnSpecificFlags.Count == 0) return;
 
         foreach (var flag in SpawnSpecificFlags)
             player.TryAddFlag(flag);
     }
 
+    // SpawnSpecificFlags の手動除去が必要な場合は派生クラスから直接呼ぶ。
+    // ChangingRole イベントからは呼ばない（CustomRoleRemover の Clear() で済むため）。
     protected void RemoveSpawnSpecificFlags(Player player)
     {
-        if (player == null || SpawnSpecificFlags == null) return;
+        if (player == null || SpawnSpecificFlags == null || SpawnSpecificFlags.Count == 0) return;
 
         foreach (var flag in SpawnSpecificFlags)
             player.TryRemoveFlag(flag);

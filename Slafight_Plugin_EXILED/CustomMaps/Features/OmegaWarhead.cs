@@ -90,7 +90,7 @@ public static class OmegaWarhead
 
         Exiled.API.Features.Cassie.MessageTranslated(
             $"By Order of O5 Command . Omega Warhead Sequence Activated . All Facility Detonated in T MINUS {Plugin.Singleton.Config.OwBoomTime} Seconds. Please evacuate to outside immediately .",
-            $"O5評議会の指令に基づいた操作により、<color=blue>OMEGA WARHEAD</color>シーケンスが開始されました。施設の全てを{Plugin.Singleton.Config.OwBoomTime}秒後に爆破します。<split>直ちに施設外に避難してください。",
+            $"O5評議会の指令に基づいた操作により、<color=blue>OMEGA WARHEAD</color>シーケンスが開始されました。施設の全てを{Plugin.Singleton.Config.OwBoomTime}秒後に爆破します。<split><b>直ちに脱出口を用いて施設外に避難してください。</b>",
             true);
         
         EvacuationRoundEndState.Begin();
