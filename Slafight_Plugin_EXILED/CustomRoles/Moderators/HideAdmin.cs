@@ -7,7 +7,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
-namespace Slafight_Plugin_EXILED.CustomRoles.Others;
+namespace Slafight_Plugin_EXILED.CustomRoles.Moderators;
 
 public class HideAdmin : CRole
 {

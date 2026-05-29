@@ -45,6 +45,7 @@ public sealed class FacilityTerminationTeamProfileDefinitionSource : CTeamProfil
             Map(CTeam.AWCY, CTeamGroup.Humanity),
             Map(CTeam.BlackQueen, CTeamGroup.Humanity),
             Map(CTeam.Fifthists, CTeamGroup.Undefined),
+            Map(CTeam.Moderators, CTeamGroup.Undefined),
             Map(CTeam.Null, CTeamGroup.Undefined));
     }
 }

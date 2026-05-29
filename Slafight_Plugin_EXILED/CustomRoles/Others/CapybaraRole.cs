@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using MEC;
@@ -30,6 +31,11 @@ public class CapybaraRole : CRole
     [
         typeof(CapybaraMissile)
     ];
+
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
+    {
+        [AmmoType.Nato9] = 35,
+    };
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {

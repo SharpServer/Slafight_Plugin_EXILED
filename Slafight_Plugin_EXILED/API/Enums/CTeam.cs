@@ -19,5 +19,6 @@ public enum CTeam
     Sarkic,
     AWCY,
     BlackQueen,
+    Moderators,
     
 }

@@ -109,9 +109,12 @@ public enum CRoleTypeId
     Sculpture,
     SergeyMakarov,
     SergeyMakarovAwaken,
+    Capybara,
+    
+    // ==== MODERATORS ==== //
     HideAdmin,
     HideWatch,
-    Capybara,
+    ModeratorRole,
     
     // ==== EXPERIMENTAL STAFF ==== //
     SecurityTeamGuard,

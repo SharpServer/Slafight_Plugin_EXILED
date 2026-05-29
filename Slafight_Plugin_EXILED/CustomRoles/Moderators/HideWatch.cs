@@ -5,7 +5,7 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 
-namespace Slafight_Plugin_EXILED.CustomRoles.Others;
+namespace Slafight_Plugin_EXILED.CustomRoles.Moderators;
 
 public class HideWatch : CRole
 {
