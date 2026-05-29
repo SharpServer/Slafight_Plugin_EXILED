@@ -105,7 +105,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         }
     }
 
-    /// <summary>PlayerDisplay を安全に取得する。失敗時は null を返す</summary>
+    /// <summary>HUD文字列をRueI向けに整形する</summary>
     private static string HudText(string text, int x, int y, int fontSize, string align = "left")
     {
         if (string.IsNullOrEmpty(text))
@@ -394,7 +394,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         // 1. ロール HUD 同期
         SyncTexts(spectator, target);
 
-        // FIX: PlayerDisplay 取得を安全なヘルパーで実施
+        // FIX: RueI HUD同期を安全なヘルパーで実施
         try
         {
             HintSync(SyncType.PHUD_Specific, RoleSpecificTextProvider.GetFor(target), spectator);
