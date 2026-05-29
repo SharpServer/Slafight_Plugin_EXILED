@@ -193,6 +193,8 @@ public static class RueiHintExtensions
         {
             return player != null &&
                    player.IsConnected &&
+                   !player.IsHost &&
+                   !player.IsNPC &&
                    player.ReferenceHub != null &&
                    player.ReferenceHub.connectionToClient != null;
         }

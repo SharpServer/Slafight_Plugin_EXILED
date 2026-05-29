@@ -146,6 +146,8 @@ public sealed class RespawnTimerDisplay : IBootstrapHandler, IDisposable
         {
             return player != null &&
                    player.IsConnected &&
+                   !player.IsHost &&
+                   !player.IsNPC &&
                    player.ReferenceHub != null &&
                    player.ReferenceHub.connectionToClient != null;
         }
