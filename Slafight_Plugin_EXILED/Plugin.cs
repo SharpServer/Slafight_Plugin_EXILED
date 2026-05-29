@@ -30,7 +30,7 @@ public class Plugin : Plugin<Config>
         Timeout = TimeSpan.FromSeconds(10)
     };
     public override string Name => "Slafight_Plugin_EXILED";
-    public override string Author => "Slaviaaa_2";
+    public override string Author => "org.sharp-server.jp.scpsl";
     public override string Prefix => "Slafight_Plugin_EXILED";
     public override Version Version => new(1, 8, 0, 5);
         
