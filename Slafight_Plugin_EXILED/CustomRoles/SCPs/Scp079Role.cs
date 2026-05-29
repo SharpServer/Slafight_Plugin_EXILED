@@ -70,7 +70,7 @@ public class Scp079Role : CRole
                 var list = Player.List.Where(p => p.GetCustomRole() is CRoleTypeId.Scp079).ToList();
                 foreach (var player in list)
                 {
-                    player.ShowHint("<size=23><color=red>!!!!!発電機が全て起動されました!!!!!\n最終手段を確立しています・・・</color></size>");
+                    player.ShowRueiPlus("<size=23><color=red>!!!!!発電機が全て起動されました!!!!!\n最終手段を確立しています・・・</color></size>");
                 }
 
                 Timing.CallDelayed(60f, () =>
@@ -80,7 +80,7 @@ public class Scp079Role : CRole
                         if (player is null || Round.IsLobby || player.GetCustomRole() is not CRoleTypeId.Scp079 ||
                             Generator.List.Where(g => !g.IsEngaged).ToList().Count is not 0) return;
                         player.AddAbility<AlphaWarheadOverride>();
-                        player.ShowHint(
+                        player.ShowRueiPlus(
                             "<color=red><b>ALPHA WARHEAD OVERRIDEが使用可能になりました！</b></color>\nアビリティ使用キーを押して施設を破壊しましょう！");
                     }
                 });

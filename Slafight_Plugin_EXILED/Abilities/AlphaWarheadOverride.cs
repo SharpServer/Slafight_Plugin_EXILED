@@ -34,7 +34,7 @@ public class AlphaWarheadOverride : AbilityBase
         {
             player.RemoveAbility<AlphaWarheadOverride>();
             player.AddAbility<AlphaWarheadOverride>();
-            player.ShowHint("※実行に失敗しました", 3f);
+            player.ShowRueiPlus("※実行に失敗しました", 3f);
             return;
         }
         FacilityLightHandler.OnWarhead(new StartingEventArgs(null, false, true));

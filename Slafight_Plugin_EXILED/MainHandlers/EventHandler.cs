@@ -123,7 +123,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
         {
             if (!IsPlayerValid(ev.Player)) return;
             string tips = Tips.GetRandomTip();
-            ev.Player.ShowHint(
+            ev.Player.ShowRueiPlus(
                 "\n\n\n\n\n\n\n<size=32>次のイベント：" + SpecialEventsHandler.Instance.LocalizedEventName + "</size>" +
                 $"\n\n<size=28>Tips: {tips}</size>",
                 5555f);
@@ -156,7 +156,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
             candidate.SetRole(roleInfo.Custom);
         }
 
-        candidate.ShowHint("※SCPプレイヤーが切断したため代わりにスポーンしました");
+        candidate.ShowRueiPlus("※SCPプレイヤーが切断したため代わりにスポーンしました");
     }
 
     public static void SyncSpecialEvent()
@@ -168,7 +168,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
             {
                 if (!IsPlayerValid(player)) continue;
                 var tips = Tips.GetRandomTip();
-                player.ShowHint(
+                player.ShowRueiPlus(
                     "\n\n\n\n\n\n\n<size=32>次のイベント：" + SpecialEventsHandler.Instance.LocalizedEventName + "</size>" +
                     $"\n\n<size=28>Tips: {tips}</size>",
                     5555f);
@@ -190,7 +190,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
         SpecificFlagsManager.ClearAll();
         foreach (var player in Player.List.ToList().Where(IsPlayerValid))
         {
-            player.ShowHint("");
+            player.ShowRueiPlus("");
             player.InitPlayerFlags();
         }
 
@@ -357,7 +357,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
             {
                 if (ev.Door.IsLocked && SpecialEventsHandler.Instance.NowEvent == SpecialEventType.None)
                 {
-                    ev.Player.ShowHint("収容違反への対応として暫くロックされているようだ・・・");
+                    ev.Player.ShowRueiPlus("収容違反への対応として暫くロックされているようだ・・・");
                 }
             }
         }

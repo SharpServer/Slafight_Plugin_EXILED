@@ -4,14 +4,11 @@ using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.CustomItems.API.Features;
-using HintServiceMeow.Core.Enum;
-using HintServiceMeow.Core.Extension;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
-using Hint = HintServiceMeow.Core.Models.Hints.Hint;
 
 // イベント系はエイリアス付けて衝突回避
 using PlayerHandlers = Exiled.Events.Handlers.Player;
@@ -680,7 +677,7 @@ public abstract class CRole
         if (player == null) return;
 
         StopRoleEffectCoroutine(player);
-        player.ShowHint(string.Empty);
+        player.ShowRueiPlus(string.Empty);
         player.DisableAllEffects();
 
         switch (roleSpawnFlags)
@@ -735,32 +732,11 @@ public abstract class CRole
         Timing.CallDelayed(0.05f, () =>
         {
             if (DescriptionDuration <= 0f) return;
-            Hint hint;
-            if (DescriptionShowRoleName)
-            {
-                hint = new Hint()
-                {
-                    Alignment = HintAlignment.Center, XCoordinate = 0, YCoordinate = 770,
-                    Text = $"<size=24><color={Team.GetTeamColor()}>{RoleName}</color>\n{Description}</size>", Id = "CRoleSpawnedHint"
-                };
-            }
-            else
-            {
-                hint = new Hint()
-                {
-                    Alignment = HintAlignment.Center, XCoordinate = 0, YCoordinate = 770,
-                    Text = $"<size=24>{Description}</size>", Id = "CRoleSpawnedHint"
-                };
-            }
+            var text = DescriptionShowRoleName
+                ? $"<size=24><color={Team.GetTeamColor()}>{RoleName}</color>\n{Description}</size>"
+                : $"<size=24>{Description}</size>";
 
-            var display = player.GetPlayerDisplay();
-            display.TryGetHint("CRoleSpawnedHint", out var oldHint);
-            if (oldHint != null) player.RemoveHint(oldHint);
-            player.AddHint(hint);
-            Timing.CallDelayed(DescriptionDuration, () =>
-            {
-                player.RemoveHint(hint);
-            });
+            player.ShowRuei(text, "CRoleSpawnedHint", DescriptionDuration, 770);
         });
 
         Timing.CallDelayed(0.6f, () =>

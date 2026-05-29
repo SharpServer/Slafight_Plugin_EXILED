@@ -70,9 +70,6 @@
         <Reference Include="Exiled.Permissions, Version=9.13.3.0, Culture=neutral, processorArchitecture=Amd64">
           <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\Exiled.Permissions.dll</HintPath>
         </Reference>
-        <Reference Include="HintServiceMeow">
-            <HintPath>$(SL_References)\HintServiceMeow-Exiled.dll</HintPath>
-        </Reference>
         <Reference Include="LabApi, Version=1.1.6.0, Culture=neutral, processorArchitecture=Amd64">
           <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\LabApi.dll</HintPath>
         </Reference>
@@ -99,6 +96,9 @@
         </Reference>
         <Reference Include="ProjectMER">
             <HintPath>$(SL_References)\ProjectMER.dll</HintPath>
+        </Reference>
+        <Reference Include="RueI">
+            <HintPath>$(UserProfile)\.nuget\packages\ruei\3.1.2\lib\net48\RueI.dll</HintPath>
         </Reference>
         <Reference Include="Unity.TextMeshPro">
             <HintPath>$(SL_References)\Unity.TextMeshPro.dll</HintPath>
@@ -472,6 +472,7 @@
         <Compile Include="Extensions\PlayerAbilityExtensions.cs" />
         <Compile Include="Extensions\PlayerCItemBaseExtensions.cs" />
         <Compile Include="Extensions\PlayerExtensions.cs" />
+        <Compile Include="Extensions\RueiHintExtensions.cs" />
         <Compile Include="Extensions\PlayerRoleHelpers.cs" />
         <Compile Include="Extensions\RoomSpawner.cs" />
         <Compile Include="Extensions\RoomUtils.cs" />

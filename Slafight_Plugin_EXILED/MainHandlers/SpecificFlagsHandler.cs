@@ -1,3 +1,4 @@
+using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
@@ -42,7 +43,7 @@ public static class SpecificFlagsHandler
 
         if (!ev.IsAllowed)
         {
-            ev.Player?.ShowHint("<size=18>あなたはこのアイテムを拾うことができません！</size>");
+            ev.Player?.ShowRueiPlus("<size=18>あなたはこのアイテムを拾うことができません！</size>");
         }
     }
 
@@ -56,7 +57,7 @@ public static class SpecificFlagsHandler
         
         if (!ev.IsAllowed)
         {
-            ev.Player?.ShowHint("<size=18>あなたはこのアイテムを捨てることができません！</size>");
+            ev.Player?.ShowRueiPlus("<size=18>あなたはこのアイテムを捨てることができません！</size>");
         }
     }
 }

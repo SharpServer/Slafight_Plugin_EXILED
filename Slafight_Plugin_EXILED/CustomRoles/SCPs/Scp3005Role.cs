@@ -86,7 +86,7 @@ public class Scp3005Role : CRole
             ev.Attacker?.Hurt(ev.Player, 20f, DamageType.Unknown,null,  "<color=#ff00fa>第五的</color>な力による影響");
 
             if (ev.Attacker != null && ev.Attacker.GetTeam() == CTeam.Fifthists)
-                ev.Attacker.ShowHint("第五に反逆するとは何事か！？");
+                ev.Attacker.ShowRueiPlus("第五に反逆するとは何事か！？");
         }
     }
 

@@ -399,7 +399,7 @@ public static class RoundEndExecutor
     {
         foreach (var player in Player.List)
         {
-            player?.ShowHint("");
+            player?.ShowRueiPlus("");
         }
     }
 
@@ -407,7 +407,7 @@ public static class RoundEndExecutor
     {
         foreach (var player in Player.List)
         {
-            player.ShowHint(definition.VictoryHint, definition.HintDuration);
+            player.ShowRueiPlus(definition.VictoryHint, definition.HintDuration);
 
             if (definition.OverrideIntercom)
                 Intercom.TrySetOverride(player, true);

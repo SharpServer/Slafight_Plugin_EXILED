@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AdminToys;
 using Exiled.API.Enums;
+using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
 using MEC;
 using ProjectMER.Features.Objects;
@@ -101,7 +102,7 @@ public class AuthDoor : ObjectPrefab
         else
         {
             player.PlayKeycardInteractSound(false);
-            player.ShowHint("<size=24>権限が足りないようだ</size>");
+            player.ShowRueiPlus("<size=24>権限が足りないようだ</size>");
         }
     }
 

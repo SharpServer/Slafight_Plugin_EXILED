@@ -1,3 +1,4 @@
+using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using InventorySystem.Items.MicroHID.Modules;
 using Slafight_Plugin_EXILED.API.Features;
@@ -54,7 +55,7 @@ public class HIDTurret : CItem
         if (ev.NewPhase is MicroHidPhase.WindingUp && !ev.MicroHID.IsPrimary)
         {
             ev.IsAllowed = false;
-            ev.Player?.ShowHint("<size=24>※この武器の強チャージ照射は無効化されています！</size>");
+            ev.Player?.ShowRueiPlus("<size=24>※この武器の強チャージ照射は無効化されています！</size>");
         }
     }
 }

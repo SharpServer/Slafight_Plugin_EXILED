@@ -1,5 +1,6 @@
 using System;
 using Exiled.API.Enums;
+using Exiled.API.Features;
 using Exiled.API.Features.Pickups;
 using Exiled.Events.EventArgs.Scp914;
 using MEC;
@@ -852,7 +853,7 @@ public static class Scp914Changes
                     Handler.CanUsePlayers.Add(ev.Player);
                 if (!Handler.ActivatedPlayers.Contains(ev.Player))
                     Handler.ActivatedPlayers.Add(ev.Player);
-                ev.Player.ShowHint("<size=24>体が魔改造されていく・・・！</size>");
+                ev.Player.ShowRueiPlus("<size=24>体が魔改造されていく・・・！</size>");
             }
         });
     }

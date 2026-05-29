@@ -304,7 +304,7 @@ public abstract class CItem
     protected virtual void ShowPickedUpMessage(Player player)
     {
         if (player == null) return;
-        player.ShowHint(BuildPickedUpMessage(), PickedUpHintDuration);
+        player.ShowRueiPlus(BuildPickedUpMessage(), PickedUpHintDuration);
         var captured = player;
         Timing.CallDelayed(PickedUpHintDuration, () =>
         {
@@ -316,7 +316,7 @@ public abstract class CItem
     protected virtual void ShowSelectedMessage(Player player)
     {
         if (player == null) return;
-        player.ShowHint(BuildSelectedMessage(), SelectedHintDuration);
+        player.ShowRueiPlus(BuildSelectedMessage(), SelectedHintDuration);
         var captured = player;
         Timing.CallDelayed(SelectedHintDuration, () =>
         {
@@ -868,7 +868,7 @@ public abstract class CItem
         if (oldItem != null
             && SerialToItem.ContainsKey(oldItem.Serial))
         {
-            try { ev.Player.ShowHint(string.Empty, 0.1f); }
+            try { ev.Player.ShowRueiPlus(string.Empty, 0.1f); }
             catch (Exception e) { Log.Error($"CItem.ChangingItem(clearHint): {e}"); }
         }
 

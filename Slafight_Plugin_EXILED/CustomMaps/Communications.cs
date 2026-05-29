@@ -44,7 +44,7 @@ public static class Communications
 
             MonitorText = $"<size=10>{MonitorTexts.RandomItem()}</size>";
             InteractableToy?.Base.OnSearched +=
-                p => Player.Get(p).ShowHint("[アクセス拒否]", 10f);
+                p => Player.Get(p).ShowRueiPlus("[アクセス拒否]", 10f);
         });
     }
     

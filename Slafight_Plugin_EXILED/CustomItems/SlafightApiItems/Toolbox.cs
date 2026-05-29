@@ -168,7 +168,7 @@ public class Toolbox : CItem
             if (!CheckHeld(player)) yield break;
             if (!ToolboxStatsMap.TryGetValue(player, out var stats)) yield break;
 
-            player.ShowHint(
+            player.ShowRueiPlus(
                 $"<size=24>現在選択されている機能：{GetTranslatedText(stats.SelectedUtilType)}</size>\n" +
                 $"<size=22>{GetTranslatedText(stats.SelectedUtilType, true)}\n{TryGetExternalCooldownText(player)}</size>",
                 1.2f);

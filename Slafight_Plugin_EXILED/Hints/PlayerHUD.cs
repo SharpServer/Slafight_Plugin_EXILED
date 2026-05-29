@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
-using HintServiceMeow.Core.Enum;
-using HintServiceMeow.Core.Utilities;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -15,7 +13,6 @@ using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
-using Hint = HintServiceMeow.Core.Models.Hints.Hint;
 
 using Slafight_Plugin_EXILED.API.Interface;
 
@@ -109,17 +106,16 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     }
 
     /// <summary>PlayerDisplay を安全に取得する。失敗時は null を返す</summary>
-    private static PlayerDisplay? TryGetDisplay(Player p)
+    private static string HudText(string text, int x, int y, int fontSize, string align = "left")
     {
-        try
-        {
-            return PlayerDisplay.Get(p.ReferenceHub);
-        }
-        catch
-        {
-            return null;
-        }
+        if (string.IsNullOrEmpty(text))
+            return string.Empty;
+
+        return $"<pos={x},{y}><align={align}><size={fontSize}>{text}</size></align></pos>";
     }
+
+    private static void SetHud(Player player, string id, string text, int x, int y, int fontSize, string align = "left")
+        => player.SetDynamicRuei(id, HudText(text, x, y, fontSize, align));
 
     // =========================================================
     // ServerInfoHint / Setup / Main
@@ -129,35 +125,12 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     {
         if (ev?.Player == null) return; // FIX: nullガード
 
-        var display = TryGetDisplay(ev.Player);
-        if (display == null) return;
-
-        Hint ServerInfo;
-        if (Plugin.Singleton.Config.IsBeta)
-        {
-            ServerInfo = new Hint
-            {
-                Id = "ServerInfo",
-                Text = "[<color=#008cff>Sharp Server</color> - <color=red>BETA</color>]",
-                Alignment = HintAlignment.Center,
-                SyncSpeed = HintSyncSpeed.UnSync,
-                FontSize = 18,
-                YCoordinate = 1050
-            };
-        }
-        else
-        {
-            ServerInfo = new Hint
-            {
-                Id = "ServerInfo",
-                Text = "[<color=#008cff>Sharp Server</color>]",
-                Alignment = HintAlignment.Center,
-                SyncSpeed = HintSyncSpeed.UnSync,
-                FontSize = 18,
-                YCoordinate = 1050
-            };
-        }
-        display.AddHint(ServerInfo);
+        HintSync(
+            SyncType.ServerInfo,
+            Plugin.Singleton.Config.IsBeta
+                ? "[<color=#008cff>Sharp Server</color> - <color=red>BETA</color>]"
+                : "[<color=#008cff>Sharp Server</color>]",
+            ev.Player);
 
         // ラウンド中に途中参加した場合は HUD も作る + ロール同期
         if (!Round.IsLobby)
@@ -171,89 +144,15 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     {
         if (!IsPlayerValid(player)) return; // FIX: nullガード
 
-        var display = TryGetDisplay(player);
-        if (display == null) return;
-
         int XCordinate = -350;
 
-        Hint PlayerHUD_Role = new()
-        {
-            Id = "PlayerHUD_Role",
-            Text = "Role: " + player.CustomInfo,
-            Alignment = HintAlignment.Left,
-            SyncSpeed = HintSyncSpeed.Fastest,
-            FontSize = 24,
-            XCoordinate = XCordinate,
-            YCoordinate = 860
-        };
-        Hint PlayerHUD_Objective = new()
-        {
-            Id = "PlayerHUD_Objective",
-            Text = "Objective: " + "Undefined",
-            Alignment = HintAlignment.Left,
-            YCoordinate = 915,
-            XCoordinate = XCordinate,
-            SyncSpeed = HintSyncSpeed.Fastest,
-            FontSize = 30
-        };
-        Hint PlayerHUD_Team = new()
-        {
-            Id = "PlayerHUD_Team",
-            Text = "Team: " + "Undefined",
-            Alignment = HintAlignment.Left,
-            YCoordinate = 885,
-            XCoordinate = XCordinate,
-            SyncSpeed = HintSyncSpeed.Fastest,
-            FontSize = 24
-        };
-        Hint PlayerHUD_Event = new()
-        {
-            Id = "PlayerHUD_Event",
-            Text = "[Event]\n<size=28>Undefined</size>",
-            Alignment = HintAlignment.Left,
-            SyncSpeed = HintSyncSpeed.Fast,
-            FontSize = 26,
-            XCoordinate = XCordinate,
-            YCoordinate = 120
-        };
-        Hint PlayerHUD_Specific = new()
-        {
-            Id = "PlayerHUD_Specific",
-            Text = "",
-            Alignment = HintAlignment.Left,
-            SyncSpeed = HintSyncSpeed.Fastest,
-            FontSize = 24,
-            XCoordinate = XCordinate + 350,
-            YCoordinate = 885
-        };
-        Hint PlayerHUD_Ability = new()
-        {
-            Id = "PlayerHUD_Ability",
-            Text = "",
-            Alignment = HintAlignment.Left,
-            SyncSpeed = HintSyncSpeed.Fastest,
-            FontSize = 24,
-            XCoordinate = XCordinate + 350,
-            YCoordinate = 855
-        };
-        Hint PlayerHUD_Debug = new()
-        {
-            Id = "PlayerHUD_Debug",
-            Text = "",
-            Alignment = HintAlignment.Left,
-            SyncSpeed = HintSyncSpeed.Fast,
-            FontSize = 24,
-            XCoordinate = XCordinate,
-            YCoordinate = 345
-        };
-
-        display.AddHint(PlayerHUD_Role);
-        display.AddHint(PlayerHUD_Objective);
-        display.AddHint(PlayerHUD_Team);
-        display.AddHint(PlayerHUD_Event);
-        display.AddHint(PlayerHUD_Specific);
-        display.AddHint(PlayerHUD_Ability);
-        display.AddHint(PlayerHUD_Debug);
+        SetHud(player, "PlayerHUD_Role", "Role: " + player.CustomInfo, XCordinate, 860, 24);
+        SetHud(player, "PlayerHUD_Objective", "Objective: Undefined", XCordinate, 915, 30);
+        SetHud(player, "PlayerHUD_Team", "Team: Undefined", XCordinate, 885, 24);
+        SetHud(player, "PlayerHUD_Event", "[Event]\n<size=28>Undefined</size>", XCordinate, 120, 26);
+        SetHud(player, "PlayerHUD_Specific", string.Empty, XCordinate + 350, 885, 24);
+        SetHud(player, "PlayerHUD_Ability", string.Empty, XCordinate + 350, 855, 24);
+        SetHud(player, "PlayerHUD_Debug", string.Empty, XCordinate, 345, 24);
     }
 
     public void PlayerHUDMain()
@@ -275,40 +174,34 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     {
         if (!IsPlayerValid(player)) return; // FIX: nullガード
 
-        var display = TryGetDisplay(player);
-        if (display == null) return;
-
         try
         {
+            int XCordinate = -350;
             switch (syncType)
             {
                 case SyncType.ServerInfo:
-                    var si = display.GetHint("ServerInfo");
-                    if (si != null) si.Text = hintText;
+                    SetHud(player, "ServerInfo", hintText, 0, 1050, 18, "center");
                     break;
                 case SyncType.PHUD_Role:
-                    var role = display.GetHint("PlayerHUD_Role");
-                    if (role != null) role.Text = "Role: " + hintText;
+                    SetHud(player, "PlayerHUD_Role", "Role: " + hintText, XCordinate, 860, 24);
                     break;
                 case SyncType.PHUD_Objective:
-                    var obj = display.GetHint("PlayerHUD_Objective");
-                    if (obj != null) obj.Text = "Objective: " + hintText;
+                    SetHud(player, "PlayerHUD_Objective", "Objective: " + hintText, XCordinate, 915, 30);
                     break;
                 case SyncType.PHUD_Team:
-                    var team = display.GetHint("PlayerHUD_Team");
-                    if (team != null) team.Text = "Team: " + hintText;
+                    SetHud(player, "PlayerHUD_Team", "Team: " + hintText, XCordinate, 885, 24);
                     break;
                 case SyncType.PHUD_Event:
-                    var ev = display.GetHint("PlayerHUD_Event");
-                    if (ev != null) ev.Text = "[Event]\n<size=28>" + hintText + "</size>";
+                    SetHud(player, "PlayerHUD_Event", "[Event]\n<size=28>" + hintText + "</size>", XCordinate, 120, 26);
+                    break;
+                case SyncType.PHUD_Specific:
+                    SetHud(player, "PlayerHUD_Specific", hintText, XCordinate + 350, 885, 24);
                     break;
                 case SyncType.PHUD_Ability:
-                    var ab = display.GetHint("PlayerHUD_Ability");
-                    if (ab != null) ab.Text = hintText;
+                    SetHud(player, "PlayerHUD_Ability", hintText, XCordinate + 350, 855, 24);
                     break;
                 case SyncType.PHUD_Debug:
-                    var db = display.GetHint("PlayerHUD_Debug");
-                    if (db != null) db.Text = hintText;
+                    SetHud(player, "PlayerHUD_Debug", hintText, XCordinate, 345, 24);
                     break;
             }
         }
@@ -502,35 +395,22 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         SyncTexts(spectator, target);
 
         // FIX: PlayerDisplay 取得を安全なヘルパーで実施
-        var display = TryGetDisplay(spectator);
-        if (display == null) return;
-
-        // 2. Specific HUD 即時同期
-        var specificHint = display.GetHint("PlayerHUD_Specific");
-        if (specificHint != null)
+        try
         {
-            try
-            {
-                specificHint.Text = RoleSpecificTextProvider.GetFor(target);
-            }
-            catch (Exception e)
-            {
-                Log.Debug($"[Spectate] Specific hint error: {e.Message}");
-            }
+            HintSync(SyncType.PHUD_Specific, RoleSpecificTextProvider.GetFor(target), spectator);
+        }
+        catch (Exception e)
+        {
+            Log.Debug($"[Spectate] Specific hint error: {e.Message}");
         }
 
-        // 3. Ability HUD 即時同期
-        var abilityHint = display.GetHint("PlayerHUD_Ability");
-        if (abilityHint != null)
+        try
         {
-            try
-            {
-                abilityHint.Text = BuildAbilityHud(target);
-            }
-            catch (Exception e)
-            {
-                Log.Debug($"[Spectate] Ability hint error: {e.Message}");
-            }
+            HintSync(SyncType.PHUD_Ability, BuildAbilityHud(target), spectator);
+        }
+        catch (Exception e)
+        {
+            Log.Debug($"[Spectate] Ability hint error: {e.Message}");
         }
     }
 
@@ -545,8 +425,8 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
             if (!IsPlayerValid(player)) continue; // FIX: nullガード
             try
             {
-                var display = TryGetDisplay(player);
-                display?.ClearHint();
+                player.ClearAllDynamicRuei();
+                player.ClearRueiPlus();
             }
             catch (Exception e)
             {
@@ -634,17 +514,6 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
                 // FIX: IsPlayerValid で一括確認
                 if (!IsPlayerValid(player)) continue;
 
-                var display = TryGetDisplay(player);
-                if (display == null) continue;
-
-                var abilityHint = display.GetHint("PlayerHUD_Ability");
-                if (abilityHint == null)
-                {
-                    PlayerHUDSetup(player);
-                    abilityHint = display.GetHint("PlayerHUD_Ability");
-                    if (abilityHint == null) continue;
-                }
-
                 // 観戦者ならターゲット側の Ability を見る
                 var hudTarget = player;
                 if (player.Role?.Team == Team.Dead &&
@@ -654,7 +523,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
 
                 try
                 {
-                    abilityHint.Text = BuildAbilityHud(hudTarget);
+                    HintSync(SyncType.PHUD_Ability, BuildAbilityHud(hudTarget), player);
                 }
                 catch (Exception e)
                 {
@@ -689,24 +558,14 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
                     IsPlayerValid(t) && t.IsAlive) // FIX: IsPlayerValid で一括確認
                     hudTarget = t;
 
-                var display = TryGetDisplay(player);
-                if (display == null) continue;
-
-                var specificHint = display.GetHint("PlayerHUD_Specific");
-                if (specificHint == null)
-                {
-                    PlayerHUDSetup(player);
-                    specificHint = display.GetHint("PlayerHUD_Specific");
-                    if (specificHint == null) continue;
-                }
-
                 try
                 {
                     string roleSpecific = RoleSpecificTextProvider.GetFor(hudTarget);
 
-                    specificHint.Text = string.IsNullOrEmpty(roleSpecific)
-                        ? string.Empty
-                        : roleSpecific;
+                    HintSync(
+                        SyncType.PHUD_Specific,
+                        string.IsNullOrEmpty(roleSpecific) ? string.Empty : roleSpecific,
+                        player);
                 }
                 catch (Exception e)
                 {
@@ -739,20 +598,9 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
                 if (!IsPlayerValid(player)) continue;
                 if (!DebugModeHandler.IsDebugMode(player)) continue;
  
-                var display = TryGetDisplay(player);
-                if (display == null) continue;
- 
-                var hint = display.GetHint("PlayerHUD_Debug");
-                if (hint == null)
-                {
-                    PlayerHUDSetup(player);
-                    hint = display.GetHint("PlayerHUD_Debug");
-                    if (hint == null) continue;
-                }
- 
                 try
                 {
-                    hint.Text = BuildDebugHud(player);
+                    HintSync(SyncType.PHUD_Debug, BuildDebugHud(player), player);
                 }
                 catch (Exception e)
                 {

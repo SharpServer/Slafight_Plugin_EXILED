@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Extensions;
+using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
 using Exiled.CustomItems.API.Features;
@@ -72,7 +73,7 @@ public class ChristmasChanges : IBootstrapHandler, System.IDisposable
                 player.TryAddCandy(CandyKindID.Pink);
                 player.TryAddCandy(CandyKindID.Pink);
                 CustomItem.TryGive(player, 700,false);
-                player.ShowHint("とてもレアなプレゼントの様だ・・・インベントリを見てみよう！=)");
+                player.ShowRueiPlus("とてもレアなプレゼントの様だ・・・インベントリを見てみよう！=)");
             }
             else if (Lucky <= 0.25f)
             {
@@ -134,7 +135,7 @@ public class ChristmasChanges : IBootstrapHandler, System.IDisposable
                 else
                 {
                     player.ExplodeEffect(ProjectileType.FragGrenade);
-                    player.ShowHint("Boooooooo!!!");
+                    player.ShowRueiPlus("Boooooooo!!!");
                 }
             }
             else

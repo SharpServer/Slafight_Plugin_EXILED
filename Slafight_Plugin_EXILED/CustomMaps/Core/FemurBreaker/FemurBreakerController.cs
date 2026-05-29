@@ -92,7 +92,7 @@ internal sealed class FemurBreakerController
 
         if (!HasCapturedVictim || IsActivated)
         {
-            player?.ShowHint("準備が完了していないか、既に実行されています。");
+            player?.ShowRueiPlus("準備が完了していないか、既に実行されています。");
             return;
         }
 

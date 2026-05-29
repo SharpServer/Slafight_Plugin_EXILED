@@ -86,31 +86,31 @@ public class Vent : ObjectPrefab
         switch (touch)
         {
             case 0:
-                player.ShowHint("<size=24>あなたのロールでは使用することが出来ません。</size>");
+                player.ShowRueiPlus("<size=24>あなたのロールでは使用することが出来ません。</size>");
                 touch = 1;
                 break;
             case 1:
-                player.ShowHint("<size=24>あなたのロールでは使用することが出来ません...</size>");
+                player.ShowRueiPlus("<size=24>あなたのロールでは使用することが出来ません...</size>");
                 touch = 2;
                 break;
             case 2:
-                player.ShowHint("<size=24>あなたのロールでは使用することが出来ません...!</size>");
+                player.ShowRueiPlus("<size=24>あなたのロールでは使用することが出来ません...!</size>");
                 touch = 3;
                 break;
             case 3:
-                player.ShowHint("<size=24>あなたのロールでは使用することが出来ません...!!!!!</size>");
+                player.ShowRueiPlus("<size=24>あなたのロールでは使用することが出来ません...!!!!!</size>");
                 touch = 4;
                 break;
             case 4:
-                player.ShowHint("<size=24>だから使用することが出来ないんだって!!!!!</size>");
+                player.ShowRueiPlus("<size=24>だから使用することが出来ないんだって!!!!!</size>");
                 touch = 5;
                 break;
             case 5:
-                player.ShowHint("<size=24>諦めてくれって!!!!!</size>");
+                player.ShowRueiPlus("<size=24>諦めてくれって!!!!!</size>");
                 touch = 6;
                 break;
             case 6:
-                player.ShowHint("<size=24>これ以上触ったらNullReferenceExceptionを起こしますよ！？</size>");
+                player.ShowRueiPlus("<size=24>これ以上触ったらNullReferenceExceptionを起こしますよ！？</size>");
                 touch = 7;
                 break;
             default: // 7以上
@@ -127,7 +127,7 @@ public class Vent : ObjectPrefab
                 );
 
                 var nre = new NullReferenceException("VentAccessViolation", innerEx);
-                player.ShowHint($"<size=16><color=#FF4444>{nre}</color></size>", 7f);
+                player.ShowRueiPlus($"<size=16><color=#FF4444>{nre}</color></size>", 7f);
                 touch = 7; // これ以上は増やさない
                 break;
         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AdminToys;
 using CustomPlayerEffects;
+using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Features.Wrappers;
 using MEC;
@@ -82,7 +83,7 @@ public class Trashbox : ObjectPrefab
 
         if (triggeredEvents.Count >= 3)
         {
-            player.ShowHint("<size=26>あなたはゴミ箱を漁った・・・\n" +
+            player.ShowRueiPlus("<size=26>あなたはゴミ箱を漁った・・・\n" +
                             "しかし、何も見つからなかった。\n" +
                             "<color=yellow>もうここには何もないようだ</color></size>",5);
             return;
@@ -102,36 +103,36 @@ public class Trashbox : ObjectPrefab
         switch (elected)
         {
             case TrashboxEventType.Nothing:
-                player.ShowHint("<size=26>あなたはゴミ箱を漁った・・・\n" +
+                player.ShowRueiPlus("<size=26>あなたはゴミ箱を漁った・・・\n" +
                                 "しかし、何も見つからなかった。</size>",5);
                 break;
             case TrashboxEventType.Painkillers:
-                player.ShowHint("<size=26>あなたはゴミ箱を漁った・・・\n" +
+                player.ShowRueiPlus("<size=26>あなたはゴミ箱を漁った・・・\n" +
                                 "<color=yellow>鎮痛剤を手に入れた！</color></size>",5);
                 player.GiveOrDrop(ItemType.Painkillers);
                 break;
             case TrashboxEventType.NeutralizeGrenade:
-                player.ShowHint("<size=26>あなたはゴミ箱を漁った・・・\n" +
+                player.ShowRueiPlus("<size=26>あなたはゴミ箱を漁った・・・\n" +
                                 "<color=yellow>無力化グレネードを手に入れた！</color></size>",5);
                 player.GiveOrDrop<NeutralizeGrenade>();
                 break;
             case TrashboxEventType.MagicMissile:
-                player.ShowHint("<size=26>あなたはゴミ箱を漁った・・・\n" +
+                player.ShowRueiPlus("<size=26>あなたはゴミ箱を漁った・・・\n" +
                                 "<color=yellow>マジックミサイルを手に入れた！</color></size>",5);
                 player.GiveOrDrop<MagicMissile>();
                 break;
             case TrashboxEventType.MasterCard:
-                player.ShowHint("<size=26>あなたはゴミ箱を漁った・・・\n" +
+                player.ShowRueiPlus("<size=26>あなたはゴミ箱を漁った・・・\n" +
                                 "<color=yellow>マスターカードを手に入れた！</color></size>",5);
                 player.GiveOrDrop<MasterCard>();
                 break;
             case TrashboxEventType.Quarter:
-                player.ShowHint("<size=26>あなたはゴミ箱を漁った・・・\n" +
+                player.ShowRueiPlus("<size=26>あなたはゴミ箱を漁った・・・\n" +
                                 "<color=yellow>硬貨を手に入れた！</color></size>",5);
                 player.GiveOrDrop<Quarter>();
                 break;
             case TrashboxEventType.Zombie:
-                player.ShowHint("<size=26>あなたはゴミ箱を漁った・・・\n" +
+                player.ShowRueiPlus("<size=26>あなたはゴミ箱を漁った・・・\n" +
                                 "<color=red>ワオ！なぞの死体が出てきた。</color></size>",5);
                 var ragdoll = Ragdoll.SpawnRagdoll(RoleTypeId.Scp0492, player.Position, Quaternion.identity, new CustomReasonDamageHandler("???"), "Dr. Redheart");
                 CItem.Get<KeycardHimself>()?.Spawn(ragdoll?.Position ?? player.Position + Vector3.up * 0.25f);
@@ -150,7 +151,7 @@ public class Trashbox : ObjectPrefab
                 };
                 var combinedText = "<size=26>あなたはゴミ箱を漁った・・・\n" +
                                    $"<color=yellow>{text}</color></size>";
-                player.ShowHint(combinedText, 10);
+                player.ShowRueiPlus(combinedText, 10);
                 var random = new Random();
                 var songName = random.Next(0, 5) switch
                 {

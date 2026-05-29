@@ -4,7 +4,6 @@ using System.Linq;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Server;
-using HintServiceMeow.Core.Extension;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -204,9 +203,7 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
         AbilityBase.RevokeAbility(player.Id);
         CustomShieldState.Clear(player);
         
-        var display = player.GetPlayerDisplay();
-        display.TryGetHint("CRoleSpawnedHint", out var oldHint);
-        if (oldHint != null) player.RemoveHint(oldHint);
+        player.ClearRuei("CRoleSpawnedHint");
         
         CItem.RebuildHybridStateFor(player);
 

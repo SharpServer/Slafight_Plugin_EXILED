@@ -364,7 +364,7 @@ public abstract class AbilityBase
             loadout.Slots[loadout.ActiveIndex] == this)
         {
             var abilityName = GetType().Name;
-            player.ShowHint(
+            player.ShowRueiPlus(
                 $"<color=yellow>{abilityName} のクールダウンが終了しました。</color>",
                 3f);
         }

@@ -1,4 +1,5 @@
 using Exiled.API.Features.Items;
+using Exiled.API.Features;
 using Exiled.Events.EventArgs.Map;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Features;
@@ -58,7 +59,7 @@ public class FakeGrenade : CItem
         }
         else
         {
-            ev.Player?.ShowHint("<color=red><size=32>不良品だった！！！</size></color>");
+            ev.Player?.ShowRueiPlus("<color=red><size=32>不良品だった！！！</size></color>");
         }
     }
 }

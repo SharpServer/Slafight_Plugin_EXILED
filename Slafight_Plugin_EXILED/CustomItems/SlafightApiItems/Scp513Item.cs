@@ -34,7 +34,7 @@ public class Scp513Item : CItem
     {
         if (!CheckHeld(ev.Player)) return;
         Scp513.AddTarget(ev.Player);
-        ev.Player.ShowHint("<size=25>何か視線を感じる気がする...</size>");
+        ev.Player.ShowRueiPlus("<size=25>何か視線を感じる気がする...</size>");
         var room = Room.Random(ZoneType.HeavyContainment);
         Spawn(room.WorldPosition(Vector3.up * 0.25f));
         ev.Item?.Destroy();

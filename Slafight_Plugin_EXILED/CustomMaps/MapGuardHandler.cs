@@ -83,6 +83,6 @@ public static class MapGuardHandler
 
     private static void Message(Player? player)
     {
-        player?.ShowHint("この扉は特殊な素材で守られているようだ・・・");
+        player?.ShowRueiPlus("この扉は特殊な素材で守られているようだ・・・");
     }
 }

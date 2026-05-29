@@ -65,7 +65,7 @@ public class Document : ObjectPrefab
         var pos = _schematicObject?.Position ?? Position;
         SpeakerApi.Play("PickItem0.ogg", "Vent", pos, true, null, false, 2.5f, 0f);
         
-        player.ShowHint(DocumentDictionary.Get(DocumentType), 10f);
+        player.ShowRueiPlus(DocumentDictionary.Get(DocumentType), 10f);
     }
 
     // ===== Options (Save/Load) =====

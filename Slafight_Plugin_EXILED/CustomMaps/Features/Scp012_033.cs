@@ -101,7 +101,7 @@ public static class Scp012_033
         {
             ev.IsAllowed = false;
             ev.Radio.IsEnabled = false;
-            ev.Player?.ShowHint("...?", 1.5f);
+            ev.Player?.ShowRueiPlus("...?", 1.5f);
         }
     }
 

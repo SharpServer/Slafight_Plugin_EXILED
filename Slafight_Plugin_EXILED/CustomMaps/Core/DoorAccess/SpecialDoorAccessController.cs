@@ -1,3 +1,4 @@
+using Exiled.API.Features;
 using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features.Doors;
@@ -88,7 +89,7 @@ internal sealed class SpecialDoorAccessController(float positionToleranceSq)
 
         ev.IsAllowed = rule.CanOpen(ev.Player);
         if (!ev.IsAllowed)
-            ev.Player.ShowHint(rule.HintMessage);
+            ev.Player.ShowRueiPlus(rule.HintMessage);
     }
 
     public void Clear()

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Exiled.API.Enums;
+using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Features;
@@ -53,7 +54,7 @@ public class SNAV310 : CItem
     {
         if (!Check(ev.Item)) return;
         _mode = ev.NewValue;
-        ev.Player.ShowHint(SnavCommon.RangeHint(ev.NewValue));
+        ev.Player.ShowRueiPlus(SnavCommon.RangeHint(ev.NewValue));
     }
 
     protected override void OnDropping(DroppingItemEventArgs ev)
@@ -63,6 +64,6 @@ public class SNAV310 : CItem
 
         ev.IsAllowed = false;
         var detected = SnavCommon.DetectRooms(ev.Player.Position, _mode, Targets);
-        ev.Player.ShowHint(SnavCommon.RoomsHint(_mode, detected, ev.Player.Position), 10f);
+        ev.Player.ShowRueiPlus(SnavCommon.RoomsHint(_mode, detected, ev.Player.Position), 10f);
     }
 }
