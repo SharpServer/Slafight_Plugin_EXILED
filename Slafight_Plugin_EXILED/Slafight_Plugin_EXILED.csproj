@@ -222,9 +222,6 @@
         <Compile Include="API\Features\RoleTableDictionaries\Contexts\AprilRoleTableContext.cs" />
         <Compile Include="API\Features\RoleTableDictionaries\Contexts\NormalRoleTableContext.cs" />
         <Compile Include="API\Features\RoleParseHelper.cs" />
-        <Compile Include="API\Features\RueiRuntimeBootstrap.cs" />
-        <Compile Include="API\Features\RespawnTimer\RespawnTimerDisplay.cs" />
-        <Compile Include="API\Features\RespawnTimer\WaveManagerExtension.cs" />
         <Compile Include="API\Features\RoundVictory\Core\*.cs" />
         <Compile Include="API\Features\RoundVictory\Sources\*.cs" />
         <Compile Include="API\Features\RoleSpecificTextProvider.cs" />
@@ -476,7 +473,6 @@
         <Compile Include="Extensions\PlayerAbilityExtensions.cs" />
         <Compile Include="Extensions\PlayerCItemBaseExtensions.cs" />
         <Compile Include="Extensions\PlayerExtensions.cs" />
-        <Compile Include="Extensions\RueiHintExtensions.cs" />
         <Compile Include="Extensions\PlayerRoleHelpers.cs" />
         <Compile Include="Extensions\RoomSpawner.cs" />
         <Compile Include="Extensions\RoomUtils.cs" />
