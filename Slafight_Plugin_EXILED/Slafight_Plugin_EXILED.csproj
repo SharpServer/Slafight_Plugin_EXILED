@@ -534,8 +534,13 @@
         <Compile Include="CustomRoles\SCPs\Scp682Role.cs" />
         <Compile Include="CustomRoles\SCPs\Scp966Role.cs" />
         <Compile Include="Extensions\CassieExtensions.cs" />
+        <Compile Include="Hints\HintCoordinateConverter.cs" />
         <Compile Include="Hints\PlayerHUD.cs" />
+        <Compile Include="Hints\RespawnTimerHints.cs" />
         <Compile Include="Hints\RoleHintsDictionary.cs" />
+        <Compile Include="Hints\RoomNameTranslator.cs" />
+        <Compile Include="Hints\Scp079PingHints.cs" />
+        <Compile Include="Hints\ScpStatusHints.cs" />
         <Compile Include="Patches\CandyPatch.cs" />
         <Compile Include="Patches\Scp914ProcessorFix.cs" />
         <Compile Include="Plugin.cs" />
