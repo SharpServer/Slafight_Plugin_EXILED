@@ -139,7 +139,7 @@ public static class StaticUtils
             }
             else
             {
-                if (keycard.Permissions.HasFlagFast(permissions)) return true;
+                if (keycard.Permissions.HasFlag(permissions)) return true;
             }
         }
         return false;
