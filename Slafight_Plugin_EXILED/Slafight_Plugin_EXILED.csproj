@@ -1,585 +1,608 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0" DefaultTargets="Build">
-    <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{38D11BA7-26B0-4C36-9C24-3563A8CE956E}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Slafight_Plugin_EXILED</RootNamespace>
+    <AssemblyName>Slafight_Plugin_EXILED</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <LangVersion>default</LangVersion>
+    <Nullable>annotations</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>x64</PlatformTarget>
+    <Prefer32Bit>false</Prefer32Bit>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="0Harmony, Version=2.2.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\Lib.Harmony.2.2.2\lib\net48\0Harmony.dll</HintPath>
+    </Reference>
+    <Reference Include="LabApi, Version=1.1.1.0, Culture=neutral, processorArchitecture=Amd64">
+      <HintPath>..\packages\Northwood.LabAPI.1.1.1\lib\net48\LabApi.dll</HintPath>
+    </Reference>
+    <Reference Include="RueI, Version=3.1.2.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\RueI.3.1.2\lib\net48\RueI.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Compression" />
+    <Reference Include="YamlDotNet, Version=11.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
+      <HintPath>..\packages\YamlDotNet.11.0.1\lib\net45\YamlDotNet.dll</HintPath>
+    </Reference>
+    <Reference Include="ZAMERT">
+      <HintPath>$(SL_References)\ZAMERT.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp-firstpass">
+      <HintPath>$(SL_References)\Assembly-CSharp-firstpass.dll</HintPath>
+    </Reference>
+    <Reference Include="CommandSystem.Core, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\CommandSystem.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Exiled.API, Version=9.13.3.0, Culture=neutral, processorArchitecture=Amd64">
+      <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\Exiled.API.dll</HintPath>
+    </Reference>
+    <Reference Include="Exiled.CreditTags, Version=9.13.3.0, Culture=neutral, processorArchitecture=Amd64">
+      <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\Exiled.CreditTags.dll</HintPath>
+    </Reference>
+    <Reference Include="Exiled.CustomItems, Version=9.13.3.0, Culture=neutral, processorArchitecture=Amd64">
+      <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\Exiled.CustomItems.dll</HintPath>
+    </Reference>
+    <Reference Include="Exiled.CustomRoles, Version=9.13.3.0, Culture=neutral, processorArchitecture=Amd64">
+      <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\Exiled.CustomRoles.dll</HintPath>
+    </Reference>
+    <Reference Include="Exiled.Events, Version=9.13.3.0, Culture=neutral, processorArchitecture=Amd64">
+      <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\Exiled.Events.dll</HintPath>
+    </Reference>
+    <Reference Include="Exiled.Loader, Version=9.13.3.0, Culture=neutral, processorArchitecture=Amd64">
+      <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\Exiled.Loader.dll</HintPath>
+    </Reference>
+    <Reference Include="Exiled.Permissions, Version=9.13.3.0, Culture=neutral, processorArchitecture=Amd64">
+      <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\Exiled.Permissions.dll</HintPath>
+    </Reference>
+    <Reference Include="Mirror">
+      <HintPath>$(SL_References)\Mirror_publicized.dll</HintPath>
+    </Reference>
+    <Reference Include="Mirror.Components">
+      <HintPath>$(SL_References)\Mirror.Components_publicized.dll</HintPath>
+    </Reference>
+    <Reference Include="mscorlib">
+      <HintPath>$(SL_References)\mscorlib.dll</HintPath>
+    </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>$(SL_References)\Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="NorthwoodLib, Version=1.4.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\NorthwoodLib.dll</HintPath>
+    </Reference>
+    <Reference Include="NVorbis">
+      <HintPath>..\packages\NVorbis.0.10.5\lib\net45\NVorbis.dll</HintPath>
+    </Reference>
+    <Reference Include="Pooling">
+      <HintPath>$(SL_References)\Pooling.dll</HintPath>
+    </Reference>
+    <Reference Include="ProjectMER">
+      <HintPath>$(SL_References)\ProjectMER.dll</HintPath>
+    </Reference>
+    <Reference Include="Unity.TextMeshPro">
+      <HintPath>$(SL_References)\Unity.TextMeshPro.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine">
+      <HintPath>$(SL_References)\UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.CoreModule">
+      <HintPath>$(SL_References)\UnityEngine.CoreModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.PhysicsModule">
+      <HintPath>$(SL_References)\UnityEngine.PhysicsModule.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AnimationModule">
+      <HintPath>$(SL_References)\UnityEngine.AnimationModule.dll</HintPath>
+    </Reference>
+    <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\packages\ExMod.Exiled.9.13.3\lib\net48\Assembly-CSharp-Publicized.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.10.0.1\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
+    </Reference>
+    <Reference Include="System.IO.Pipelines, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.IO.Pipelines.10.0.1\lib\net462\System.IO.Pipelines.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Memory, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Numerics.Vectors, Version=4.1.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Numerics.Vectors.4.6.1\lib\net462\System.Numerics.Vectors.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Encodings.Web, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Encodings.Web.10.0.1\lib\net462\System.Text.Encodings.Web.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Text.Json, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Text.Json.10.0.1\lib\net462\System.Text.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>..\packages\System.Threading.Tasks.Extensions.4.6.3\lib\net462\System.Threading.Tasks.Extensions.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Net.Http.WebRequest" />
+    <Reference Include="System.Numerics" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Abilities\AllowEscapeAbility.cs" />
+    <Compile Include="Abilities\AlphaWarheadOverride.cs" />
+    <Compile Include="Abilities\CreateSinkholeAbility.cs" />
+    <Compile Include="Abilities\DropBiggerShitAbility.cs" />
+    <Compile Include="Abilities\MagicMissileAbility.cs" />
+    <Compile Include="Abilities\MemeWaveAbility.cs" />
+    <Compile Include="Abilities\PlaceTantrumAbility.cs" />
+    <Compile Include="Abilities\Scp035TentacleAbility.cs" />
+    <Compile Include="Abilities\Scp966SpeedAbility.cs" />
+    <Compile Include="Abilities\SoundOfFifthAbility.cs" />
+    <Compile Include="Abilities\TeleprotRandomAbility.cs" />
+    <Compile Include="API\Enums\CTeam.cs" />
+    <Compile Include="API\Enums\CTeamGroup.cs" />
+    <Compile Include="API\Enums\CustomColor.cs" />
+    <Compile Include="API\Enums\ServerColors.cs" />
+    <Compile Include="API\Enums\Scp035StateType.cs" />
+    <Compile Include="API\Enums\SeasonTypeId.cs" />
+    <Compile Include="API\Enums\SpecificFlagType.cs" />
+    <Compile Include="API\Enums\TaskType.cs" />
+    <Compile Include="API\Features\AbilityBase.cs" />
+    <Compile Include="API\Features\AbilityLocalisation.cs" />
+    <Compile Include="API\Features\AbilityInputHandler.cs" />
+    <Compile Include="API\Features\AbilityLoadout.cs" />
+    <Compile Include="API\Features\AbilityManager.cs" />
+    <Compile Include="API\Features\AbilityParseHelper.cs" />
+    <Compile Include="API\Features\CassieHelper.cs" />
+    <Compile Include="API\Features\EventSubscriptionScope.cs" />
+    <Compile Include="API\Features\CItem.cs" />
+    <Compile Include="API\Features\CItemHybrid.cs" />
+    <Compile Include="API\Features\CItemArmor.cs" />
+    <Compile Include="API\Features\CItemKeycard.cs" />
+    <Compile Include="API\Features\KeycardAccessLevels.cs" />
+    <Compile Include="API\Features\CItemWeapon.cs" />
+    <Compile Include="API\Features\CustomShieldEvents.cs" />
+    <Compile Include="API\Features\CustomShieldState.cs" />
+    <Compile Include="API\Features\CustomInfoDisplay.cs" />
+    <Compile Include="API\Features\CustomTriggerPoint.cs" />
+    <Compile Include="API\Features\GeneratorPrefab.cs" />
+    <Compile Include="API\Features\LabApiHandlerRegistry.cs" />
+    <Compile Include="API\Features\NetworkVisibilityManager.cs" />
+    <Compile Include="API\Features\PlayerSpeakerManager.cs" />
+    <Compile Include="API\Features\Scp914\Scp914Context.cs" />
+    <Compile Include="API\Features\Scp914\Scp914Rule.cs" />
+    <Compile Include="API\Features\Scp914\Scp914RuleSet.cs" />
+    <Compile Include="API\Features\Scp914\Scp914Dispatcher.cs" />
+    <Compile Include="API\Features\Scp914\Scp914Registry.cs" />
+    <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\MtfCoreForceUnitPacks.cs" />
+    <Compile Include="API\Features\SpeakerApi.cs" />
+    <Compile Include="API\Features\VoiceRecordingApi.cs" />
+    <Compile Include="API\Features\CRole.cs" />
+    <Compile Include="API\Features\CRoom.cs" />
+    <Compile Include="API\Features\CustomBooleans.cs" />
+    <Compile Include="API\Features\Common\DefinitionSourceLoader.cs" />
+    <Compile Include="API\Features\GlobalVentManager.cs" />
+    <Compile Include="API\Features\CItemNvg.cs" />
+    <Compile Include="API\Features\ObjectPrefab.cs" />
+    <Compile Include="API\Features\PrefabSaveData.cs" />
+    <Compile Include="API\Features\RoleLimitManager.cs" />
+    <Compile Include="API\Features\RoleTableContext.cs" />
+    <Compile Include="API\Features\RoleTableContextRegistry.cs" />
+    <Compile Include="API\Features\RoleTableDictionaries\Contexts\AprilRoleTableContext.cs" />
+    <Compile Include="API\Features\RoleTableDictionaries\Contexts\NormalRoleTableContext.cs" />
+    <Compile Include="API\Features\RoleParseHelper.cs" />
+    <Compile Include="API\Features\RueiRuntimeBootstrap.cs" />
+    <Compile Include="API\Features\RespawnTimer\RespawnTimerDisplay.cs" />
+    <Compile Include="API\Features\RespawnTimer\WaveManagerExtension.cs" />
+    <Compile Include="API\Features\ScpHud\PingTranslate.cs" />
+    <Compile Include="API\Features\ScpHud\ScpStatusDisplay.cs" />
+    <Compile Include="API\Features\RoundVictory\Core\*.cs" />
+    <Compile Include="API\Features\RoundVictory\Sources\*.cs" />
+    <Compile Include="API\Features\RoleSpecificTextProvider.cs" />
+    <Compile Include="API\Features\ServerSpecifics.cs" />
+    <Compile Include="API\Features\SpawnContext.cs" />
+    <Compile Include="API\Features\SpawnContextRegistry.cs" />
+    <Compile Include="API\Features\SlafightLabApiHandler.cs" />
+    <Compile Include="API\Features\SpawnSystemDictionaries\Contexts\DefaultContexts.cs" />
+    <Compile Include="API\Features\SpawnSystemDictionaries\Contexts\FacilityTerminationContexts.cs" />
+    <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\DefaultUnitPacks.cs" />
+    <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\FacilityTerminationPacks.cs" />
+    <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\MtfSeeNoEvilUnitPacks.cs" />
+    <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\SnowWarriersPacks.cs" />
+    <Compile Include="API\Features\SpecialEvent.cs" />
+    <Compile Include="API\Features\SpecificFlagsManager.cs" />
+    <Compile Include="API\Features\SpyKitRecords.cs" />
+    <Compile Include="API\Features\SpyMorphDataCollections.cs" />
+    <Compile Include="API\Features\Tips.cs" />
+    <Compile Include="API\Features\Teams\Core\*.cs" />
+    <Compile Include="API\Features\Teams\Escape\*.cs" />
+    <Compile Include="API\Features\Teams\Profiles\*.cs" />
+    <Compile Include="API\Features\Teams\Definitions\Escape\*.cs" />
+    <Compile Include="API\Features\Teams\Definitions\Profiles\*.cs" />
+    <Compile Include="API\Features\Teams\Definitions\Teams\*.cs" />
+    <Compile Include="API\Features\UnitPack.cs" />
+    <Compile Include="API\Features\SpawnSystemBootstrap.cs" />
+    <Compile Include="API\Features\UnitPackRegistry.cs" />
+    <Compile Include="API\Features\WearFollower.cs" />
+    <Compile Include="API\Interface\IBootstrapHandler.cs" />
+    <Compile Include="API\Interface\IControllableObject.cs" />
+    <Compile Include="API\Interface\IObjectPrefab.cs" />
+    <Compile Include="API\Interface\ISpawnableObject.cs" />
+    <Compile Include="API\Objects\RoleTables.cs" />
+    <Compile Include="API\Structs\ObjectInfo.cs" />
+    <Compile Include="Changes\CandyChanges.cs" />
+    <Compile Include="Changes\ChristmasChanges.cs" />
+    <Compile Include="Changes\EasterEggsHandler.cs" />
+    <Compile Include="Changes\EscapeHandler.cs" />
+    <Compile Include="Changes\FacilityLightHandler.cs" />
+    <Compile Include="Changes\Scp1509Handler.cs" />
+    <Compile Include="Changes\Scp914Changes.cs" />
+    <Compile Include="Changes\ScpPermissions.cs" />
+    <Compile Include="Commands\DevTools\AbilityUniversal.cs" />
+    <Compile Include="Commands\DevTools\ActivateGenerator.cs" />
+    <Compile Include="Commands\DevTools\AddQueue.cs" />
+    <Compile Include="Commands\DevTools\DebugStart.cs" />
+    <Compile Include="Commands\DevTools\GetQueue.cs" />
+    <Compile Include="Commands\DevTools\GiveItem.cs" />
+    <Compile Include="Commands\DevTools\HelpCommand.cs" />
+    <Compile Include="Commands\DevTools\HitboxCommand.cs" />
+    <Compile Include="Commands\DevTools\ListCommand.cs" />
+    <Compile Include="Commands\DevTools\ObjectPrefabTools.cs" />
+    <Compile Include="Commands\DevTools\PlayerCommand.cs" />
+    <Compile Include="Commands\DevTools\PlayAudioHere.cs" />
+    <Compile Include="Commands\DevTools\PlayInstantSurfaceBombing.cs" />
+    <Compile Include="Commands\DevTools\QueueCommand.cs" />
+    <Compile Include="Commands\DevTools\RestartCommand.cs" />
+    <Compile Include="Commands\DevTools\RunEvent.cs" />
+    <Compile Include="Commands\DevTools\SetQueue.cs" />
+    <Compile Include="Commands\DevTools\SpawnBuiltInPrefab.cs" />
+    <Compile Include="Commands\DevTools\SpawnUniversal.cs" />
+    <Compile Include="Commands\DevTools\SpawnWave.cs" />
+    <Compile Include="Commands\DevTools\StatusCommand.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\CapybaraMissile.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\ArmorInfantry.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\ArmorVip.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunDisarmerRifle.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunAnomalyDetainer.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunRevolverX.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\KeycardA.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\KeycardHimself.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\KeycardSupplyManager.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\S41MedicalPistol.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\KeycardChaosIntruder.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\CloakGenerator.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\CUA_SpyKit.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\DninoueMissile.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunM82.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunScp7381.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunSL8.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunSuppressiver.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\NvgBlue.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\NvgRed.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\SchwarzschildRailbreaker.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\Veritas.cs" />
+    <Compile Include="CustomItems\NvgManager.cs" />
+    <Compile Include="CustomItems\CustomItemsManager.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\AdvancedMedkit.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\AntiMemeGoggle.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\CaneOfTheStars.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\ClassZMemoryForcePil.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\DummyRoad.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\FakeGrenade.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\FlashBangE.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GoCRecruitPaper.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunCOM77.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunFRMGX.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunFSP18.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunGoCRailgun.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunGoCRailgunFull.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunGoCTurret.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunN7CR.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunN7Weltkrieg.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunProject90.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunSuperLogicer.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\GunTacticalRevolver.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\HIDTurret.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\KeycardArmoryLevel1.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\KeycardArmoryLevel2.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\KeycardArmoryLevel3.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\KeycardConscripts.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\KeycardFifthist.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\KeycardFifthistPriest.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\KeycardSecurityChief.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\KeycardSiteNavigator.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\KeycardSiteDirector.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\KeycardSurveillance.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\MagicMissile.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\MasterCard.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\ClassXMemoryForcePil.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\NeutralizeGrenade.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\NvgNormal.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\OmegaWarheadAccess.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\PlayingCard.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\Quarter.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\Scp1425.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\SchwarzschildQuasar.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\Scp148.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\SerumC.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\SerumD.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\SNAV300.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\SNAV310.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\SNAVUltimate.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\SnavCommon.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\Scp513Item.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\ThrowableScp244.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\Toolbox.cs" />
+    <Compile Include="CustomItems\SlafightApiItems\ModeratorUtil.cs" />
+    <Compile Include="CustomMaps\FacilityControlRoom.cs" />
+    <Compile Include="CustomMaps\FacilityControlRoomFunction.cs" />
+    <Compile Include="CustomMaps\FacilityControlRoomFunctions\AntiMemeProtocolFunction.cs" />
+    <Compile Include="CustomMaps\Communications.cs" />
+    <Compile Include="CustomMaps\Entities\Scp513.cs" />
+    <Compile Include="CustomMaps\Entities\ObjectBootstraps.cs" />
+    <Compile Include="CustomMaps\FacilityControlRoomFunctions\SurfaceBombingFunction.cs" />
+    <Compile Include="CustomMaps\Features\DailyCassieAnnounce.cs" />
+    <Compile Include="CustomMaps\Features\DocumentDictionary.cs" />
+    <Compile Include="CustomMaps\Features\OmegaWarhead.cs" />
+    <Compile Include="CustomMaps\Features\Scp012_033.cs" />
+    <Compile Include="CustomMaps\Features\Sinkhole.cs" />
+    <Compile Include="CustomMaps\Features\TerminalRift.cs" />
+    <Compile Include="CustomMaps\Features\TerminalTrain.cs" />
+    <Compile Include="CustomMaps\Features\VentControl.cs" />
+    <Compile Include="CustomMaps\Features\WarheadDoorLockdown.cs" />
+    <Compile Include="CustomMaps\Features\WarheadBoomEffectHandler.cs" />
+    <Compile Include="CustomMaps\Features\WarheadBoomEffectUtil.cs" />
+    <Compile Include="CustomMaps\GateAEnding.cs" />
+    <Compile Include="CustomMaps\Bridges\ObjectPrefabHandler.cs" />
+    <Compile Include="CustomMaps\Bridges\SchematicObjectPrefabBridge.cs" />
+    <Compile Include="CustomMaps\ObjectPrefabs\AntiMemeBomb.cs" />
+    <Compile Include="CustomMaps\ObjectPrefabs\HIDTurretObject.cs" />
+    <Compile Include="CustomMaps\ObjectPrefabs\Document.cs" />
+    <Compile Include="CustomMaps\ObjectPrefabs\AuthDoor.cs" />
+    <Compile Include="CustomMaps\ObjectPrefabs\PhysicsSchematicObject.cs" />
+    <Compile Include="CustomMaps\ObjectPrefabs\Tentacle.cs" />
+    <Compile Include="CustomMaps\ObjectPrefabs\Trashbox.cs" />
+    <Compile Include="CustomMaps\ObjectPrefabs\Vent.cs" />
+    <Compile Include="CustomMaps\ObjectPrefabs\WarheadBoomEffect.cs" />
+    <Compile Include="CustomMaps\Bridges\TriggerPointItemSpawner.cs" />
+    <Compile Include="CustomMaps\Bridges\TriggerPointRegistry.cs" />
+    <Compile Include="CustomRoles\ChaosInsurgency\ChaosIntruder.cs" />
+    <Compile Include="CustomRoles\ChaosInsurgency\ChaosPenal.cs" />
+    <Compile Include="CustomRoles\ChaosInsurgency\ChaosCommando.cs" />
+    <Compile Include="CustomRoles\ChaosInsurgency\ChaosSignal.cs" />
+    <Compile Include="CustomRoles\ChaosInsurgency\ChaosSniper.cs" />
+    <Compile Include="CustomRoles\ChaosInsurgency\ChaosTacticalUnit.cs" />
+    <Compile Include="CustomRoles\ChaosInsurgency\ChaosUndercoverAgent.cs" />
+    <Compile Include="CustomRoles\ClassD\CandySubject.cs" />
+    <Compile Include="CustomRoles\ClassD\Janitor.cs" />
+    <Compile Include="CustomRoles\Fifthist\FifthistConvert.cs" />
+    <Compile Include="CustomRoles\Fifthist\FifthistGuidance.cs" />
+    <Compile Include="CustomRoles\Fifthist\FifthistMarionetteRole.cs" />
+    <Compile Include="CustomRoles\Fifthist\Scp3125Role.cs" />
+    <Compile Include="CustomRoles\FoundationForces\HdDisarmer.cs" />
+    <Compile Include="CustomRoles\FoundationForces\HdMarshal.cs" />
+    <Compile Include="CustomRoles\FoundationForces\HdShotgunner.cs" />
+    <Compile Include="CustomRoles\FoundationForces\HdShielder.cs" />
+    <Compile Include="CustomRoles\FoundationForces\NtfGeneral.cs" />
+    <Compile Include="CustomRoles\FoundationForces\NtfDetainer.cs" />
+    <Compile Include="CustomRoles\FoundationForces\NtfFieldMedic.cs" />
+    <Compile Include="CustomRoles\FoundationForces\NtfSpecialist.cs" />
+    <Compile Include="CustomRoles\FoundationForces\Sculpture.cs" />
+    <Compile Include="CustomRoles\FoundationForces\SneGears.cs" />
+    <Compile Include="CustomRoles\FoundationForces\SneNeutralitist.cs" />
+    <Compile Include="CustomRoles\FoundationForces\SneOperator.cs" />
+    <Compile Include="CustomRoles\FoundationForces\SnePurify.cs" />
+    <Compile Include="CustomRoles\FoundationForces\AraOrun.cs" />
+    <Compile Include="CustomRoles\FoundationForces\LwsAgent.cs" />
+    <Compile Include="CustomRoles\FoundationForces\LwsForensic.cs" />
+    <Compile Include="CustomRoles\FoundationForces\LwsJudgement.cs" />
+    <Compile Include="CustomRoles\FoundationForces\LwsLiaison.cs" />
+    <Compile Include="CustomRoles\FoundationForces\RrhAegis.cs" />
+    <Compile Include="CustomRoles\FoundationForces\RrhAssaulter.cs" />
+    <Compile Include="CustomRoles\FoundationForces\RrhEnforcer.cs" />
+    <Compile Include="CustomRoles\FoundationForces\RrhWarden.cs" />
+    <Compile Include="CustomRoles\GoC\GoCCommunications.cs" />
+    <Compile Include="CustomRoles\GoC\GoCDeputy.cs" />
+    <Compile Include="CustomRoles\GoC\GoCHoundDog.cs" />
+    <Compile Include="CustomRoles\GoC\GoCMedic.cs" />
+    <Compile Include="CustomRoles\GoC\GoCOperative.cs" />
+    <Compile Include="CustomRoles\GoC\GoCSquadLeader.cs" />
+    <Compile Include="CustomRoles\GoC\GoCThaumaturgist.cs" />
+    <Compile Include="CustomRoles\Guards\Chamber Guard.cs" />
+    <Compile Include="CustomRoles\Guards\EvacuationGuard.cs" />
+    <Compile Include="CustomRoles\Guards\SecurityChief.cs" />
+    <Compile Include="CustomRoles\Guards\SecurityTeamGuard.cs" />
+    <Compile Include="CustomRoles\Guards\SupplyManager.cs" />
+    <Compile Include="CustomRoles\Moderators\HideAdmin.cs" />
+    <Compile Include="CustomRoles\Moderators\HideWatch.cs" />
+    <Compile Include="CustomRoles\Moderators\ModeratorRole.cs" />
+    <Compile Include="CustomRoles\Others\CandyWarrierApril.cs" />
+    <Compile Include="CustomRoles\Others\CandyWarrierHalloween.cs" />
+    <Compile Include="CustomRoles\Others\CapybaraRole.cs" />
+    <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovAwakenRole.cs" />
+    <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovExtensionAndUtils.cs" />
+    <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovRole.cs" />
+    <Compile Include="CustomRoles\Others\SergeyMakarov\SergeySharedContents.cs" />
+    <Compile Include="CustomRoles\Others\SnowWarrier.cs" />
+    <Compile Include="CustomRoles\Scientist\CandyResearcher.cs" />
+    <Compile Include="CustomRoles\Scientist\SiteNavigator.cs" />
+    <Compile Include="CustomRoles\Scientist\MarionWheeler.cs" />
+    <Compile Include="CustomRoles\Scientist\Object Observer.cs" />
+    <Compile Include="CustomRoles\Scientist\Engineer.cs" />
+    <Compile Include="CustomRoles\Scientist\Surveillance.cs" />
+    <Compile Include="CustomRoles\SCPs\Scp035Role.cs" />
+    <Compile Include="CustomRoles\SCPs\Scp079Role.cs" />
+    <Compile Include="CustomRoles\SCPs\Scp096Anger.cs" />
+    <Compile Include="CustomRoles\SCPs\Scp106Role.cs" />
+    <Compile Include="CustomRoles\SCPs\Scp173Role.cs" />
+    <Compile Include="CustomRoles\SCPs\Scp3005Role.cs" />
+    <Compile Include="CustomRoles\SCPs\Scp610Role.cs" />
+    <Compile Include="CustomRoles\SCPs\Scp999Role.cs" />
+    <Compile Include="CustomRoles\SCPs\ZombifiedRole.cs" />
+    <Compile Include="Extensions\AbilityResetUtil.cs" />
+    <Compile Include="Extensions\ColorExtensions.cs" />
+    <Compile Include="Extensions\CustomTeamUtils.cs" />
+    <Compile Include="Extensions\CustomItemExtensions.cs" />
+    <Compile Include="Extensions\OnlyChecker.cs" />
+    <Compile Include="Extensions\PlayerAbilityExtensions.cs" />
+    <Compile Include="Extensions\PlayerCItemBaseExtensions.cs" />
+    <Compile Include="Extensions\PlayerExtensions.cs" />
+    <Compile Include="Extensions\RueiHintExtensions.cs" />
+    <Compile Include="Extensions\PlayerRoleHelpers.cs" />
+    <Compile Include="Extensions\RoomSpawner.cs" />
+    <Compile Include="Extensions\RoomUtils.cs" />
+    <Compile Include="Extensions\RoundUtils.cs" />
+    <Compile Include="Extensions\SchematicHelpers.cs" />
+    <Compile Include="Extensions\StaticUtils.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
+    <Compile Include="MainHandlers\AutoHandlerBootstrapRegister.cs" />
+    <Compile Include="MainHandlers\BadgeHandler.cs" />
+    <Compile Include="MainHandlers\DebugModeHandler.cs" />
+    <Compile Include="MainHandlers\EventHandler.cs" />
+    <Compile Include="MainHandlers\FirstRolesHandler.cs" />
+    <Compile Include="MainHandlers\LabApiHandler.cs" />
+    <Compile Include="MainHandlers\NewEventHandler.cs" />
+    <Compile Include="MainHandlers\RoundHandler.cs" />
+    <Compile Include="MainHandlers\RPNameSetter.cs" />
+    <Compile Include="MainHandlers\ServerSpecificsHandler.cs" />
+    <Compile Include="MainHandlers\SpawningHandler.cs" />
+    <Compile Include="MainHandlers\SpawnSystem.cs" />
+    <Compile Include="MainHandlers\SpecificFlagsHandler.cs" />
+    <Compile Include="MainHandlers\WearsHandler.cs" />
+    <Compile Include="CustomMaps\Core\DoorAccess\SpecialDoorAccessController.cs" />
+    <Compile Include="CustomMaps\Core\DoorAccess\SpecialDoorAccessRule.cs" />
+    <Compile Include="CustomMaps\Core\FemurBreaker\FemurBreakerController.cs" />
+    <Compile Include="CustomMaps\Core\Interactions\MapToyInteractionRouter.cs" />
+    <Compile Include="CustomMaps\Core\Lifecycle\RoundStartupCoordinator.cs" />
+    <Compile Include="CustomMaps\Core\SurfaceGate\SurfaceGateBarrierController.cs" />
+    <Compile Include="CustomMaps\Core\Utilities\SchematicMover.cs" />
+    <Compile Include="CustomMaps\Core\CustomMapMainHandler.cs" />
+    <Compile Include="CustomMaps\MapFlags.cs" />
+    <Compile Include="CustomMaps\MapGuardHandler.cs" />
+    <Compile Include="CustomMaps\PDEx.cs" />
+    <Compile Include="API\Enums\CRoleTypeId.cs" />
+    <Compile Include="API\Enums\SpawnTypeId.cs" />
+    <Compile Include="API\Enums\SpecialEventType.cs" />
+    <Compile Include="API\Enums\SyncType.cs" />
+    <Compile Include="Commands\CommandTools.cs" />
+    <Compile Include="Commands\DevToolFunctionHandler.cs" />
+    <Compile Include="Commands\DevTools\PlayOmegaWarhead.cs" />
+    <Compile Include="Commands\DevTools\ProximityChatCommand.cs" />
+    <Compile Include="Commands\DevTools\PlaySurfaceAttack.cs" />
+    <Compile Include="Commands\DevTools\VoiceRecordingCommand.cs" />
+    <Compile Include="Commands\DevTools\ReRollSetQueue.cs" />
+    <Compile Include="Commands\DevTools\ReRollSpecial.cs" />
+    <Compile Include="Commands\DevTools\SpawnDebugToolRole.cs" />
+    <Compile Include="Commands\RootCommand.cs" />
+    <Compile Include="Config.cs" />
+    <Compile Include="CustomRoles\CustomRolesHandler.cs" />
+    <Compile Include="CustomRoles\Fifthist\FifthistPriest.cs" />
+    <Compile Include="CustomRoles\Fifthist\FifthistRescue.cs" />
+    <Compile Include="CustomRoles\FoundationForces\HdCommander.cs" />
+    <Compile Include="CustomRoles\FoundationForces\HdInfantry.cs" />
+    <Compile Include="CustomRoles\FoundationForces\NtfAide.cs" />
+    <Compile Include="CustomRoles\Scientist\FacilityManager.cs" />
+    <Compile Include="CustomRoles\Scientist\ZoneManager.cs" />
+    <Compile Include="CustomRoles\SCPs\Scp3114Role.cs" />
+    <Compile Include="CustomRoles\SCPs\Scp682Role.cs" />
+    <Compile Include="CustomRoles\SCPs\Scp966Role.cs" />
+    <Compile Include="Extensions\CassieExtensions.cs" />
+    <Compile Include="Hints\PlayerHUD.cs" />
+    <Compile Include="Hints\RoleHintsDictionary.cs" />
+    <Compile Include="Patches\CandyPatch.cs" />
+    <Compile Include="Patches\Scp914ProcessorFix.cs" />
+    <Compile Include="Plugin.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ProximityChat\ActivateHandler.cs" />
+    <Compile Include="ProximityChat\Handler.cs" />
+    <Compile Include="SpecialEvents\Events\CandyWarriersAttack.cs" />
+    <Compile Include="SpecialEvents\Events\CaseColourlessGreen.cs" />
+    <Compile Include="SpecialEvents\Events\ChaosInsurgencyRaid.cs" />
+    <Compile Include="SpecialEvents\Events\ClassicEvent.cs" />
+    <Compile Include="SpecialEvents\Events\DailyFoundation.cs" />
+    <Compile Include="SpecialEvents\Events\FacilityTermination.cs" />
+    <Compile Include="SpecialEvents\Events\Old_DeltaWarhead.cs" />
+    <Compile Include="SpecialEvents\Events\FifthistsRaid.cs" />
+    <Compile Include="SpecialEvents\Events\None.cs" />
+    <Compile Include="SpecialEvents\Events\OmegaWarhead.cs" />
+    <Compile Include="SpecialEvents\Events\OperationBlackout.cs" />
+    <Compile Include="SpecialEvents\Events\RevolverBattles.cs" />
+    <Compile Include="SpecialEvents\Events\EndlessCryEvent.cs" />
+    <Compile Include="SpecialEvents\Events\Scp1509BattleField.cs" />
+    <Compile Include="SpecialEvents\Events\SergeyMakarovReturns.cs" />
+    <Compile Include="SpecialEvents\Events\SnowWarriersAttack.cs" />
+    <Compile Include="SpecialEvents\Events\SpeedUpEvent.cs" />
+    <Compile Include="SpecialEvents\SpecialEventsHandler.cs" />
+    <Compile Include="SpecialEvents\SpecialEventWeightContext.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+    <None Include="packages.config" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target Name="CopyToExiledPlugins" AfterTargets="Build">
     <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-        <ProjectGuid>{38D11BA7-26B0-4C36-9C24-3563A8CE956E}</ProjectGuid>
-        <OutputType>Library</OutputType>
-        <AppDesignerFolder>Properties</AppDesignerFolder>
-        <RootNamespace>Slafight_Plugin_EXILED</RootNamespace>
-        <AssemblyName>Slafight_Plugin_EXILED</AssemblyName>
-        <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
-        <FileAlignment>512</FileAlignment>
-        <LangVersion>default</LangVersion>
-        <Nullable>annotations</Nullable>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-        <PlatformTarget>x64</PlatformTarget>
-        <Prefer32Bit>false</Prefer32Bit>
-        <DebugSymbols>true</DebugSymbols>
-        <DebugType>full</DebugType>
-        <Optimize>false</Optimize>
-        <OutputPath>bin\Debug\</OutputPath>
-        <DefineConstants>DEBUG;TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
-    </PropertyGroup>
-    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-        <PlatformTarget>x64</PlatformTarget>
-        <Prefer32Bit>false</Prefer32Bit>
-        <DebugType>pdbonly</DebugType>
-        <Optimize>true</Optimize>
-        <OutputPath>bin\Release\</OutputPath>
-        <DefineConstants>TRACE</DefineConstants>
-        <ErrorReport>prompt</ErrorReport>
-        <WarningLevel>4</WarningLevel>
+      <ExiledPluginsDir>$(APPDATA)\EXILED\Plugins\7777</ExiledPluginsDir>
+      <ExiledDependenciesDir>$(APPDATA)\EXILED\Plugins\dependencies</ExiledDependenciesDir>
     </PropertyGroup>
     <ItemGroup>
-        <Reference Include="0Harmony, Version=2.2.2.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\Lib.Harmony.2.2.2\lib\net48\0Harmony.dll</HintPath>
-        </Reference>
-        <Reference Include="CommandSystem.Core, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\ExMod.Exiled.9.14.0\lib\net48\CommandSystem.Core.dll</HintPath>
-        </Reference>
-        <Reference Include="Exiled.API, Version=9.14.0.0, Culture=neutral, processorArchitecture=Amd64">
-          <HintPath>..\packages\ExMod.Exiled.9.14.0\lib\net48\Exiled.API.dll</HintPath>
-        </Reference>
-        <Reference Include="Exiled.CreditTags, Version=9.14.0.0, Culture=neutral, processorArchitecture=Amd64">
-          <HintPath>..\packages\ExMod.Exiled.9.14.0\lib\net48\Exiled.CreditTags.dll</HintPath>
-        </Reference>
-        <Reference Include="Exiled.CustomItems, Version=9.14.0.0, Culture=neutral, processorArchitecture=Amd64">
-          <HintPath>..\packages\ExMod.Exiled.9.14.0\lib\net48\Exiled.CustomItems.dll</HintPath>
-        </Reference>
-        <Reference Include="Exiled.CustomRoles, Version=9.14.0.0, Culture=neutral, processorArchitecture=Amd64">
-          <HintPath>..\packages\ExMod.Exiled.9.14.0\lib\net48\Exiled.CustomRoles.dll</HintPath>
-        </Reference>
-        <Reference Include="Exiled.Events, Version=9.14.0.0, Culture=neutral, processorArchitecture=Amd64">
-          <HintPath>..\packages\ExMod.Exiled.9.14.0\lib\net48\Exiled.Events.dll</HintPath>
-        </Reference>
-        <Reference Include="Exiled.Loader, Version=9.14.0.0, Culture=neutral, processorArchitecture=Amd64">
-          <HintPath>..\packages\ExMod.Exiled.9.14.0\lib\net48\Exiled.Loader.dll</HintPath>
-        </Reference>
-        <Reference Include="Exiled.Permissions, Version=9.14.0.0, Culture=neutral, processorArchitecture=Amd64">
-          <HintPath>..\packages\ExMod.Exiled.9.14.0\lib\net48\Exiled.Permissions.dll</HintPath>
-        </Reference>
-        <Reference Include="HintServiceMeow-Exiled, Version=5.5.0.0, Culture=neutral, processorArchitecture=Amd64">
-          <HintPath>..\packages\HintServiceMeow-Exiled.5.5.0\lib\net48\HintServiceMeow-Exiled.dll</HintPath>
-        </Reference>
-        <Reference Include="LabApi, Version=1.1.7.0, Culture=neutral, processorArchitecture=Amd64">
-          <HintPath>..\packages\ExMod.Exiled.9.14.0\lib\net48\LabApi.dll</HintPath>
-        </Reference>
-        <Reference Include="NorthwoodLib, Version=1.4.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>..\packages\ExMod.Exiled.9.14.0\lib\net48\NorthwoodLib.dll</HintPath>
-        </Reference>
-        <Reference Include="System.IO.Compression" />
-        <Reference Include="YamlDotNet, Version=11.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
-          <HintPath>..\packages\ExMod.Exiled.9.14.0\lib\net48\YamlDotNet.dll</HintPath>
-        </Reference>
-        <Reference Include="ZAMERT">
-            <HintPath>$(SL_References)\ZAMERT.dll</HintPath>
-        </Reference>
-        <Reference Include="Assembly-CSharp-firstpass">
-            <HintPath>$(SL_References)\Assembly-CSharp-firstpass.dll</HintPath>
-        </Reference>
-        <Reference Include="Mirror">
-            <HintPath>$(SL_References)\Mirror_publicized.dll</HintPath>
-        </Reference>
-        <Reference Include="Mirror.Components">
-            <HintPath>$(SL_References)\Mirror.Components_publicized.dll</HintPath>
-        </Reference>
-        <Reference Include="mscorlib">
-            <HintPath>$(SL_References)\mscorlib.dll</HintPath>
-        </Reference>
-        <Reference Include="Newtonsoft.Json">
-            <HintPath>$(SL_References)\Newtonsoft.Json.dll</HintPath>
-        </Reference>
-        <Reference Include="NVorbis">
-          <HintPath>..\packages\NVorbis.0.10.5\lib\net45\NVorbis.dll</HintPath>
-        </Reference>
-        <Reference Include="Pooling">
-            <HintPath>$(SL_References)\Pooling.dll</HintPath>
-        </Reference>
-        <Reference Include="ProjectMER">
-            <HintPath>$(SL_References)\ProjectMER.dll</HintPath>
-        </Reference>
-        <Reference Include="Unity.TextMeshPro">
-            <HintPath>$(SL_References)\Unity.TextMeshPro.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine">
-            <HintPath>$(SL_References)\UnityEngine.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.CoreModule">
-            <HintPath>$(SL_References)\UnityEngine.CoreModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.PhysicsModule">
-            <HintPath>$(SL_References)\UnityEngine.PhysicsModule.dll</HintPath>
-        </Reference>
-        <Reference Include="UnityEngine.AnimationModule">
-            <HintPath>$(SL_References)\UnityEngine.AnimationModule.dll</HintPath>
-        </Reference>
-        <Reference Include="Assembly-CSharp, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-            <HintPath>..\packages\ExMod.Exiled.9.14.0\lib\net48\Assembly-CSharp-Publicized.dll</HintPath>
-        </Reference>
-        <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-            <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.10.0.1\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Buffers, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-            <HintPath>..\packages\System.Buffers.4.6.1\lib\net462\System.Buffers.dll</HintPath>
-        </Reference>
-        <Reference Include="System.IO.Pipelines, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-            <HintPath>..\packages\System.IO.Pipelines.10.0.1\lib\net462\System.IO.Pipelines.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Memory, Version=4.0.5.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-            <HintPath>..\packages\System.Memory.4.6.3\lib\net462\System.Memory.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Numerics.Vectors, Version=4.1.6.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-            <HintPath>..\packages\System.Numerics.Vectors.4.6.1\lib\net462\System.Numerics.Vectors.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Runtime.CompilerServices.Unsafe, Version=6.0.3.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
-            <HintPath>..\packages\System.Runtime.CompilerServices.Unsafe.6.1.2\lib\net462\System.Runtime.CompilerServices.Unsafe.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Text.Encodings.Web, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-            <HintPath>..\packages\System.Text.Encodings.Web.10.0.1\lib\net462\System.Text.Encodings.Web.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Text.Json, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-            <HintPath>..\packages\System.Text.Json.10.0.1\lib\net462\System.Text.Json.dll</HintPath>
-        </Reference>
-        <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.4.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
-            <HintPath>..\packages\System.Threading.Tasks.Extensions.4.6.3\lib\net462\System.Threading.Tasks.Extensions.dll</HintPath>
-        </Reference>
-        <Reference Include="System" />
-        <Reference Include="System.Core" />
-        <Reference Include="System.Data" />
-        <Reference Include="System.Net" />
-        <Reference Include="System.Net.Http" />
-        <Reference Include="System.Net.Http.WebRequest" />
-        <Reference Include="System.Numerics" />
-        <Reference Include="System.Xml" />
+      <ExiledDependencyFiles Include="$(OutputPath)LabApi.dll" Condition="Exists('$(OutputPath)LabApi.dll')" />
+      <ExiledDependencyFiles Include="$(OutputPath)Microsoft.Bcl.AsyncInterfaces.dll" Condition="Exists('$(OutputPath)Microsoft.Bcl.AsyncInterfaces.dll')" />
+      <ExiledDependencyFiles Include="$(OutputPath)Newtonsoft.Json.dll" Condition="Exists('$(OutputPath)Newtonsoft.Json.dll')" />
+      <ExiledDependencyFiles Include="$(OutputPath)NVorbis.dll" Condition="Exists('$(OutputPath)NVorbis.dll')" />
+      <ExiledDependencyFiles Include="$(OutputPath)ProjectMER.dll" Condition="Exists('$(OutputPath)ProjectMER.dll')" />
+      <ExiledDependencyFiles Include="$(OutputPath)RueI.dll" Condition="Exists('$(OutputPath)RueI.dll')" />
+      <ExiledDependencyFiles Include="$(OutputPath)System.Buffers.dll" Condition="Exists('$(OutputPath)System.Buffers.dll')" />
+      <ExiledDependencyFiles Include="$(OutputPath)System.IO.Pipelines.dll" Condition="Exists('$(OutputPath)System.IO.Pipelines.dll')" />
+      <ExiledDependencyFiles Include="$(OutputPath)System.Memory.dll" Condition="Exists('$(OutputPath)System.Memory.dll')" />
+      <ExiledDependencyFiles Include="$(OutputPath)System.Numerics.Vectors.dll" Condition="Exists('$(OutputPath)System.Numerics.Vectors.dll')" />
+      <ExiledDependencyFiles Include="$(OutputPath)System.Runtime.CompilerServices.Unsafe.dll" Condition="Exists('$(OutputPath)System.Runtime.CompilerServices.Unsafe.dll')" />
+      <ExiledDependencyFiles Include="$(OutputPath)System.Text.Encodings.Web.dll" Condition="Exists('$(OutputPath)System.Text.Encodings.Web.dll')" />
+      <ExiledDependencyFiles Include="$(OutputPath)System.Text.Json.dll" Condition="Exists('$(OutputPath)System.Text.Json.dll')" />
+      <ExiledDependencyFiles Include="$(OutputPath)System.Threading.Tasks.Extensions.dll" Condition="Exists('$(OutputPath)System.Threading.Tasks.Extensions.dll')" />
+      <ExiledDependencyFiles Include="$(OutputPath)YamlDotNet.dll" Condition="Exists('$(OutputPath)YamlDotNet.dll')" />
+      <ExiledDependencyFiles Include="C:\Mono\lib\mono\xbuild\Microsoft\Microsoft.NET.Build.Extensions\net471\lib\System.Net.Http.dll" Condition="Exists('C:\Mono\lib\mono\xbuild\Microsoft\Microsoft.NET.Build.Extensions\net471\lib\System.Net.Http.dll')" />
     </ItemGroup>
-    <ItemGroup>
-        <Compile Include="Abilities\AllowEscapeAbility.cs" />
-        <Compile Include="Abilities\AlphaWarheadOverride.cs" />
-        <Compile Include="Abilities\CreateSinkholeAbility.cs" />
-        <Compile Include="Abilities\DropBiggerShitAbility.cs" />
-        <Compile Include="Abilities\MagicMissileAbility.cs" />
-        <Compile Include="Abilities\MemeWaveAbility.cs" />
-        <Compile Include="Abilities\PlaceTantrumAbility.cs" />
-        <Compile Include="Abilities\Scp035TentacleAbility.cs" />
-        <Compile Include="Abilities\Scp966SpeedAbility.cs" />
-        <Compile Include="Abilities\SoundOfFifthAbility.cs" />
-        <Compile Include="Abilities\TeleprotRandomAbility.cs" />
-        <Compile Include="API\Enums\CTeam.cs" />
-        <Compile Include="API\Enums\CTeamGroup.cs" />
-        <Compile Include="API\Enums\CustomColor.cs" />
-        <Compile Include="API\Enums\ServerColors.cs" />
-        <Compile Include="API\Enums\Scp035StateType.cs" />
-        <Compile Include="API\Enums\SeasonTypeId.cs" />
-        <Compile Include="API\Enums\SpecificFlagType.cs" />
-        <Compile Include="API\Enums\TaskType.cs" />
-        <Compile Include="API\Features\AbilityBase.cs" />
-        <Compile Include="API\Features\AbilityLocalisation.cs" />
-        <Compile Include="API\Features\AbilityInputHandler.cs" />
-        <Compile Include="API\Features\AbilityLoadout.cs" />
-        <Compile Include="API\Features\AbilityManager.cs" />
-        <Compile Include="API\Features\AbilityParseHelper.cs" />
-        <Compile Include="API\Features\CassieHelper.cs" />
-        <Compile Include="API\Features\EventSubscriptionScope.cs" />
-        <Compile Include="API\Features\CItem.cs" />
-        <Compile Include="API\Features\CItemHybrid.cs" />
-        <Compile Include="API\Features\CItemArmor.cs" />
-        <Compile Include="API\Features\CItemKeycard.cs" />
-        <Compile Include="API\Features\KeycardAccessLevels.cs" />
-        <Compile Include="API\Features\CItemWeapon.cs" />
-        <Compile Include="API\Features\CustomShieldEvents.cs" />
-        <Compile Include="API\Features\CustomShieldState.cs" />
-        <Compile Include="API\Features\CustomInfoDisplay.cs" />
-        <Compile Include="API\Features\CustomTriggerPoint.cs" />
-        <Compile Include="API\Features\GeneratorPrefab.cs" />
-        <Compile Include="API\Features\LabApiHandlerRegistry.cs" />
-        <Compile Include="API\Features\NetworkVisibilityManager.cs" />
-        <Compile Include="API\Features\PlayerSpeakerManager.cs" />
-        <Compile Include="API\Features\Scp914\Scp914Context.cs" />
-        <Compile Include="API\Features\Scp914\Scp914Rule.cs" />
-        <Compile Include="API\Features\Scp914\Scp914RuleSet.cs" />
-        <Compile Include="API\Features\Scp914\Scp914Dispatcher.cs" />
-        <Compile Include="API\Features\Scp914\Scp914Registry.cs" />
-        <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\MtfCoreForceUnitPacks.cs" />
-        <Compile Include="API\Features\SpeakerApi.cs" />
-        <Compile Include="API\Features\VoiceRecordingApi.cs" />
-        <Compile Include="API\Features\CRole.cs" />
-        <Compile Include="API\Features\CRoom.cs" />
-        <Compile Include="API\Features\CustomBooleans.cs" />
-        <Compile Include="API\Features\Common\DefinitionSourceLoader.cs" />
-        <Compile Include="API\Features\GlobalVentManager.cs" />
-        <Compile Include="API\Features\CItemNvg.cs" />
-        <Compile Include="API\Features\ObjectPrefab.cs" />
-        <Compile Include="API\Features\PrefabSaveData.cs" />
-        <Compile Include="API\Features\RoleLimitManager.cs" />
-        <Compile Include="API\Features\RoleTableContext.cs" />
-        <Compile Include="API\Features\RoleTableContextRegistry.cs" />
-        <Compile Include="API\Features\RoleTableDictionaries\Contexts\AprilRoleTableContext.cs" />
-        <Compile Include="API\Features\RoleTableDictionaries\Contexts\NormalRoleTableContext.cs" />
-        <Compile Include="API\Features\RoleParseHelper.cs" />
-        <Compile Include="API\Features\RoundVictory\Core\*.cs" />
-        <Compile Include="API\Features\RoundVictory\Sources\*.cs" />
-        <Compile Include="API\Features\RoleSpecificTextProvider.cs" />
-        <Compile Include="API\Features\ServerSpecifics.cs" />
-        <Compile Include="API\Features\SpawnContext.cs" />
-        <Compile Include="API\Features\SpawnContextRegistry.cs" />
-        <Compile Include="API\Features\SlafightLabApiHandler.cs" />
-        <Compile Include="API\Features\SpawnSystemDictionaries\Contexts\DefaultContexts.cs" />
-        <Compile Include="API\Features\SpawnSystemDictionaries\Contexts\FacilityTerminationContexts.cs" />
-        <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\DefaultUnitPacks.cs" />
-        <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\FacilityTerminationPacks.cs" />
-        <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\MtfSeeNoEvilUnitPacks.cs" />
-        <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\SnowWarriersPacks.cs" />
-        <Compile Include="API\Features\SpecialEvent.cs" />
-        <Compile Include="API\Features\SpecificFlagsManager.cs" />
-        <Compile Include="API\Features\SpyKitRecords.cs" />
-        <Compile Include="API\Features\SpyMorphDataCollections.cs" />
-        <Compile Include="API\Features\Tips.cs" />
-        <Compile Include="API\Features\Teams\Core\*.cs" />
-        <Compile Include="API\Features\Teams\Escape\*.cs" />
-        <Compile Include="API\Features\Teams\Profiles\*.cs" />
-        <Compile Include="API\Features\Teams\Definitions\Escape\*.cs" />
-        <Compile Include="API\Features\Teams\Definitions\Profiles\*.cs" />
-        <Compile Include="API\Features\Teams\Definitions\Teams\*.cs" />
-        <Compile Include="API\Features\UnitPack.cs" />
-        <Compile Include="API\Features\SpawnSystemBootstrap.cs" />
-        <Compile Include="API\Features\UnitPackRegistry.cs" />
-        <Compile Include="API\Features\WearFollower.cs" />
-        <Compile Include="API\Interface\IBootstrapHandler.cs" />
-        <Compile Include="API\Interface\IControllableObject.cs" />
-        <Compile Include="API\Interface\IObjectPrefab.cs" />
-        <Compile Include="API\Interface\ISpawnableObject.cs" />
-        <Compile Include="API\Objects\RoleTables.cs" />
-        <Compile Include="API\Structs\ObjectInfo.cs" />
-        <Compile Include="Changes\CandyChanges.cs" />
-        <Compile Include="Changes\ChristmasChanges.cs" />
-        <Compile Include="Changes\EasterEggsHandler.cs" />
-        <Compile Include="Changes\EscapeHandler.cs" />
-        <Compile Include="Changes\FacilityLightHandler.cs" />
-        <Compile Include="Changes\Scp1509Handler.cs" />
-        <Compile Include="Changes\Scp914Changes.cs" />
-        <Compile Include="Changes\ScpPermissions.cs" />
-        <Compile Include="Commands\DevTools\AbilityUniversal.cs" />
-        <Compile Include="Commands\DevTools\ActivateGenerator.cs" />
-        <Compile Include="Commands\DevTools\AddQueue.cs" />
-        <Compile Include="Commands\DevTools\DebugStart.cs" />
-        <Compile Include="Commands\DevTools\GetQueue.cs" />
-        <Compile Include="Commands\DevTools\GiveItem.cs" />
-        <Compile Include="Commands\DevTools\HelpCommand.cs" />
-        <Compile Include="Commands\DevTools\HitboxCommand.cs" />
-        <Compile Include="Commands\DevTools\ListCommand.cs" />
-        <Compile Include="Commands\DevTools\ObjectPrefabTools.cs" />
-        <Compile Include="Commands\DevTools\PlayerCommand.cs" />
-        <Compile Include="Commands\DevTools\PlayAudioHere.cs" />
-        <Compile Include="Commands\DevTools\PlayInstantSurfaceBombing.cs" />
-        <Compile Include="Commands\DevTools\QueueCommand.cs" />
-        <Compile Include="Commands\DevTools\RestartCommand.cs" />
-        <Compile Include="Commands\DevTools\RunEvent.cs" />
-        <Compile Include="Commands\DevTools\SetQueue.cs" />
-        <Compile Include="Commands\DevTools\SpawnBuiltInPrefab.cs" />
-        <Compile Include="Commands\DevTools\SpawnUniversal.cs" />
-        <Compile Include="Commands\DevTools\SpawnWave.cs" />
-        <Compile Include="Commands\DevTools\StatusCommand.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\CapybaraMissile.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\ArmorInfantry.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\ArmorVip.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunDisarmerRifle.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunAnomalyDetainer.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunRevolverX.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\KeycardA.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\KeycardHimself.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\KeycardSupplyManager.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\S41MedicalPistol.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\KeycardChaosIntruder.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\CloakGenerator.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\CUA_SpyKit.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\DninoueMissile.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunM82.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunScp7381.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunSL8.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunSuppressiver.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\NvgBlue.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\NvgRed.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\SchwarzschildRailbreaker.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\Veritas.cs" />
-        <Compile Include="CustomItems\NvgManager.cs" />
-        <Compile Include="CustomItems\CustomItemsManager.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\AdvancedMedkit.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\AntiMemeGoggle.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\CaneOfTheStars.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\ClassZMemoryForcePil.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\DummyRoad.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\FakeGrenade.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\FlashBangE.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GoCRecruitPaper.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunCOM77.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunFRMGX.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunFSP18.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunGoCRailgun.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunGoCRailgunFull.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunGoCTurret.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunN7CR.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunN7Weltkrieg.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunProject90.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunSuperLogicer.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\GunTacticalRevolver.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\HIDTurret.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\KeycardArmoryLevel1.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\KeycardArmoryLevel2.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\KeycardArmoryLevel3.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\KeycardConscripts.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\KeycardFifthist.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\KeycardFifthistPriest.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\KeycardSecurityChief.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\KeycardSiteNavigator.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\KeycardSiteDirector.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\KeycardSurveillance.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\MagicMissile.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\MasterCard.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\ClassXMemoryForcePil.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\NeutralizeGrenade.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\NvgNormal.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\OmegaWarheadAccess.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\PlayingCard.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\Quarter.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\Scp1425.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\SchwarzschildQuasar.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\Scp148.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\SerumC.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\SerumD.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\SNAV300.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\SNAV310.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\SNAVUltimate.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\SnavCommon.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\Scp513Item.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\ThrowableScp244.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\Toolbox.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\ModeratorUtil.cs" />
-        <Compile Include="CustomMaps\FacilityControlRoom.cs" />
-        <Compile Include="CustomMaps\FacilityControlRoomFunction.cs" />
-        <Compile Include="CustomMaps\FacilityControlRoomFunctions\AntiMemeProtocolFunction.cs" />
-        <Compile Include="CustomMaps\Communications.cs" />
-        <Compile Include="CustomMaps\Entities\Scp513.cs" />
-        <Compile Include="CustomMaps\Entities\ObjectBootstraps.cs" />
-        <Compile Include="CustomMaps\FacilityControlRoomFunctions\SurfaceBombingFunction.cs" />
-        <Compile Include="CustomMaps\Features\DailyCassieAnnounce.cs" />
-        <Compile Include="CustomMaps\Features\DocumentDictionary.cs" />
-        <Compile Include="CustomMaps\Features\OmegaWarhead.cs" />
-        <Compile Include="CustomMaps\Features\Scp012_033.cs" />
-        <Compile Include="CustomMaps\Features\Sinkhole.cs" />
-        <Compile Include="CustomMaps\Features\TerminalRift.cs" />
-        <Compile Include="CustomMaps\Features\TerminalTrain.cs" />
-        <Compile Include="CustomMaps\Features\VentControl.cs" />
-        <Compile Include="CustomMaps\Features\WarheadDoorLockdown.cs" />
-        <Compile Include="CustomMaps\Features\WarheadBoomEffectHandler.cs" />
-        <Compile Include="CustomMaps\Features\WarheadBoomEffectUtil.cs" />
-        <Compile Include="CustomMaps\GateAEnding.cs" />
-        <Compile Include="CustomMaps\Bridges\ObjectPrefabHandler.cs" />
-        <Compile Include="CustomMaps\Bridges\SchematicObjectPrefabBridge.cs" />
-        <Compile Include="CustomMaps\ObjectPrefabs\AntiMemeBomb.cs" />
-        <Compile Include="CustomMaps\ObjectPrefabs\HIDTurretObject.cs" />
-        <Compile Include="CustomMaps\ObjectPrefabs\Document.cs" />
-        <Compile Include="CustomMaps\ObjectPrefabs\AuthDoor.cs" />
-        <Compile Include="CustomMaps\ObjectPrefabs\PhysicsSchematicObject.cs" />
-        <Compile Include="CustomMaps\ObjectPrefabs\Tentacle.cs" />
-        <Compile Include="CustomMaps\ObjectPrefabs\Trashbox.cs" />
-        <Compile Include="CustomMaps\ObjectPrefabs\Vent.cs" />
-        <Compile Include="CustomMaps\ObjectPrefabs\WarheadBoomEffect.cs" />
-        <Compile Include="CustomMaps\Bridges\TriggerPointItemSpawner.cs" />
-        <Compile Include="CustomMaps\Bridges\TriggerPointRegistry.cs" />
-        <Compile Include="CustomRoles\ChaosInsurgency\ChaosIntruder.cs" />
-        <Compile Include="CustomRoles\ChaosInsurgency\ChaosPenal.cs" />
-        <Compile Include="CustomRoles\ChaosInsurgency\ChaosCommando.cs" />
-        <Compile Include="CustomRoles\ChaosInsurgency\ChaosSignal.cs" />
-        <Compile Include="CustomRoles\ChaosInsurgency\ChaosSniper.cs" />
-        <Compile Include="CustomRoles\ChaosInsurgency\ChaosTacticalUnit.cs" />
-        <Compile Include="CustomRoles\ChaosInsurgency\ChaosUndercoverAgent.cs" />
-        <Compile Include="CustomRoles\ClassD\CandySubject.cs" />
-        <Compile Include="CustomRoles\ClassD\Janitor.cs" />
-        <Compile Include="CustomRoles\Fifthist\FifthistConvert.cs" />
-        <Compile Include="CustomRoles\Fifthist\FifthistGuidance.cs" />
-        <Compile Include="CustomRoles\Fifthist\FifthistMarionetteRole.cs" />
-        <Compile Include="CustomRoles\Fifthist\Scp3125Role.cs" />
-        <Compile Include="CustomRoles\FoundationForces\HdDisarmer.cs" />
-        <Compile Include="CustomRoles\FoundationForces\HdMarshal.cs" />
-        <Compile Include="CustomRoles\FoundationForces\HdShotgunner.cs" />
-        <Compile Include="CustomRoles\FoundationForces\HdShielder.cs" />
-        <Compile Include="CustomRoles\FoundationForces\NtfGeneral.cs" />
-        <Compile Include="CustomRoles\FoundationForces\NtfDetainer.cs" />
-        <Compile Include="CustomRoles\FoundationForces\NtfFieldMedic.cs" />
-        <Compile Include="CustomRoles\FoundationForces\NtfSpecialist.cs" />
-        <Compile Include="CustomRoles\FoundationForces\Sculpture.cs" />
-        <Compile Include="CustomRoles\FoundationForces\SneGears.cs" />
-        <Compile Include="CustomRoles\FoundationForces\SneNeutralitist.cs" />
-        <Compile Include="CustomRoles\FoundationForces\SneOperator.cs" />
-        <Compile Include="CustomRoles\FoundationForces\SnePurify.cs" />
-        <Compile Include="CustomRoles\FoundationForces\AraOrun.cs" />
-        <Compile Include="CustomRoles\FoundationForces\LwsAgent.cs" />
-        <Compile Include="CustomRoles\FoundationForces\LwsForensic.cs" />
-        <Compile Include="CustomRoles\FoundationForces\LwsJudgement.cs" />
-        <Compile Include="CustomRoles\FoundationForces\LwsLiaison.cs" />
-        <Compile Include="CustomRoles\FoundationForces\RrhAegis.cs" />
-        <Compile Include="CustomRoles\FoundationForces\RrhAssaulter.cs" />
-        <Compile Include="CustomRoles\FoundationForces\RrhEnforcer.cs" />
-        <Compile Include="CustomRoles\FoundationForces\RrhWarden.cs" />
-        <Compile Include="CustomRoles\GoC\GoCCommunications.cs" />
-        <Compile Include="CustomRoles\GoC\GoCDeputy.cs" />
-        <Compile Include="CustomRoles\GoC\GoCHoundDog.cs" />
-        <Compile Include="CustomRoles\GoC\GoCMedic.cs" />
-        <Compile Include="CustomRoles\GoC\GoCOperative.cs" />
-        <Compile Include="CustomRoles\GoC\GoCSquadLeader.cs" />
-        <Compile Include="CustomRoles\GoC\GoCThaumaturgist.cs" />
-        <Compile Include="CustomRoles\Guards\Chamber Guard.cs" />
-        <Compile Include="CustomRoles\Guards\EvacuationGuard.cs" />
-        <Compile Include="CustomRoles\Guards\SecurityChief.cs" />
-        <Compile Include="CustomRoles\Guards\SecurityTeamGuard.cs" />
-        <Compile Include="CustomRoles\Guards\SupplyManager.cs" />
-        <Compile Include="CustomRoles\Moderators\HideAdmin.cs" />
-        <Compile Include="CustomRoles\Moderators\HideWatch.cs" />
-        <Compile Include="CustomRoles\Moderators\ModeratorRole.cs" />
-        <Compile Include="CustomRoles\Others\CandyWarrierApril.cs" />
-        <Compile Include="CustomRoles\Others\CandyWarrierHalloween.cs" />
-        <Compile Include="CustomRoles\Others\CapybaraRole.cs" />
-        <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovAwakenRole.cs" />
-        <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovExtensionAndUtils.cs" />
-        <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovRole.cs" />
-        <Compile Include="CustomRoles\Others\SergeyMakarov\SergeySharedContents.cs" />
-        <Compile Include="CustomRoles\Others\SnowWarrier.cs" />
-        <Compile Include="CustomRoles\Scientist\CandyResearcher.cs" />
-        <Compile Include="CustomRoles\Scientist\SiteNavigator.cs" />
-        <Compile Include="CustomRoles\Scientist\MarionWheeler.cs" />
-        <Compile Include="CustomRoles\Scientist\Object Observer.cs" />
-        <Compile Include="CustomRoles\Scientist\Engineer.cs" />
-        <Compile Include="CustomRoles\Scientist\Surveillance.cs" />
-        <Compile Include="CustomRoles\SCPs\Scp035Role.cs" />
-        <Compile Include="CustomRoles\SCPs\Scp079Role.cs" />
-        <Compile Include="CustomRoles\SCPs\Scp096Anger.cs" />
-        <Compile Include="CustomRoles\SCPs\Scp106Role.cs" />
-        <Compile Include="CustomRoles\SCPs\Scp173Role.cs" />
-        <Compile Include="CustomRoles\SCPs\Scp3005Role.cs" />
-        <Compile Include="CustomRoles\SCPs\Scp610Role.cs" />
-        <Compile Include="CustomRoles\SCPs\Scp999Role.cs" />
-        <Compile Include="CustomRoles\SCPs\ZombifiedRole.cs" />
-        <Compile Include="Extensions\AbilityResetUtil.cs" />
-        <Compile Include="Extensions\ColorExtensions.cs" />
-        <Compile Include="Extensions\CustomTeamUtils.cs" />
-        <Compile Include="Extensions\CustomItemExtensions.cs" />
-        <Compile Include="Extensions\OnlyChecker.cs" />
-        <Compile Include="Extensions\PlayerAbilityExtensions.cs" />
-        <Compile Include="Extensions\PlayerCItemBaseExtensions.cs" />
-        <Compile Include="Extensions\PlayerExtensions.cs" />
-        <Compile Include="Extensions\PlayerRoleHelpers.cs" />
-        <Compile Include="Extensions\RoomSpawner.cs" />
-        <Compile Include="Extensions\RoomUtils.cs" />
-        <Compile Include="Extensions\RoundUtils.cs" />
-        <Compile Include="Extensions\SchematicHelpers.cs" />
-        <Compile Include="Extensions\StaticUtils.cs" />
-        <Compile Include="Extensions\StringExtensions.cs" />
-        <Compile Include="MainHandlers\AutoHandlerBootstrapRegister.cs" />
-        <Compile Include="MainHandlers\BadgeHandler.cs" />
-        <Compile Include="MainHandlers\DebugModeHandler.cs" />
-        <Compile Include="MainHandlers\EventHandler.cs" />
-        <Compile Include="MainHandlers\FirstRolesHandler.cs" />
-        <Compile Include="MainHandlers\LabApiHandler.cs" />
-        <Compile Include="MainHandlers\NewEventHandler.cs" />
-        <Compile Include="MainHandlers\RoundHandler.cs" />
-        <Compile Include="MainHandlers\RPNameSetter.cs" />
-        <Compile Include="MainHandlers\ServerSpecificsHandler.cs" />
-        <Compile Include="MainHandlers\SpawningHandler.cs" />
-        <Compile Include="MainHandlers\SpawnSystem.cs" />
-        <Compile Include="MainHandlers\SpecificFlagsHandler.cs" />
-        <Compile Include="MainHandlers\WearsHandler.cs" />
-        <Compile Include="CustomMaps\Core\DoorAccess\SpecialDoorAccessController.cs" />
-        <Compile Include="CustomMaps\Core\DoorAccess\SpecialDoorAccessRule.cs" />
-        <Compile Include="CustomMaps\Core\FemurBreaker\FemurBreakerController.cs" />
-        <Compile Include="CustomMaps\Core\Interactions\MapToyInteractionRouter.cs" />
-        <Compile Include="CustomMaps\Core\Lifecycle\RoundStartupCoordinator.cs" />
-        <Compile Include="CustomMaps\Core\SurfaceGate\SurfaceGateBarrierController.cs" />
-        <Compile Include="CustomMaps\Core\Utilities\SchematicMover.cs" />
-        <Compile Include="CustomMaps\Core\CustomMapMainHandler.cs" />
-        <Compile Include="CustomMaps\MapFlags.cs" />
-        <Compile Include="CustomMaps\MapGuardHandler.cs" />
-        <Compile Include="CustomMaps\PDEx.cs" />
-        <Compile Include="API\Enums\CRoleTypeId.cs" />
-        <Compile Include="API\Enums\SpawnTypeId.cs" />
-        <Compile Include="API\Enums\SpecialEventType.cs" />
-        <Compile Include="API\Enums\SyncType.cs" />
-        <Compile Include="Commands\CommandTools.cs" />
-        <Compile Include="Commands\DevToolFunctionHandler.cs" />
-        <Compile Include="Commands\DevTools\PlayOmegaWarhead.cs" />
-        <Compile Include="Commands\DevTools\ProximityChatCommand.cs" />
-        <Compile Include="Commands\DevTools\PlaySurfaceAttack.cs" />
-        <Compile Include="Commands\DevTools\VoiceRecordingCommand.cs" />
-        <Compile Include="Commands\DevTools\ReRollSetQueue.cs" />
-        <Compile Include="Commands\DevTools\ReRollSpecial.cs" />
-        <Compile Include="Commands\DevTools\SpawnDebugToolRole.cs" />
-        <Compile Include="Commands\RootCommand.cs" />
-        <Compile Include="Config.cs" />
-        <Compile Include="CustomRoles\CustomRolesHandler.cs" />
-        <Compile Include="CustomRoles\Fifthist\FifthistPriest.cs" />
-        <Compile Include="CustomRoles\Fifthist\FifthistRescue.cs" />
-        <Compile Include="CustomRoles\FoundationForces\HdCommander.cs" />
-        <Compile Include="CustomRoles\FoundationForces\HdInfantry.cs" />
-        <Compile Include="CustomRoles\FoundationForces\NtfAide.cs" />
-        <Compile Include="CustomRoles\Scientist\FacilityManager.cs" />
-        <Compile Include="CustomRoles\Scientist\ZoneManager.cs" />
-        <Compile Include="CustomRoles\SCPs\Scp3114Role.cs" />
-        <Compile Include="CustomRoles\SCPs\Scp682Role.cs" />
-        <Compile Include="CustomRoles\SCPs\Scp966Role.cs" />
-        <Compile Include="Extensions\CassieExtensions.cs" />
-        <Compile Include="Hints\HintCoordinateConverter.cs" />
-        <Compile Include="Hints\PlayerHUD.cs" />
-        <Compile Include="Hints\RespawnTimerHints.cs" />
-        <Compile Include="Hints\RoleHintsDictionary.cs" />
-        <Compile Include="Hints\RoomNameTranslator.cs" />
-        <Compile Include="Hints\Scp079PingHints.cs" />
-        <Compile Include="Hints\ScpStatusHints.cs" />
-        <Compile Include="Patches\CandyPatch.cs" />
-        <Compile Include="Patches\Scp914ProcessorFix.cs" />
-        <Compile Include="Plugin.cs" />
-        <Compile Include="Properties\AssemblyInfo.cs" />
-        <Compile Include="ProximityChat\ActivateHandler.cs" />
-        <Compile Include="ProximityChat\Handler.cs" />
-        <Compile Include="SpecialEvents\Events\CandyWarriersAttack.cs" />
-        <Compile Include="SpecialEvents\Events\CaseColourlessGreen.cs" />
-        <Compile Include="SpecialEvents\Events\ChaosInsurgencyRaid.cs" />
-        <Compile Include="SpecialEvents\Events\ClassicEvent.cs" />
-        <Compile Include="SpecialEvents\Events\DailyFoundation.cs" />
-        <Compile Include="SpecialEvents\Events\FacilityTermination.cs" />
-        <Compile Include="SpecialEvents\Events\Old_DeltaWarhead.cs" />
-        <Compile Include="SpecialEvents\Events\FifthistsRaid.cs" />
-        <Compile Include="SpecialEvents\Events\None.cs" />
-        <Compile Include="SpecialEvents\Events\OmegaWarhead.cs" />
-        <Compile Include="SpecialEvents\Events\OperationBlackout.cs" />
-        <Compile Include="SpecialEvents\Events\RevolverBattles.cs" />
-        <Compile Include="SpecialEvents\Events\EndlessCryEvent.cs" />
-        <Compile Include="SpecialEvents\Events\Scp1509BattleField.cs" />
-        <Compile Include="SpecialEvents\Events\SergeyMakarovReturns.cs" />
-        <Compile Include="SpecialEvents\Events\SnowWarriersAttack.cs" />
-        <Compile Include="SpecialEvents\Events\SpeedUpEvent.cs" />
-        <Compile Include="SpecialEvents\SpecialEventsHandler.cs" />
-        <Compile Include="SpecialEvents\SpecialEventWeightContext.cs" />
-    </ItemGroup>
-    <ItemGroup>
-        <None Include="App.config" />
-        <None Include="packages.config" />
-    </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-    <Target Name="CopyToExiledPlugins" AfterTargets="Build">
-        <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll"
-              DestinationFolder="$(APPDATA)\EXILED\Plugins\7777"
-              SkipUnchangedFiles="false" />
-    </Target>
-    <Import Project="..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" />
-    <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
-        <PropertyGroup>
-            <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105.The missing file is {0}.</ErrorText>
-        </PropertyGroup>
-        <Error Condition="!Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets'))" />
-    </Target>
+    <MakeDir Directories="$(ExiledPluginsDir);$(ExiledDependenciesDir)" />
+    <Copy SourceFiles="$(OutputPath)$(AssemblyName).dll" DestinationFolder="$(ExiledPluginsDir)" SkipUnchangedFiles="false" />
+    <Copy SourceFiles="@(ExiledDependencyFiles)" DestinationFolder="$(ExiledDependenciesDir)" SkipUnchangedFiles="false" />
+  </Target>
+  <Import Project="..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets" Condition="Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" />
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Enable NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105.The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\System.ValueTuple.4.6.1\build\net471\System.ValueTuple.targets'))" />
+  </Target>
 </Project>
