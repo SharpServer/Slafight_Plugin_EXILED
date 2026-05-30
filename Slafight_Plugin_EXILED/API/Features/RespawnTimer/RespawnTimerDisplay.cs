@@ -12,6 +12,7 @@ using Respawning.Waves.Generic;
 using RueI.API;
 using RueI.API.Elements;
 using Slafight_Plugin_EXILED.API.Interface;
+using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.API.Features.RespawnTimer;
 
@@ -141,6 +142,7 @@ public sealed class RespawnTimerDisplay : IBootstrapHandler, IDisposable
             var display = RueDisplay.Get(player.ReferenceHub);
             display.Show(SpecTimerTag, SpecTimer);
             display.Show(SpawnSituationTag, SpecSpawn);
+            display.QueueRueiUpdate();
         }
         catch (Exception ex)
         {

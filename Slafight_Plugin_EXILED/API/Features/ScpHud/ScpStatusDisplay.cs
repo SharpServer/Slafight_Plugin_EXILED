@@ -140,6 +140,7 @@ public sealed class ScpStatusDisplay : IBootstrapHandler, IDisposable
         {
             var display = RueDisplay.Get(player.ReferenceHub);
             display.Show(ScpHudTag, ScpElement);
+            display.QueueRueiUpdate();
         }
         catch (Exception ex)
         {

@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text;
 using Exiled.API.Features;
 using RueI.API;
@@ -13,6 +14,9 @@ public static class RueiHintExtensions
 {
     private const string RueiPlusTagName = "RueiPlus";
     private static readonly TimeSpan DynamicUpdateInterval = TimeSpan.FromMilliseconds(100);
+    private static readonly MethodInfo? SetUpdateInMethod = typeof(RueDisplay).GetMethod(
+        "SetUpdateIn",
+        BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
     private static readonly object SyncRoot = new();
     private static readonly Dictionary<int, Dictionary<string, string>> DynamicTexts = new();
     private static readonly Dictionary<string, uint> TagVersions = new();
@@ -119,6 +123,27 @@ public static class RueiHintExtensions
     public static void SetDynamicRuei(this Player player, string tagName, StringBuilder text, int hintpos = 500)
         => player.SetDynamicRuei(tagName, text?.ToString(), hintpos);
 
+    public static void QueueRueiUpdate(this RueDisplay display, float delaySeconds = 0.05f)
+    {
+        if (display == null)
+            return;
+
+        try
+        {
+            if (SetUpdateInMethod != null)
+            {
+                SetUpdateInMethod.Invoke(display, new object[] { delaySeconds });
+                return;
+            }
+
+            display.Update();
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"QueueRueiUpdate failed: {ex.Message}");
+        }
+    }
+
     public static void ClearDynamicRuei(this Player player, string tagName)
         => player.ClearRuei(tagName);
 
@@ -165,6 +190,7 @@ public static class RueiHintExtensions
                     UpdateInterval = DynamicUpdateInterval,
                     ResolutionBasedAlign = true
                 });
+            display.QueueRueiUpdate();
         }
         catch (Exception ex)
         {
