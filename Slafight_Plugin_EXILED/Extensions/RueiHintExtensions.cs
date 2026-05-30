@@ -13,9 +13,8 @@ namespace Slafight_Plugin_EXILED.Extensions;
 public static class RueiHintExtensions
 {
     private const string RueiPlusTagName = "RueiPlus";
-    private const int BaseGameHintPosition = 780;
-    private const int HsmToRueiOffset = 1100;
-    private const string ShowHintLineHeight = "86%";
+    private const int OneShotHintPosition = 200;
+    private const int DynamicHintPosition = 500;
     private static readonly object SyncRoot = new();
     private static readonly Dictionary<int, Dictionary<string, string>> DynamicTexts = new();
     private static readonly Dictionary<string, int> DynamicPositions = new();
@@ -23,13 +22,13 @@ public static class RueiHintExtensions
     private static readonly Dictionary<string, uint> TagVersions = new();
     private static readonly HashSet<string> ActiveDynamicTags = [];
     
-    public static void ShowRuei(this Player player, string info, string tagName, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
+    public static void ShowRuei(this Player player, string info, string tagName, float displayTimeInSeconds = 5f, int hintpos = OneShotHintPosition)
         => player.ShowRuei(info, new Tag(tagName), displayTimeInSeconds, hintpos);
 
-    public static void ShowRuei(this Player player, StringBuilder info, string tagName, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
+    public static void ShowRuei(this Player player, StringBuilder info, string tagName, float displayTimeInSeconds = 5f, int hintpos = OneShotHintPosition)
         => player.ShowRuei(info?.ToString(), tagName, displayTimeInSeconds, hintpos);
 
-    public static void ShowRuei(this Player player, string info, Tag tag, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
+    public static void ShowRuei(this Player player, string info, Tag tag, float displayTimeInSeconds = 5f, int hintpos = OneShotHintPosition)
     {
         if (!IsValid(player) || tag is null)
             return;
@@ -54,14 +53,7 @@ public static class RueiHintExtensions
             if (string.IsNullOrEmpty(info))
                 return;
 
-            string text = FormatShowHintText(info);
-            display.Show(
-                tag,
-                new BasicElement(ToRueiHintPos(hintpos), text)
-                {
-                    VerticalAlign = VerticalAlign.Center,
-                },
-                displayTimeInSeconds);
+            display.Show(tag, new BasicElement(hintpos, info), displayTimeInSeconds);
 
             if (displayTimeInSeconds > 0f)
                 player.ReferenceHub.StartCoroutine(RemoveTagAfterDelay(player, tag, displayTimeInSeconds, version));
@@ -72,13 +64,13 @@ public static class RueiHintExtensions
         }
     }
 
-    public static void ShowRuei(this Player player, StringBuilder info, Tag tag, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
+    public static void ShowRuei(this Player player, StringBuilder info, Tag tag, float displayTimeInSeconds = 5f, int hintpos = OneShotHintPosition)
         => player.ShowRuei(info?.ToString(), tag, displayTimeInSeconds, hintpos);
 
-    public static void ShowRueiPlus(this Player player, string info, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
+    public static void ShowRueiPlus(this Player player, string info, float displayTimeInSeconds = 5f, int hintpos = OneShotHintPosition)
         => player.ShowRuei(info, RueiPlusTagName, displayTimeInSeconds, hintpos);
 
-    public static void ShowRueiPlus(this Player player, StringBuilder info, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
+    public static void ShowRueiPlus(this Player player, StringBuilder info, float displayTimeInSeconds = 5f, int hintpos = OneShotHintPosition)
         => player.ShowRueiPlus(info?.ToString(), displayTimeInSeconds, hintpos);
 
     public static void ClearRueiPlus(this Player player)
@@ -116,7 +108,7 @@ public static class RueiHintExtensions
         this Player player,
         string tagName,
         string text,
-        int hintpos = BaseGameHintPosition,
+        int hintpos = DynamicHintPosition,
         VerticalAlign verticalAlign = VerticalAlign.Center)
     {
         if (!IsValid(player) || string.IsNullOrEmpty(tagName))
@@ -152,7 +144,7 @@ public static class RueiHintExtensions
         this Player player,
         string tagName,
         StringBuilder text,
-        int hintpos = BaseGameHintPosition,
+        int hintpos = DynamicHintPosition,
         VerticalAlign verticalAlign = VerticalAlign.Center)
         => player.SetDynamicRuei(tagName, text?.ToString(), hintpos, verticalAlign);
 
@@ -288,24 +280,4 @@ public static class RueiHintExtensions
 
     private static string MakeKey(int playerId, string tagName)
         => playerId + ":" + tagName;
-
-    private static int ToRueiHintPos(int hsmY)
-    {
-        int converted = HsmToRueiOffset - hsmY;
-        if (converted < 0)
-            return 0;
-
-        if (converted > 1000)
-            return 1000;
-
-        return converted;
-    }
-
-    private static string FormatShowHintText(string text)
-    {
-        if (string.IsNullOrEmpty(text))
-            return string.Empty;
-
-        return $"<line-height={ShowHintLineHeight}>{text}</line-height>";
-    }
 }
