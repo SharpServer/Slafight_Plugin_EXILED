@@ -321,9 +321,9 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
                     break;
             }
         }
-        catch (Exception e)
+        catch (Exception)
         {
-            Log.Debug($"[HintSync] Exception for {player.Nickname}: {e.Message}");
+            // Log.Debug($"[HintSync] Exception for {player.Nickname}: {e.Message}");
         }
     }
 
@@ -763,9 +763,9 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
                 {
                     hint.Text = BuildDebugHud(player);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
-                    Log.Debug($"[DebugHudLoop] Exception for {player.Nickname}: {e.Message}");
+                    // Log.Debug($"[DebugHudLoop] Exception for {player.Nickname}: {e.Message}");
                 }
             }
  
@@ -972,16 +972,17 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         }
         
         // ── 有効なエフェクト一覧 ─────────────────────────────────────
-        var activeEffects = player.ActiveEffects.ToList();
-        if (activeEffects.Count == 0)
+        var activeEffects = player.ActiveEffects?.ToList();
+        if (activeEffects is null || activeEffects?.Count == 0)
         {
             sb.AppendLine("<color=#666666>Effects: None</color>");
         }
         else
         {
             sb.AppendLine("<color=#aaaaaa>Effects:</color>");
-            foreach (var effect in activeEffects)
+            foreach (var effect in activeEffects!)
             {
+                if (effect is null) continue;
                 string duration = effect.Duration > 0f
                     ? $"{effect.TimeLeft:F0}"
                     : "∞";
