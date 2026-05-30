@@ -5,25 +5,19 @@ using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Scp079;
-using HintServiceMeow.Core.Enum;
-using HintServiceMeow.Core.Utilities;
 using MEC;
-using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.Extensions;
-using Hint = HintServiceMeow.Core.Models.Hints.Hint;
 
 namespace Slafight_Plugin_EXILED.Hints;
 
 public sealed class Scp079PingHints : IBootstrapHandler, IDisposable
 {
-    private const string HintId = "Scp079PingHint";
     private const float DisplaySeconds = 5f;
     private static Scp079PingHints? _instance;
 
     private readonly Dictionary<int, int> _versions = new();
-    private readonly int _hintY = HintCoordinateConverter.FromRueiY(200);
     private bool _disposed;
 
     public static void Register()
@@ -71,23 +65,16 @@ public sealed class Scp079PingHints : IBootstrapHandler, IDisposable
         if (!IsPlayerValid(player))
             return;
 
-        var display = TryGetDisplay(player);
-        if (display == null)
-            return;
-
-        EnsureHint(display);
-        SetText(display, text);
-
         int version = _versions.TryGetValue(player.Id, out int current) ? current + 1 : 1;
         _versions[player.Id] = version;
+
+        player.ShowHint(text, DisplaySeconds);
 
         Timing.CallDelayed(DisplaySeconds, () =>
         {
             if (_versions.TryGetValue(player.Id, out int latest) && latest == version)
             {
-                var delayedDisplay = TryGetDisplay(player);
-                if (delayedDisplay != null)
-                    SetText(delayedDisplay, string.Empty);
+                _versions.Remove(player.Id);
             }
         });
     }
@@ -95,39 +82,6 @@ public sealed class Scp079PingHints : IBootstrapHandler, IDisposable
     private void ClearAll()
     {
         _versions.Clear();
-        foreach (var player in Player.List.ToList())
-        {
-            if (!IsPlayerValid(player))
-                continue;
-
-            var display = TryGetDisplay(player);
-            if (display != null)
-                SetText(display, string.Empty);
-        }
-    }
-
-    private void EnsureHint(PlayerDisplay display)
-    {
-        if (display.GetHint(HintId) != null)
-            return;
-
-        display.AddHint(new Hint
-        {
-            Id = HintId,
-            Text = string.Empty,
-            Alignment = HintAlignment.Center,
-            SyncSpeed = HintSyncSpeed.Fastest,
-            FontSize = 24,
-            XCoordinate = 0,
-            YCoordinate = _hintY,
-        });
-    }
-
-    private static void SetText(PlayerDisplay display, string text)
-    {
-        var hint = display.GetHint(HintId);
-        if (hint != null)
-            hint.Text = text;
     }
 
     private static string BuildMessage(PingingEventArgs ev)
@@ -138,7 +92,7 @@ public sealed class Scp079PingHints : IBootstrapHandler, IDisposable
         {
             PingType.Generator => "発電機",
             PingType.Projectile => "爆発物",
-            PingType.MicroHid => "マイクロHIDを持った人間",
+            PingType.MicroHid => "マイクロ HID を持った人間",
             PingType.Human => "人間",
             PingType.Elevator => "エレベーター",
             PingType.Door => "ドア",
@@ -152,7 +106,7 @@ public sealed class Scp079PingHints : IBootstrapHandler, IDisposable
                 : "white";
 
         string targetText = string.IsNullOrEmpty(target) ? string.Empty : $"{target}に";
-        return $"<color={color}><size=80%>SCP079が{targetText}ピンを差した。場所：{zone}の{room}</size></color>";
+        return $"<color={color}><size=80%>SCP079 が{targetText}ピンを差した。場所：{zone}の{room}</size></color>";
     }
 
     private static bool IsPlayerValid(Player? player)
@@ -169,18 +123,6 @@ public sealed class Scp079PingHints : IBootstrapHandler, IDisposable
 
     private static bool IsScpTeam(Player player)
     {
-        return player.GetTeam() == CTeam.SCPs || player.Role.Team == Team.SCPs;
-    }
-
-    private static PlayerDisplay? TryGetDisplay(Player player)
-    {
-        try
-        {
-            return PlayerDisplay.Get(player.ReferenceHub);
-        }
-        catch
-        {
-            return null;
-        }
+        return player.GetTeam() == CTeam.SCPs;
     }
 }

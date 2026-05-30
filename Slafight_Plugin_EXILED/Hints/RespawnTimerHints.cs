@@ -25,8 +25,8 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
     private const string BalanceColor = "#FFD700";
     private static RespawnTimerHints? _instance;
 
-    private readonly int _timerY = HintCoordinateConverter.FromRueiY(910);
-    private readonly int _stateY = HintCoordinateConverter.FromRueiY(900);
+    private readonly int _timerY = 90;
+    private readonly int _stateY = 110;
     private CoroutineHandle _loop;
     private bool _disposed;
 

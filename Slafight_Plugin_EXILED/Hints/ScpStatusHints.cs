@@ -21,7 +21,7 @@ public sealed class ScpStatusHints : IBootstrapHandler, IDisposable
     private const string HintId = "ScpStatusHint";
     private static ScpStatusHints? _instance;
 
-    private readonly int _hintY = HintCoordinateConverter.FromRueiY(900);
+    private readonly int _hintY = HintCoordinateConverter.FromRueiY(700);
     private CoroutineHandle _loop;
     private bool _disposed;
 
@@ -127,16 +127,32 @@ public sealed class ScpStatusHints : IBootstrapHandler, IDisposable
         if (display.GetHint(HintId) != null)
             return;
 
-        display.AddHint(new Hint
+        if (Player.Get(display.ReferenceHub).IsVanillaOrCustom(RoleTypeId.Scp079, CRoleTypeId.Scp079))
         {
-            Id = HintId,
-            Text = string.Empty,
-            Alignment = HintAlignment.Right,
-            SyncSpeed = HintSyncSpeed.Fast,
-            FontSize = 24,
-            XCoordinate = 350,
-            YCoordinate = _hintY,
-        });
+            display.AddHint(new Hint
+            {
+                Id = HintId,
+                Text = string.Empty,
+                Alignment = HintAlignment.Right,
+                SyncSpeed = HintSyncSpeed.Fast,
+                FontSize = 24,
+                XCoordinate = 350,
+                YCoordinate = _hintY,
+            });
+        }
+        else
+        {
+            display.AddHint(new Hint
+            {
+                Id = HintId,
+                Text = string.Empty,
+                Alignment = HintAlignment.Right,
+                SyncSpeed = HintSyncSpeed.Fast,
+                FontSize = 24,
+                XCoordinate = 550,
+                YCoordinate = _hintY,
+            });
+        }
     }
 
     private static void SetText(PlayerDisplay display, string text)
@@ -149,7 +165,7 @@ public sealed class ScpStatusHints : IBootstrapHandler, IDisposable
     private static string BuildContent(Player screenPlayer)
     {
         var sb = new StringBuilder();
-        sb.Append("<align=right><size=30>");
+        sb.Append("<size=30>");
 
         var scpPlayers = Player.List
             .Where(player => IsScpTeam(player) && player.IsAlive)
@@ -171,7 +187,7 @@ public sealed class ScpStatusHints : IBootstrapHandler, IDisposable
         foreach (var generator in Generator.List)
             AppendGeneratorLine(sb, generator);
 
-        sb.Append("</size></align>");
+        sb.Append("</size>");
         return sb.ToString();
     }
 

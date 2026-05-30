@@ -4,7 +4,7 @@ internal static class HintCoordinateConverter
 {
     public static int FromRueiY(int rueiY)
     {
-        int converted = 1100 - rueiY;
+        int converted = 1000 - rueiY;
         if (converted < 0)
             return 0;
 
