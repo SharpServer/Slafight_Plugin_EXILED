@@ -54,7 +54,7 @@ public sealed class RoundVictoryRule
         return ForTeamSide(
             winnerTeam,
             priority,
-            memberTeams: new[] { winnerTeam },
+            memberTeams: [winnerTeam],
             debugName,
             specificReason,
             requiresVanillaEndLock,

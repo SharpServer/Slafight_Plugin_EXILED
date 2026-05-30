@@ -15,7 +15,7 @@ public static class RueiHintExtensions
     private static readonly Dictionary<int, Dictionary<string, string>> DynamicTexts = new();
     private static readonly Dictionary<string, uint> TagVersions = new();
     private static readonly HashSet<string> ActiveDynamicTags = new();
-
+    
     public static void ShowRuei(this Player player, string info, string tagName, float displayTimeInSeconds = 5f, int hintpos = 200)
         => player.ShowRuei(info, new Tag(tagName), displayTimeInSeconds, hintpos);
 
@@ -36,7 +36,10 @@ public static class RueiHintExtensions
             }
 
             try { display.Remove(tag); }
-            catch { }
+            catch
+            {
+                // ignored
+            }
 
             if (string.IsNullOrEmpty(info))
                 return;
@@ -76,7 +79,10 @@ public static class RueiHintExtensions
 
             RueDisplay.Get(player.ReferenceHub).Remove(tag);
         }
-        catch { }
+        catch
+        {
+            // ignored
+        }
     }
 
     public static void SetDynamicRuei(this Player player, string tagName, string text, int hintpos = 500)
@@ -110,8 +116,8 @@ public static class RueiHintExtensions
         lock (SyncRoot)
         {
             tags = DynamicTexts.TryGetValue(player.Id, out var texts)
-                ? new List<string>(texts.Keys)
-                : new List<string>();
+                ? [..texts.Keys]
+                : [];
         }
 
         foreach (var tag in tags)

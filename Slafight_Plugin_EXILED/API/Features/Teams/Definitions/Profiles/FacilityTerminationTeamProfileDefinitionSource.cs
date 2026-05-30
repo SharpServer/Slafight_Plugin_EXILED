@@ -14,8 +14,7 @@ public sealed class FacilityTerminationTeamProfileDefinitionSource : CTeamProfil
         // Fifthists のように通常の個別勝利を優先したい勢力は Undefined にする。
         yield return Define(
             CTeamProfileManager.FacilityTerminationProfile,
-            new[]
-            {
+            [
                 Victory(
                     CTeamGroup.Humanity,
                     "FacilityTerminationHumanityWin",
@@ -27,8 +26,8 @@ public sealed class FacilityTerminationTeamProfileDefinitionSource : CTeamProfil
                     "FacilityTerminationNormalcyWin",
                     CTeam.FoundationForces,
                     priority: 20,
-                    specificReason: RoundEndReasons.NoHumanityAllowed),
-            },
+                    specificReason: RoundEndReasons.NoHumanityAllowed)
+            ],
             Map(CTeam.FoundationForces, CTeamGroup.Normalcy),
             Map(CTeam.Guards, CTeamGroup.Normalcy),
             Map(CTeam.O5, CTeamGroup.Normalcy),

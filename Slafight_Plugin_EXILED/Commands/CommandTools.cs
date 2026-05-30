@@ -194,7 +194,7 @@ internal static class CommandTools
 
         return string.Join(" ", value
             .Replace("\r", "\n")
-            .Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .Split(['\n'], StringSplitOptions.RemoveEmptyEntries)
             .Select(part => part.Trim()));
     }
 }

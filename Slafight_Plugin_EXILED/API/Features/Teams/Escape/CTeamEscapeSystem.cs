@@ -114,7 +114,7 @@ public static class CTeamEscapeRegistry
     private static readonly Lazy<IReadOnlyList<CTeamEscapeRule>> Rules =
         new(BuildRules);
 
-    private static readonly List<Func<CTeamEscapeContext, CTeamEscapeTarget?>> DynamicOverrides = new();
+    private static readonly List<Func<CTeamEscapeContext, CTeamEscapeTarget?>> DynamicOverrides = [];
 
     public static void AddDynamicOverride(Func<CTeamEscapeContext, CTeamEscapeTarget?> rule)
     {
