@@ -18,7 +18,7 @@ public class SpawnTimerHandler : SlafightLabApiHandler, IBootstrapHandler
 {
     private static SpawnTimerHandler _instance;
     private static CoroutineHandle handle;
-    
+
     public static void Register()
     {
         return;
