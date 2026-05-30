@@ -135,6 +135,8 @@ public class EventHandler : IBootstrapHandler, IDisposable
         if (ev?.Player == null) return;
         DebugModeHandler.RemovePlayer(ev.Player);
         RPNameSetter.Clear(ev.Player);
+        ev.Player.ClearAllDynamicRuei();
+        ev.Player.ClearRueiPlus();
 
         if (ev.Player.GetTeam() != CTeam.SCPs || ev.Player.IsVanillaOrCustom(RoleTypeId.Scp0492, CRoleTypeId.Zombified)) return;
         if (Round.ElapsedTime.TotalSeconds > 179) return;

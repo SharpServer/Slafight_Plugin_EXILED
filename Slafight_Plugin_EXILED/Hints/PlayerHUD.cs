@@ -397,6 +397,9 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         var player = ev?.Player; // FIX: nullガード
         if (player == null) return;
 
+        player.ClearAllDynamicRuei();
+        player.ClearRueiPlus();
+
         Timing.CallDelayed(0.5f, () =>
         {
             if (!IsPlayerValid(player)) return; // FIX: 遅延後の生存確認
