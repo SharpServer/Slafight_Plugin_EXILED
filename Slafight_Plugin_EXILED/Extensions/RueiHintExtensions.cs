@@ -113,6 +113,15 @@ public static class RueiHintExtensions
         }
 
         EnsureDynamicRuei(player, tagName, hintpos);
+
+        try
+        {
+            RueDisplay.Get(player.ReferenceHub).Update();
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"SetDynamicRuei update failed: {ex.Message}");
+        }
     }
 
     public static void SetDynamicRuei(this Player player, string tagName, StringBuilder text, int hintpos = 500)
@@ -158,6 +167,7 @@ public static class RueiHintExtensions
             catch { }
 
             display.Show(tag, new DynamicElement(hintpos, hub => GetDynamicText(hub, tagName)));
+            display.Update();
         }
         catch (Exception ex)
         {

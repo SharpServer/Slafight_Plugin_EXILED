@@ -28,7 +28,8 @@ public sealed class ScpStatusDisplay : IBootstrapHandler, IDisposable
 
     public static DynamicElement ScpElement { get; } = new(900, GetScpContent)
     {
-        UpdateInterval = TimeSpan.FromTicks(500)
+        UpdateInterval = TimeSpan.FromTicks(500),
+        ResolutionBasedAlign = true
     };
 
     public static ScpStatusDisplay? Instance { get; private set; }
@@ -137,7 +138,9 @@ public sealed class ScpStatusDisplay : IBootstrapHandler, IDisposable
 
         try
         {
-            RueDisplay.Get(player.ReferenceHub).Show(ScpHudTag, ScpElement);
+            var display = RueDisplay.Get(player.ReferenceHub);
+            display.Show(ScpHudTag, ScpElement);
+            display.Update();
         }
         catch (Exception ex)
         {
