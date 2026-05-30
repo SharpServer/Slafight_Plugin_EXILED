@@ -106,16 +106,28 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     }
 
     /// <summary>HUD文字列をRueI向けに整形する</summary>
-    private static string HudText(string text, int x, int y, int fontSize, string align = "left")
+    private static string HudText(string text, int x, int fontSize, string align = "left")
     {
         if (string.IsNullOrEmpty(text))
             return string.Empty;
 
-        return $"<pos={x},{y}><align={align}><size={fontSize}>{text}</size></align></pos>";
+        return $"<pos={x}><align={align}><size={fontSize}>{text}</size></align></pos>";
     }
 
     private static void SetHud(Player player, string id, string text, int x, int y, int fontSize, string align = "left")
-        => player.SetDynamicRuei(id, HudText(text, x, y, fontSize, align));
+        => player.SetDynamicRuei(id, HudText(text, x, fontSize, align), ToRueiHintPos(y));
+
+    private static int ToRueiHintPos(int hsmY)
+    {
+        int converted = 1100 - hsmY;
+        if (converted < 0)
+            return 0;
+
+        if (converted > 1000)
+            return 1000;
+
+        return converted;
+    }
 
     // =========================================================
     // ServerInfoHint / Setup / Main
