@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
@@ -37,6 +38,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     private CoroutineHandle _abilityHudLoop;
     private CoroutineHandle _taskSyncLoop;
     private CoroutineHandle _debugHudLoop;
+    private const string DebugHudLineHeight = "18";
 
     // 観戦者ID → 現在見ているプレイヤー
     private readonly Dictionary<int, Player> _spectateTargets = new();
@@ -106,16 +108,53 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     }
 
     /// <summary>HUD文字列をRueI向けに整形する</summary>
-    private static string HudText(string text, int x, int fontSize, string align = "left")
+    private static string HudText(string text, int x, int fontSize, string align = "left", string? lineHeight = null)
     {
         if (string.IsNullOrEmpty(text))
             return string.Empty;
 
-        return $"<pos={x}><align={align}><size={fontSize}>{text}</size></align></pos>";
+        var builder = new StringBuilder(text.Length + 64);
+        builder.Append("<size=").Append(fontSize).Append('>');
+        if (!string.IsNullOrEmpty(lineHeight))
+            builder.Append("<line-height=").Append(lineHeight).Append('>');
+
+        bool hasAlignment = !string.IsNullOrEmpty(align) &&
+                            !align.Equals("center", StringComparison.OrdinalIgnoreCase);
+        if (hasAlignment)
+            builder.Append("<align=").Append(align).Append('>');
+
+        string[] lines = text.Replace("\r\n", "\n").Replace('\r', '\n').Split('\n');
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (i > 0)
+                builder.Append('\n');
+
+            if (x != 0 && lines[i].Length > 0)
+                builder.Append("<pos=").Append(x).Append('>');
+
+            builder.Append(lines[i]);
+        }
+
+        if (hasAlignment)
+            builder.Append("</align>");
+
+        if (!string.IsNullOrEmpty(lineHeight))
+            builder.Append("</line-height>");
+
+        builder.Append("</size>");
+        return builder.ToString();
     }
 
-    private static void SetHud(Player player, string id, string text, int x, int y, int fontSize, string align = "left")
-        => player.SetDynamicRuei(id, HudText(text, x, fontSize, align), ToRueiHintPos(y));
+    private static void SetHud(
+        Player player,
+        string id,
+        string text,
+        int x,
+        int y,
+        int fontSize,
+        string align = "left",
+        string? lineHeight = null)
+        => player.SetDynamicRuei(id, HudText(text, x, fontSize, align, lineHeight), ToRueiHintPos(y));
 
     private static int ToRueiHintPos(int hsmY)
     {
@@ -164,7 +203,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         SetHud(player, "PlayerHUD_Event", "[Event]\n<size=28>Undefined</size>", XCordinate, 120, 26);
         SetHud(player, "PlayerHUD_Specific", string.Empty, XCordinate + 350, 885, 24);
         SetHud(player, "PlayerHUD_Ability", string.Empty, XCordinate + 350, 855, 24);
-        SetHud(player, "PlayerHUD_Debug", string.Empty, XCordinate, 345, 24);
+        SetHud(player, "PlayerHUD_Debug", string.Empty, XCordinate, 375, 24, lineHeight: DebugHudLineHeight);
     }
 
     public void PlayerHUDMain()
@@ -213,7 +252,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
                     SetHud(player, "PlayerHUD_Ability", hintText, XCordinate + 350, 855, 24);
                     break;
                 case SyncType.PHUD_Debug:
-                    SetHud(player, "PlayerHUD_Debug", hintText, XCordinate, 345, 24);
+                    SetHud(player, "PlayerHUD_Debug", hintText, XCordinate, 375, 24, lineHeight: DebugHudLineHeight);
                     break;
             }
         }

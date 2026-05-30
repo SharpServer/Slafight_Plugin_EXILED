@@ -733,8 +733,8 @@ public abstract class CRole
         {
             if (DescriptionDuration <= 0f) return;
             var text = DescriptionShowRoleName
-                ? $"<size=24><color={Team.GetTeamColor()}>{RoleName}</color>\n{Description}</size>"
-                : $"<size=24>{Description}</size>";
+                ? $"<line-height=18><size=24><color={Team.GetTeamColor()}>{RoleName}</color>\n{Description}</size>"
+                : $"<size=24>{Description}</size></line-height>";
 
             player.ShowRuei(text, "CRoleSpawnedHint", DescriptionDuration, 770);
         });

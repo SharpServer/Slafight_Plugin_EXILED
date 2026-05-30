@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Exiled.API.Features;
 using RueI.API;
 using RueI.API.Elements;
+using RueI.API.Elements.Enums;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.Extensions;
@@ -11,17 +12,22 @@ namespace Slafight_Plugin_EXILED.Extensions;
 public static class RueiHintExtensions
 {
     private const string RueiPlusTagName = "RueiPlus";
+    private const int BaseGameHintPosition = 780;
+    private const int HsmToRueiOffset = 1100;
+    private const string ShowHintLineHeight = "86%";
     private static readonly object SyncRoot = new();
     private static readonly Dictionary<int, Dictionary<string, string>> DynamicTexts = new();
+    private static readonly Dictionary<string, int> DynamicPositions = new();
+    private static readonly Dictionary<string, VerticalAlign> DynamicAlignments = new();
     private static readonly Dictionary<string, uint> TagVersions = new();
     private static readonly HashSet<string> ActiveDynamicTags = [];
     
-    public static void ShowRuei(this Player player, string info, string tagName, float displayTimeInSeconds = 5f, int hintpos = 200)
+    public static void ShowRuei(this Player player, string info, string tagName, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
         => player.ShowRuei(info, new Tag(tagName), displayTimeInSeconds, hintpos);
 
-    public static void ShowRuei(this Player player, string info, Tag tag, float displayTimeInSeconds = 5f, int hintpos = 200)
+    public static void ShowRuei(this Player player, string info, Tag tag, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
     {
-        if (!IsValid(player) || tag == null)
+        if (!IsValid(player) || tag is null)
             return;
 
         try
@@ -44,7 +50,14 @@ public static class RueiHintExtensions
             if (string.IsNullOrEmpty(info))
                 return;
 
-            display.Show(tag, new BasicElement(hintpos, info), displayTimeInSeconds);
+            string text = FormatShowHintText(info);
+            display.Show(
+                tag,
+                new BasicElement(ToRueiHintPos(hintpos), text)
+                {
+                    VerticalAlign = VerticalAlign.Center,
+                },
+                displayTimeInSeconds);
 
             if (displayTimeInSeconds > 0f)
                 player.ReferenceHub.StartCoroutine(RemoveTagAfterDelay(player, tag, displayTimeInSeconds, version));
@@ -55,7 +68,7 @@ public static class RueiHintExtensions
         }
     }
 
-    public static void ShowRueiPlus(this Player player, string info, float displayTimeInSeconds = 5f, int hintpos = 200)
+    public static void ShowRueiPlus(this Player player, string info, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
         => player.ShowRuei(info, RueiPlusTagName, displayTimeInSeconds, hintpos);
 
     public static void ClearRueiPlus(this Player player)
@@ -74,7 +87,11 @@ public static class RueiHintExtensions
                 NextVersion(MakeKey(player.Id, tag));
                 if (DynamicTexts.TryGetValue(player.Id, out var texts))
                     texts.Remove(tagName);
-                ActiveDynamicTags.Remove(MakeKey(player.Id, tagName));
+
+                var activeKey = MakeKey(player.Id, tagName);
+                ActiveDynamicTags.Remove(activeKey);
+                DynamicPositions.Remove(activeKey);
+                DynamicAlignments.Remove(activeKey);
             }
 
             RueDisplay.Get(player.ReferenceHub).Remove(tag);
@@ -85,11 +102,17 @@ public static class RueiHintExtensions
         }
     }
 
-    public static void SetDynamicRuei(this Player player, string tagName, string text, int hintpos = 500)
+    public static void SetDynamicRuei(
+        this Player player,
+        string tagName,
+        string text,
+        int hintpos = BaseGameHintPosition,
+        VerticalAlign verticalAlign = VerticalAlign.Center)
     {
         if (!IsValid(player) || string.IsNullOrEmpty(tagName))
             return;
 
+        var activeKey = MakeKey(player.Id, tagName);
         lock (SyncRoot)
         {
             if (!DynamicTexts.TryGetValue(player.Id, out var texts))
@@ -99,9 +122,20 @@ public static class RueiHintExtensions
             }
 
             texts[tagName] = text ?? string.Empty;
+            DynamicPositions[activeKey] = hintpos;
+            DynamicAlignments[activeKey] = verticalAlign;
         }
 
-        EnsureDynamicRuei(player, tagName, hintpos);
+        EnsureDynamicRuei(player, tagName, hintpos, verticalAlign);
+
+        try
+        {
+            RueDisplay.Get(player.ReferenceHub).Update();
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"SetDynamicRuei update failed: {ex.Message}");
+        }
     }
 
     public static void ClearDynamicRuei(this Player player, string tagName)
@@ -124,12 +158,16 @@ public static class RueiHintExtensions
             player.ClearDynamicRuei(tag);
     }
 
-    private static void EnsureDynamicRuei(Player player, string tagName, int hintpos)
+    private static void EnsureDynamicRuei(Player player, string tagName, int hintpos, VerticalAlign verticalAlign)
     {
         var activeKey = MakeKey(player.Id, tagName);
         lock (SyncRoot)
         {
-            if (ActiveDynamicTags.Contains(activeKey))
+            if (ActiveDynamicTags.Contains(activeKey) &&
+                DynamicPositions.TryGetValue(activeKey, out var currentPosition) &&
+                currentPosition == hintpos &&
+                DynamicAlignments.TryGetValue(activeKey, out var currentAlignment) &&
+                currentAlignment == verticalAlign)
                 return;
 
             ActiveDynamicTags.Add(activeKey);
@@ -143,12 +181,21 @@ public static class RueiHintExtensions
             try { display.Remove(tag); }
             catch { }
 
-            display.Show(tag, new DynamicElement(hintpos, hub => GetDynamicText(hub, tagName)));
+            display.Show(
+                tag,
+                new DynamicElement(hintpos, hub => GetDynamicText(hub, tagName))
+                {
+                    VerticalAlign = verticalAlign,
+                });
         }
         catch (Exception ex)
         {
             lock (SyncRoot)
+            {
                 ActiveDynamicTags.Remove(activeKey);
+                DynamicPositions.Remove(activeKey);
+                DynamicAlignments.Remove(activeKey);
+            }
 
             Log.Debug($"EnsureDynamicRuei failed: {ex.Message}");
         }
@@ -223,4 +270,24 @@ public static class RueiHintExtensions
 
     private static string MakeKey(int playerId, string tagName)
         => playerId + ":" + tagName;
+
+    private static int ToRueiHintPos(int hsmY)
+    {
+        int converted = HsmToRueiOffset - hsmY;
+        if (converted < 0)
+            return 0;
+
+        if (converted > 1000)
+            return 1000;
+
+        return converted;
+    }
+
+    private static string FormatShowHintText(string text)
+    {
+        if (string.IsNullOrEmpty(text))
+            return string.Empty;
+
+        return $"<line-height={ShowHintLineHeight}>{text}</line-height>";
+    }
 }
