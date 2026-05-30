@@ -270,14 +270,14 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
 
         SpawnableFaction spawnableFaction = Respawn.NextKnownSpawnableFaction;
         string factionName = spawnableFaction is SpawnableFaction.ChaosWave or SpawnableFaction.ChaosMiniWave
-            ? $"<color={ChaosColor}>カオス</color>"
-            : $"<color={FoundationColor}>九尾狐</color>";
+            ? $"<color={ChaosColor}>要注意団体</color>"
+            : $"<color={FoundationColor}>財団部隊</color>";
 
         return waveQueueState switch
         {
             WaveQueueState.Idle when isEqual => $"現在<color={BalanceColor}>均衡中</color>",
-            WaveQueueState.Idle when isChaosNext => $"現在<color={ChaosColor}>カオス</color>が優勢",
-            WaveQueueState.Idle when isNtfNext => $"現在<color={FoundationColor}>九尾狐</color>が優勢",
+            WaveQueueState.Idle when isChaosNext => $"現在<color={ChaosColor}>要注意団体</color>が優勢",
+            WaveQueueState.Idle when isNtfNext => $"現在<color={FoundationColor}>財団部隊</color>が優勢",
             WaveQueueState.WaveSelected => $"{factionName}陣営が準備開始",
             WaveQueueState.WaveSpawning => $"{factionName}がまもなく到着",
             WaveQueueState.WaveSpawned => $"{factionName}が到着",
