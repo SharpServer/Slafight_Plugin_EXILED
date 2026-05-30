@@ -14,7 +14,7 @@ public static class RueiHintExtensions
     private static readonly object SyncRoot = new();
     private static readonly Dictionary<int, Dictionary<string, string>> DynamicTexts = new();
     private static readonly Dictionary<string, uint> TagVersions = new();
-    private static readonly HashSet<string> ActiveDynamicTags = new();
+    private static readonly HashSet<string> ActiveDynamicTags = [];
     
     public static void ShowRuei(this Player player, string info, string tagName, float displayTimeInSeconds = 5f, int hintpos = 200)
         => player.ShowRuei(info, new Tag(tagName), displayTimeInSeconds, hintpos);
