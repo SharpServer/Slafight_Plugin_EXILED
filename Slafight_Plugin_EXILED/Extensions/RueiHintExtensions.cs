@@ -12,6 +12,7 @@ namespace Slafight_Plugin_EXILED.Extensions;
 public static class RueiHintExtensions
 {
     private const string RueiPlusTagName = "RueiPlus";
+    private static readonly TimeSpan DynamicUpdateInterval = TimeSpan.FromMilliseconds(100);
     private static readonly object SyncRoot = new();
     private static readonly Dictionary<int, Dictionary<string, string>> DynamicTexts = new();
     private static readonly Dictionary<string, uint> TagVersions = new();
@@ -113,15 +114,6 @@ public static class RueiHintExtensions
         }
 
         EnsureDynamicRuei(player, tagName, hintpos);
-
-        try
-        {
-            RueDisplay.Get(player.ReferenceHub).Update();
-        }
-        catch (Exception ex)
-        {
-            Log.Debug($"SetDynamicRuei update failed: {ex.Message}");
-        }
     }
 
     public static void SetDynamicRuei(this Player player, string tagName, StringBuilder text, int hintpos = 500)
@@ -166,8 +158,13 @@ public static class RueiHintExtensions
             try { display.Remove(tag); }
             catch { }
 
-            display.Show(tag, new DynamicElement(hintpos, hub => GetDynamicText(hub, tagName)));
-            display.Update();
+            display.Show(
+                tag,
+                new DynamicElement(hintpos, hub => GetDynamicText(hub, tagName))
+                {
+                    UpdateInterval = DynamicUpdateInterval,
+                    ResolutionBasedAlign = true
+                });
         }
         catch (Exception ex)
         {

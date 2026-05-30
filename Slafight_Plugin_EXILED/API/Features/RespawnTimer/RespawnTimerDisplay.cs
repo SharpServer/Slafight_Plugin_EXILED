@@ -23,13 +23,15 @@ public sealed class RespawnTimerDisplay : IBootstrapHandler, IDisposable
     public static DynamicElement SpecTimer { get; } = new(910, GetTimers)
     {
         UpdateInterval = TimeSpan.FromSeconds(1),
-        ShowToSpectators = true
+        ShowToSpectators = true,
+        ResolutionBasedAlign = true
     };
 
     public static DynamicElement SpecSpawn { get; } = new(900, GetRespawnSituation)
     {
         UpdateInterval = TimeSpan.FromTicks(500),
-        ShowToSpectators = true
+        ShowToSpectators = true,
+        ResolutionBasedAlign = true
     };
 
     public static RespawnTimerDisplay? Instance { get; private set; }
@@ -139,7 +141,6 @@ public sealed class RespawnTimerDisplay : IBootstrapHandler, IDisposable
             var display = RueDisplay.Get(player.ReferenceHub);
             display.Show(SpecTimerTag, SpecTimer);
             display.Show(SpawnSituationTag, SpecSpawn);
-            display.Update();
         }
         catch (Exception ex)
         {
