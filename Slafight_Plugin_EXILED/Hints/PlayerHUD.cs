@@ -137,24 +137,26 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         {
             ServerInfo = new Hint
             {
-                Id = "ServerInfo",
+                Id = $"{HudConstId.PlayerHUD_ServerInfo}",
                 Text = "[<color=#008cff>Sharp Server</color> - <color=red>BETA</color>]",
                 Alignment = HintAlignment.Center,
                 SyncSpeed = HintSyncSpeed.UnSync,
                 FontSize = 18,
-                YCoordinate = 1050
+                YCoordinate = 1050,
+                ResolutionBasedAlign = true
             };
         }
         else
         {
             ServerInfo = new Hint
             {
-                Id = "ServerInfo",
+                Id = $"{HudConstId.PlayerHUD_ServerInfo}",
                 Text = "[<color=#008cff>Sharp Server</color>]",
                 Alignment = HintAlignment.Center,
                 SyncSpeed = HintSyncSpeed.UnSync,
                 FontSize = 18,
-                YCoordinate = 1050
+                YCoordinate = 1050,
+                ResolutionBasedAlign = true
             };
         }
         display.AddHint(ServerInfo);
@@ -178,73 +180,80 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
 
         Hint PlayerHUD_Role = new()
         {
-            Id = "PlayerHUD_Role",
+            Id = $"{HudConstId.PlayerHUD_Role}",
             Text = "Role: " + player.CustomInfo,
             Alignment = HintAlignment.Left,
             SyncSpeed = HintSyncSpeed.Fastest,
             FontSize = 24,
             XCoordinate = XCordinate,
-            YCoordinate = 860
+            YCoordinate = 860,
+            ResolutionBasedAlign = true
         };
         Hint PlayerHUD_Objective = new()
         {
-            Id = "PlayerHUD_Objective",
+            Id = $"{HudConstId.PlayerHUD_Objective}",
             Text = "Objective: " + "Undefined",
             Alignment = HintAlignment.Left,
             YCoordinate = 915,
             XCoordinate = XCordinate,
             SyncSpeed = HintSyncSpeed.Fastest,
-            FontSize = 30
+            FontSize = 30,
+            ResolutionBasedAlign = true
         };
         Hint PlayerHUD_Team = new()
         {
-            Id = "PlayerHUD_Team",
+            Id = $"{HudConstId.PlayerHUD_Team}",
             Text = "Team: " + "Undefined",
             Alignment = HintAlignment.Left,
             YCoordinate = 885,
             XCoordinate = XCordinate,
             SyncSpeed = HintSyncSpeed.Fastest,
-            FontSize = 24
+            FontSize = 24,
+            ResolutionBasedAlign = true
         };
         Hint PlayerHUD_Event = new()
         {
-            Id = "PlayerHUD_Event",
+            Id = $"{HudConstId.PlayerHUD_Event}",
             Text = "[Event]\n<size=28>Undefined</size>",
             Alignment = HintAlignment.Left,
             SyncSpeed = HintSyncSpeed.Fast,
             FontSize = 26,
             XCoordinate = XCordinate,
-            YCoordinate = 120
+            YCoordinate = 120,
+            ResolutionBasedAlign = true
         };
         Hint PlayerHUD_Specific = new()
         {
-            Id = "PlayerHUD_Specific",
+            Id = $"{HudConstId.PlayerHUD_Specific}",
             Text = "",
             Alignment = HintAlignment.Left,
             SyncSpeed = HintSyncSpeed.Fastest,
             FontSize = 24,
             XCoordinate = XCordinate + 350,
-            YCoordinate = 885
+            YCoordinate = 885,
+            ResolutionBasedAlign = true
         };
         Hint PlayerHUD_Ability = new()
         {
-            Id = "PlayerHUD_Ability",
+            Id = $"{HudConstId.PlayerHUD_Ability}",
             Text = "",
             Alignment = HintAlignment.Left,
             SyncSpeed = HintSyncSpeed.Fastest,
             FontSize = 24,
             XCoordinate = XCordinate + 350,
-            YCoordinate = 855
+            YCoordinate = 855,
+            ResolutionBasedAlign = true
         };
         Hint PlayerHUD_Debug = new()
         {
-            Id = "PlayerHUD_Debug",
+            Id = $"{HudConstId.PlayerHUD_Debug}",
             Text = "",
             Alignment = HintAlignment.Left,
             SyncSpeed = HintSyncSpeed.Fast,
             FontSize = 24,
             XCoordinate = XCordinate,
-            YCoordinate = 345
+            YCoordinate = 345,
+            ResolutionBasedAlign = true
         };
 
         display.AddHint(PlayerHUD_Role);

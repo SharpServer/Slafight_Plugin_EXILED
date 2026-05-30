@@ -55,7 +55,7 @@ public abstract class CItem
     private static readonly Dictionary<ushort, CItem> SerialToItem = new();
 
     // Pickup の Light オブジェクト管理
-    private static readonly Dictionary<ushort, Exiled.API.Features.Toys.Light> PickupLights = new();
+    private static readonly Dictionary<ushort, LabApi.Features.Wrappers.LightSourceToy> PickupLights = new();
     private static readonly Dictionary<ushort, CoroutineHandle> PickupLightCoroutines = new();
 
     // Pickup に追従する Schematic
@@ -465,14 +465,14 @@ public abstract class CItem
     // Pickup ライト制御
     // ======================================================
 
-    public virtual Exiled.API.Features.Toys.Light? AddPickupLight(Pickup? pickup)
+    public virtual LabApi.Features.Wrappers.LightSourceToy? AddPickupLight(Pickup? pickup)
     {
         if (pickup == null) return null;
         if (PickupLights.TryGetValue(pickup.Serial, out var existing)) return existing;
 
         try
         {
-            var light = Exiled.API.Features.Toys.Light.Create(pickup.Position);
+            var light = LabApi.Features.Wrappers.LightSourceToy.Create(pickup.Position);
             if (light == null) return null;
 
             light.Color      = PickupLightColor;
@@ -494,7 +494,7 @@ public abstract class CItem
     }
 
     private static IEnumerator<float> TrackPickupLight(
-        Pickup pickup, Exiled.API.Features.Toys.Light light)
+        Pickup pickup, LabApi.Features.Wrappers.LightSourceToy light)
     {
         while (pickup?.Base?.gameObject != null && light?.Base?.gameObject != null)
         {

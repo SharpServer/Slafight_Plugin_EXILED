@@ -64,9 +64,6 @@
         <Reference Include="Exiled.Permissions, Version=9.14.0.0, Culture=neutral, processorArchitecture=Amd64">
           <HintPath>..\packages\ExMod.Exiled.9.14.0\lib\net48\Exiled.Permissions.dll</HintPath>
         </Reference>
-        <Reference Include="HintServiceMeow-Exiled, Version=5.5.0.0, Culture=neutral, processorArchitecture=Amd64">
-          <HintPath>..\packages\HintServiceMeow-Exiled.5.5.0\lib\net48\HintServiceMeow-Exiled.dll</HintPath>
-        </Reference>
         <Reference Include="LabApi, Version=1.1.7.0, Culture=neutral, processorArchitecture=Amd64">
           <HintPath>..\packages\ExMod.Exiled.9.14.0\lib\net48\LabApi.dll</HintPath>
         </Reference>
@@ -79,6 +76,9 @@
         </Reference>
         <Reference Include="ZAMERT">
             <HintPath>$(SL_References)\ZAMERT.dll</HintPath>
+        </Reference>
+        <Reference Include="HintServiceMeow-Exiled">
+            <HintPath>$(SL_References)\HintServiceMeow-Exiled.dll</HintPath>
         </Reference>
         <Reference Include="Assembly-CSharp-firstpass">
             <HintPath>$(SL_References)\Assembly-CSharp-firstpass.dll</HintPath>
@@ -173,6 +173,7 @@
         <Compile Include="API\Enums\CTeam.cs" />
         <Compile Include="API\Enums\CTeamGroup.cs" />
         <Compile Include="API\Enums\CustomColor.cs" />
+        <Compile Include="API\Enums\HudConstId.cs" />
         <Compile Include="API\Enums\ServerColors.cs" />
         <Compile Include="API\Enums\Scp035StateType.cs" />
         <Compile Include="API\Enums\SeasonTypeId.cs" />
@@ -480,6 +481,7 @@
         <Compile Include="Extensions\SchematicHelpers.cs" />
         <Compile Include="Extensions\StaticUtils.cs" />
         <Compile Include="Extensions\StringExtensions.cs" />
+        <Compile Include="Hints\SpawnTimer\SpawnTimerHandler.cs" />
         <Compile Include="MainHandlers\AutoHandlerBootstrapRegister.cs" />
         <Compile Include="MainHandlers\BadgeHandler.cs" />
         <Compile Include="MainHandlers\DebugModeHandler.cs" />

@@ -741,7 +741,7 @@ public abstract class CRole
                 hint = new Hint()
                 {
                     Alignment = HintAlignment.Center, XCoordinate = 0, YCoordinate = 770,
-                    Text = $"<size=24><color={Team.GetTeamColor()}>{RoleName}</color>\n{Description}</size>", Id = "CRoleSpawnedHint"
+                    Text = $"<size=24><color={Team.GetTeamColor()}>{RoleName}</color>\n{Description}</size>", Id = HudConstId.CRoleSpawned
                 };
             }
             else
@@ -749,12 +749,12 @@ public abstract class CRole
                 hint = new Hint()
                 {
                     Alignment = HintAlignment.Center, XCoordinate = 0, YCoordinate = 770,
-                    Text = $"<size=24>{Description}</size>", Id = "CRoleSpawnedHint"
+                    Text = $"<size=24>{Description}</size>", Id = HudConstId.CRoleSpawned
                 };
             }
 
             var display = player.GetPlayerDisplay();
-            display.TryGetHint("CRoleSpawnedHint", out var oldHint);
+            display.TryGetHint(HudConstId.CRoleSpawned, out var oldHint);
             if (oldHint != null) player.RemoveHint(oldHint);
             player.AddHint(hint);
             Timing.CallDelayed(DescriptionDuration, () =>
