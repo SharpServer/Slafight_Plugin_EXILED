@@ -162,9 +162,10 @@ public sealed class ScpStatusDisplay : IBootstrapHandler, IDisposable
 
     private static void OnPinging(PingingEventArgs ev)
     {
-        if (ev == null || !ev.IsAllowed || ev.Room == null)
+        if (ev?.Room == null)
             return;
 
+        var targets = Player.List.Where(player => player.Role.Side is Side.Scp);
         string room = PingTranslate.TranslateRoomName(ev.Room.Type);
         string zone = PingTranslate.TranslateZoneName(ev.Room.Zone);
         string message = ev.Type switch
@@ -178,7 +179,7 @@ public sealed class ScpStatusDisplay : IBootstrapHandler, IDisposable
             _ => $"<size=80%>SCP079がピンを差した。場所：{zone}の{room}</size>"
         };
 
-        foreach (var scp in Player.List.Where(ShouldSeeScpHud))
+        foreach (var scp in targets)
             scp.ShowRueiPlus(message);
     }
 

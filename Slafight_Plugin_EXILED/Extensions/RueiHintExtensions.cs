@@ -5,7 +5,6 @@ using System.Text;
 using Exiled.API.Features;
 using RueI.API;
 using RueI.API.Elements;
-using RueI.API.Elements.Enums;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.Extensions;
@@ -13,24 +12,20 @@ namespace Slafight_Plugin_EXILED.Extensions;
 public static class RueiHintExtensions
 {
     private const string RueiPlusTagName = "RueiPlus";
-    private const int OneShotHintPosition = 200;
-    private const int DynamicHintPosition = 500;
     private static readonly object SyncRoot = new();
     private static readonly Dictionary<int, Dictionary<string, string>> DynamicTexts = new();
-    private static readonly Dictionary<string, int> DynamicPositions = new();
-    private static readonly Dictionary<string, VerticalAlign> DynamicAlignments = new();
     private static readonly Dictionary<string, uint> TagVersions = new();
     private static readonly HashSet<string> ActiveDynamicTags = [];
-    
-    public static void ShowRuei(this Player player, string info, string tagName, float displayTimeInSeconds = 5f, int hintpos = OneShotHintPosition)
+
+    public static void ShowRuei(this Player player, string info, string tagName, float displayTimeInSeconds = 5f, int hintpos = 200)
         => player.ShowRuei(info, new Tag(tagName), displayTimeInSeconds, hintpos);
 
-    public static void ShowRuei(this Player player, StringBuilder info, string tagName, float displayTimeInSeconds = 5f, int hintpos = OneShotHintPosition)
+    public static void ShowRuei(this Player player, StringBuilder info, string tagName, float displayTimeInSeconds = 5f, int hintpos = 200)
         => player.ShowRuei(info?.ToString(), tagName, displayTimeInSeconds, hintpos);
 
-    public static void ShowRuei(this Player player, string info, Tag tag, float displayTimeInSeconds = 5f, int hintpos = OneShotHintPosition)
+    public static void ShowRuei(this Player player, string info, Tag tag, float displayTimeInSeconds = 5f, int hintpos = 200)
     {
-        if (!IsValid(player) || tag is null)
+        if (!IsValid(player) || tag == null)
             return;
 
         try
@@ -64,13 +59,13 @@ public static class RueiHintExtensions
         }
     }
 
-    public static void ShowRuei(this Player player, StringBuilder info, Tag tag, float displayTimeInSeconds = 5f, int hintpos = OneShotHintPosition)
+    public static void ShowRuei(this Player player, StringBuilder info, Tag tag, float displayTimeInSeconds = 5f, int hintpos = 200)
         => player.ShowRuei(info?.ToString(), tag, displayTimeInSeconds, hintpos);
 
-    public static void ShowRueiPlus(this Player player, string info, float displayTimeInSeconds = 5f, int hintpos = OneShotHintPosition)
+    public static void ShowRueiPlus(this Player player, string info, float displayTimeInSeconds = 5f, int hintpos = 200)
         => player.ShowRuei(info, RueiPlusTagName, displayTimeInSeconds, hintpos);
 
-    public static void ShowRueiPlus(this Player player, StringBuilder info, float displayTimeInSeconds = 5f, int hintpos = OneShotHintPosition)
+    public static void ShowRueiPlus(this Player player, StringBuilder info, float displayTimeInSeconds = 5f, int hintpos = 200)
         => player.ShowRueiPlus(info?.ToString(), displayTimeInSeconds, hintpos);
 
     public static void ClearRueiPlus(this Player player)
@@ -90,10 +85,7 @@ public static class RueiHintExtensions
                 if (DynamicTexts.TryGetValue(player.Id, out var texts))
                     texts.Remove(tagName);
 
-                var activeKey = MakeKey(player.Id, tagName);
-                ActiveDynamicTags.Remove(activeKey);
-                DynamicPositions.Remove(activeKey);
-                DynamicAlignments.Remove(activeKey);
+                ActiveDynamicTags.Remove(MakeKey(player.Id, tagName));
             }
 
             RueDisplay.Get(player.ReferenceHub).Remove(tag);
@@ -104,17 +96,11 @@ public static class RueiHintExtensions
         }
     }
 
-    public static void SetDynamicRuei(
-        this Player player,
-        string tagName,
-        string text,
-        int hintpos = DynamicHintPosition,
-        VerticalAlign verticalAlign = VerticalAlign.Center)
+    public static void SetDynamicRuei(this Player player, string tagName, string text, int hintpos = 500)
     {
         if (!IsValid(player) || string.IsNullOrEmpty(tagName))
             return;
 
-        var activeKey = MakeKey(player.Id, tagName);
         lock (SyncRoot)
         {
             if (!DynamicTexts.TryGetValue(player.Id, out var texts))
@@ -124,29 +110,13 @@ public static class RueiHintExtensions
             }
 
             texts[tagName] = text ?? string.Empty;
-            DynamicPositions[activeKey] = hintpos;
-            DynamicAlignments[activeKey] = verticalAlign;
         }
 
-        EnsureDynamicRuei(player, tagName, hintpos, verticalAlign);
-
-        try
-        {
-            RueDisplay.Get(player.ReferenceHub).Update();
-        }
-        catch (Exception ex)
-        {
-            Log.Debug($"SetDynamicRuei update failed: {ex.Message}");
-        }
+        EnsureDynamicRuei(player, tagName, hintpos);
     }
 
-    public static void SetDynamicRuei(
-        this Player player,
-        string tagName,
-        StringBuilder text,
-        int hintpos = DynamicHintPosition,
-        VerticalAlign verticalAlign = VerticalAlign.Center)
-        => player.SetDynamicRuei(tagName, text?.ToString(), hintpos, verticalAlign);
+    public static void SetDynamicRuei(this Player player, string tagName, StringBuilder text, int hintpos = 500)
+        => player.SetDynamicRuei(tagName, text?.ToString(), hintpos);
 
     public static void ClearDynamicRuei(this Player player, string tagName)
         => player.ClearRuei(tagName);
@@ -168,16 +138,12 @@ public static class RueiHintExtensions
             player.ClearDynamicRuei(tag);
     }
 
-    private static void EnsureDynamicRuei(Player player, string tagName, int hintpos, VerticalAlign verticalAlign)
+    private static void EnsureDynamicRuei(Player player, string tagName, int hintpos)
     {
         var activeKey = MakeKey(player.Id, tagName);
         lock (SyncRoot)
         {
-            if (ActiveDynamicTags.Contains(activeKey) &&
-                DynamicPositions.TryGetValue(activeKey, out var currentPosition) &&
-                currentPosition == hintpos &&
-                DynamicAlignments.TryGetValue(activeKey, out var currentAlignment) &&
-                currentAlignment == verticalAlign)
+            if (ActiveDynamicTags.Contains(activeKey))
                 return;
 
             ActiveDynamicTags.Add(activeKey);
@@ -191,21 +157,12 @@ public static class RueiHintExtensions
             try { display.Remove(tag); }
             catch { }
 
-            display.Show(
-                tag,
-                new DynamicElement(hintpos, hub => GetDynamicText(hub, tagName))
-                {
-                    VerticalAlign = verticalAlign,
-                });
+            display.Show(tag, new DynamicElement(hintpos, hub => GetDynamicText(hub, tagName)));
         }
         catch (Exception ex)
         {
             lock (SyncRoot)
-            {
                 ActiveDynamicTags.Remove(activeKey);
-                DynamicPositions.Remove(activeKey);
-                DynamicAlignments.Remove(activeKey);
-            }
 
             Log.Debug($"EnsureDynamicRuei failed: {ex.Message}");
         }
