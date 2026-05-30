@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using Exiled.API.Features;
 using RueI.API;
 using RueI.API.Elements;
@@ -24,6 +25,9 @@ public static class RueiHintExtensions
     
     public static void ShowRuei(this Player player, string info, string tagName, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
         => player.ShowRuei(info, new Tag(tagName), displayTimeInSeconds, hintpos);
+
+    public static void ShowRuei(this Player player, StringBuilder info, string tagName, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
+        => player.ShowRuei(info?.ToString(), tagName, displayTimeInSeconds, hintpos);
 
     public static void ShowRuei(this Player player, string info, Tag tag, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
     {
@@ -68,8 +72,14 @@ public static class RueiHintExtensions
         }
     }
 
+    public static void ShowRuei(this Player player, StringBuilder info, Tag tag, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
+        => player.ShowRuei(info?.ToString(), tag, displayTimeInSeconds, hintpos);
+
     public static void ShowRueiPlus(this Player player, string info, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
         => player.ShowRuei(info, RueiPlusTagName, displayTimeInSeconds, hintpos);
+
+    public static void ShowRueiPlus(this Player player, StringBuilder info, float displayTimeInSeconds = 5f, int hintpos = BaseGameHintPosition)
+        => player.ShowRueiPlus(info?.ToString(), displayTimeInSeconds, hintpos);
 
     public static void ClearRueiPlus(this Player player)
         => player.ClearRuei(RueiPlusTagName);
@@ -137,6 +147,14 @@ public static class RueiHintExtensions
             Log.Debug($"SetDynamicRuei update failed: {ex.Message}");
         }
     }
+
+    public static void SetDynamicRuei(
+        this Player player,
+        string tagName,
+        StringBuilder text,
+        int hintpos = BaseGameHintPosition,
+        VerticalAlign verticalAlign = VerticalAlign.Center)
+        => player.SetDynamicRuei(tagName, text?.ToString(), hintpos, verticalAlign);
 
     public static void ClearDynamicRuei(this Player player, string tagName)
         => player.ClearRuei(tagName);
