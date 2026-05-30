@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
-using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 

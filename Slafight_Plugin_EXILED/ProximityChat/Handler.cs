@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
@@ -7,10 +6,10 @@ using HintServiceMeow.Core.Extension;
 using MEC;
 using PlayerRoles;
 using PlayerRoles.Spectating;
+using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using VoiceChat;
-using VoiceChat.Codec;
 using VoiceChat.Networking;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
 using SpectatorRole = PlayerRoles.Spectating.SpectatorRole;
@@ -71,7 +70,7 @@ public static class Handler
                 var hint = new Hint()
                 {
                     Alignment = HintAlignment.Center, XCoordinate = 0, YCoordinate = 865,
-                    Text = "<color=yellow><size=24>近接チャット機能が利用可能です！</size></color>", Id = "ProximityHint"
+                    Text = "<color=yellow><size=24>近接チャット機能が利用可能です！</size></color>", Id = HudConstId.ProximityChat
                 };
                 ev.Player?.AddHint(hint);
                 Timing.CallDelayed(5f, () => ev.Player?.RemoveHint(hint));

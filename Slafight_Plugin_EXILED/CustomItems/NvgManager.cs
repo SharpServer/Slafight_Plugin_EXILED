@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using CustomPlayerEffects;
 using Exiled.API.Features;
-using Exiled.API.Features.Toys;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers.Wearables;

@@ -7,7 +7,6 @@ using PlayerRoles;
 using PlayerStatsSystem;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using UnityEngine;
 

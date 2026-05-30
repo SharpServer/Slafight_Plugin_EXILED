@@ -1,7 +1,5 @@
-using System;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features; // SpecialEvent 基底クラス
-using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 

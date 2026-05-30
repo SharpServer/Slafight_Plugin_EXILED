@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
@@ -6,7 +5,6 @@ using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps; // SpecialEvent 基底クラス
-using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
