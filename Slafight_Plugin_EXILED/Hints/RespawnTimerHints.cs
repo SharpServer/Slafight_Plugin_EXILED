@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Enums;
+using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using HintServiceMeow.Core.Enum;
@@ -11,6 +12,7 @@ using MEC;
 using PlayerRoles;
 using Respawning;
 using Respawning.Waves;
+using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
 
@@ -194,15 +196,18 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
 
     private static string BuildTimerText()
     {
-        TimeSpan ntfTime = GetNextFactionWaveTime(Faction.FoundationStaff);
-        TimeSpan chaosTime = GetNextFactionWaveTime(Faction.FoundationEnemy);
+        var ntfWave = GetNextFactionWave(Faction.FoundationStaff);
+        var chaosWave = GetNextFactionWave(Faction.FoundationEnemy);
+
+        var ntfTime = GetWaveTimeLeft(ntfWave);
+        var chaosTime = GetWaveTimeLeft(chaosWave);
 
         bool isEqual = ntfTime > TimeSpan.Zero && chaosTime > TimeSpan.Zero && ntfTime == chaosTime;
         bool isNtfNext = ntfTime > TimeSpan.Zero && (ntfTime < chaosTime || chaosTime == TimeSpan.Zero) && !isEqual;
         bool isChaosNext = chaosTime > TimeSpan.Zero && (chaosTime < ntfTime || ntfTime == TimeSpan.Zero) && !isEqual;
 
-        string ntf = FormatFactionTime(ntfTime, FoundationColor, isNtfNext || isEqual);
-        string chaos = FormatFactionTime(chaosTime, ChaosColor, isChaosNext || isEqual);
+        string ntf = FormatFactionTime(ntfWave, ntfTime, FoundationColor, isNtfNext || isEqual);
+        string chaos = FormatFactionTime(chaosWave, chaosTime, ChaosColor, isChaosNext || isEqual);
         return $"<align=center>{ntf}<space=450>{chaos}</align>";
     }
 
@@ -211,14 +216,21 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
         return TranslateWaveQueueState(Respawn.CurrentState);
     }
 
-    private static string FormatFactionTime(TimeSpan time, string color, bool highlight)
+    private static string FormatFactionTime(TimeBasedWave? wave, TimeSpan time, string color, bool highlight)
     {
-        string text = (highlight ? "► " : string.Empty) + FormatTimeSpanToJapanese(time);
+        string text = (highlight ? "► " : string.Empty) + FormatTimeSpanToJapanese(wave, time);
         return highlight ? $"<color={color}>{text}</color>" : text;
     }
 
-    private static string FormatTimeSpanToJapanese(TimeSpan timeSpan)
+    private static string FormatTimeSpanToJapanese(TimeBasedWave? wave, TimeSpan timeSpan)
     {
+        if (wave == null)
+            return "一時停止中";
+
+        // IsForcefullyPaused のみを使用（元のコードと同じ条件）
+        if (wave.Timer.IsForcefullyPaused)
+            return "一時停止中";
+
         if (timeSpan == TimeSpan.Zero)
             return "利用不可";
 
@@ -228,14 +240,14 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
         return $"{(int)timeSpan.TotalMinutes}分{timeSpan.Seconds}秒";
     }
 
-    private static TimeSpan GetNextFactionWaveTime(Faction faction)
+    private static TimeBasedWave? GetNextFactionWave(Faction faction)
     {
         TimeSpan shortestTime = TimeSpan.MaxValue;
-        bool waveFound = false;
+        TimeBasedWave? targetWave = null;
 
         foreach (var wave in WaveManager.Waves)
         {
-            if (wave is not TimeBasedWave timeBasedWave || timeBasedWave.Timer.IsPaused)
+            if (wave is not TimeBasedWave timeBasedWave)
                 continue;
 
             bool isCorrectFaction = faction switch
@@ -248,21 +260,36 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
             if (!isCorrectFaction)
                 continue;
 
+            // 一時停止中の wave はスキップ（タイマー計算から外す）
+            if (timeBasedWave.Timer.IsForcefullyPaused)
+                continue;
+
             var timeLeft = TimeSpan.FromSeconds(timeBasedWave.Timer.TimeLeft);
             if (timeLeft < shortestTime)
             {
                 shortestTime = timeLeft;
-                waveFound = true;
+                targetWave = timeBasedWave;
             }
         }
 
-        return waveFound ? shortestTime : TimeSpan.Zero;
+        return targetWave;
+    }
+
+    private static TimeSpan GetWaveTimeLeft(TimeBasedWave? wave)
+    {
+        if (wave == null)
+            return TimeSpan.Zero;
+
+        return TimeSpan.FromSeconds(wave.Timer.TimeLeft);
     }
 
     private static string TranslateWaveQueueState(WaveQueueState waveQueueState)
     {
-        TimeSpan ntfTime = GetNextFactionWaveTime(Faction.FoundationStaff);
-        TimeSpan chaosTime = GetNextFactionWaveTime(Faction.FoundationEnemy);
+        var ntfWave = GetNextFactionWave(Faction.FoundationStaff);
+        var chaosWave = GetNextFactionWave(Faction.FoundationEnemy);
+
+        var ntfTime = GetWaveTimeLeft(ntfWave);
+        var chaosTime = GetWaveTimeLeft(chaosWave);
 
         bool isEqual = ntfTime > TimeSpan.Zero && chaosTime > TimeSpan.Zero && ntfTime == chaosTime;
         bool isNtfNext = ntfTime > TimeSpan.Zero && (ntfTime < chaosTime || chaosTime == TimeSpan.Zero);

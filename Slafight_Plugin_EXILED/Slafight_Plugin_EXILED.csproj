@@ -201,6 +201,7 @@
         <Compile Include="API\Features\LabApiHandlerRegistry.cs" />
         <Compile Include="API\Features\NetworkVisibilityManager.cs" />
         <Compile Include="API\Features\PlayerSpeakerManager.cs" />
+        <Compile Include="API\Features\Scp1576Database.cs" />
         <Compile Include="API\Features\Scp914\Scp914Context.cs" />
         <Compile Include="API\Features\Scp914\Scp914Rule.cs" />
         <Compile Include="API\Features\Scp914\Scp914RuleSet.cs" />
@@ -481,7 +482,6 @@
         <Compile Include="Extensions\SchematicHelpers.cs" />
         <Compile Include="Extensions\StaticUtils.cs" />
         <Compile Include="Extensions\StringExtensions.cs" />
-        <Compile Include="Hints\SpawnTimer\SpawnTimerHandler.cs" />
         <Compile Include="MainHandlers\AutoHandlerBootstrapRegister.cs" />
         <Compile Include="MainHandlers\BadgeHandler.cs" />
         <Compile Include="MainHandlers\DebugModeHandler.cs" />
