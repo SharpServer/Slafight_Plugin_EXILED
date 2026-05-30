@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using System.Text;
 using CommandSystem;
-using Exiled.Permissions.Extensions;
 using Slafight_Plugin_EXILED.Commands.DevTools;
 
 namespace Slafight_Plugin_EXILED.Commands;

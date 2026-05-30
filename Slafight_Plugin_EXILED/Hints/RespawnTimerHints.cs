@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using HintServiceMeow.Core.Enum;
@@ -10,7 +11,6 @@ using MEC;
 using PlayerRoles;
 using Respawning;
 using Respawning.Waves;
-using Respawning.Waves.Generic;
 using Slafight_Plugin_EXILED.API.Interface;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
 

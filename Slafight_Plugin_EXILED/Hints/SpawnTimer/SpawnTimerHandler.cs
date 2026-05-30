@@ -1,12 +1,9 @@
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Extension;
-using HintServiceMeow.Core.Utilities;
 using HintServiceMeow.Core.Utilities.Image;
 using MEC;
 using PlayerRoles;

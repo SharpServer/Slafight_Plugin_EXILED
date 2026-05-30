@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
@@ -11,7 +10,6 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using VoiceChat;
-using VoiceChat.Codec;
 using VoiceChat.Networking;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
 using SpectatorRole = PlayerRoles.Spectating.SpectatorRole;

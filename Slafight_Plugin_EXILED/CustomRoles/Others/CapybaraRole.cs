@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using MEC;

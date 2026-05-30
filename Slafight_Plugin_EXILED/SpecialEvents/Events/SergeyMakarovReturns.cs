@@ -1,4 +1,3 @@
-using System;
 using System.Linq;
 using Exiled.API.Features;
 using MEC;
@@ -10,7 +9,6 @@ using Slafight_Plugin_EXILED.CustomRoles.Others.SergeyMakarov;
 // SpecialEvent 基底クラス
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
-using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
