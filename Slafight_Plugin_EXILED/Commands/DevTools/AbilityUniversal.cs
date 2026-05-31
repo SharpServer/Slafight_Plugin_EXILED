@@ -3,6 +3,7 @@ using CommandSystem;
 using Exiled.API.Features;
 using Exiled.Permissions.Extensions;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.Commands.DevTools;
 
@@ -79,7 +80,7 @@ public class AbilityUniversal : ICommand
         if (maxUses.HasValue) msg += $" 回数={maxUses}";
         
         response = msg;
-        executor.ShowHint($"<color=green>{msg}</color>", 3f);
+MeowExtensions.ShowHint(        executor, $"<color=green>{msg}</color>", 3f);
         return true;
     }
 }

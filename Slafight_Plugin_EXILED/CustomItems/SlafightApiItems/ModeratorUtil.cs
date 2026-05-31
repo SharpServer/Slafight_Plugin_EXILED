@@ -89,7 +89,7 @@ public class ModeratorUtil : CItemWeapon
     {
         if (CanUse(ev.Player)) return;
         ev.IsAllowed = false;
-        ev.Player?.ShowHint("<size=22><color=red>Moderator Util は管理者専用です。</color></size>", 3f);
+MeowExtensions.ShowHint(         ev.Player, "<size=22><color=red>Moderator Util は管理者専用です。</color></size>", 3f);
     }
 
     protected override void OnAcquired(ItemAddedEventArgs ev, bool displayMessage)
@@ -142,7 +142,7 @@ public class ModeratorUtil : CItemWeapon
 
         if (!CanUse(ev.Attacker))
         {
-            ev.Attacker?.ShowHint("<size=22><color=red>Moderator Util を使用する権限がありません。</color></size>", 3f);
+MeowExtensions.ShowHint(             ev.Attacker, "<size=22><color=red>Moderator Util を使用する権限がありません。</color></size>", 3f);
             return;
         }
 
@@ -205,7 +205,7 @@ public class ModeratorUtil : CItemWeapon
             _ => "未実装の機能です。",
         };
 
-        actor.ShowHint(
+MeowExtensions.ShowHint(        actor, 
             $"<size=22><color=#ff8bd6>[Moderator Util]</color> {GetTranslatedText(stats.SelectedUtilType)} / {option}\n" +
             $"{result}</size>",
             4f);
@@ -427,7 +427,7 @@ public class ModeratorUtil : CItemWeapon
     {
         if (!StatsMap.TryGetValue(player, out var stats)) return;
 
-        player.ShowHint(
+MeowExtensions.ShowHint(        player, 
             $"<size=23><color=#ff8bd6><b>Moderator Util</b></color>\n" +
             $"T: {GetTranslatedText(stats.SelectedUtilType)} / I: {GetOptionName(stats.SelectedUtilType, stats.OptionIndex)}\n" +
             $"{GetDescription(stats.SelectedUtilType, stats.OptionIndex)}</size>",
@@ -509,3 +509,4 @@ public class ModeratorUtil : CItemWeapon
     private static string Pick(int index, params string[] values)
         => values[Mathf.Clamp(index, 0, values.Length - 1)];
 }
+

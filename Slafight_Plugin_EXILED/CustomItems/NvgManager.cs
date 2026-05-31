@@ -7,6 +7,7 @@ using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers.Wearables;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Light = Exiled.API.Features.Toys.Light;
 
@@ -112,7 +113,7 @@ public static class NvgManager
         // 電池0%なら起動しない（無限電池は常に起動可）
         if (!isInfinite && BatteryData.TryGetValue(serial, out var savedBattery) && savedBattery <= 0f)
         {
-            player.ShowHint("このNVGの電池は完全に切れています。", 3f);
+MeowExtensions.ShowHint(            player, "このNVGの電池は完全に切れています。", 3f);
             Log.Debug($"[NvgManager] StartNvg拒否: 電池切れ serial={serial}");
             return;
         }
@@ -312,7 +313,7 @@ public static class NvgManager
                 if (prof.UseBlackout)
                     player.EnableEffect<Blindness>(255, 2.5f);
 
-                player.ShowHint("NVGの電池が切れた…視界が真っ暗になった。", 5f);
+MeowExtensions.ShowHint(                player, "NVGの電池が切れた…視界が真っ暗になった。", 5f);
 
                 StopNvgBySerial(serial, clearBattery: true);
                 yield break;
@@ -330,7 +331,7 @@ public static class NvgManager
                 data.NvgLight.Intensity = prof.LightIntensity * (0.4f + 0.6f * ratio);
             }
 
-            player.ShowHint($"NVG電池: {(int)battery}%", 1f);
+MeowExtensions.ShowHint(            player, $"NVG電池: {(int)battery}%", 1f);
         }
     }
 

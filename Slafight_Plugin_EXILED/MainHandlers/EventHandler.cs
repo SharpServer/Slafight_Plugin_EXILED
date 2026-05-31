@@ -9,6 +9,8 @@ using Exiled.API.Features.Pickups;
 using Exiled.Events.EventArgs.Map;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Warhead;
+using HintServiceMeow.Core.Enum;
+using HintServiceMeow.Core.Extension;
 using InventorySystem.Items.Usables.Scp330;
 using MEC;
 using PlayerRoles;
@@ -26,6 +28,7 @@ using ServerHandler = Exiled.Events.Handlers.Server;
 using Slafight_Plugin_EXILED.API.Interface;
 using WarheadHandler = Exiled.Events.Handlers.Warhead;
 using MapHandler = Exiled.Events.Handlers.Map;
+using HsmHint = HintServiceMeow.Core.Models.Hints.Hint;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -122,11 +125,8 @@ public class EventHandler : IBootstrapHandler, IDisposable
         Timing.CallDelayed(0.05f, () =>
         {
             if (!IsPlayerValid(ev.Player)) return;
-            string tips = Tips.GetRandomTip();
-            ev.Player.ShowHint(
-                "\n\n\n\n\n\n\n<size=32>次のイベント：" + SpecialEventsHandler.Instance.LocalizedEventName + "</size>" +
-                $"\n\n<size=28>Tips: {tips}</size>",
-                5555f);
+            if (Round.InProgress) return;
+            ShowLobbyInfoHint(ev.Player);
         });
     }
 
@@ -156,7 +156,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
             candidate.SetRole(roleInfo.Custom);
         }
 
-        candidate.ShowHint("※SCPプレイヤーが切断したため代わりにスポーンしました");
+MeowExtensions.ShowHint(        candidate, "※SCPプレイヤーが切断したため代わりにスポーンしました");
     }
 
     public static void SyncSpecialEvent()
@@ -167,13 +167,54 @@ public class EventHandler : IBootstrapHandler, IDisposable
             foreach (var player in Player.List)
             {
                 if (!IsPlayerValid(player)) continue;
-                var tips = Tips.GetRandomTip();
-                player.ShowHint(
-                    "\n\n\n\n\n\n\n<size=32>次のイベント：" + SpecialEventsHandler.Instance.LocalizedEventName + "</size>" +
-                    $"\n\n<size=28>Tips: {tips}</size>",
-                    5555f);
+                ShowLobbyInfoHint(player);
             }
         });
+    }
+
+    private static void ShowLobbyInfoHint(Player player)
+    {
+        try
+        {
+            var display = player.GetPlayerDisplay();
+            var oldHint = display.GetHint(HudConstId.LobbyInfo);
+            if (oldHint != null)
+                display.RemoveHint(oldHint);
+
+            var hint = new HsmHint
+            {
+                Id = HudConstId.LobbyInfo,
+                Alignment = HintAlignment.Center,
+                XCoordinate = 0,
+                YCoordinate = 835,
+                FontSize = 32,
+                SyncSpeed = HintSyncSpeed.Fast,
+                ResolutionBasedAlign = true,
+                Text = "<size=32>次のイベント：" + SpecialEventsHandler.Instance.LocalizedEventName + "</size>" +
+                       $"\n\n<size=28>Tips: {Tips.GetRandomTip()}</size>",
+            };
+
+            display.AddHint(hint);
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"[LobbyInfoHint] failed for {player.Nickname}: {ex.Message}");
+        }
+    }
+
+    private static void ClearLobbyInfoHint(Player player)
+    {
+        try
+        {
+            var display = player.GetPlayerDisplay();
+            var oldHint = display.GetHint(HudConstId.LobbyInfo);
+            if (oldHint != null)
+                display.RemoveHint(oldHint);
+        }
+        catch (Exception ex)
+        {
+            Log.Debug($"[LobbyInfoHint] clear failed for {player.Nickname}: {ex.Message}");
+        }
     }
 
     private void OnRoundRestarted()
@@ -190,7 +231,8 @@ public class EventHandler : IBootstrapHandler, IDisposable
         SpecificFlagsManager.ClearAll();
         foreach (var player in Player.List.ToList().Where(IsPlayerValid))
         {
-            player.ShowHint("");
+            ClearLobbyInfoHint(player);
+MeowExtensions.ShowHint(            player, "");
             player.InitPlayerFlags();
         }
 
@@ -367,7 +409,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
             {
                 if (ev.Door.IsLocked && SpecialEventsHandler.Instance.NowEvent == SpecialEventType.None)
                 {
-                    ev.Player.ShowHint("収容違反への対応として暫くロックされているようだ・・・");
+                    MeowExtensions.ShowHint(ev.Player, "収容違反への対応として暫くロックされているようだ・・・");
                 }
             }
         }

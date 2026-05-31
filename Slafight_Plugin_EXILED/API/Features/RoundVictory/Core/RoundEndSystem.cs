@@ -399,7 +399,7 @@ public static class RoundEndExecutor
     {
         foreach (var player in Player.List)
         {
-            player?.ShowHint("");
+MeowExtensions.ShowHint(             player, "");
         }
     }
 
@@ -407,7 +407,7 @@ public static class RoundEndExecutor
     {
         foreach (var player in Player.List)
         {
-            player.ShowHint(definition.VictoryHint, definition.HintDuration);
+MeowExtensions.ShowHint(            player, definition.VictoryHint, definition.HintDuration);
 
             if (definition.OverrideIntercom)
                 Intercom.TrySetOverride(player, true);
@@ -438,3 +438,4 @@ public static class RoundEndExecutor
         action();
     }
 }
+

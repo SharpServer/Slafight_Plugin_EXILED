@@ -472,6 +472,7 @@
         <Compile Include="Extensions\ColorExtensions.cs" />
         <Compile Include="Extensions\CustomTeamUtils.cs" />
         <Compile Include="Extensions\CustomItemExtensions.cs" />
+        <Compile Include="Extensions\MeowExtensions.cs" />
         <Compile Include="Extensions\OnlyChecker.cs" />
         <Compile Include="Extensions\PlayerAbilityExtensions.cs" />
         <Compile Include="Extensions\PlayerCItemBaseExtensions.cs" />
@@ -536,6 +537,7 @@
         <Compile Include="CustomRoles\SCPs\Scp682Role.cs" />
         <Compile Include="CustomRoles\SCPs\Scp966Role.cs" />
         <Compile Include="Extensions\CassieExtensions.cs" />
+        <Compile Include="GlobalUsings.cs" />
         <Compile Include="Hints\PlayerHUD.cs" />
         <Compile Include="Hints\RespawnTimerHints.cs" />
         <Compile Include="Hints\RoleHintsDictionary.cs" />

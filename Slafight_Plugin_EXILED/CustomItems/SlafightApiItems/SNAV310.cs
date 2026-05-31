@@ -3,6 +3,7 @@ using Exiled.API.Enums;
 using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Item = Exiled.API.Features.Items.Item;
 
@@ -53,7 +54,7 @@ public class SNAV310 : CItem
     {
         if (!Check(ev.Item)) return;
         _mode = ev.NewValue;
-        ev.Player.ShowHint(SnavCommon.RangeHint(ev.NewValue));
+MeowExtensions.ShowHint(        ev.Player, SnavCommon.RangeHint(ev.NewValue));
     }
 
     protected override void OnDropping(DroppingItemEventArgs ev)
@@ -63,6 +64,6 @@ public class SNAV310 : CItem
 
         ev.IsAllowed = false;
         var detected = SnavCommon.DetectRooms(ev.Player.Position, _mode, Targets);
-        ev.Player.ShowHint(SnavCommon.RoomsHint(_mode, detected, ev.Player.Position), 10f);
+MeowExtensions.ShowHint(        ev.Player, SnavCommon.RoomsHint(_mode, detected, ev.Player.Position), 10f);
     }
 }

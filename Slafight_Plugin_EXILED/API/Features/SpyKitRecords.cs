@@ -103,7 +103,7 @@ public static class SpyKitRecords
         if (data.HasValue)
             player.Morph(data.Value);
         else
-            player.ShowHint($"<color=red>{morphName} が見つかりません</color>", 3f);
+MeowExtensions.ShowHint(            player, $"<color=red>{morphName} が見つかりません</color>", 3f);
     }
 
     /// <summary>

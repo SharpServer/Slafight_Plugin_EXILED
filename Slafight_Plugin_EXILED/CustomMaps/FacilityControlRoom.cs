@@ -10,6 +10,7 @@ using MEC;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps.FacilityControlRoomFunctions;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;
@@ -110,7 +111,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
 
         ev.IsAllowed = false;
         session.SelectedFunctionIndex = (session.SelectedFunctionIndex + 1) % Functions.Count;
-        ev.Player.ShowHint(BuildModeHint(session), 1.2f);
+MeowExtensions.ShowHint(        ev.Player, BuildModeHint(session), 1.2f);
     }
 
     private void OnChangingItem(ChangingItemEventArgs ev)
@@ -134,7 +135,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
     {
         if (player.CurrentItem is not Keycard keycard)
         {
-            player.ShowHint("<size=24>制御室操作を終了しました。\n管理権限を持つキーカードを手に持ってください。</size>", 3.5f);
+MeowExtensions.ShowHint(            player, "<size=24>制御室操作を終了しました。\n管理権限を持つキーカードを手に持ってください。</size>", 3.5f);
             return;
         }
 
@@ -142,7 +143,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
         session.HintLoop = Timing.RunCoroutine(HintLoopCoroutine(session));
         _sessions[player] = session;
 
-        player.ShowHint(BuildModeHint(session), 1.2f);
+MeowExtensions.ShowHint(        player, BuildModeHint(session), 1.2f);
     }
 
     private void ExecuteSelectedFunction(
@@ -206,7 +207,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
             }
 
             if (Time.time >= session.SuppressModeHintUntil)
-                session.Player.ShowHint(BuildModeHint(session), 1.2f);
+MeowExtensions.ShowHint(                session.Player, BuildModeHint(session), 1.2f);
         }
     }
 
@@ -219,7 +220,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
         _sessions.Remove(player);
 
         if (!string.IsNullOrWhiteSpace(hint))
-            player.ShowHint(hint, 3.5f);
+MeowExtensions.ShowHint(            player, hint, 3.5f);
     }
 
     private static bool TryGetStagedKeycard(
@@ -361,7 +362,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
         string hint)
     {
         session.SuppressModeHintUntil = Time.time + 3f;
-        player.ShowHint(hint, 3.5f);
+MeowExtensions.ShowHint(        player, hint, 3.5f);
     }
 
     private static IReadOnlyList<FacilityControlRoomFunction> CreateFunctions()

@@ -62,7 +62,7 @@ public class TeleportRandomAbility : AbilityBase
 
         if (candidates.Count == 0)
         {
-            player.ShowHint("有効な位置が見つかりませんでした", 3f);
+MeowExtensions.ShowHint(            player, "有効な位置が見つかりませんでした", 3f);
             return;
         }
 
@@ -82,7 +82,7 @@ public class TeleportRandomAbility : AbilityBase
             player.CurrentRoom.TurnOffLights(2.5f);
         }
         else
-            player.ShowHint("安全なテレポート位置が見つかりませんでした", 5f);
+MeowExtensions.ShowHint(            player, "安全なテレポート位置が見つかりませんでした", 5f);
     }
 
     private static bool IsValidTeleportTarget(Vector3 pos, HashSet<RoomType> excludeTypes)

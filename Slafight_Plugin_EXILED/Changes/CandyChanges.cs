@@ -121,7 +121,7 @@ public static class CandyChanges
         if (ev.Candy.Kind == CandyKindID.Black)
         {
             // Goodbye. MASARU Black...
-            ev.Player?.ShowHint("<size=24>この世全ての混沌を混ぜて煮詰めた匂いがする...</size>");
+MeowExtensions.ShowHint(             ev.Player, "<size=24>この世全ての混沌を混ぜて煮詰めた匂いがする...</size>");
         }
         else if (ev.Candy.Kind == CandyKindID.Brown)
         {
@@ -133,7 +133,7 @@ public static class CandyChanges
             ev.Player?.CustomHumeShieldStat.MaxValue = 10000f;
             ev.Player?.CustomHumeShieldStat.CurValue = 10000f;
             ev.Player?.CustomHumeShieldStat.ShieldRegenerationMultiplier = 0f;
-            ev.Player?.ShowHint("<size=24>埃っぽく鉄臭い匂いが鼻を刺す...</size>");
+MeowExtensions.ShowHint(             ev.Player, "<size=24>埃っぽく鉄臭い匂いが鼻を刺す...</size>");
             Timing.CallDelayed(60f, () =>
             {
                 ev.Player?.CustomHumeShieldStat.MaxValue = 0f;
@@ -142,7 +142,7 @@ public static class CandyChanges
         }
         else if (ev.Candy.Kind == CandyKindID.Orange)
         {
-            ev.Player?.ShowHint("<size=24>眩しいほどに爽やかなオレンジの匂いがする...</size>");
+MeowExtensions.ShowHint(             ev.Player, "<size=24>眩しいほどに爽やかなオレンジの匂いがする...</size>");
             foreach (Player player in Player.List)
             {
                 if (player == null || ev.Player == null) continue;
@@ -159,7 +159,7 @@ public static class CandyChanges
         {
             ev.Player?.EnableEffect(EffectType.Ghostly, 40f);
             ev.Player?.EnableEffect(EffectType.MovementBoost, 20, 40f);
-            ev.Player?.ShowHint("<size=24>透き通るようなミルクの香りがする...</size>");
+MeowExtensions.ShowHint(             ev.Player, "<size=24>透き通るようなミルクの香りがする...</size>");
         }
         else if (ev.Candy.Kind == CandyKindID.Evil)
         {
@@ -180,8 +180,9 @@ public static class CandyChanges
                     Handler.ActivatedPlayers.Add(ev.Player);
                 }
 
-                ev.Player?.ShowHint("<size=24>冒涜的な匂いに気が狂いそうになる...</size>");
+MeowExtensions.ShowHint(                 ev.Player, "<size=24>冒涜的な匂いに気が狂いそうになる...</size>");
             });
         }
     }
 }
+

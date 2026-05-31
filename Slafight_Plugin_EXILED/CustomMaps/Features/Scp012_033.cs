@@ -4,6 +4,7 @@ using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using Slafight_Plugin_EXILED.CustomMaps.Core;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
@@ -101,7 +102,7 @@ public static class Scp012_033
         {
             ev.IsAllowed = false;
             ev.Radio.IsEnabled = false;
-            ev.Player?.ShowHint("...?", 1.5f);
+MeowExtensions.ShowHint(             ev.Player, "...?", 1.5f);
         }
     }
 
@@ -157,3 +158,4 @@ public static class Scp012_033
         }
     }
 }
+

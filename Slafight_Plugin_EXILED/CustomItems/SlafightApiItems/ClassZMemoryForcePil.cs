@@ -2,6 +2,7 @@ using Exiled.API.Enums;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
@@ -23,7 +24,7 @@ public class ClassZMemoryForcePil : CItem
         if (ev.Player == null) return;
         if (!ev.Player.HasFlag(SpecificFlagType.AntiMemeEffectDisabled)) return;
         ev.IsAllowed = false;
-        ev.Player.ShowHint("既に耐性を得ている為、使用できません。");
+MeowExtensions.ShowHint(        ev.Player, "既に耐性を得ている為、使用できません。");
     }
 
     protected override void OnUsed(UsedItemEventArgs ev)

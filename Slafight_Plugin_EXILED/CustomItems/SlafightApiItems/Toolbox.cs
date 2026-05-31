@@ -7,6 +7,7 @@ using Exiled.API.Features.Doors;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
@@ -168,7 +169,7 @@ public class Toolbox : CItem
             if (!CheckHeld(player)) yield break;
             if (!ToolboxStatsMap.TryGetValue(player, out var stats)) yield break;
 
-            player.ShowHint(
+MeowExtensions.ShowHint(            player, 
                 $"<size=24>現在選択されている機能：{GetTranslatedText(stats.SelectedUtilType)}</size>\n" +
                 $"<size=22>{GetTranslatedText(stats.SelectedUtilType, true)}\n{TryGetExternalCooldownText(player)}</size>",
                 1.2f);

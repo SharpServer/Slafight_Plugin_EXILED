@@ -71,7 +71,7 @@ public class SNAVUltimate : CItem
     {
         if (!Check(ev.Item)) return;
         _mode = ev.NewValue;
-        ev.Player.ShowHint(SnavCommon.RangeHint(ev.NewValue));
+MeowExtensions.ShowHint(        ev.Player, SnavCommon.RangeHint(ev.NewValue));
     }
 
     protected override void OnDropping(DroppingItemEventArgs ev)
@@ -91,7 +91,7 @@ public class SNAVUltimate : CItem
             ? string.Join("\n", scps.Select(p => $"{p.Nickname} ({p.Role.Type}): {Vector3.Distance(pos, p.Position):F0}m"))
             : "なし";
 
-        ev.Player.ShowHint(
+MeowExtensions.ShowHint(        ev.Player, 
             $"[{_mode}]検知された部屋：\n{roomsText}\n\n検知されたSCP：\n{scpsText}",
             10f);
     }

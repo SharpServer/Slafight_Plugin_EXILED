@@ -12,6 +12,7 @@ using UnityEngine;
 using EffectType = Exiled.API.Enums.EffectType;
 
 using Slafight_Plugin_EXILED.API.Interface;
+using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.Changes;
 
@@ -72,7 +73,7 @@ public class ChristmasChanges : IBootstrapHandler, System.IDisposable
                 player.TryAddCandy(CandyKindID.Pink);
                 player.TryAddCandy(CandyKindID.Pink);
                 CustomItem.TryGive(player, 700,false);
-                player.ShowHint("とてもレアなプレゼントの様だ・・・インベントリを見てみよう！=)");
+MeowExtensions.ShowHint(                player, "とてもレアなプレゼントの様だ・・・インベントリを見てみよう！=)");
             }
             else if (Lucky <= 0.25f)
             {
@@ -134,7 +135,7 @@ public class ChristmasChanges : IBootstrapHandler, System.IDisposable
                 else
                 {
                     player.ExplodeEffect(ProjectileType.FragGrenade);
-                    player.ShowHint("Boooooooo!!!");
+MeowExtensions.ShowHint(                    player, "Boooooooo!!!");
                 }
             }
             else

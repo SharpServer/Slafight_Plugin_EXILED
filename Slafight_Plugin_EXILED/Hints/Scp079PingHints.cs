@@ -68,7 +68,7 @@ public sealed class Scp079PingHints : IBootstrapHandler, IDisposable
         int version = _versions.TryGetValue(player.Id, out int current) ? current + 1 : 1;
         _versions[player.Id] = version;
 
-        player.ShowHint(text, DisplaySeconds);
+MeowExtensions.ShowHint(        player, text, DisplaySeconds);
 
         Timing.CallDelayed(DisplaySeconds, () =>
         {

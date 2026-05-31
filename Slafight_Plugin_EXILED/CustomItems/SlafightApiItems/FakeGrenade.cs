@@ -2,6 +2,7 @@ using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Map;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using MapHandlers = Exiled.Events.Handlers.Map;
 
@@ -58,7 +59,8 @@ public class FakeGrenade : CItem
         }
         else
         {
-            ev.Player?.ShowHint("<color=red><size=32>不良品だった！！！</size></color>");
+MeowExtensions.ShowHint(             ev.Player, "<color=red><size=32>不良品だった！！！</size></color>");
         }
     }
 }
+

@@ -53,7 +53,7 @@ public class CUA_SpyKit : CItemKeycard
             return;
         }
         ev.Player?.ChangeAppearance(RoleTypeId.ClassD, Player.List.Where(p => p != null).ToList());
-        ev.Player?.ShowHint("<size=24><color=#EE7760>Class-D Personnel</color>に変装しました", 2.5f);
+MeowExtensions.ShowHint(         ev.Player, "<size=24><color=#EE7760>Class-D Personnel</color>に変装しました", 2.5f);
         ev.IsAllowed = false;
     }
 
@@ -62,7 +62,8 @@ public class CUA_SpyKit : CItemKeycard
         if (ev.Player?.GetCustomRole() != CRoleTypeId.ChaosUndercoverAgent) return;
         if (!Check(ev.Item)) return;
         ev.Player?.ChangeAppearance(RoleTypeId.ChaosRifleman, Player.List.Where(p => p != null).ToList());
-        ev.Player?.ShowHint("<size=24><color=#228B22>Chaos Insurgency Rifleman</color>に変装しました", 2.5f);
+MeowExtensions.ShowHint(         ev.Player, "<size=24><color=#228B22>Chaos Insurgency Rifleman</color>に変装しました", 2.5f);
         ev.IsAllowed = false;
     }
 }
+

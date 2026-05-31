@@ -3,6 +3,7 @@ using Exiled.API.Enums;
 using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Item = Exiled.API.Features.Items.Item;
 
@@ -50,7 +51,7 @@ public class SNAV300 : CItem
         if (ev.Radio.BatteryLevel < 10) return;
         if (!Check(ev.Item)) return;
         _mode = ev.NewValue;
-        ev.Player.ShowHint(SnavCommon.RangeHint(ev.NewValue));
+MeowExtensions.ShowHint(        ev.Player, SnavCommon.RangeHint(ev.NewValue));
     }
 
     /// <summary>投げる (Drop=Throw) 操作で使用 — バッテリー消費 + 部屋検知。</summary>
@@ -64,13 +65,13 @@ public class SNAV300 : CItem
         var consumption = SnavCommon.Consumption(_mode);
         if (radio.BatteryLevel < consumption)
         {
-            ev.Player.ShowHint("バッテリー不足！", 3f);
+MeowExtensions.ShowHint(            ev.Player, "バッテリー不足！", 3f);
             return;
         }
 
         radio.BatteryLevel -= (byte)consumption;
 
         var detected = SnavCommon.DetectRooms(ev.Player.Position, _mode, Targets);
-        ev.Player.ShowHint(SnavCommon.RoomsHint(_mode, detected, ev.Player.Position), 10f);
+MeowExtensions.ShowHint(        ev.Player, SnavCommon.RoomsHint(_mode, detected, ev.Player.Position), 10f);
     }
 }

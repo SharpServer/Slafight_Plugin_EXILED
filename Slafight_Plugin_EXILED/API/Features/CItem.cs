@@ -12,6 +12,7 @@ using Mirror;
 using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers.Wearables;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 using PlayerHandlers = Exiled.Events.Handlers.Player;
@@ -304,7 +305,7 @@ public abstract class CItem
     protected virtual void ShowPickedUpMessage(Player player)
     {
         if (player == null) return;
-        player.ShowHint(BuildPickedUpMessage(), PickedUpHintDuration);
+MeowExtensions.ShowHint(        player, BuildPickedUpMessage(), PickedUpHintDuration);
         var captured = player;
         Timing.CallDelayed(PickedUpHintDuration, () =>
         {
@@ -316,7 +317,7 @@ public abstract class CItem
     protected virtual void ShowSelectedMessage(Player player)
     {
         if (player == null) return;
-        player.ShowHint(BuildSelectedMessage(), SelectedHintDuration);
+MeowExtensions.ShowHint(        player, BuildSelectedMessage(), SelectedHintDuration);
         var captured = player;
         Timing.CallDelayed(SelectedHintDuration, () =>
         {
@@ -868,7 +869,7 @@ public abstract class CItem
         if (oldItem != null
             && SerialToItem.ContainsKey(oldItem.Serial))
         {
-            try { ev.Player.ShowHint(string.Empty, 0.1f); }
+            try { MeowExtensions.ShowHint(ev.Player, string.Empty, 0.1f); }
             catch (Exception e) { Log.Error($"CItem.ChangingItem(clearHint): {e}"); }
         }
 
@@ -1121,3 +1122,4 @@ public abstract class CItem
         _pendingGiveDisplayMessage = false;
     }
 }
+

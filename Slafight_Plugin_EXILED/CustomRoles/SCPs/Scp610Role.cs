@@ -61,8 +61,8 @@ public class Scp610Role : CRole
         ev.Amount /= 3.5f;
         if (ev.Player.Health <= 40f && !ev.Player.HasFlag(SpecificFlagType.Infecting610))
         {
-            ev.Attacker.ShowHint("<size=22><color=yellow><b>相手を感染させる事に成功した！3分後には同胞になっているであろう！</b></color></size>", 5);
-            ev.Player.ShowHint("<size=22><color=red><b>SCP-610に感染してしまった！\nSCP-500で治療しなければ三分後には同胞になってしまうぞ！");
+MeowExtensions.ShowHint(            ev.Attacker, "<size=22><color=yellow><b>相手を感染させる事に成功した！3分後には同胞になっているであろう！</b></color></size>", 5);
+MeowExtensions.ShowHint(            ev.Player, "<size=22><color=red><b>SCP-610に感染してしまった！\nSCP-500で治療しなければ三分後には同胞になってしまうぞ！");
             ev.Player.TryAddFlag(SpecificFlagType.Infecting610);
             ev.Player.EnableEffect<Concussed>(255);
             ev.Player.EnableEffect<DamageReduction>(60);
@@ -71,7 +71,7 @@ public class Scp610Role : CRole
         else if (ev.Player.HasFlag(SpecificFlagType.Infecting610))
         {
             ev.Amount /= 10f;
-            ev.Attacker.ShowHint("<size=24>相手はもうすでに感染しています！</size>");
+MeowExtensions.ShowHint(            ev.Attacker, "<size=24>相手はもうすでに感染しています！</size>");
         }
     }
 

@@ -6,6 +6,7 @@ using Exiled.Events.EventArgs.Warhead;
 using Interactables.Interobjects.DoorUtils;
 using MapGeneration;
 using MEC;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;
@@ -83,6 +84,7 @@ public static class MapGuardHandler
 
     private static void Message(Player? player)
     {
-        player?.ShowHint("この扉は特殊な素材で守られているようだ・・・");
+MeowExtensions.ShowHint(         player, "この扉は特殊な素材で守られているようだ・・・");
     }
 }
+

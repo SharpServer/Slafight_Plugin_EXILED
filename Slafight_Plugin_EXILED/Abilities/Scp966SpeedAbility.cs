@@ -38,7 +38,7 @@ public class Scp966SpeedAbility : AbilityBase
         player.EnableEffect(EffectType.MovementBoost, SpeedBoostIntensity);
 
         // HUD など
-        player.ShowHint("<color=yellow>SCP-966 高速移動開始！攻撃すると解除。</color>", 3f);
+MeowExtensions.ShowHint(        player, "<color=yellow>SCP-966 高速移動開始！攻撃すると解除。</color>", 3f);
 
         // 実際の持続時間は Cooldown とは別に決めたいならここで
         // 例えば 8秒だけ高速にするなら:
@@ -52,7 +52,7 @@ public class Scp966SpeedAbility : AbilityBase
             AbilityManager.TryGetLoadout(player, out var loadout) &&
             loadout.Slots[loadout.ActiveIndex] == this)
         {
-            player.ShowHint(
+MeowExtensions.ShowHint(            player, 
                 "<color=yellow>高速移動アビリティのクールダウンが終了しました。</color>",
                 3f);
         }

@@ -10,6 +10,8 @@ public static class HudConstId
     public const string PlayerHUD_Specific = "PlayerHUD_Specific";
     public const string PlayerHUD_Ability = "PlayerHUD_Ability";
     public const string PlayerHUD_Debug = "PlayerHUD_Debug";
+    public const string LobbyInfo = "LobbyInfo";
+    public const string TemporaryHintService = "DoorLockedInfo";
     public const string SpawnTimerHUD_FoundationStaff = "SpawnTimerHUD_FoundationStaff";
     public const string SpawnTimerHUD_FoundationEnemy = "SpawnTimerHUD_FoundationEnemy";
     public const string SpawnTimerHUD_ExpectedSpawn = "SpawnTimerHUD_ExpectedSpawn";
