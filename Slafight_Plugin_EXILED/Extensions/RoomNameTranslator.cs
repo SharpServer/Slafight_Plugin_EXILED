@@ -86,7 +86,22 @@ internal static class RoomNameTranslator
             RoomType.Surface => "地上",
             RoomType.HczStraight => "直線通路",
             RoomType.EzTCross => "三叉路",
-            _ => "エラー",
+            RoomType.EzChef => "直線通路",
+            RoomType.EzStraightColumn => "直線通路",
+            RoomType.EzCheckpointHallwayB => "チェックポイントB-H",
+            RoomType.HczDss08 => "DSS-08 アクロマティック・アベ―トメント",
+            RoomType.HczCornerDeep => "曲がり角",
+            RoomType.HczIntersectionJunk => "三叉路",
+            RoomType.HczIntersection => "三叉路",
+            RoomType.HczStraightC => "直線通路 (トイレ)",
+            RoomType.HczStraightPipeRoom => "直線通路",
+            RoomType.HczStraightVariant => "直線通路",
+            RoomType.EzSmallrooms => "直線通路 (EV)",
+            RoomType.Hcz127 => "SCP-127収容室",
+            RoomType.HczServerRoom => "サーバー室",
+            RoomType.HczIncineratorWayside => "焼却炉",
+            RoomType.HczLoadingBay => "三叉路",
+            _ => "エラー"
         };
     }
 }
