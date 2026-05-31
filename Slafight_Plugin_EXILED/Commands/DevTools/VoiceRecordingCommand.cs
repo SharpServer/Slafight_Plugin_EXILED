@@ -83,14 +83,14 @@ public class VoiceRecordingCommand : ICommand
             duration,
             [VoiceChatChannel.Proximity, VoiceChatChannel.ScpChat, VoiceChatChannel.Radio]);
 
-MeowExtensions.ShowHint(        executor, $"<color=red>● 録音中</color>\n<size=24>{key} / {duration:0.#}秒 / 半径{radius:0.#}m</size>", duration);
+        MeowExtensions.ShowHint(executor, $"<color=red>● 録音中</color>\n<size=24>{key} / {duration:0.#}秒 / 半径{radius:0.#}m</size>", duration);
         Timing.CallDelayed(duration + 0.05f, () =>
         {
             if (executor == null || !executor.IsConnected)
                 return;
 
             if (VoiceRecordingApi.TryGetRecording(key, out var recording) && !VoiceRecordingApi.IsRecording(key))
-MeowExtensions.ShowHint(                executor, $"<color=green>録音完了！</color>\n<size=24>{key}: {recording.FrameCount} frames / {recording.DurationSeconds:0.##}s</size>", 5f);
+                MeowExtensions.ShowHint(executor, $"<color=green>録音完了！</color>\n<size=24>{key}: {recording.FrameCount} frames / {recording.DurationSeconds:0.##}s</size>", 5f);
         });
 
         response = $"Recording started: key={key}, radius={radius:0.##}, duration={duration:0.##}s";
