@@ -326,4 +326,15 @@ public static class StaticUtils
         if (player is null) return;
         SpeakerApi.Play(isSuccess ? "KeycardUse1.ogg" : "KeycardUse2.ogg", "KeycardDoor", player.Position, true);
     }
+    
+    public static Color32 ToGradientColor(float value, bool redToGreen = false)
+    {
+        value = Mathf.Clamp01(value);
+
+        byte red = (byte)(redToGreen ? Mathf.RoundToInt(255 * (1f - value)) : 0);
+        byte green = (byte)Mathf.RoundToInt(255 * value);
+        byte blue = (byte)(redToGreen ? 0 : Mathf.RoundToInt(255 * (1f - value)));
+
+        return new Color32(red, green, blue, 255);
+    }
 }
