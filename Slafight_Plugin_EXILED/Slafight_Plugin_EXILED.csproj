@@ -534,7 +534,6 @@
         <Compile Include="CustomRoles\SCPs\Scp682Role.cs" />
         <Compile Include="CustomRoles\SCPs\Scp966Role.cs" />
         <Compile Include="Extensions\CassieExtensions.cs" />
-        <Compile Include="Hints\HintCoordinateConverter.cs" />
         <Compile Include="Hints\PlayerHUD.cs" />
         <Compile Include="Hints\RespawnTimerHints.cs" />
         <Compile Include="Hints\RoleHintsDictionary.cs" />
