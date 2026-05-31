@@ -37,7 +37,7 @@ public class MarionWheeler : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        Timing.CallDelayed(0.1f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.AfterSpawnFinalize, () =>
         {
             Timing.RunCoroutine(Coroutine(player));
         });

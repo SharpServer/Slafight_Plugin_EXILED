@@ -38,7 +38,7 @@ public class CapybaraRole : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        Timing.CallDelayed(0.25f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.RestoreRoleState, () =>
         {
             if (!player.IsConnected || !Check(player))
                 return;

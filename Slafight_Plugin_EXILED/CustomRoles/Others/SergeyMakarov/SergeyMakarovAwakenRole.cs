@@ -37,7 +37,7 @@ public class SergeyMakarovAwakenRole : CRole
         player.AddAbility(new CreateSinkholeAbility(player));
         player.AddAbility(new MagicMissileAbility(player));
         player.AddAbility(new SoundOfFifthAbility(player));
-        Timing.CallDelayed(0.05f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
             RPNameSetter.SetForcedCustomName(player, $"セルゲイ・マカロフ ({player.Nickname})");
         });

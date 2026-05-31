@@ -108,7 +108,7 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
         ShyGuyPositions[player] = player.Position;
         
         Log.Debug("Scp096: Anger was Spawned!");
-        Timing.CallDelayed(0.1f, () => StartAnger(player));
+        Timing.CallDelayed(RoleSpawnTimings.AfterSpawnFinalize, () => StartAnger(player));
     }
 
     private readonly Dictionary<Player, bool> _inTryNotToCryAnim = [];  // そのまま

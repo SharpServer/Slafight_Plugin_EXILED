@@ -132,34 +132,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         var display = TryGetDisplay(ev.Player);
         if (display == null) return;
 
-        Hint ServerInfo;
-        if (Plugin.Singleton.Config.IsBeta)
-        {
-            ServerInfo = new Hint
-            {
-                Id = $"{HudConstId.PlayerHUD_ServerInfo}",
-                Text = "[<color=#008cff>Sharp Server</color> - <color=red>BETA</color>]",
-                Alignment = HintAlignment.Center,
-                SyncSpeed = HintSyncSpeed.UnSync,
-                FontSize = 18,
-                YCoordinate = 1050,
-                ResolutionBasedAlign = true
-            };
-        }
-        else
-        {
-            ServerInfo = new Hint
-            {
-                Id = $"{HudConstId.PlayerHUD_ServerInfo}",
-                Text = "[<color=#008cff>Sharp Server</color>]",
-                Alignment = HintAlignment.Center,
-                SyncSpeed = HintSyncSpeed.UnSync,
-                FontSize = 18,
-                YCoordinate = 1050,
-                ResolutionBasedAlign = true
-            };
-        }
-        display.AddHint(ServerInfo);
+        EnsureServerInfoHint(display);
 
         // ラウンド中に途中参加した場合は HUD も作る + ロール同期
         if (!Round.IsLobby)
@@ -178,91 +151,82 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
 
         int XCordinate = -350;
 
-        Hint PlayerHUD_Role = new()
-        {
-            Id = $"{HudConstId.PlayerHUD_Role}",
-            Text = "Role: " + player.CustomInfo,
-            Alignment = HintAlignment.Left,
-            SyncSpeed = HintSyncSpeed.Fastest,
-            FontSize = 24,
-            XCoordinate = XCordinate,
-            YCoordinate = 860,
-            ResolutionBasedAlign = true
-        };
-        Hint PlayerHUD_Objective = new()
-        {
-            Id = $"{HudConstId.PlayerHUD_Objective}",
-            Text = "Objective: " + "Undefined",
-            Alignment = HintAlignment.Left,
-            YCoordinate = 915,
-            XCoordinate = XCordinate,
-            SyncSpeed = HintSyncSpeed.Fastest,
-            FontSize = 30,
-            ResolutionBasedAlign = true
-        };
-        Hint PlayerHUD_Team = new()
-        {
-            Id = $"{HudConstId.PlayerHUD_Team}",
-            Text = "Team: " + "Undefined",
-            Alignment = HintAlignment.Left,
-            YCoordinate = 885,
-            XCoordinate = XCordinate,
-            SyncSpeed = HintSyncSpeed.Fastest,
-            FontSize = 24,
-            ResolutionBasedAlign = true
-        };
-        Hint PlayerHUD_Event = new()
-        {
-            Id = $"{HudConstId.PlayerHUD_Event}",
-            Text = "[Event]\n<size=28>Undefined</size>",
-            Alignment = HintAlignment.Left,
-            SyncSpeed = HintSyncSpeed.Fast,
-            FontSize = 26,
-            XCoordinate = XCordinate,
-            YCoordinate = 120,
-            ResolutionBasedAlign = true
-        };
-        Hint PlayerHUD_Specific = new()
-        {
-            Id = $"{HudConstId.PlayerHUD_Specific}",
-            Text = "",
-            Alignment = HintAlignment.Left,
-            SyncSpeed = HintSyncSpeed.Fastest,
-            FontSize = 24,
-            XCoordinate = XCordinate + 350,
-            YCoordinate = 885,
-            ResolutionBasedAlign = true
-        };
-        Hint PlayerHUD_Ability = new()
-        {
-            Id = $"{HudConstId.PlayerHUD_Ability}",
-            Text = "",
-            Alignment = HintAlignment.Left,
-            SyncSpeed = HintSyncSpeed.Fastest,
-            FontSize = 24,
-            XCoordinate = XCordinate + 350,
-            YCoordinate = 855,
-            ResolutionBasedAlign = true
-        };
-        Hint PlayerHUD_Debug = new()
-        {
-            Id = $"{HudConstId.PlayerHUD_Debug}",
-            Text = "",
-            Alignment = HintAlignment.Left,
-            SyncSpeed = HintSyncSpeed.Fast,
-            FontSize = 24,
-            XCoordinate = XCordinate,
-            YCoordinate = 345,
-            ResolutionBasedAlign = true
-        };
+        EnsureServerInfoHint(display);
+        EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Role, "Role: " + player.CustomInfo, HintAlignment.Left, HintSyncSpeed.Fastest, 24, XCordinate, 860);
+        EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Objective, "Objective: Undefined", HintAlignment.Left, HintSyncSpeed.Fastest, 30, XCordinate, 915);
+        EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Team, "Team: Undefined", HintAlignment.Left, HintSyncSpeed.Fastest, 24, XCordinate, 885);
+        EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Event, "[Event]\n<size=28>Undefined</size>", HintAlignment.Left, HintSyncSpeed.Fast, 26, XCordinate, 120);
+        EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Specific, string.Empty, HintAlignment.Left, HintSyncSpeed.Fastest, 24, XCordinate + 350, 885);
+        EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Ability, string.Empty, HintAlignment.Left, HintSyncSpeed.Fastest, 24, XCordinate + 350, 855);
+        EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Debug, string.Empty, HintAlignment.Left, HintSyncSpeed.Fast, 24, XCordinate, 345);
+    }
 
-        display.AddHint(PlayerHUD_Role);
-        display.AddHint(PlayerHUD_Objective);
-        display.AddHint(PlayerHUD_Team);
-        display.AddHint(PlayerHUD_Event);
-        display.AddHint(PlayerHUD_Specific);
-        display.AddHint(PlayerHUD_Ability);
-        display.AddHint(PlayerHUD_Debug);
+    private static string BuildServerInfoText()
+    {
+        return Plugin.Singleton.Config.IsBeta
+            ? "[<color=#008cff>Sharp Server</color> - <color=red>BETA</color>]"
+            : "[<color=#008cff>Sharp Server</color>]";
+    }
+
+    private static HintServiceMeow.Core.Models.Hints.AbstractHint EnsureServerInfoHint(PlayerDisplay display)
+    {
+        var existing = display.GetHint(HudConstId.PlayerHUD_ServerInfo);
+        if (existing != null)
+        {
+            existing.Text = BuildServerInfoText();
+            return existing;
+        }
+
+        var hint = new Hint
+        {
+            Id = HudConstId.PlayerHUD_ServerInfo,
+            Alignment = HintAlignment.Center,
+            SyncSpeed = HintSyncSpeed.UnSync,
+            FontSize = 18,
+            XCoordinate = 0,
+            YCoordinate = 1050,
+            ResolutionBasedAlign = true
+        };
+        hint.Text = BuildServerInfoText();
+        display.AddHint(hint);
+        return hint;
+    }
+
+    private static void EnsurePlayerHudHint(
+        PlayerDisplay display,
+        string id,
+        string defaultText,
+        HintAlignment alignment,
+        HintSyncSpeed syncSpeed,
+        int fontSize,
+        int x,
+        int y)
+    {
+        if (display.GetHint(id) is not Hint hint)
+        {
+            hint = new Hint
+            {
+                Id = id,
+                Text = defaultText,
+                Alignment = alignment,
+                SyncSpeed = syncSpeed,
+                FontSize = fontSize,
+                XCoordinate = x,
+                YCoordinate = y,
+                ResolutionBasedAlign = true
+            };
+            display.AddHint(hint);
+        }
+
+        if (string.IsNullOrEmpty(hint.Text))
+            hint.Text = defaultText;
+
+        hint.Alignment = alignment;
+        hint.SyncSpeed = syncSpeed;
+        hint.FontSize = fontSize;
+        hint.XCoordinate = x;
+        hint.YCoordinate = y;
+        hint.ResolutionBasedAlign = true;
     }
 
     public void PlayerHUDMain()
@@ -292,31 +256,35 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
             switch (syncType)
             {
                 case SyncType.ServerInfo:
-                    var si = display.GetHint("ServerInfo");
-                    if (si != null) si.Text = hintText;
+                    var si = EnsureServerInfoHint(display);
+                    si.Text = hintText;
                     break;
                 case SyncType.PHUD_Role:
-                    var role = display.GetHint("PlayerHUD_Role");
+                    var role = display.GetHint(HudConstId.PlayerHUD_Role);
                     if (role != null) role.Text = "Role: " + hintText;
                     break;
                 case SyncType.PHUD_Objective:
-                    var obj = display.GetHint("PlayerHUD_Objective");
+                    var obj = display.GetHint(HudConstId.PlayerHUD_Objective);
                     if (obj != null) obj.Text = "Objective: " + hintText;
                     break;
                 case SyncType.PHUD_Team:
-                    var team = display.GetHint("PlayerHUD_Team");
+                    var team = display.GetHint(HudConstId.PlayerHUD_Team);
                     if (team != null) team.Text = "Team: " + hintText;
                     break;
                 case SyncType.PHUD_Event:
-                    var ev = display.GetHint("PlayerHUD_Event");
+                    var ev = display.GetHint(HudConstId.PlayerHUD_Event);
                     if (ev != null) ev.Text = "[Event]\n<size=28>" + hintText + "</size>";
                     break;
+                case SyncType.PHUD_Specific:
+                    var specific = display.GetHint(HudConstId.PlayerHUD_Specific);
+                    if (specific != null) specific.Text = hintText;
+                    break;
                 case SyncType.PHUD_Ability:
-                    var ab = display.GetHint("PlayerHUD_Ability");
+                    var ab = display.GetHint(HudConstId.PlayerHUD_Ability);
                     if (ab != null) ab.Text = hintText;
                     break;
                 case SyncType.PHUD_Debug:
-                    var db = display.GetHint("PlayerHUD_Debug");
+                    var db = display.GetHint(HudConstId.PlayerHUD_Debug);
                     if (db != null) db.Text = hintText;
                     break;
             }
@@ -564,6 +532,26 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         }
 
         _spectateTargets.Clear();
+
+        Timing.CallDelayed(RoleSpawnTimings.HudRecreateAfterClear, () =>
+        {
+            foreach (Player player in Player.List.ToList())
+            {
+                if (!IsPlayerValid(player)) continue;
+
+                var display = TryGetDisplay(player);
+                if (display == null) continue;
+
+                EnsureServerInfoHint(display);
+
+                if (!Round.IsLobby)
+                {
+                    PlayerHUDSetup(player);
+                    if (player.Role?.Team != Team.Dead)
+                        ApplyRoleInfo(player, player);
+                }
+            }
+        });
 
         // ★ コルーチンは止めない（旧仕様の安定性維持）
     }

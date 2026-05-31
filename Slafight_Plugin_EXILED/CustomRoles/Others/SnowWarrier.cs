@@ -34,7 +34,7 @@ public class SnowWarrier : CRole
 
         const int maxHealth = 1000;
 
-        Timing.CallDelayed(0.05f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
             CustomInfoDisplay.Apply(player, "<color=#FFFFFF>SNOW WARRIER</color>");
             player.MaxHealth = maxHealth;

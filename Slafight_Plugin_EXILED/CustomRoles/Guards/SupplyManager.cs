@@ -38,7 +38,7 @@ public class SupplyManager : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        Timing.CallDelayed(0.05f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
             if (Random.Range(0, 2) == 0)
             {

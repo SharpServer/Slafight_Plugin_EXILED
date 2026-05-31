@@ -70,7 +70,7 @@ public class SergeyMakarovRole : CRole
         SpawnContextRegistry.Register(chaosOnlyContext);
         SpawnContextRegistry.SetActive("SM_VanillaOnly");
         
-        Timing.CallDelayed(0.05f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
             RPNameSetter.SetForcedCustomName(player, $"セルゲイ・マカロフ ({player.Nickname})");
         });

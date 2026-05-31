@@ -29,7 +29,7 @@ public class CandyResearcher : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        Timing.CallDelayed(0.02f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.NextFrame, () =>
         {
             if (Scp330Bag.TryGetBag(player.ReferenceHub, out var bag))
             {

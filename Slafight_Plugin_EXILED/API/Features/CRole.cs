@@ -1,12 +1,14 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CentralAuth;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.CustomItems.API.Features;
 using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Extension;
 using MEC;
+using Mirror;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
@@ -85,6 +87,14 @@ public abstract class CRole
     public sealed class CRoleAutoRegisterIgnoreAttribute : Attribute { }
 
     // ==== Plugin から呼ぶ入り口 ====
+
+    public static bool IsTeamNpc(Player? player)
+    {
+        if (player == null)
+            return false;
+
+        return TeamNpcs.Values.Any(info => info.NpcId == player.Id);
+    }
 
     /// <summary>
     /// 全ての CRole 派生クラスをインスタンス化し、
@@ -261,7 +271,7 @@ public abstract class CRole
 
         if (!TeamNpcs.TryGetValue(ev.Player.Id, out var oldInfo)) return;
 
-        Timing.CallDelayed(1f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.TeamNpcCleanupAfterRoleChange, () =>
         {
             if (!TeamNpcs.TryGetValue(ev.Player.Id, out var current)) return;
             if (current.NpcId != oldInfo.NpcId) return;
@@ -665,7 +675,7 @@ public abstract class CRole
         OnRoleSpawned(player, roleSpawnFlags);
         AssignIdentity(player);
 
-        Timing.CallDelayed(0.25f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.AfterSpawnFinalize, () =>
         {
             if (player is null) return;
             ApplyCustomInfo(player, SpawnCustomInfo);
@@ -691,7 +701,7 @@ public abstract class CRole
                 var items = player.Items.ToList();
                 var ammos = player.Ammo.ToList();
 
-                Timing.CallDelayed(1f, () =>
+                Timing.CallDelayed(RoleSpawnTimings.RestoreRoleState, () =>
                 {
                     player.Position = savePosition;
                     player.ClearInventory();
@@ -707,7 +717,7 @@ public abstract class CRole
             case RoleSpawnFlags.AssignInventory:
             {
                 var savePosition = player.Position + new Vector3(0f, 0.1f, 0f);
-                Timing.CallDelayed(1f, () =>
+                Timing.CallDelayed(RoleSpawnTimings.RestoreRoleState, () =>
                 {
                     player.Position = savePosition;
                 });
@@ -718,7 +728,7 @@ public abstract class CRole
                 var items = player.Items.ToList();
                 var ammos = player.Ammo.ToList();
 
-                Timing.CallDelayed(1f, () =>
+                Timing.CallDelayed(RoleSpawnTimings.RestoreRoleState, () =>
                 {
                     player.ClearInventory();
 
@@ -732,7 +742,7 @@ public abstract class CRole
             }
         }
 
-        Timing.CallDelayed(0.05f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
             if (DescriptionDuration <= 0f) return;
             Hint hint;
@@ -763,7 +773,7 @@ public abstract class CRole
             });
         });
 
-        Timing.CallDelayed(0.6f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.TeamNpcSpawn, () =>
         {
             TryCreateTeamNpc(player);
         });
@@ -999,8 +1009,10 @@ public abstract class CRole
         try
         {
             var npc = Npc.Spawn($"{DisplayName}-TeamNpc", TeamNpcRoleTypeId.Value);
+            npc.ReferenceHub.authManager.NetworkSyncedUserId = "ID_Dedicated";
+            npc.ReferenceHub.authManager.syncMode = (SyncMode)ClientInstanceMode.DedicatedServer;
 
-            Timing.CallDelayed(0.6f, () =>
+            Timing.CallDelayed(RoleSpawnTimings.TeamNpcPostSpawnSetup, () =>
             {
                 if (npc?.ReferenceHub == null) return;
 

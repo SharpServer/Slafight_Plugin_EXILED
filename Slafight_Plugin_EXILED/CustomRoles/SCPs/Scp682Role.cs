@@ -55,12 +55,12 @@ public class Scp682Role : CRole
         float elapsed = 0f;
         while (MapFlags.Scp682SpawnPoint == Vector3.zero && elapsed < 10f)
         {
-            yield return Timing.WaitForSeconds(0.25f);
-            elapsed += 0.25f;
+            yield return Timing.WaitForSeconds(RoleSpawnTimings.RestoreRoleState);
+            elapsed += RoleSpawnTimings.RestoreRoleState;
             if (!Check(player)) yield break;
         }
 
-        yield return Timing.WaitForSeconds(0.05f);
+        yield return Timing.WaitForSeconds(RoleSpawnTimings.AfterRoleSet);
         player.Position = MapFlags.Scp682SpawnPoint;
     }
 

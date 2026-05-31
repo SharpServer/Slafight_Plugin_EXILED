@@ -468,7 +468,7 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
         }
         finally
         {
-            Timing.CallDelayed(0.02f, () => _isDefaultWave = true);
+            Timing.CallDelayed(RoleSpawnTimings.SpawnSystemDefaultWaveReset, () => _isDefaultWave = true);
         }
     }
 

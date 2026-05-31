@@ -161,7 +161,7 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
 
     private static void RoundUnlocker()
     {
-        Timing.CallDelayed(5f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.FirstRolesRoundUnlockFallback, () =>
         {
             Round.IsLocked = false;
         });

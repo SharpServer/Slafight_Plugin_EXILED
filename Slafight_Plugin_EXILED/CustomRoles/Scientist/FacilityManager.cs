@@ -31,7 +31,7 @@ public class FacilityManager : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        Timing.CallDelayed(0.05f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
             player.Position = MapFlags.FacilityManagerSpawnPoint;
         });

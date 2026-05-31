@@ -210,12 +210,12 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
         
         CItem.RebuildHybridStateFor(player);
 
-        Timing.CallDelayed(1f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.CustomRoleRemovalCleanup, () =>
         {
             try
             {
                 if (player.IsConnected)
-                    PlayerHUD.Instance.HintSync(SyncType.PHUD_Specific, string.Empty, player);
+                    PlayerHUD.Instance?.HintSync(SyncType.PHUD_Specific, string.Empty, player);
 
                 RoleSpecificTextProvider.Clear(player);
             }

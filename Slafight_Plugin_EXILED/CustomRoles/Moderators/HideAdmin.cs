@@ -33,7 +33,7 @@ public class HideAdmin : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        Timing.CallDelayed(0.05f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
             player.IsBypassModeEnabled = true;
             player.IsNoclipPermitted = true;

@@ -25,7 +25,7 @@ public class AraOrun : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        Timing.CallDelayed(1f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.AfterSpawnFinalize, () =>
         {
             if (player.Role is Scp079Role scp079Role)
             {

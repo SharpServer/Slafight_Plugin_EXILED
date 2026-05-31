@@ -35,7 +35,7 @@ public class CandyWarrierHalloween : CRole
 
         const int maxHealth = 1000;
 
-        Timing.CallDelayed(0.05f, () =>
+        Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
             player.SetCustomInfo("<color=#EE7600>CANDY WARRIER</color>");
             player.MaxHealth = maxHealth;
@@ -50,7 +50,7 @@ public class CandyWarrierHalloween : CRole
             player.AddItem(ItemType.KeycardO5);
             player.AddItem(ItemType.SCP330);  // 明示的にバッグ追加
 
-            Timing.CallDelayed(0.02f, () =>
+            Timing.CallDelayed(RoleSpawnTimings.NextFrame, () =>
             {
                 if (Scp330Bag.TryGetBag(player.ReferenceHub, out var bag))
                 {
