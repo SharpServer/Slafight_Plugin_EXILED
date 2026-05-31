@@ -1,10 +1,10 @@
 using Exiled.API.Enums;
 
-namespace Slafight_Plugin_EXILED.Hints;
+namespace Slafight_Plugin_EXILED.Extensions;
 
 internal static class RoomNameTranslator
 {
-    public static string TranslateZoneName(ZoneType zone)
+    public static string TranslateZoneName(this ZoneType zone)
     {
         return zone switch
         {
@@ -17,7 +17,7 @@ internal static class RoomNameTranslator
         };
     }
 
-    public static string TranslateZoneNameForShort(ZoneType zone)
+    public static string TranslateZoneNameForShort(this ZoneType zone)
     {
         return zone switch
         {
@@ -30,7 +30,7 @@ internal static class RoomNameTranslator
         };
     }
 
-    public static string TranslateRoomName(RoomType room)
+    public static string TranslateRoomName(this RoomType room)
     {
         return room switch
         {

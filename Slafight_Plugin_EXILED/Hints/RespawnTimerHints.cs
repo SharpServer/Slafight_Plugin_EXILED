@@ -1,6 +1,7 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Extensions;
@@ -8,6 +9,7 @@ using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Utilities;
+using HintServiceMeow.Core.Utilities.Image;
 using MEC;
 using PlayerRoles;
 using Respawning;
@@ -123,6 +125,8 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
         EnsureHint(display, StateHintId, _stateY);
         SetText(display, TimerHintId, BuildTimerText());
         SetText(display, StateHintId, BuildStateText());
+
+        ImageHintPlayer.PlayFile(display, Path.Combine(Plugin.Singleton.Config.AudioReferences, "test.png"));
     }
 
     private void ClearAll()

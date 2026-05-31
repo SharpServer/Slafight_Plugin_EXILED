@@ -476,6 +476,7 @@
         <Compile Include="Extensions\PlayerCItemBaseExtensions.cs" />
         <Compile Include="Extensions\PlayerExtensions.cs" />
         <Compile Include="Extensions\PlayerRoleHelpers.cs" />
+        <Compile Include="Extensions\RoomNameTranslator.cs" />
         <Compile Include="Extensions\RoomSpawner.cs" />
         <Compile Include="Extensions\RoomUtils.cs" />
         <Compile Include="Extensions\RoundUtils.cs" />
@@ -537,7 +538,6 @@
         <Compile Include="Hints\PlayerHUD.cs" />
         <Compile Include="Hints\RespawnTimerHints.cs" />
         <Compile Include="Hints\RoleHintsDictionary.cs" />
-        <Compile Include="Hints\RoomNameTranslator.cs" />
         <Compile Include="Hints\Scp079PingHints.cs" />
         <Compile Include="Hints\ScpStatusHints.cs" />
         <Compile Include="Patches\CandyPatch.cs" />

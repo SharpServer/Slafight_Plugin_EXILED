@@ -94,6 +94,8 @@ public class ScpStatusHints : IBootstrapHandler
             });
         }
 
+        sb.Clear();
+
         result.Add(new Hint()
         {
             Text = "発電機の状態：",
@@ -103,7 +105,47 @@ public class ScpStatusHints : IBootstrapHandler
         });
         foreach (var generator in Generator.List)
         {
-            
+            if (generator is null) continue;
+            float progress = 1f - generator.CurrentTime / generator.ActivationTime;
+            progress = Mathf.Clamp01(progress);
+
+            string color;
+            string statusText;
+
+            if (progress == 0f)
+            {
+                color = "white";
+                statusText = "未起動";
+            }
+            else if (progress < 0.5f)
+            {
+                color = "yellow";
+                statusText = $"進行度: {progress:P0} (起動まで{generator.CurrentTime:F0}秒)";
+            }
+            else if (progress < 0.8f)
+            {
+                color = "orange";
+                statusText = $"進行度: {progress:P0} (起動まで{generator.CurrentTime:F0}秒)";
+            }
+            else if (progress >= 1f)
+            {
+                color = "red";
+                statusText = "起動済み";
+            }
+            else
+            {
+                color = "red";
+                statusText = $"進行度: {progress:P0} (起動まで{generator.CurrentTime:F0}秒)";
+            }
+
+            sb.Append("<color=")
+                .Append(color)
+                .Append("><b>")
+                .Append(generator.Room.Type.TranslateRoomName())
+                .Append(": </b>")
+                .Append(statusText)
+                .Append("</color>")
+                .AppendLine();
         }
         return result;
     }
