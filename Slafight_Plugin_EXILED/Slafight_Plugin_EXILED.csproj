@@ -82,6 +82,7 @@
         </Reference>
         <Reference Include="HintServiceMeow-Exiled">
             <HintPath>$(SL_References)\HintServiceMeow-Exiled.dll</HintPath>
+            <Private>False</Private>
         </Reference>
         <Reference Include="Assembly-CSharp-firstpass">
             <HintPath>$(SL_References)\Assembly-CSharp-firstpass.dll</HintPath>
@@ -580,7 +581,6 @@
             <ExiledDependenciesDir>$(APPDATA)\EXILED\Plugins\dependencies</ExiledDependenciesDir>
         </PropertyGroup>
         <ItemGroup>
-            <ExiledDependencyFiles Include="$(OutputPath)HintServiceMeow-Exiled.dll" Condition="Exists('$(OutputPath)HintServiceMeow-Exiled.dll')" />
             <ExiledDependencyFiles Include="$(OutputPath)LabApi.dll" Condition="Exists('$(OutputPath)LabApi.dll')" />
             <ExiledDependencyFiles Include="$(OutputPath)Microsoft.Bcl.AsyncInterfaces.dll" Condition="Exists('$(OutputPath)Microsoft.Bcl.AsyncInterfaces.dll')" />
             <ExiledDependencyFiles Include="$(OutputPath)Newtonsoft.Json.dll" Condition="Exists('$(OutputPath)Newtonsoft.Json.dll')" />
