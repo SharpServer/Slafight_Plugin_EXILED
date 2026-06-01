@@ -91,7 +91,7 @@ internal sealed class FemurBreakerController
 
         if (!HasCapturedVictim || IsActivated)
         {
-MeowExtensions.ShowHint(             player, "準備が完了していないか、既に実行されています。");
+            player.ShowHint("準備が完了していないか、既に実行されています。");
             return;
         }
 

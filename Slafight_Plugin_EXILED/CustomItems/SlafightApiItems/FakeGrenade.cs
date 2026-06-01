@@ -59,7 +59,7 @@ public class FakeGrenade : CItem
         }
         else
         {
-MeowExtensions.ShowHint(             ev.Player, "<color=red><size=32>不良品だった！！！</size></color>");
+            ev.Player.ShowHint("<color=red><size=32>不良品だった！！！</size></color>");
         }
     }
 }

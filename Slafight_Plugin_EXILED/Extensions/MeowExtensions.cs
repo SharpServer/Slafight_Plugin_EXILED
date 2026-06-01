@@ -9,7 +9,6 @@ namespace Slafight_Plugin_EXILED.Extensions;
 
 public static class MeowExtensions
 {
-    public static void ShowHint(Player? player, string message, float duration = 3f) => player.ShowHsmHint(message, duration);
     public static void ShowHsmHint(
         this Player? player,
         string text,

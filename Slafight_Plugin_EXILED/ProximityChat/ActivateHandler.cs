@@ -15,12 +15,12 @@ public class ActivateHandler
             if (Handler.ActivatedPlayers.Contains(player))
             {
                 Handler.ActivatedPlayers.Remove(player);
-MeowExtensions.ShowHint(                player, "近接チャットが<color=red>無効化</color>されました", 5f);
+                player.ShowHint("近接チャットが<color=red>無効化</color>されました", 5f);
             }
             else
             {
                 Handler.ActivatedPlayers.Add(player);
-MeowExtensions.ShowHint(                player, "近接チャットが<color=green>有効化</color>されました", 5f);
+                player.ShowHint("近接チャットが<color=green>有効化</color>されました", 5f);
             }
         }
     }

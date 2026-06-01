@@ -43,7 +43,7 @@ public static class SpecificFlagsHandler
 
         if (!ev.IsAllowed)
         {
-            MeowExtensions.ShowHint(ev.Player, "<size=18>あなたはこのアイテムを拾うことができません！</size>");
+            ev.Player.ShowHint("<size=18>あなたはこのアイテムを拾うことができません！</size>");
         }
     }
 
@@ -57,7 +57,7 @@ public static class SpecificFlagsHandler
         
         if (!ev.IsAllowed)
         {
-            MeowExtensions.ShowHint(ev.Player, "<size=18>あなたはこのアイテムを捨てることができません！</size>");
+            ev.Player.ShowHint("<size=18>あなたはこのアイテムを捨てることができません！</size>");
         }
     }
 }

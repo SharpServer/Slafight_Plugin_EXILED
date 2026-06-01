@@ -690,7 +690,7 @@ public abstract class CRole
         if (player == null) return;
 
         StopRoleEffectCoroutine(player);
-MeowExtensions.ShowHint(        player, string.Empty);
+        player.ShowHint(string.Empty);
         player.DisableAllEffects();
 
         switch (roleSpawnFlags)

@@ -35,7 +35,7 @@ public class ProximityChatCommand : ICommand
             case "on":
             case "enable":
                 Handler.SetProximityChatForced(target, true);
-MeowExtensions.ShowHint(                target, "近接チャットが<color=green>強制有効化</color>されました", 5f);
+                target.ShowHint("近接チャットが<color=green>強制有効化</color>されました", 5f);
                 response = $"Forced ProximityChat for {target.Nickname}.";
                 return true;
 
@@ -43,7 +43,7 @@ MeowExtensions.ShowHint(                target, "近接チャットが<color=gre
             case "off":
             case "disable":
                 Handler.SetProximityChatForced(target, false);
-MeowExtensions.ShowHint(                target, "近接チャットの<color=yellow>強制有効化</color>を解除しました", 5f);
+                target.ShowHint("近接チャットの<color=yellow>強制有効化</color>を解除しました", 5f);
                 response = $"Removed ProximityChat override for {target.Nickname}.";
                 return true;
 

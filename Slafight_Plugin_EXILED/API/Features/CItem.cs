@@ -305,7 +305,7 @@ public abstract class CItem
     protected virtual void ShowPickedUpMessage(Player player)
     {
         if (player == null) return;
-MeowExtensions.ShowHint(        player, BuildPickedUpMessage(), PickedUpHintDuration);
+            player.ShowHint(BuildPickedUpMessage(), PickedUpHintDuration);
         var captured = player;
         Timing.CallDelayed(PickedUpHintDuration, () =>
         {
@@ -317,7 +317,7 @@ MeowExtensions.ShowHint(        player, BuildPickedUpMessage(), PickedUpHintDura
     protected virtual void ShowSelectedMessage(Player player)
     {
         if (player == null) return;
-MeowExtensions.ShowHint(        player, BuildSelectedMessage(), SelectedHintDuration);
+            player.ShowHint(BuildSelectedMessage(), SelectedHintDuration);
         var captured = player;
         Timing.CallDelayed(SelectedHintDuration, () =>
         {
@@ -869,7 +869,7 @@ MeowExtensions.ShowHint(        player, BuildSelectedMessage(), SelectedHintDura
         if (oldItem != null
             && SerialToItem.ContainsKey(oldItem.Serial))
         {
-            try { MeowExtensions.ShowHint(ev.Player, string.Empty, 0.1f); }
+            try { ev.Player.ShowHint(string.Empty, 0.1f); }
             catch (Exception e) { Log.Error($"CItem.ChangingItem(clearHint): {e}"); }
         }
 

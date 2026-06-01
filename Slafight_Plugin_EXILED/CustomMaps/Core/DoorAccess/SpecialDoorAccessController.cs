@@ -89,7 +89,7 @@ internal sealed class SpecialDoorAccessController(float positionToleranceSq)
 
         ev.IsAllowed = rule.CanOpen(ev.Player);
         if (!ev.IsAllowed)
-MeowExtensions.ShowHint(            ev.Player, rule.HintMessage);
+            ev.Player.ShowHint(rule.HintMessage);
     }
 
     public void Clear()

@@ -123,7 +123,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
                 {
                     player.Position = MapFlags.PocketDimensionExitKingJoinPoint;
                     player.AddAbility(new AllowEscapeAbility(player));
-MeowExtensions.ShowHint(                    player, "アビリティ「腐蝕からの解放」が付与されました。\n人間を釈放したくなったら使ってください\nまた、近接チャットも一時的に利用可能です！");
+                    player.ShowHint("アビリティ「腐蝕からの解放」が付与されました。\n人間を釈放したくなったら使ってください\nまた、近接チャットも一時的に利用可能です！");
                     Handler.CanUsePlayers.Add(player);
                 }
             }

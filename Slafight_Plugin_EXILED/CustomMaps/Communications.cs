@@ -43,7 +43,7 @@ public static class Communications
             SetupText();
 
             MonitorText = $"<size=10>{MonitorTexts.RandomItem()}</size>";
-            InteractableToy?.Base.OnSearched += p => MeowExtensions.ShowHint(Player.Get(p), "[アクセス拒否]", 10f);
+            InteractableToy?.Base.OnSearched += p => Player.Get(p).ShowHint("[アクセス拒否]", 10f);
         });
     }
     

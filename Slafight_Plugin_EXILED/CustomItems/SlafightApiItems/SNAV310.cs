@@ -54,7 +54,7 @@ public class SNAV310 : CItem
     {
         if (!Check(ev.Item)) return;
         _mode = ev.NewValue;
-MeowExtensions.ShowHint(        ev.Player, SnavCommon.RangeHint(ev.NewValue));
+        ev.Player.ShowHint(SnavCommon.RangeHint(ev.NewValue));
     }
 
     protected override void OnDropping(DroppingItemEventArgs ev)
@@ -64,6 +64,6 @@ MeowExtensions.ShowHint(        ev.Player, SnavCommon.RangeHint(ev.NewValue));
 
         ev.IsAllowed = false;
         var detected = SnavCommon.DetectRooms(ev.Player.Position, _mode, Targets);
-MeowExtensions.ShowHint(        ev.Player, SnavCommon.RoomsHint(_mode, detected, ev.Player.Position), 10f);
+        ev.Player.ShowHint(SnavCommon.RoomsHint(_mode, detected, ev.Player.Position), 10f);
     }
 }

@@ -159,8 +159,7 @@ public class DevToolFunctionHandler
             startedPlayer.TryAddCustomItem(1000);
             startedPlayer.IsGodModeEnabled = true;
             startedPlayer.Position = new Vector3(39.48081f, 314.1123f, -32.159f);
-MeowExtensions.ShowHint(            startedPlayer, 
-                "デバッグラウンドを開始しました！\n" +
+            startedPlayer.ShowHint("デバッグラウンドを開始しました！\n" +
                 "あなたはデバッグツールが使用可能です！\n" +
                 "コイン - 現在の座標・部屋を取得できます\n" +
                 "ドア操作時 - ドアの名前等が分かります\n" +

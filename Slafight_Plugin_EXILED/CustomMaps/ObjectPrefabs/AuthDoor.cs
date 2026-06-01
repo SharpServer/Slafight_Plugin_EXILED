@@ -101,7 +101,7 @@ public class AuthDoor : ObjectPrefab
         else
         {
             player.PlayKeycardInteractSound(false);
-MeowExtensions.ShowHint(            player, "<size=24>権限が足りないようだ</size>");
+            player.ShowHint("<size=24>権限が足りないようだ</size>");
         }
     }
 

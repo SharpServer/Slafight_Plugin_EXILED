@@ -177,8 +177,7 @@ public abstract class CItemHybrid : CItem
 
         if (ShowModeSwitchHint)
         {
-MeowExtensions.ShowHint(            player, 
-                $"<size=24>モード切替: {nextSub.ModeName.OrDefault(nextSub.TargetItem.DisplayName)}</size>\n" +
+            player.ShowHint($"<size=24>モード切替: {nextSub.ModeName.OrDefault(nextSub.TargetItem.DisplayName)}</size>\n" +
                 $"<size=23>{nextSub.ModeDescription.OrDefault(nextSub.TargetItem.Description)}</size>",
                 2f);
         }

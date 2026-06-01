@@ -33,7 +33,7 @@ public class AlphaWarheadOverride : AbilityBase
         {
             player.RemoveAbility<AlphaWarheadOverride>();
             player.AddAbility<AlphaWarheadOverride>();
-MeowExtensions.ShowHint(            player, "※実行に失敗しました", 3f);
+            player.ShowHint("※実行に失敗しました", 3f);
             return;
         }
         FacilityLightHandler.OnWarhead(new StartingEventArgs(null, false, true));

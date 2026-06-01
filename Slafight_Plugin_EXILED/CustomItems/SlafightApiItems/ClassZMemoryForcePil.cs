@@ -24,7 +24,7 @@ public class ClassZMemoryForcePil : CItem
         if (ev.Player == null) return;
         if (!ev.Player.HasFlag(SpecificFlagType.AntiMemeEffectDisabled)) return;
         ev.IsAllowed = false;
-MeowExtensions.ShowHint(        ev.Player, "既に耐性を得ている為、使用できません。");
+        ev.Player.ShowHint("既に耐性を得ている為、使用できません。");
     }
 
     protected override void OnUsed(UsedItemEventArgs ev)

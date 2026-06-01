@@ -83,14 +83,14 @@ public class VoiceRecordingCommand : ICommand
             duration,
             [VoiceChatChannel.Proximity, VoiceChatChannel.ScpChat, VoiceChatChannel.Radio]);
 
-        MeowExtensions.ShowHint(executor, $"<color=red>● 録音中</color>\n<size=24>{key} / {duration:0.#}秒 / 半径{radius:0.#}m</size>", duration);
+        executor.ShowHint($"<color=red>● 録音中</color>\n<size=24>{key} / {duration:0.#}秒 / 半径{radius:0.#}m</size>", duration);
         Timing.CallDelayed(duration + 0.05f, () =>
         {
             if (executor == null || !executor.IsConnected)
                 return;
 
             if (VoiceRecordingApi.TryGetRecording(key, out var recording) && !VoiceRecordingApi.IsRecording(key))
-                MeowExtensions.ShowHint(executor, $"<color=green>録音完了！</color>\n<size=24>{key}: {recording.FrameCount} frames / {recording.DurationSeconds:0.##}s</size>", 5f);
+                executor.ShowHint($"<color=green>録音完了！</color>\n<size=24>{key}: {recording.FrameCount} frames / {recording.DurationSeconds:0.##}s</size>", 5f);
         });
 
         response = $"Recording started: key={key}, radius={radius:0.##}, duration={duration:0.##}s";
@@ -107,7 +107,7 @@ public class VoiceRecordingCommand : ICommand
         }
 
         VoiceRecordingApi.TryGetRecording(key, out var recording);
-MeowExtensions.ShowHint(        executor, $"<color=green>録音完了！</color>\n<size=24>{key}: {recording?.FrameCount ?? 0} frames</size>", 5f);
+        executor.ShowHint($"<color=green>録音完了！</color>\n<size=24>{key}: {recording?.FrameCount ?? 0} frames</size>", 5f);
         response = $"Recording stopped: {key}. Frames={recording?.FrameCount ?? 0}, Duration={recording?.DurationSeconds ?? 0f:0.##}s";
         return true;
     }
@@ -130,7 +130,7 @@ MeowExtensions.ShowHint(        executor, $"<color=green>録音完了！</color>
         }
 
         VoiceRecordingApi.Play(key, executor.Position, maxDistance: maxDistance);
-MeowExtensions.ShowHint(        executor, $"<color=yellow>録音再生中</color>\n<size=24>{key}</size>", Mathf.Max(2f, recording.DurationSeconds + 1f));
+        executor.ShowHint($"<color=yellow>録音再生中</color>\n<size=24>{key}</size>", Mathf.Max(2f, recording.DurationSeconds + 1f));
         response = $"Playing recording: {key}. Frames={recording.FrameCount}, Duration={recording.DurationSeconds:0.##}s, Hash={recording.Hash}";
         return true;
     }

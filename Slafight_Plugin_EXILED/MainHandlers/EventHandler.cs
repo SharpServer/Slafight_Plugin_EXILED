@@ -156,7 +156,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
             candidate.SetRole(roleInfo.Custom);
         }
 
-MeowExtensions.ShowHint(        candidate, "※SCPプレイヤーが切断したため代わりにスポーンしました");
+        candidate.ShowHint("※SCPプレイヤーが切断したため代わりにスポーンしました");
     }
 
     public static void SyncSpecialEvent()
@@ -232,7 +232,7 @@ MeowExtensions.ShowHint(        candidate, "※SCPプレイヤーが切断した
         foreach (var player in Player.List.ToList().Where(IsPlayerValid))
         {
             ClearLobbyInfoHint(player);
-MeowExtensions.ShowHint(            player, "");
+            player.ShowHint("");
             player.InitPlayerFlags();
         }
 
@@ -409,7 +409,7 @@ MeowExtensions.ShowHint(            player, "");
             {
                 if (ev.Door.IsLocked && SpecialEventsHandler.Instance.NowEvent == SpecialEventType.None)
                 {
-                    MeowExtensions.ShowHint(ev.Player, "収容違反への対応として暫くロックされているようだ・・・");
+                    ev.Player.ShowHint("収容違反への対応として暫くロックされているようだ・・・");
                 }
             }
         }

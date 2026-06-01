@@ -852,7 +852,7 @@ public static class Scp914Changes
                     Handler.CanUsePlayers.Add(ev.Player);
                 if (!Handler.ActivatedPlayers.Contains(ev.Player))
                     Handler.ActivatedPlayers.Add(ev.Player);
-MeowExtensions.ShowHint(                ev.Player, "<size=24>体が魔改造されていく・・・！</size>");
+                ev.Player.ShowHint("<size=24>体が魔改造されていく・・・！</size>");
             }
         });
     }

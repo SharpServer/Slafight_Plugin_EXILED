@@ -102,7 +102,7 @@ public static class Scp012_033
         {
             ev.IsAllowed = false;
             ev.Radio.IsEnabled = false;
-MeowExtensions.ShowHint(             ev.Player, "...?", 1.5f);
+            ev.Player.ShowHint("...?", 1.5f);
         }
     }
 

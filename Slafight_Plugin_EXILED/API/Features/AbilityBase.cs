@@ -365,8 +365,7 @@ public abstract class AbilityBase
             loadout.Slots[loadout.ActiveIndex] == this)
         {
             var abilityName = GetType().Name;
-MeowExtensions.ShowHint(            player, 
-                $"<color=yellow>{abilityName} のクールダウンが終了しました。</color>",
+            player.ShowHint($"<color=yellow>{abilityName} のクールダウンが終了しました。</color>",
                 3f);
         }
     }
