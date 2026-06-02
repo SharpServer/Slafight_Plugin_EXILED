@@ -135,6 +135,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
         if (ev?.Player == null) return;
         DebugModeHandler.RemovePlayer(ev.Player);
         RPNameSetter.Clear(ev.Player);
+        EffectFakeSyncProvider.RemovePlayer(ev.Player);
 
         if (ev.Player.GetTeam() != CTeam.SCPs || ev.Player.IsVanillaOrCustom(RoleTypeId.Scp0492, CRoleTypeId.Zombified)) return;
         if (Round.ElapsedTime.TotalSeconds > 179) return;
@@ -219,6 +220,8 @@ public class EventHandler : IBootstrapHandler, IDisposable
 
     private void OnRoundRestarted()
     {
+        EffectFakeSyncProvider.DisableAll();
+
         Timing.CallDelayed(0.1f, () =>
         {
             DeadmanDisable = false;
@@ -228,6 +231,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
 
     private static void OnRoundStarted()
     {
+        EffectFakeSyncProvider.DisableAll();
         SpecificFlagsManager.ClearAll();
         foreach (var player in Player.List.ToList().Where(IsPlayerValid))
         {
@@ -320,10 +324,14 @@ public class EventHandler : IBootstrapHandler, IDisposable
     private void OnChangingRole(ChangingRoleEventArgs ev)
     {
         if (ev.Player is null) return;
+        EffectFakeSyncProvider.Disable(ev.Player);
+
         Timing.CallDelayed(1.05f, () =>
         {
             if (!IsPlayerValid(ev.Player)) return;
             if (!Round.InProgress) return;
+            ConfigureScpTeamAnomalousTarget(ev.Player);
+
             RoleTypeId role = ev.Player.Role;
             var allowed = role.GetTeam();
             if (allowed == Team.SCPs) return;
@@ -350,6 +358,26 @@ public class EventHandler : IBootstrapHandler, IDisposable
                 ev.Player.GiveOrDrop(ItemType.Flashlight);
             }
         });
+    }
+
+    private static void ConfigureScpTeamAnomalousTarget(Player player)
+    {
+        if (!IsPlayerValid(player)) return;
+
+        if (!player.IsAlive || player.GetTeam() != CTeam.SCPs)
+        {
+            EffectFakeSyncProvider.Disable(player, EffectType.AnomalousTarget);
+            EffectFakeSyncProvider.RefreshAll();
+            return;
+        }
+
+        EffectFakeSyncProvider.SetTargetRule(
+            player,
+            EffectType.AnomalousTarget,
+            target => IsPlayerValid(target) &&
+                      target.IsAlive &&
+                      target.GetTeam() == CTeam.SCPs);
+        EffectFakeSyncProvider.RefreshAll();
     }
 
     private void DeadmanCancel(DeadmanSwitchInitiatingEventArgs? ev)

@@ -187,6 +187,7 @@
         <Compile Include="API\Features\AbilityManager.cs" />
         <Compile Include="API\Features\AbilityParseHelper.cs" />
         <Compile Include="API\Features\CassieHelper.cs" />
+        <Compile Include="API\Features\EffectFakeSyncProvider.cs" />
         <Compile Include="API\Features\EventSubscriptionScope.cs" />
         <Compile Include="API\Features\CItem.cs" />
         <Compile Include="API\Features\CItemHybrid.cs" />
