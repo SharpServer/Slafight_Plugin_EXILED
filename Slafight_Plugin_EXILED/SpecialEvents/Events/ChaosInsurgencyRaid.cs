@@ -254,7 +254,10 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
             var scps = Player.List.Where(p => p.GetTeam() == CTeam.SCPs && p.IsAlive).ToList();
             foreach (var scp in scps)
             {
-                scp.CurrentRoom.SetRoomColorForTargetOnly(scp, new Color32(255, 255, 255, 255));
+                foreach(var Rooms in Room.List)
+                {
+                   Rooms.SetRoomColorForTargetOnly(scp, new Color32(255, 255, 255, 255));
+                }   
             }
             yield return Timing.WaitForOneFrame;
         }
