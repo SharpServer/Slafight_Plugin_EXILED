@@ -255,24 +255,14 @@ public class EventHandler : IBootstrapHandler, IDisposable
             {
                 if (SpecialEventsHandler.Instance.NowEvent == SpecialEventType.OmegaWarhead)
                 {
-                    Timing.CallDelayed(3.15f, () =>
-                    {
-                        SpeakerApi.Play("Cassie_2.ogg", "Cassie", Vector3.zero, maxDistance: float.MaxValue, isSpatial: false);
-
-                    });
                     Exiled.API.Features.Cassie.MessageTranslated(
-                        ". . . . . . . . . . .",
+                        "Emergency , emergency , A large containment breach is currently started within the site. All personnel must immediately begin evacuation .",
                         "緊急、緊急、現在大規模な収容違反がサイト内で発生しています。全職員は警備隊の指示に従い、避難を開始してください。", true);
                 }
                 else
                 {
-                    Timing.CallDelayed(3.15f, () =>
-                    {
-                        SpeakerApi.Play("Cassie_1.ogg", "Cassie", Vector3.zero, maxDistance: float.MaxValue, isSpatial: false);
-                        
-                    });
                     Exiled.API.Features.Cassie.MessageTranslated(
-                        ". . . . . . . . . . .",
+                        "Attention, All personnel . Detected containment breach is currently started within the site. All personnel must immediately begin evacuation .",
                         "全職員へ通達。収容違反の発生を確認しました。全職員は警備隊の指示に従い、避難を開始してください。", true);
                 }
                 foreach (var room in Room.List)
