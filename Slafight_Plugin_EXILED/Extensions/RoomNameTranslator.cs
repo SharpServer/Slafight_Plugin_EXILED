@@ -89,7 +89,7 @@ internal static class RoomNameTranslator
             RoomType.EzChef => "直線通路",
             RoomType.EzStraightColumn => "直線通路",
             RoomType.EzCheckpointHallwayB => "チェックポイントB-H",
-            RoomType.HczDss08 => "DSS-08 アクロマティック・アベ―トメント",
+            RoomType.HczDss08 => "DSS-08 玄妙除却室",
             RoomType.HczCornerDeep => "曲がり角",
             RoomType.HczIntersectionJunk => "三叉路",
             RoomType.HczIntersection => "三叉路",

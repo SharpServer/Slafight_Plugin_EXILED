@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Extensions;
@@ -14,6 +13,14 @@ namespace Slafight_Plugin_EXILED.Changes;
 
 public static class FacilityLightHandler
 {
+    private const byte NightVisionIntensity = 255;
+    private const float NightVisionDuration = 2.5f;
+    private const float NightVisionRefreshInterval = 1.5f;
+
+    private static readonly HashSet<Player> ForceNightVisionPlayers = [];
+    private static readonly HashSet<CTeam> ForceNightVisionTeams = [];
+    private static CoroutineHandle ForceNightVisionCoroutineHandle;
+
     public static void Register()
     {
         Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
@@ -30,13 +37,10 @@ public static class FacilityLightHandler
         Exiled.Events.Handlers.Warhead.Stopping -= OnStopping;
     }
 
-    public static Dictionary<Player, bool> ForceNightVisionDictionary = [];
-    private static CoroutineHandle ForceNightVisionCoroutineHandle;
-
     private static void OnWaitingForPlayers()
     {
         Timing.KillCoroutines(ForceNightVisionCoroutineHandle);
-        ForceNightVisionDictionary.Clear();
+        ClearForcedNightVision();
     }
     
     private static void OnRoundStarted()
@@ -97,13 +101,35 @@ public static class FacilityLightHandler
         InitLight();
     }
 
-    public static void SetNightVisionTargetStateForTeam(this CTeam targetTeam, bool isEnable)
+    public static void SetNightVisionTargetState(this Player targetPlayer, bool isEnabled)
     {
-        foreach (var player in Player.List)
-        {
-            if (player?.GetTeam() != targetTeam || !player.IsAlive) continue;
-            ForceNightVisionDictionary[player] = isEnable;
-        }
+        if (targetPlayer == null)
+            return;
+
+        if (isEnabled)
+            ForceNightVisionPlayers.Add(targetPlayer);
+        else
+            ForceNightVisionPlayers.Remove(targetPlayer);
+    }
+
+    public static void SetNightVisionTargetStateForTeam(this CTeam targetTeam, bool isEnabled)
+    {
+        if (isEnabled)
+            ForceNightVisionTeams.Add(targetTeam);
+        else
+            ForceNightVisionTeams.Remove(targetTeam);
+    }
+
+    public static bool IsNightVisionForced(this Player player)
+    {
+        return player != null &&
+               (ForceNightVisionPlayers.Contains(player) || ForceNightVisionTeams.Contains(player.GetTeam()));
+    }
+
+    public static void ClearForcedNightVision()
+    {
+        ForceNightVisionPlayers.Clear();
+        ForceNightVisionTeams.Clear();
     }
     
     private static IEnumerator<float> ForceNightVisionCoroutine()
@@ -111,12 +137,16 @@ public static class FacilityLightHandler
         while (true)
         {
             if (Round.IsLobby) yield break;
-            var players = Player.List.Where(p => ForceNightVisionDictionary[p] && p.IsAlive).ToList();
-            foreach (var player in players)
+
+            foreach (var player in Player.List)
             {
-                player.EnableEffect<NightVision>(255);
+                if (!player.IsAlive || !player.IsNightVisionForced())
+                    continue;
+
+                player.EnableEffect<NightVision>(NightVisionIntensity, NightVisionDuration);
             }
-            yield return Timing.WaitForOneFrame;
+
+            yield return Timing.WaitForSeconds(NightVisionRefreshInterval);
         }
     }
 }

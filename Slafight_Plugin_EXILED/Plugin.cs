@@ -34,7 +34,7 @@ public class Plugin : Plugin<Config>
     public override string Prefix => "Slafight_Plugin_EXILED";
     public override Version Version => new(1, 8, 0, 6);
         
-    public override Version RequiredExiledVersion { get; } = new(9, 13, 3);
+    public override Version RequiredExiledVersion { get; } = new(9, 14, 2);
 
     public Harmony HarmonyInstance { get; private set; }
     // Enable & Disable
