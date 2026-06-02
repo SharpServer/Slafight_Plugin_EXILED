@@ -1,20 +1,22 @@
+using System.Collections.Generic;
+using System.Linq;
+using CustomPlayerEffects;
 using Exiled.API.Enums;
+using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Warhead;
 using MEC;
+using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.Changes;
 
 public static class FacilityLightHandler
 {
-    public struct RoomColorData
-    {
-        public string ColorCode;
-    }
-    
     public static void Register()
     {
+        Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
         Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
         Exiled.Events.Handlers.Warhead.Starting += OnWarhead;
         Exiled.Events.Handlers.Warhead.Stopping += OnStopping;
@@ -22,13 +24,24 @@ public static class FacilityLightHandler
 
     public static void Unregister()
     {
+        Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
         Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
         Exiled.Events.Handlers.Warhead.Starting -= OnWarhead;
         Exiled.Events.Handlers.Warhead.Stopping -= OnStopping;
     }
 
+    public static Dictionary<Player, bool> ForceNightVisionDictionary = [];
+    private static CoroutineHandle ForceNightVisionCoroutineHandle;
+
+    private static void OnWaitingForPlayers()
+    {
+        Timing.KillCoroutines(ForceNightVisionCoroutineHandle);
+        ForceNightVisionDictionary.Clear();
+    }
+    
     private static void OnRoundStarted()
     {
+        ForceNightVisionCoroutineHandle = Timing.RunCoroutine(ForceNightVisionCoroutine());
         Timing.CallDelayed(0.5f, InitLight);
     }
 
@@ -82,5 +95,28 @@ public static class FacilityLightHandler
     {
         if (!ev.IsAllowed) return;
         InitLight();
+    }
+
+    public static void SetNightVisionTargetStateForTeam(this CTeam targetTeam, bool isEnable)
+    {
+        foreach (var player in Player.List)
+        {
+            if (player?.GetTeam() != targetTeam || !player.IsAlive) continue;
+            ForceNightVisionDictionary[player] = isEnable;
+        }
+    }
+    
+    private static IEnumerator<float> ForceNightVisionCoroutine()
+    {
+        while (true)
+        {
+            if (Round.IsLobby) yield break;
+            var players = Player.List.Where(p => ForceNightVisionDictionary[p] && p.IsAlive).ToList();
+            foreach (var player in players)
+            {
+                player.EnableEffect<NightVision>(255);
+            }
+            yield return Timing.WaitForOneFrame;
+        }
     }
 }

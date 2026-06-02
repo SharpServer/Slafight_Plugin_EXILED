@@ -104,6 +104,8 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
 
         foreach (var room in Room.List)
             room.Color = new Color(55 / 255f, 55 / 255f, 55 / 255f);
+        
+        CTeam.SCPs.SetNightVisionTargetStateForTeam(true);
 
 
         yield return Timing.WaitForSeconds(8f);
@@ -181,6 +183,8 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
             room.AreLightsOff = false;
             room.Color = new Color32(255, 0, 0, 255);
         }
+        
+        CTeam.SCPs.SetNightVisionTargetStateForTeam(false);
 
         foreach (var door in Door.List)
         {
@@ -245,23 +249,6 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
     }
 
     // ===== コルーチン =====
-    private IEnumerator<float> SetRoomColorForScps()
-    {
-
-        while (true)
-        {
-            if (!Round.IsEnded) yield break;
-            var scps = Player.List.Where(p => p.GetTeam() == CTeam.SCPs && p.IsAlive).ToList();
-            foreach (var scp in scps)
-            {
-                foreach(var Rooms in Room.List)
-                {
-                   Rooms.SetRoomColorForTargetOnly(scp, new Color32(255, 255, 255, 255));
-                }   
-            }
-            yield return Timing.WaitForOneFrame;
-        }
-    }
     private IEnumerator<float> NukeDownCoroutine(SchematicObject schem)
     {
         if (schem == null || schem.transform == null)
