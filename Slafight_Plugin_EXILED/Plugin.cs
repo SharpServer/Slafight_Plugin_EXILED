@@ -113,7 +113,6 @@ public class Plugin : Plugin<Config>
 
         NetworkVisibilityManager.Unregister();
         NvgManager.Unregister();
-        SpecificFlagsHandler.Unregister();
             
         WearsHandler.Unregister();
         CRole.UnregisterAllEvents();
