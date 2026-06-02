@@ -1,7 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using Exiled.API.Enums;
+using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
 using Exiled.Events.EventArgs.Player;
@@ -17,6 +15,9 @@ using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.Extensions;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
@@ -103,6 +104,7 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
 
         foreach (var room in Room.List)
             room.Color = new Color(55 / 255f, 55 / 255f, 55 / 255f);
+
 
         yield return Timing.WaitForSeconds(8f);
         if (CancelIfOutdated()) yield break;
@@ -243,6 +245,20 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
     }
 
     // ===== コルーチン =====
+    private IEnumerator<float> SetRoomColorForScps()
+    {
+
+        while (true)
+        {
+            if (!Round.IsEnded) yield break;
+            var scps = Player.List.Where(p => p.GetTeam() == CTeam.SCPs && p.IsAlive).ToList();
+            foreach (var scp in scps)
+            {
+                scp.CurrentRoom.SetRoomColorForTargetOnly(scp, new Color32(255, 255, 255, 255));
+            }
+            yield return Timing.WaitForOneFrame;
+        }
+    }
     private IEnumerator<float> NukeDownCoroutine(SchematicObject schem)
     {
         if (schem == null || schem.transform == null)
