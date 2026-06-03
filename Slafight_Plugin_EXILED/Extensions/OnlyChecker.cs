@@ -39,8 +39,8 @@ public static class OnlyChecker
 
             if (player.Role.Type == RoleTypeId.Tutorial && player.GetCustomRole() == CRoleTypeId.None) continue;
             if (team == CTeam.Fifthists && player.GetCustomRole() == CRoleTypeId.Scp3005) continue;
-            if (team == CTeam.Others && specificTrigger == "snow" && player.GetCustomRole() == CRoleTypeId.SnowWarrier) continue;
-            if (team == CTeam.Others && specificTrigger == "candy" && player.IsCandyWarrier()) continue;
+            if (team == CTeam.Others && specificTrigger == "snow" && player.GetCustomRole() == CRoleTypeId.SnowWarrior) continue;
+            if (team == CTeam.Others && specificTrigger == "candy" && player.IsCandyWarrior()) continue;
             if (team == CTeam.GoC && specificTrigger == "humanity" && player.IsHumanitist()) continue;
             if (team == CTeam.FoundationForces && specificTrigger == "nohumanity" && !player.IsHumanitist()) continue;
             if (player.GetCustomRole() == CRoleTypeId.Scp999) continue;

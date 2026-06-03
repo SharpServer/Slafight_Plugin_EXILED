@@ -220,10 +220,10 @@ public static class StaticUtils
         return player.GetTeam() != CTeam.FoundationForces && player.GetTeam() != CTeam.Guards;
     }
 
-    public static bool IsCandyWarrier(this Player? player)
+    public static bool IsCandyWarrior(this Player? player)
     {
         if (player == null) return false;
-        return player.GetCustomRole() is CRoleTypeId.CandyWarrierApril or CRoleTypeId.CandyWarrierHalloween;
+        return player.GetCustomRole() is CRoleTypeId.CandyWarriorApril or CRoleTypeId.CandyWarriorHalloween;
     }
 
     public static uint GetNetId(this Player? player)

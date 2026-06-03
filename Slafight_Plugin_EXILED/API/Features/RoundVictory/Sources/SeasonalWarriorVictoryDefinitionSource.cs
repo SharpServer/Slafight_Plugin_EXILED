@@ -5,7 +5,7 @@ using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.API.Features.RoundVictory.Sources;
 
-public sealed class SeasonalWarrierVictoryDefinitionSource : RoundVictoryDefinitionSource
+public sealed class SeasonalWarriorVictoryDefinitionSource : RoundVictoryDefinitionSource
 {
     public override bool IsEnabled(RoundVictoryContext context) =>
         context.ActiveEvent is not SpecialEventType.FacilityTermination;
@@ -15,18 +15,18 @@ public sealed class SeasonalWarrierVictoryDefinitionSource : RoundVictoryDefinit
         yield return RoundVictoryRule.ForCustomRoles(
             CTeam.Others,
             priority: 20,
-            customRoles: [CRoleTypeId.SnowWarrier],
-            debugName: "SnowWarrierWin",
-            specificReason: RoundEndReasons.SnowWarrierWin,
+            customRoles: [CRoleTypeId.SnowWarrior],
+            debugName: "SnowWarriorWin",
+            specificReason: RoundEndReasons.SnowWarriorWin,
             requiresVanillaEndLock: true,
             isEnabled: context => context.Season == SeasonTypeId.Christmas).ToGroup();
 
         yield return RoundVictoryRule.ForPredicate(
-            "CandyWarrierWin",
+            "CandyWarriorWin",
             CTeam.Others,
-            player => player.IsCandyWarrier(),
+            player => player.IsCandyWarrior(),
             priority: 20,
-            specificReason: RoundEndReasons.CandyWarrierWin,
+            specificReason: RoundEndReasons.CandyWarriorWin,
             requiresVanillaEndLock: true,
             isEnabled: context => context.Season is SeasonTypeId.April or SeasonTypeId.Halloween).ToGroup();
     }

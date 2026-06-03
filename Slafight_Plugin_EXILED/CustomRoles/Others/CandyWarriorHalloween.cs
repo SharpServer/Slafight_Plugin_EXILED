@@ -11,13 +11,13 @@ using Slafight_Plugin_EXILED.MainHandlers;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.Others;
 
-public class CandyWarrierApril : CRole
+public class CandyWarriorHalloween : CRole
 {
-    protected override string RoleName { get; set; } = "<color=#FF96DE>CANDY WARRIER</color>";
-    protected override string Description { get; set; } = "非常に<color=#FF96DE>お菓子的</color>である。そうは思わんかね？";
-    protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.CandyWarrierApril;
+    protected override string RoleName { get; set; } = "<color=#EE7600>CANDY WARRIOR</color>";
+    protected override string Description { get; set; } = "非常に<color=#EE7600>お菓子的</color>である。そうは思わんかね？";
+    protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.CandyWarriorHalloween;
     protected override CTeam Team { get; set; } = CTeam.Others;
-    protected override string UniqueRoleKey { get; set; } = "CandyWarrierApril";
+    protected override string UniqueRoleKey { get; set; } = "CandyWarriorHalloween";
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosRifleman;
     protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
     [
@@ -37,7 +37,7 @@ public class CandyWarrierApril : CRole
 
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
-            player.SetCustomInfo("<color=#FF96DE>CANDY WARRIER</color>");
+            player.SetCustomInfo("<color=#EE7600>CANDY WARRIOR</color>");
             player.MaxHealth = maxHealth;
             player.Health = maxHealth;
 
@@ -55,14 +55,22 @@ public class CandyWarrierApril : CRole
                 if (Scp330Bag.TryGetBag(player.ReferenceHub, out var bag))
                 {
                     bag.Candies.Clear();
+                    var rareCandies = new List<CandyKindID>
+                    {
+                        CandyKindID.Black,
+                        CandyKindID.Brown,
+                        CandyKindID.Gray,
+                        CandyKindID.Orange,
+                        CandyKindID.White,
+                    };
                     for (int i = 0; i < 6; i++)
-                        bag.TryAddSpecific(CandyKindID.Pink);
+                        bag.TryAddSpecific(rareCandies.RandomItem());
                     bag.ServerRefreshBag();
                 }
             });
 
             player.SetAmmo(AmmoType.Nato9, 50);
-            LabApiHandler.SchemCandyWarrier(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
+            LabApiHandler.SchemCandyWarrior(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
         });
     }
 }

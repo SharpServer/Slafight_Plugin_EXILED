@@ -14,7 +14,7 @@ public static class UnitPackBootstrap
         FacilityTerminationPacks.Register();
         MtfSeeNoEvilUnitPacks.Register();
         MtfCoreForceUnitPacks.Register();
-        SnowWarriersPacks.Register();
+        SnowWarriorsPacks.Register();
     }
 
     public static void UnregisterAllPacks()

@@ -102,9 +102,9 @@ public enum CRoleTypeId
     GoCHoundDog,
     
     // ==== Others ==== //
-    SnowWarrier,
-    CandyWarrierApril,
-    CandyWarrierHalloween,
+    SnowWarrior,
+    CandyWarriorApril,
+    CandyWarriorHalloween,
     Zombified,
     Sculpture,
     SergeyMakarov,

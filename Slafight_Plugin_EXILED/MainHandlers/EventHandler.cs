@@ -289,8 +289,8 @@ public class EventHandler : IBootstrapHandler, IDisposable
                 {
                     List<SpecialEventType> a = [
                         SpecialEventType.NuclearAttack,
-                        SpecialEventType.SnowWarriersAttack,
-                        SpecialEventType.CandyWarriersAttack,
+                        SpecialEventType.SnowWarriorsAttack,
+                        SpecialEventType.CandyWarriorsAttack,
                         SpecialEventType.FacilityTermination,
                         SpecialEventType.SergeyMakarovReturns
                     ];

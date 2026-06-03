@@ -21,13 +21,13 @@ public class SpecialEventWeightContext
         [SpecialEventType.NuclearAttack]         = 10,
         [SpecialEventType.ClassicEvent]          = 0,
         [SpecialEventType.OperationBlackout]     = 0,
-        [SpecialEventType.SnowWarriersAttack]    = 10,
+        [SpecialEventType.SnowWarriorsAttack]    = 10,
         [SpecialEventType.FacilityTermination]   = 4,
         [SpecialEventType.RevolverBattles]       = 0,
         [SpecialEventType.SergeyMakarovReturns]  = 66,
         [SpecialEventType.SpeedUpEvent]          = 6,
         [SpecialEventType.DailyFoundation]       = 0,
-        [SpecialEventType.CandyWarriersAttack]   = 10,
+        [SpecialEventType.CandyWarriorsAttack]   = 10,
         [SpecialEventType.CaseColourlessGreen]   = 10,
     };
 

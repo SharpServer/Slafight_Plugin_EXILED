@@ -18,12 +18,12 @@ public static class RoundEndReasons
     /// <summary>
     /// 雪の戦士達の勝利。
     /// </summary>
-    public const string SnowWarrierWin = "SW_WIN";
+    public const string SnowWarriorWin = "SW_WIN";
 
     /// <summary>
     /// お菓子の戦士達の勝利。
     /// </summary>
-    public const string CandyWarrierWin = "CANDY_WIN";
+    public const string CandyWarriorWin = "CANDY_WIN";
 
     /// <summary>
     /// FacilityTermination で人類側が勝利した場合。

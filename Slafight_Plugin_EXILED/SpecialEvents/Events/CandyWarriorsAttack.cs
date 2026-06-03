@@ -18,12 +18,12 @@ using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
-public class CandyWarriersAttackEvent : SpecialEvent
+public class CandyWarriorsAttackEvent : SpecialEvent
 {
     // ===== メタ情報 =====
-    public override SpecialEventType EventType => SpecialEventType.CandyWarriersAttack;
+    public override SpecialEventType EventType => SpecialEventType.CandyWarriorsAttack;
     public override int MinPlayersRequired => 5;
-    public override string LocalizedName => "Candy Warriers Raid";
+    public override string LocalizedName => "Candy Warriors Raid";
     public override string TriggerRequirement => "5人以上のプレイヤー";
 
     // ===== 内部状態 =====
@@ -79,8 +79,8 @@ public class CandyWarriersAttackEvent : SpecialEvent
         foreach (var player in StaticUtils.SelectRandomPlayersByRatio(CTeam.SCPs, 1f / 3f))
         {
             player.SetRole(MapFlags.GetSeason() is SeasonTypeId.April
-                ? CRoleTypeId.CandyWarrierApril
-                : CRoleTypeId.CandyWarrierHalloween);
+                ? CRoleTypeId.CandyWarriorApril
+                : CRoleTypeId.CandyWarriorHalloween);
         }
 
         yield return Timing.WaitForSeconds(8f);
@@ -131,7 +131,7 @@ public class CandyWarriersAttackEvent : SpecialEvent
         if (CancelIfOutdated()) yield break;
 
         bool candyAlive = Player.List.Any(p =>
-            p != null && p.GetCustomRole() is CRoleTypeId.CandyWarrierApril or CRoleTypeId.CandyWarrierHalloween);
+            p != null && p.GetCustomRole() is CRoleTypeId.CandyWarriorApril or CRoleTypeId.CandyWarriorHalloween);
 
         if (candyAlive)
             Timing.RunCoroutine(CandySuccessCoroutine());

@@ -3,7 +3,7 @@ using Slafight_Plugin_EXILED.MainHandlers;
 
 namespace Slafight_Plugin_EXILED.API.Features.SpawnSystemDictionaries.UnitPacks;
 
-public static class SnowWarriersPacks
+public static class SnowWarriorsPacks
 {
     public static void Register()
     {
@@ -15,7 +15,7 @@ public static class SnowWarriersPacks
                     SpawnTypeId.GoiSnowNormal,
                     new()
                     {
-                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.SnowWarrier), (99f, false) },
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.SnowWarrior), (99f, false) },
                     }
                 }
             }
@@ -28,7 +28,7 @@ public static class SnowWarriersPacks
                     SpawnTypeId.GoiSnowBackup,
                     new()
                     {
-                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.SnowWarrier), (99f, false) },
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.SnowWarrior), (99f, false) },
                     }
                 }
             }

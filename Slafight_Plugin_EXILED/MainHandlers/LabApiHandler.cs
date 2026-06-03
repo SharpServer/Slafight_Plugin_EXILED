@@ -106,11 +106,11 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
                 player.DestroySchematic(schem);
             });
 
-    public static void SchemSnowWarrier(Player labPlayer)
+    public static void SchemSnowWarrior(Player labPlayer)
         => WearRoleSchematic(
             labPlayer,
             "SnowWarrier",
-            nameof(SchemSnowWarrier),
+            nameof(SchemSnowWarrior),
             afterAttach: (player, schem) =>
             {
                 if (player.GameObject != null)
@@ -119,11 +119,11 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
                 AttachRoleSchematicLight(schem, Color.white);
             });
 
-    public static void SchemCandyWarrier(Player labPlayer)
+    public static void SchemCandyWarrior(Player labPlayer)
         => WearRoleSchematic(
             labPlayer,
             "CandyWarrier",
-            nameof(SchemCandyWarrier),
+            nameof(SchemCandyWarrior),
             playerScale: Vector3.one,
             afterAttach: (player, schem) =>
             {

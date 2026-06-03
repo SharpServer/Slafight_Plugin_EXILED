@@ -25,18 +25,18 @@ public sealed class SpecificRoundEndDefinitionSource : RoundEndDefinitionSource
             beforeEnd: ResetSpawnContext);
 
         yield return RoundEndDefinition.Custom(
-            "SnowWarrierWin",
+            "SnowWarriorWin",
             CTeam.Others,
             "<b><size=80><color=#ffffff>雪の戦士達</color>の勝利</size></b>",
             RoundEndScoreMode.EscapedDClasses,
-            specificReason: RoundEndReasons.SnowWarrierWin);
+            specificReason: RoundEndReasons.SnowWarriorWin);
 
         yield return RoundEndDefinition.Custom(
-            "CandyWarrierWin",
+            "CandyWarriorWin",
             CTeam.Others,
             "<b><size=80><color=#ff96de>お菓子の戦士達</color>の勝利</size></b>",
             RoundEndScoreMode.EscapedDClasses,
-            specificReason: RoundEndReasons.CandyWarrierWin);
+            specificReason: RoundEndReasons.CandyWarriorWin);
     }
 
     private static void ResetSpawnContext()

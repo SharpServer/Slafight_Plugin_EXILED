@@ -239,7 +239,7 @@
         <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\DefaultUnitPacks.cs" />
         <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\FacilityTerminationPacks.cs" />
         <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\MtfSeeNoEvilUnitPacks.cs" />
-        <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\SnowWarriersPacks.cs" />
+        <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\SnowWarriorsPacks.cs" />
         <Compile Include="API\Features\SpecialEvent.cs" />
         <Compile Include="API\Features\SpecificFlagsManager.cs" />
         <Compile Include="API\Features\SpyKitRecords.cs" />
@@ -447,14 +447,14 @@
         <Compile Include="CustomRoles\Moderators\HideAdmin.cs" />
         <Compile Include="CustomRoles\Moderators\HideWatch.cs" />
         <Compile Include="CustomRoles\Moderators\ModeratorRole.cs" />
-        <Compile Include="CustomRoles\Others\CandyWarrierApril.cs" />
-        <Compile Include="CustomRoles\Others\CandyWarrierHalloween.cs" />
+        <Compile Include="CustomRoles\Others\CandyWarriorApril.cs" />
+        <Compile Include="CustomRoles\Others\CandyWarriorHalloween.cs" />
         <Compile Include="CustomRoles\Others\CapybaraRole.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovAwakenRole.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovExtensionAndUtils.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovRole.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeySharedContents.cs" />
-        <Compile Include="CustomRoles\Others\SnowWarrier.cs" />
+        <Compile Include="CustomRoles\Others\SnowWarrior.cs" />
         <Compile Include="CustomRoles\Scientist\CandyResearcher.cs" />
         <Compile Include="CustomRoles\Scientist\SiteNavigator.cs" />
         <Compile Include="CustomRoles\Scientist\MarionWheeler.cs" />
@@ -551,7 +551,7 @@
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="ProximityChat\ActivateHandler.cs" />
         <Compile Include="ProximityChat\Handler.cs" />
-        <Compile Include="SpecialEvents\Events\CandyWarriersAttack.cs" />
+        <Compile Include="SpecialEvents\Events\CandyWarriorsAttack.cs" />
         <Compile Include="SpecialEvents\Events\CaseColourlessGreen.cs" />
         <Compile Include="SpecialEvents\Events\ChaosInsurgencyRaid.cs" />
         <Compile Include="SpecialEvents\Events\ClassicEvent.cs" />
@@ -566,7 +566,7 @@
         <Compile Include="SpecialEvents\Events\EndlessCryEvent.cs" />
         <Compile Include="SpecialEvents\Events\Scp1509BattleField.cs" />
         <Compile Include="SpecialEvents\Events\SergeyMakarovReturns.cs" />
-        <Compile Include="SpecialEvents\Events\SnowWarriersAttack.cs" />
+        <Compile Include="SpecialEvents\Events\SnowWarriorsAttack.cs" />
         <Compile Include="SpecialEvents\Events\SpeedUpEvent.cs" />
         <Compile Include="SpecialEvents\SpecialEventsHandler.cs" />
         <Compile Include="SpecialEvents\SpecialEventWeightContext.cs" />

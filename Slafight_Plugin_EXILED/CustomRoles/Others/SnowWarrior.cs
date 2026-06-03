@@ -9,13 +9,13 @@ using Slafight_Plugin_EXILED.MainHandlers;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.Others;
 
-public class SnowWarrier : CRole
+public class SnowWarrior : CRole
 {
-    protected override string RoleName { get; set; } = "<color=white>SNOW WARRIER</color>";
+    protected override string RoleName { get; set; } = "<color=white>SNOW WARRIOR</color>";
     protected override string Description { get; set; } = "<size=24>非常に<color=#ffffff>雪玉的</color>である。そうは思わんかね？";
-    protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SnowWarrier;
+    protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SnowWarrior;
     protected override CTeam Team { get; set; } = CTeam.Others;
-    protected override string UniqueRoleKey { get; set; } = "SnowWarrier";
+    protected override string UniqueRoleKey { get; set; } = "SnowWarrior";
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosRifleman;
     protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
     [
@@ -30,13 +30,13 @@ public class SnowWarrier : CRole
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
         player.Role.Set(RoleTypeId.Tutorial, RoleSpawnFlags.AssignInventory);
-        LabApiHandler.SchemSnowWarrier(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
+        LabApiHandler.SchemSnowWarrior(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
 
         const int maxHealth = 1000;
 
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
-            CustomInfoDisplay.Apply(player, "<color=#FFFFFF>SNOW WARRIER</color>");
+            CustomInfoDisplay.Apply(player, "<color=#FFFFFF>SNOW WARRIOR</color>");
             player.MaxHealth = maxHealth;
             player.Health = maxHealth;
 

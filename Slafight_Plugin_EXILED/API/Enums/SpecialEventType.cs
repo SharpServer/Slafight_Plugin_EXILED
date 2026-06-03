@@ -35,7 +35,7 @@ public enum SpecialEventType
     OperationBlackout,
     
     /// <summary>MEGABALL ATTACK YEAHHHH</summary>
-    SnowWarriersAttack,
+    SnowWarriorsAttack,
     
     /// <summary>DELTA 2.0</summary>
     FacilityTermination,
@@ -53,7 +53,7 @@ public enum SpecialEventType
     DailyFoundation,
     
     /// <summary>Candyyyyyy!!! AprilとHalloweenで仕様が異なる</summary>
-    CandyWarriersAttack,
+    CandyWarriorsAttack,
     
     /// <summary>CASE COLOURLESS GREEN</summary>
     CaseColourlessGreen,

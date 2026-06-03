@@ -109,15 +109,15 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.GoCHoundDog]       = ("<color=#0000c8>Hound Dog: White Suit</color>",        GoCTeam, GoCObj),
 
         // ── Others ────────────────────────────────────────────────────────
-        [CRoleTypeId.SnowWarrier] = (
+        [CRoleTypeId.SnowWarrior] = (
             "<b><color=#ffffff>SNOW WARRIER</color></b>",
             "<b><color=#ffffff>SNOW WARRIER's DIVISION</color></b>",
             "全施設にクリスマスと雪玉の正義を執行しろ"),
-        [CRoleTypeId.CandyWarrierApril] = (
+        [CRoleTypeId.CandyWarriorApril] = (
             "<b><color=#ffffff>CANDY WARRIER</color></b>",
             "<b><color=#ffffff>CANDY WARRIER's DIVISION</color></b>",
             "全施設にFunnyなお菓子の正義を執行しろ"),
-        [CRoleTypeId.CandyWarrierHalloween] = (
+        [CRoleTypeId.CandyWarriorHalloween] = (
             "<b><color=#ffffff>CANDY WARRIER</color></b>",
             "<b><color=#ffffff>CANDY WARRIER's DIVISION</color></b>",
             "全施設にFunnyなお菓子の正義を執行しろ"),

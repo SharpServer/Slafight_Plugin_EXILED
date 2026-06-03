@@ -17,12 +17,12 @@ using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
-public class SnowWarriersAttackEvent : SpecialEvent
+public class SnowWarriorsAttackEvent : SpecialEvent
 {
     // ===== メタ情報 =====
-    public override SpecialEventType EventType => SpecialEventType.SnowWarriersAttack;
+    public override SpecialEventType EventType => SpecialEventType.SnowWarriorsAttack;
     public override int MinPlayersRequired => 5;
-    public override string LocalizedName => "Snow Warriers Raid";
+    public override string LocalizedName => "Snow Warriors Raid";
     public override string TriggerRequirement => "5人以上のプレイヤー";
 
     // ===== 内部状態 =====
@@ -72,7 +72,7 @@ public class SnowWarriersAttackEvent : SpecialEvent
 
         // 役職変換
         foreach (var player in StaticUtils.SelectRandomPlayersByRatio(CTeam.SCPs, 1f / 3f))
-            player.SetRole(CRoleTypeId.SnowWarrier);
+            player.SetRole(CRoleTypeId.SnowWarrior);
 
         yield return Timing.WaitForSeconds(8f);
         if (CancelIfOutdated()) yield break;
@@ -124,7 +124,7 @@ public class SnowWarriersAttackEvent : SpecialEvent
         bool snowAlive = false;
         foreach (var player in Player.List)
         {
-            if (player != null && player.GetCustomRole() is CRoleTypeId.SnowWarrier)
+            if (player != null && player.GetCustomRole() is CRoleTypeId.SnowWarrior)
             {
                 snowAlive = true;
                 break;

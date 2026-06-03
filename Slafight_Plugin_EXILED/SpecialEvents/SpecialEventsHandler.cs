@@ -459,7 +459,7 @@ public class SpecialEventsHandler : IBootstrapHandler, IDisposable
                 SpecialEventType.NuclearAttack or
                 SpecialEventType.OperationBlackout or
                 SpecialEventType.Scp1509BattleField or
-                SpecialEventType.SnowWarriersAttack or
+                SpecialEventType.SnowWarriorsAttack or
                 SpecialEventType.CaseColourlessGreen or
                 SpecialEventType.FacilityTermination => false,
             _ => true
