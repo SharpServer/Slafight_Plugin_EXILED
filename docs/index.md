@@ -68,7 +68,7 @@ description: Slafight Plugin EXILEDのユーザー向けWiki。
 <section class="content-section">
   <h2>便利リンク</h2>
   <div class="section-grid">
-    <a class="wiki-card" href="{{ '/scp914-keycard-flow.html' | relative_url }}">
+    <a class="wiki-card" href="{{ '/internal/scp914-keycard-flow.html' | relative_url }}">
       <p class="eyebrow">Reference</p>
       <h3>SCP-914 Keycard Flow</h3>
       <p>実装から整理したキーカード変換の早見表。既存HTMLをそのまま公開対象にしています。</p>
