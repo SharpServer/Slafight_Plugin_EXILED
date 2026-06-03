@@ -5,7 +5,7 @@
 
 - id: scp-035
   name: SCP-035
-  side: SCP陣営
+  side: SCP
   team: SCP
   base: チュートリアル
   hp: 2500
@@ -24,7 +24,7 @@
     - tentacle
 - id: scp-079-custom
   name: SCP-079
-  side: SCP陣営
+  side: SCP
   team: SCP
   base: SCP-079
   summary: 施設制御システムを操るSCP。ドアや施設機能を利用し、収容違反を有利に進める。
@@ -33,7 +33,7 @@
     - facility-control
 - id: scp-096-anger
   name: 'SCP-096: ANGER'
-  side: SCP陣営
+  side: SCP
   team: SCP
   base: SCP-096
   condition: ENDLESS CRYイベントでスポーン
@@ -43,7 +43,7 @@
     - endless-cry
 - id: scp-106-custom
   name: SCP-106
-  side: SCP陣営
+  side: SCP
   team: SCP
   base: SCP-106
   summary: Sinkholeやポケットディメンション関連の追加ギミックを扱うSCP。
@@ -56,7 +56,7 @@
     - pdex
 - id: scp-173
   name: SCP-173
-  side: SCP陣営
+  side: SCP
   team: SCP
   base: SCP-173
   hp: 4500
@@ -72,7 +72,7 @@
     - teleport
 - id: scp-610
   name: SCP-610
-  side: SCP陣営
+  side: SCP
   team: SCP
   base: チュートリアル
   hp: 800
@@ -90,7 +90,7 @@
     - infection
 - id: scp-682
   name: SCP-682
-  side: SCP陣営
+  side: SCP
   team: SCP
   base: SCP-939
   hp: 999
@@ -100,14 +100,14 @@
     - scp682
 - id: scp-966
   name: SCP-966
-  side: SCP陣営
+  side: SCP
   team: SCP
   summary: 背後から忍び寄って人間を狩るSCP。
   tags:
     - scp
 - id: scp-999
   name: SCP-999
-  side: SCP陣営
+  side: SCP
   team: SCP / 中立寄り
   summary: 勝敗に影響しないペット的SCP。一見無害だが、扱いを誤るべきではない。
   tags:
@@ -115,8 +115,8 @@
     - limited
 - id: scp-3005
   name: SCP-3005
-  side: GoI
-  team: SCP / Fifth Church
+  side: GoI - Fifthists Church
+  team: SCP / Fifthists Church
   summary: 非常に第五的な紫の球体。半径2m以内のプレイヤーへ1.5秒ごとに15ダメージを与える。
   condition: THE FIFTHIST'S RAIDでSCPから変換
   abilities:
@@ -127,7 +127,7 @@
     - raid
 - id: scp-3114
   name: SCP-3114
-  side: SCP陣営
+  side: SCP
   team: SCP
   base: SCP-3114
   hp: 3114
@@ -137,7 +137,7 @@
     - scp
 - id: zombified-subject
   name: Zombified Subject
-  side: SCP陣営
+  side: SCP
   team: SCP
   base: SCP-049-2
   hp: 125
@@ -147,7 +147,7 @@
     - zombie
 - id: chamber-guard
   name: Chamber Guard
-  side: 財団
+  side: The Foundation
   team: Foundation Security
   summary: Dクラス職員の作業やSCPオブジェクトの監視を行う収容室警備。
   tags:
@@ -155,7 +155,7 @@
     - foundation
 - id: security-team-guard
   name: Security Team Guard（保安部隊）
-  side: 財団
+  side: The Foundation
   team: Foundation Security
   base: 警備員
   hp: 100
@@ -170,7 +170,7 @@
     - foundation
 - id: security-chief
   name: Security Chief
-  side: 財団
+  side: The Foundation
   team: Foundation Security
   spawn: 施設管理者室
   summary: 施設管理者室にスポーンする警備員。警備主任カードとFSP-18を持ち、職員を脱出させる。
@@ -182,7 +182,7 @@
     - foundation
 - id: evac-guard
   name: Emergency Evacuation Guard
-  side: 財団
+  side: The Foundation
   team: Foundation Security
   spawn: 下層
   summary: 下層にスポーンする緊急用警備員。職員避難を助ける役割がある。
@@ -191,7 +191,7 @@
     - foundation
 - id: supply-manager
   name: 施設供給管理官
-  side: 財団
+  side: The Foundation
   team: Foundation Security
   base: 警備員
   hp: 100
@@ -206,7 +206,7 @@
     - support
 - id: facility-manager
   name: Facility Manager
-  side: 財団
+  side: The Foundation
   team: Foundation Science
   summary: 施設を管理する重要な科学者。赤カードを持つ。
   items:
@@ -216,7 +216,7 @@
     - neutral
 - id: zone-manager
   name: Zone Manager
-  side: 財団
+  side: The Foundation
   team: Foundation Science
   summary: 各区画を管理する上位科学者。青カードと黄色カードを持つ。
   items:
@@ -227,7 +227,7 @@
     - neutral
 - id: engineer
   name: Engineer
-  side: 財団
+  side: The Foundation
   team: Foundation Science
   summary: 施設点検やタスク処理を担う技術者。最終的に強力なアイテムを得られる可能性がある。
   tags:
@@ -235,14 +235,14 @@
     - engineer
 - id: object-observer
   name: Object Observer
-  side: 財団
+  side: The Foundation
   team: Foundation Science
   summary: 収容室のSCPオブジェクト監視役。少しだけ防具を持つ博士。
   tags:
     - scientist
 - id: site-navigator
   name: サイトナビゲーター
-  side: 財団
+  side: The Foundation
   team: Foundation Science
   base: 科学者
   hp: 100
@@ -256,7 +256,7 @@
     - navigation
 - id: surveillance
   name: Surveillance
-  side: 財団
+  side: The Foundation
   team: Foundation Science
   base: SCP-079
   hp: 100
@@ -266,7 +266,7 @@
     - surveillance
 - id: marion-wheeler
   name: マリオン・ホイーラー
-  side: 財団
+  side: The Foundation
   team: Foundation Science
   base: 科学者
   hp: 120
@@ -280,7 +280,7 @@
     - antimeme
 - id: candy-researcher
   name: お菓子研究者
-  side: 財団
+  side: The Foundation
   team: Foundation Science
   base: 科学者
   hp: 100
@@ -293,7 +293,7 @@
     - candy
 - id: ntf-general
   name: 'MTF Epsilon-11: Nine-Tailed Fox Commander'
-  side: 財団
+  side: The Foundation
   team: MTF Epsilon-11
   base: MTF隊長
   hp: 100
@@ -311,7 +311,7 @@
     - ntf
 - id: ntf-lieutenant
   name: 'MTF Epsilon-11: Nine-Tailed Fox Lieutenant'
-  side: 財団
+  side: The Foundation
   team: MTF Epsilon-11
   summary: 隊長補佐を目的とし、万一の際は代理・臨時隊長として指示を下せる。
   items:
@@ -328,7 +328,7 @@
     - ntf
 - id: ntf-specialist
   name: 'MTF Epsilon-11: Nine-Tailed Fox Specialist'
-  side: 財団
+  side: The Foundation
   team: MTF Epsilon-11
   base: MTFスペシャリスト
   hp: 100
@@ -345,7 +345,7 @@
     - ntf
 - id: ntf-detainer
   name: 'MTF Epsilon-11: Nine-Tailed Fox Detainer'
-  side: 財団
+  side: The Foundation
   team: MTF Epsilon-11
   base: MTF軍曹
   hp: 100
@@ -361,7 +361,7 @@
     - ntf
 - id: ntf-field-medic
   name: 'MTF Epsilon-11: Nine-Tailed Fox Field Medic'
-  side: 財団
+  side: The Foundation
   team: MTF Epsilon-11
   base: MTF二等兵
   hp: 100
@@ -377,7 +377,7 @@
     - medic
 - id: hd-marshal
   name: 'MTF Nu-7: Hammer Down Marshal'
-  side: 財団
+  side: The Foundation
   team: MTF Nu-7
   summary: Nu-7の重鎮。Weltkrieg級軽機関銃を所持し、部隊を指揮する。
   items:
@@ -393,7 +393,7 @@
     - nu7
 - id: hd-commander
   name: 'MTF Nu-7: Hammer Down Commander'
-  side: 財団
+  side: The Foundation
   team: MTF Nu-7
   summary: Nu-7歩兵を指揮し、制圧を進める指揮官。
   items:
@@ -410,7 +410,7 @@
     - nu7
 - id: hd-infantry
   name: 'MTF Nu-7: Hammer Down Infantry'
-  side: 財団
+  side: The Foundation
   team: MTF Nu-7
   base: MTF二等兵
   summary: Nu-7の最下級兵。グレネードなど装備が豊富。
@@ -429,7 +429,7 @@
     - nu7
 - id: hd-shotgunner
   name: 'MTF Nu-7: Hammer Down Shotgunner'
-  side: 財団
+  side: The Foundation
   team: MTF Nu-7
   base: MTF二等兵
   hp: 110
@@ -445,7 +445,7 @@
     - nu7
 - id: hd-disarmer
   name: 'MTF Nu-7: Hammer Down Disarmer'
-  side: 財団
+  side: The Foundation
   team: MTF Nu-7
   base: MTF二等兵
   hp: 110
@@ -461,7 +461,7 @@
     - nu7
 - id: hd-shielder
   name: 'MTF Nu-7: Hammer Down Shielder'
-  side: 財団
+  side: The Foundation
   team: MTF Nu-7
   base: MTF二等兵
   hp: 120
@@ -478,7 +478,7 @@
     - shield
 - id: sne-operator
   name: 'MTF Eta-10: See No Evil Operator'
-  side: 財団
+  side: The Foundation
   team: MTF Eta-10
   base: MTF隊長
   hp: 150
@@ -496,7 +496,7 @@
     - antimeme
 - id: sne-gears
   name: 'MTF Eta-10: See No Evil Gears'
-  side: 財団
+  side: The Foundation
   team: MTF Eta-10
   base: MTF軍曹
   hp: 125
@@ -513,7 +513,7 @@
     - antimeme
 - id: sne-neutralitist
   name: 'MTF Eta-10: See No Evil Neutralitist'
-  side: 財団
+  side: The Foundation
   team: MTF Eta-10
   base: MTF二等兵
   hp: 125
@@ -529,7 +529,7 @@
     - antimeme
 - id: sne-purify
   name: 'MTF Eta-10: See No Evil Purify'
-  side: 財団
+  side: The Foundation
   team: MTF Eta-10
   base: MTF二等兵
   hp: 125
@@ -544,7 +544,7 @@
     - antimeme
 - id: lws-judgement
   name: 'MTF Omega-1: Law''s Left Hand Judgement'
-  side: 財団
+  side: The Foundation
   team: MTF Omega-1
   base: MTF隊長
   hp: 120
@@ -560,7 +560,7 @@
     - omega1
 - id: lws-liaison
   name: 'MTF Omega-1: Law''s Left Hand Liaison'
-  side: 財団
+  side: The Foundation
   team: MTF Omega-1
   base: MTF軍曹
   hp: 110
@@ -575,7 +575,7 @@
     - omega1
 - id: lws-forensic
   name: 'MTF Omega-1: Law''s Left Hand Forensic'
-  side: 財団
+  side: The Foundation
   team: MTF Omega-1
   base: MTFスペシャリスト
   hp: 100
@@ -590,7 +590,7 @@
     - omega1
 - id: lws-agent
   name: 'MTF Omega-1: Law''s Left Hand Agent'
-  side: 財団
+  side: The Foundation
   team: MTF Omega-1
   base: MTF二等兵
   hp: 100
@@ -605,7 +605,7 @@
     - omega1
 - id: rrh-warden
   name: 'MTF Alpha-1: Red Right Hand Warden'
-  side: 財団
+  side: The Foundation
   team: MTF Alpha-1
   base: MTF隊長
   hp: 130
@@ -616,7 +616,7 @@
     - alpha1
 - id: rrh-enforcer
   name: 'MTF Alpha-1: Red Right Hand Enforcer'
-  side: 財団
+  side: The Foundation
   team: MTF Alpha-1
   base: MTF軍曹
   hp: 120
@@ -627,7 +627,7 @@
     - alpha1
 - id: rrh-aegis
   name: 'MTF Alpha-1: Red Right Hand Aegis'
-  side: 財団
+  side: The Foundation
   team: MTF Alpha-1
   base: MTF軍曹
   hp: 140
@@ -638,7 +638,7 @@
     - alpha1
 - id: rrh-assaulter
   name: 'MTF Alpha-1: Red Right Hand Assaulter'
-  side: 財団
+  side: The Foundation
   team: MTF Alpha-1
   base: MTF二等兵
   hp: 110
@@ -649,7 +649,7 @@
     - alpha1
 - id: ara-orun
   name: アラ・オルン
-  side: 財団
+  side: The Foundation
   team: Foundation Special
   base: SCP-079
   hp: 100
@@ -661,7 +661,7 @@
     - antimeme
 - id: sculpture
   name: Sculpture
-  side: 財団
+  side: The Foundation
   team: Foundation Special
   base: MTF二等兵
   summary: Facility TerminationでSCP側から変換される彫刻兵。瞬きの隙を突いて高速移動し、敵を攻撃する。
@@ -670,7 +670,7 @@
     - facility-termination
 - id: chaos-commando
   name: Chaos Insurgency Commando
-  side: GoI
+  side: GoI - Chaos Insurgency
   team: Chaos Insurgency
   base: カオス抑圧兵
   hp: 120
@@ -687,7 +687,7 @@
     - goi
 - id: chaos-sniper
   name: Chaos Insurgency Sniper
-  side: GoI
+  side: GoI - Chaos Insurgency
   team: Chaos Insurgency
   base: カオス抑圧兵
   hp: 100
@@ -702,7 +702,7 @@
     - sniper
 - id: chaos-intruder
   name: Chaos Insurgency Intruder
-  side: GoI
+  side: GoI - Chaos Insurgency
   team: Chaos Insurgency
   base: カオス略奪兵
   hp: 100
@@ -716,7 +716,7 @@
     - chaos
 - id: chaos-signal
   name: Chaos Insurgency Signal Operator
-  side: GoI
+  side: GoI - Chaos Insurgency
   team: Chaos Insurgency
   base: カオスライフル兵
   hp: 100
@@ -731,7 +731,7 @@
     - navigation
 - id: chaos-tactical-unit
   name: Chaos Insurgency Tactical Unit
-  side: GoI
+  side: GoI - Chaos Insurgency
   team: Chaos Insurgency
   base: カオス略奪兵
   hp: 100
@@ -745,7 +745,7 @@
     - revolver
 - id: chaos-penal
   name: Chaos Insurgency Penal Unit
-  side: GoI
+  side: GoI - Chaos Insurgency
   team: Chaos Insurgency
   base: カオス徴集兵
   hp: 100
@@ -760,7 +760,7 @@
     - explosive
 - id: chaos-undercover-agent
   name: Chaos Insurgency Undercover Agent
-  side: GoI
+  side: GoI - Chaos Insurgency
   team: Chaos Insurgency
   base: カオス略奪兵
   hp: 100
@@ -775,9 +775,9 @@
     - chaos
     - spy
 - id: fifthist-rescue
-  name: Fifth Church Rescue（第五教会 救出師）
-  side: GoI
-  team: Fifth Church
+  name: Fifthists Church Rescue（第五教会 救出師）
+  side: GoI - Fifthists Church
+  team: Fifthists Church
   summary: SCP-3005救出のためにSite-02へ侵入した第五教会の実働員。SCPや他の人間陣営との敵対も辞さない。
   condition: THE FIFTHIST'S RAIDで出現
   items:
@@ -792,9 +792,9 @@
     - fifthist
     - goi
 - id: fifthist-priest
-  name: Fifth Church Priest（第五教会 司祭）
-  side: GoI
-  team: Fifth Church
+  name: Fifthists Church Priest（第五教会 司祭）
+  side: GoI - Fifthists Church
+  team: Fifthists Church
   condition: SCP-3005がFifthist Raid中に脱出すると変化可能
   summary: 第五的存在の恩寵を受けた第五主義者。SCP-3005と同じ範囲反ミームが可能。
   items:
@@ -810,16 +810,16 @@
     - fifthist
     - antimeme
 - id: fifthist-convert
-  name: Fifth Church Convert（第五教会 改宗者）
-  side: GoI
-  team: Fifth Church
+  name: Fifthists Church Convert（第五教会 改宗者）
+  side: GoI - Fifthists Church
+  team: Fifthists Church
   summary: 第五教会になったばかりの人。武器は弱く、前線よりサポート寄り。
   tags:
     - fifthist
 - id: fifthist-guidance
-  name: 第五教会 案内人
-  side: GoI
-  team: Fifth Church
+  name: Fifthists Church Guidance（第五教会 案内人）
+  side: GoI - Fifthists Church
+  team: Fifthists Church
   base: チュートリアル
   hp: 125
   summary: 第五教会の案内役。Cane of the Starsで対象を第五主義へ導く。
@@ -828,9 +828,9 @@
   tags:
     - fifthist
 - id: fifthist-marionette
-  name: Fifth Church Marionette（第五教会 傀儡人形）
-  side: GoI
-  team: Fifth Church
+  name: Fifthists Church Marionette（第五教会 傀儡人形）
+  side: GoI - Fifthists Church
+  team: Fifthists Church
   base: SCP-049-2
   hp: 100
   version: v1.7.5.0
@@ -842,8 +842,8 @@
     - marionette
 - id: scp-3125
   name: SCP-3125
-  side: GoI
-  team: Fifth Church
+  side: GoI - Fifthists Church
+  team: Fifthists Church
   base: MTF隊長
   condition: CASE COLOURLESS GREENで出現
   summary: 反ミーム部門を壊滅させた第五的存在。マリオン・ホイーラーの阻止が主目的となる。
@@ -852,8 +852,8 @@
     - antimeme
     - scp3125
 - id: goc-operative
-  name: 'GoC Ptolemy Division: Broken Dagger Operative'
-  side: GoI
+  name: GoC Broken Dagger Operative
+  side: GoI - Global Occult Coalition
   team: GoC
   base: MTF二等兵
   hp: 100
@@ -866,8 +866,8 @@
     - goc
     - goi
 - id: goc-medic
-  name: 'GoC Ptolemy Division: Broken Dagger Medic'
-  side: GoI
+  name: GoC Broken Dagger Medic
+  side: GoI - Global Occult Coalition
   team: GoC
   base: MTFスペシャリスト
   hp: 100
@@ -882,8 +882,8 @@
     - goc
     - medic
 - id: goc-communications
-  name: 'GoC Ptolemy Division: Broken Dagger Communications'
-  side: GoI
+  name: GoC Broken Dagger Communications
+  side: GoI - Global Occult Coalition
   team: GoC
   base: MTFスペシャリスト
   hp: 100
@@ -898,8 +898,8 @@
   tags:
     - goc
 - id: goc-thaumaturgist
-  name: 'GoC Ptolemy Division: Broken Dagger Thaumaturgist'
-  side: GoI
+  name: GoC Broken Dagger Thaumaturgist
+  side: GoI - Global Occult Coalition
   team: GoC
   base: MTFスペシャリスト
   hp: 100
@@ -914,8 +914,8 @@
     - goc
     - thaumaturgist
 - id: goc-deputy
-  name: 'GoC Ptolemy Division: Broken Dagger Deputy'
-  side: GoI
+  name: GoC Broken Dagger Deputy
+  side: GoI - Global Occult Coalition
   team: GoC
   base: MTFスペシャリスト
   hp: 100
@@ -929,8 +929,8 @@
   tags:
     - goc
 - id: goc-squad-leader
-  name: 'GoC Ptolemy Division: Broken Dagger Squad Leader'
-  side: GoI
+  name: GoC Broken Dagger Squad Leader
+  side: GoI - Global Occult Coalition
   team: GoC
   base: MTFスペシャリスト
   hp: 110
@@ -946,23 +946,23 @@
     - leader
 - id: goc-hound-dog
   name: GoC Hound Dog Mark II White Suit
-  side: GoI
+  side: GoI - Global Occult Coalition
   team: GoC
   base: MTFスペシャリスト
   hp: 120
   summary: GoC製の戦闘強化服。高速移動、VERITAS、自爆装置、自動認証など複数の機能を持つ強力なロール。
   items:
     - 外套ジェネレータ
-    - GOC戦略兵装 EMR-01
+    - GoC戦略兵装 EMR-01
     - アドレナリン
     - 医療キット
   tags:
     - goc
     - hound-dog
     - power-suit
-- id: snow-warrior
+- id: snow-warrier
   name: Snow Warrior
-  side: GoI
+  side: GoI - Snow Warrior's Division
   team: Snow Warrior's Division
   base: チュートリアル
   hp: 1000
@@ -980,9 +980,9 @@
   tags:
     - seasonal
     - snow
-- id: candy-warrior-april
+- id: candy-warrier-april
   name: Candy Warrior (April)
-  side: GoI
+  side: GoI - Candy Warrior's Division
   team: Candy Warrior's Division
   base: チュートリアル
   hp: 1000
@@ -998,9 +998,9 @@
     - seasonal
     - candy
     - april
-- id: candy-warrior-halloween
+- id: candy-warrier-halloween
   name: Candy Warrior (Halloween)
-  side: GoI
+  side: GoI - Candy Warrior's Division
   team: Candy Warrior's Division
   base: チュートリアル
   hp: 1000
@@ -1018,7 +1018,7 @@
     - halloween
 - id: janitor
   name: Janitor
-  side: 中立
+  side: Facility Personnels
   team: D-Class
   base: Dクラス
   hp: 100
@@ -1030,7 +1030,7 @@
     - neutral
 - id: candy-subject
   name: 菓子被験者
-  side: 中立
+  side: Facility Personnels
   team: D-Class
   base: Dクラス
   hp: 100
@@ -1043,7 +1043,7 @@
     - candy
 - id: sergey-makarov
   name: 施設管理官 - セルゲイ・マカロフ
-  side: その他
+  side: Others / Specials
   team: Special
   base: 科学者
   hp: 100
@@ -1059,7 +1059,7 @@
     - april
 - id: sergey-makarov-awaken
   name: 呪詛 - セルゲイ・マカロフ
-  side: その他
+  side: Others / Specials
   team: Special
   base: SCP-049-2
   hp: 5000
@@ -1070,7 +1070,7 @@
     - april
 - id: capybara-role
   name: Xx_CAPYBARA_xX
-  side: その他
+  side: Others / Specials
   team: Special
   base: チュートリアル
   summary: カピバラ関連のネタ系特殊ロール。
