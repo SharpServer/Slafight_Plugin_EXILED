@@ -1,6 +1,7 @@
 # Normalized role configuration
-# - MTF names are unified as: MTF <Unit>: <Codename> <Role>
-# - Entries are sorted by faction/team.
+# - side is normalized as a top-level faction/category.
+# - team is normalized as the sub-faction, unit, department, or role group.
+# - Entries are sorted by side -> team -> role order.
 # - IDs are kept unchanged for compatibility.
 
 - id: scp-035
@@ -108,23 +109,11 @@
 - id: scp-999
   name: SCP-999
   side: SCP
-  team: SCP / 中立寄り
+  team: SCP
   summary: 勝敗に影響しないペット的SCP。一見無害だが、扱いを誤るべきではない。
   tags:
     - scp
     - limited
-- id: scp-3005
-  name: SCP-3005
-  side: GoI - Fifthists Church
-  team: SCP / Fifthists Church
-  summary: 非常に第五的な紫の球体。半径2m以内のプレイヤーへ1.5秒ごとに15ダメージを与える。
-  condition: THE FIFTHIST'S RAIDでSCPから変換
-  abilities:
-    - THE FIFTHIST'S RAID中は脱出口から脱出でき、成功すると第五教会陣営の勝利になる。
-  tags:
-    - scp
-    - fifthist
-    - raid
 - id: scp-3114
   name: SCP-3114
   side: SCP
@@ -145,6 +134,118 @@
   tags:
     - scp
     - zombie
+- id: janitor
+  name: Janitor
+  side: Facility Personnels
+  team: D-Class
+  base: Dクラス
+  hp: 100
+  summary: SCP-173の清掃係。多目的グレネードで汚物を清掃する。
+  items:
+    - 多目的グレネード
+  tags:
+    - classd
+    - neutral
+- id: candy-subject
+  name: 菓子被験者
+  side: Facility Personnels
+  team: D-Class
+  base: Dクラス
+  hp: 100
+  summary: お菓子好きの博士の実験に巻き込まれたDクラス職員。キャンディーを多く持つ。
+  items:
+    - 用務員キーカード
+    - SCP-330
+  tags:
+    - classd
+    - candy
+- id: facility-manager
+  name: Facility Manager
+  side: Facility Personnels
+  team: Scientists
+  summary: 施設を管理する重要な科学者。赤カードを持つ。
+  items:
+    - 赤カード
+  tags:
+    - scientist
+    - neutral
+- id: zone-manager
+  name: Zone Manager
+  side: Facility Personnels
+  team: Scientists
+  summary: 各区画を管理する上位科学者。青カードと黄色カードを持つ。
+  items:
+    - 青カード
+    - 黄色カード
+  tags:
+    - scientist
+    - neutral
+- id: engineer
+  name: Engineer
+  side: Facility Personnels
+  team: Scientists
+  summary: 施設点検やタスク処理を担う技術者。最終的に強力なアイテムを得られる可能性がある。
+  tags:
+    - scientist
+    - engineer
+- id: object-observer
+  name: Object Observer
+  side: Facility Personnels
+  team: Scientists
+  summary: 収容室のSCPオブジェクト監視役。少しだけ防具を持つ博士。
+  tags:
+    - scientist
+- id: site-navigator
+  name: サイトナビゲーター
+  side: Facility Personnels
+  team: Scientists
+  base: 科学者
+  hp: 100
+  summary: 携帯マップ端末S-NAVを持った研究員。構造が変化し続けるサイト内で道案内役になる。
+  items:
+    - S-Nav 300
+    - 医療キット
+    - 懐中電灯
+  tags:
+    - scientist
+    - navigation
+- id: surveillance
+  name: Surveillance
+  side: Facility Personnels
+  team: Scientists
+  base: SCP-079
+  hp: 100
+  summary: SCP-079のような視点で施設を監視する科学者ロール。SCP陣営のボイスチャンネルには参加できない。
+  tags:
+    - scientist
+    - surveillance
+- id: marion-wheeler
+  name: マリオン・ホイーラー
+  side: Facility Personnels
+  team: Scientists
+  base: 科学者
+  hp: 120
+  condition: CASE COLOURLESS GREENで出現
+  summary: 反ミーム部門の部門長。反ミーム爆弾を起動し、アウトブレイクのリセットを目指す。
+  items:
+    - 収容技術者カード
+    - 医療キット x3
+  tags:
+    - scientist
+    - antimeme
+- id: candy-researcher
+  name: お菓子研究者
+  side: Facility Personnels
+  team: Scientists
+  base: 科学者
+  hp: 100
+  summary: キャンディー研究に巻き込まれた科学者。SCP-330を持ってスポーンする。
+  items:
+    - 科学者キーカード
+    - SCP-330
+  tags:
+    - scientist
+    - candy
 - id: chamber-guard
   name: Chamber Guard
   side: The Foundation
@@ -204,93 +305,6 @@
   tags:
     - guard
     - support
-- id: facility-manager
-  name: Facility Manager
-  side: The Foundation
-  team: Foundation Science
-  summary: 施設を管理する重要な科学者。赤カードを持つ。
-  items:
-    - 赤カード
-  tags:
-    - scientist
-    - neutral
-- id: zone-manager
-  name: Zone Manager
-  side: The Foundation
-  team: Foundation Science
-  summary: 各区画を管理する上位科学者。青カードと黄色カードを持つ。
-  items:
-    - 青カード
-    - 黄色カード
-  tags:
-    - scientist
-    - neutral
-- id: engineer
-  name: Engineer
-  side: The Foundation
-  team: Foundation Science
-  summary: 施設点検やタスク処理を担う技術者。最終的に強力なアイテムを得られる可能性がある。
-  tags:
-    - scientist
-    - engineer
-- id: object-observer
-  name: Object Observer
-  side: The Foundation
-  team: Foundation Science
-  summary: 収容室のSCPオブジェクト監視役。少しだけ防具を持つ博士。
-  tags:
-    - scientist
-- id: site-navigator
-  name: サイトナビゲーター
-  side: The Foundation
-  team: Foundation Science
-  base: 科学者
-  hp: 100
-  summary: 携帯マップ端末S-NAVを持った研究員。構造が変化し続けるサイト内で道案内役になる。
-  items:
-    - S-Nav 300
-    - 医療キット
-    - 懐中電灯
-  tags:
-    - scientist
-    - navigation
-- id: surveillance
-  name: Surveillance
-  side: The Foundation
-  team: Foundation Science
-  base: SCP-079
-  hp: 100
-  summary: SCP-079のような視点で施設を監視する科学者ロール。SCP陣営のボイスチャンネルには参加できない。
-  tags:
-    - scientist
-    - surveillance
-- id: marion-wheeler
-  name: マリオン・ホイーラー
-  side: The Foundation
-  team: Foundation Science
-  base: 科学者
-  hp: 120
-  condition: CASE COLOURLESS GREENで出現
-  summary: 反ミーム部門の部門長。反ミーム爆弾を起動し、アウトブレイクのリセットを目指す。
-  items:
-    - 収容技術者カード
-    - 医療キット x3
-  tags:
-    - scientist
-    - antimeme
-- id: candy-researcher
-  name: お菓子研究者
-  side: The Foundation
-  team: Foundation Science
-  base: 科学者
-  hp: 100
-  summary: キャンディー研究に巻き込まれた科学者。SCP-330を持ってスポーンする。
-  items:
-    - 科学者キーカード
-    - SCP-330
-  tags:
-    - scientist
-    - candy
 - id: ntf-general
   name: 'MTF Epsilon-11: Nine-Tailed Fox Commander'
   side: The Foundation
@@ -840,6 +854,18 @@
   tags:
     - fifthist
     - marionette
+- id: scp-3005
+  name: SCP-3005
+  side: GoI - Fifthists Church
+  team: Fifthists Church
+  summary: 非常に第五的な紫の球体。半径2m以内のプレイヤーへ1.5秒ごとに15ダメージを与える。
+  condition: THE FIFTHIST'S RAIDでSCPから変換
+  abilities:
+    - THE FIFTHIST'S RAID中は脱出口から脱出でき、成功すると第五教会陣営の勝利になる。
+  tags:
+    - scp
+    - fifthist
+    - raid
 - id: scp-3125
   name: SCP-3125
   side: GoI - Fifthists Church
@@ -1016,31 +1042,6 @@
     - seasonal
     - candy
     - halloween
-- id: janitor
-  name: Janitor
-  side: Facility Personnels
-  team: D-Class
-  base: Dクラス
-  hp: 100
-  summary: SCP-173の清掃係。多目的グレネードで汚物を清掃する。
-  items:
-    - 多目的グレネード
-  tags:
-    - classd
-    - neutral
-- id: candy-subject
-  name: 菓子被験者
-  side: Facility Personnels
-  team: D-Class
-  base: Dクラス
-  hp: 100
-  summary: お菓子好きの博士の実験に巻き込まれたDクラス職員。キャンディーを多く持つ。
-  items:
-    - 用務員キーカード
-    - SCP-330
-  tags:
-    - classd
-    - candy
 - id: sergey-makarov
   name: 施設管理官 - セルゲイ・マカロフ
   side: Others / Specials
