@@ -6,7 +6,7 @@
   hp: 4500
   hume: 1500
   spawn: 下層SCP-173収容室
-  summary: 3人以上の人間に視認されていると行動できない強化版SCP-173。
+  summary: 3人以上の人間に視認されていると行動できない。
   abilities:
     - "メインヴィラン: ランダムな部屋にテレポートする。CD 180秒。"
     - "汚物作戦: 周囲5m以内にランダムな汚物を5個生成する。CD 80秒。"
@@ -45,14 +45,13 @@
   name: SCP-966
   side: SCP陣営
   team: SCP
-  summary: 背後から忍び寄って人間を狩るSCP。視認自体はしやすいが、966視点では音が非常に大きい。
+  summary: 背後から忍び寄って人間を狩るSCP。
   tags: [scp]
 
 - id: scp-999
   name: SCP-999
   side: SCP陣営
   team: SCP / 中立寄り
-  condition: 通常時はスポーンしない。管理者限定または期間限定で出現する可能性あり。
   summary: 勝敗に影響しないペット的SCP。一見無害だが、扱いを誤るべきではない。
   tags: [scp, limited]
 
@@ -942,7 +941,7 @@
   team: その他
   base: 科学者
   hp: 100
-  condition: エイプリルフール系イベントで出現
+  condition: セルゲイ・マカロフ・イベント
   summary: 復讐に憑かれて蘇った施設管理官。持てる全てを使い、自身を裏切った者たちへの復讐を目指す。
   items:
     - CROSSVEC
@@ -957,7 +956,7 @@
   team: その他
   base: SCP-049-2
   hp: 5000
-  condition: セルゲイ・マカロフ関連イベントで覚醒
+  condition: セルゲイ・マカロフ・イベント
   summary: 怨念に呑まれたセルゲイ・マカロフ。怨みの沼、呪詛、管理官の祟りを使い、邪魔者を排除する。
   tags: [special, april]
 
