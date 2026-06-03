@@ -1,11 +1,11 @@
-- id: gate-a-bridge
-  name: Gate A Bridge
+- id: surface-custom
+  name: Surface Custom Map
   zone: 地上
   kind: 構造物
-  summary: Gate Aの落下事故防止と見栄えのために作られた橋。
+  summary: 様々な需要にこたえるためちょっとした部屋と小道具とかがおかれた地上のカスタムマップ要素です。
   notes:
-    - 橋上に柵がないのは予算と時間の都合。将来改修される可能性あり。
-  tags: [surface, gate-a]
+    - かつてはゲートAにへんてこな橋がおかれているだけでした。
+  tags: [surface]
 
 - id: ez-armory
   name: 上層武器庫
