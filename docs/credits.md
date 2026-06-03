@@ -8,7 +8,7 @@ permalink: /credits/
   <div>
     <p class="eyebrow">Credits / Licenses</p>
     <h1>クレジット</h1>
-    <p>コンテンツや素材のクレジットは本文から分離して管理します。新しいBGMや素材を追加したら <code>docs/_data/credits.yml</code> に追記してください。</p>
+    <p>サーバー内コンテンツ、BGM、音声素材、ロゴなどのクレジットとライセンスをまとめています。</p>
   </div>
   <div class="filter-box">
     <label for="credit-filter">このページを絞り込み</label>
@@ -23,7 +23,8 @@ permalink: /credits/
   <h2>{{ group.name }}</h2>
   <div class="card-grid">
   {% for credit in group.items %}
-    <article class="wiki-card" id="{{ credit.id }}" data-card data-search="{{ credit.title }} {{ credit.author }} {{ credit.license }} {{ credit.usage }} {{ credit.category }}">
+    {% capture credit_search %}{{ credit.title }} {{ credit.author }} {{ credit.license }} {{ credit.usage }} {{ credit.category }}{% endcapture %}
+    <article class="wiki-card" id="{{ credit.id }}" data-card data-search="{{ credit_search | strip_html | escape }}">
       <header>
         <p class="eyebrow">{{ credit.license | default: group.name }}</p>
         <h3>{{ credit.title }}</h3>

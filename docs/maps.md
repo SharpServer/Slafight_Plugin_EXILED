@@ -23,7 +23,8 @@ permalink: /maps/
   <h2>{{ group.name }}</h2>
   <div class="card-grid">
   {% for entry in group.items %}
-    <article class="wiki-card" id="{{ entry.id }}" data-card data-search="{{ entry.name }} {{ entry.zone }} {{ entry.entrance }} {{ entry.summary }} {{ entry.tags | join: ' ' }}">
+    {% capture map_search %}{{ entry.name }} {{ entry.zone }} {{ entry.entrance }} {{ entry.summary }} {{ entry.tags | join: ' ' }}{% endcapture %}
+    <article class="wiki-card" id="{{ entry.id }}" data-card data-search="{{ map_search | strip_html | escape }}">
       <header>
         <p class="eyebrow">{{ entry.kind | default: group.name }}</p>
         <h3>{{ entry.name }}</h3>

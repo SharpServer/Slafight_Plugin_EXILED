@@ -8,7 +8,7 @@ permalink: /roles/
   <div>
     <p class="eyebrow">Custom Roles</p>
     <h1>カスタムロール</h1>
-    <p>プレイヤーが遭遇する独自ロールの説明、陣営、HP、主な所持品、出現条件をまとめています。追加は <code>docs/_data/roles.yml</code> に1件追記します。</p>
+    <p>プレイヤーが遭遇する独自ロールの説明、陣営、HP、主な所持品、出現条件をまとめています。</p>
   </div>
   <div class="filter-box">
     <label for="role-filter">このページを絞り込み</label>
@@ -23,7 +23,8 @@ permalink: /roles/
   <h2>{{ group.name }}</h2>
   <div class="card-grid">
   {% for role in group.items %}
-    <article class="wiki-card" id="{{ role.id }}" data-card data-search="{{ role.name }} {{ role.side }} {{ role.team }} {{ role.base }} {{ role.summary }} {{ role.condition }} {{ role.items | join: ' ' }} {{ role.tags | join: ' ' }}">
+    {% capture role_search %}{{ role.name }} {{ role.side }} {{ role.team }} {{ role.base }} {{ role.summary }} {{ role.condition }} {{ role.items | join: ' ' }} {{ role.tags | join: ' ' }}{% endcapture %}
+    <article class="wiki-card" id="{{ role.id }}" data-card data-search="{{ role_search | strip_html | escape }}">
       <header>
         <p class="eyebrow">{{ role.team | default: group.name }}{% if role.version %} / {{ role.version }}{% endif %}</p>
         <h3>{{ role.name }}</h3>

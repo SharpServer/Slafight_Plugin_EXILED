@@ -1,14 +1,14 @@
 ---
 layout: default
-title: 更新方法
-description: Wikiの追加・更新手順。
-permalink: /maintenance/
+title: 内部管理ガイド
+description: Wikiの内部管理ガイド。
+permalink: /internal/
 ---
 <section class="page-hero">
   <div>
     <p class="eyebrow">Maintenance</p>
-    <h1>更新方法</h1>
-    <p>このWikiはGitHub Pages向けのJekyllサイトです。Discordフォーラム投稿を直接増やす代わりに、データファイルへ1件ずつ追加していく運用にします。</p>
+    <h1>内部管理ガイド</h1>
+    <p>このページは管理者向けです。公開Wikiに出す内容はユーザー向け説明に絞り、更新作業やデータ構造の話はここに集約します。</p>
   </div>
 </section>
 
@@ -34,9 +34,9 @@ permalink: /maintenance/
       <tr><td>カスタムアイテム</td><td><code>docs/_data/items.yml</code></td><td><code>/items/</code> と検索</td></tr>
       <tr><td>特殊イベント</td><td><code>docs/_data/events.yml</code></td><td><code>/events/</code> と検索</td></tr>
       <tr><td>マップ / ギミック</td><td><code>docs/_data/maps.yml</code></td><td><code>/maps/</code> と検索</td></tr>
-      <tr><td>共通仕様</td><td><code>docs/_data/mechanics.yml</code></td><td><code>/mechanics/</code> と検索</td></tr>
+      <tr><td>内部用の共通仕様メモ</td><td><code>docs/_data/mechanics.yml</code></td><td><code>/internal/mechanics/</code></td></tr>
       <tr><td>アビリティ</td><td><code>docs/_data/abilities.yml</code></td><td><code>/abilities/</code> と検索</td></tr>
-      <tr><td>ServerSpecific</td><td><code>docs/_data/server_specifics.yml</code></td><td><code>/server-specifics/</code> と検索</td></tr>
+      <tr><td>キー設定</td><td><code>docs/_data/server_specifics.yml</code></td><td><code>/server-specifics/</code> と検索</td></tr>
       <tr><td>クレジット</td><td><code>docs/_data/credits.yml</code></td><td><code>/credits/</code> と検索</td></tr>
     </tbody>
   </table>
@@ -84,3 +84,4 @@ bundle install
 bundle exec jekyll serve</code></pre>
   <p>GitHub Pages上ではGitHub側がJekyllを実行します。ローカルにJekyllが無くても、コミットしてPagesを有効化すれば公開できます。</p>
 </section>
+

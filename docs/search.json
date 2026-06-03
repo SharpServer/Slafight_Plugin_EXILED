@@ -20,17 +20,13 @@ permalink: /search.json
 {% unless first %},{% endunless %}{% assign first = false %}
 {"type":"マップ/ギミック","title":{{ entry.name | jsonify }},"group":{{ entry.zone | jsonify }},"summary":{{ entry.summary | jsonify }},"tags":{{ entry.tags | join: ' ' | jsonify }},"url":"/maps/#{{ entry.id }}"}
 {% endfor %}
-{% for entry in site.data.mechanics %}
-{% unless first %},{% endunless %}{% assign first = false %}
-{"type":"共通仕様","title":{{ entry.name | jsonify }},"group":{{ entry.category | jsonify }},"summary":{{ entry.summary | jsonify }},"tags":{{ entry.tags | join: ' ' | jsonify }},"url":"/mechanics/#{{ entry.id }}"}
-{% endfor %}
 {% for ability in site.data.abilities %}
 {% unless first %},{% endunless %}{% assign first = false %}
 {"type":"アビリティ","title":{{ ability.name | jsonify }},"group":{{ ability.category | jsonify }},"summary":{{ ability.summary | jsonify }},"tags":{{ ability.tags | join: ' ' | jsonify }},"url":"/abilities/#{{ ability.id }}"}
 {% endfor %}
 {% for entry in site.data.server_specifics %}
 {% unless first %},{% endunless %}{% assign first = false %}
-{"type":"ServerSpecific","title":{{ entry.name | jsonify }},"group":{{ entry.input_type | jsonify }},"summary":{{ entry.summary | jsonify }},"tags":{{ entry.tags | join: ' ' | jsonify }},"url":"/server-specifics/#{{ entry.id }}"}
+{"type":"キー設定","title":{{ entry.name | jsonify }},"group":{{ entry.input_type | jsonify }},"summary":{{ entry.summary | jsonify }},"tags":{{ entry.tags | join: ' ' | jsonify }},"url":"/server-specifics/#{{ entry.id }}"}
 {% endfor %}
 {% for credit in site.data.credits %}
 {% unless first %},{% endunless %}{% assign first = false %}

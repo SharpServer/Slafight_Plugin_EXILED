@@ -12,18 +12,9 @@ nav:
     url: /events/
   - title: マップ/ギミック
     url: /maps/
-  - title: 共通仕様
-    url: /mechanics/
   - title: アビリティ
     url: /abilities/
-  - title: ServerSpecific
+  - title: キー設定
     url: /server-specifics/
   - title: クレジット
     url: /credits/
-  - title: 更新方法
-    url: /maintenance/
-quick_links:
-  - title: SCP-914 Keycard Flow
-    url: /scp914-keycard-flow.html
-    description: SCP-914のキーカード変換を実装から整理した表。
-

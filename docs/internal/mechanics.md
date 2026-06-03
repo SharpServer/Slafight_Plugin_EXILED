@@ -1,14 +1,14 @@
 ---
 layout: default
-title: 共通仕様
-description: EventHandler.cs由来のラウンド共通仕様。
-permalink: /mechanics/
+title: 内部用 共通仕様メモ
+description: 管理者向けのEventHandler.cs由来メモ。
+permalink: /internal/mechanics/
 ---
 <section class="page-hero">
   <div>
     <p class="eyebrow">Global Mechanics</p>
     <h1>共通仕様</h1>
-    <p><code>MainHandlers/EventHandler.cs</code> にある、全イベント・全ラウンドにまたがる仕様をユーザー向けにまとめています。</p>
+    <p><code>MainHandlers/EventHandler.cs</code> にある、全イベント・全ラウンドにまたがる仕様を管理者向けにまとめています。</p>
   </div>
   <div class="filter-box">
     <label for="mechanic-filter">このページを絞り込み</label>
@@ -23,7 +23,8 @@ permalink: /mechanics/
   <h2>{{ group.name }}</h2>
   <div class="card-grid">
   {% for entry in group.items %}
-    <article class="wiki-card" id="{{ entry.id }}" data-card data-search="{{ entry.name }} {{ entry.category }} {{ entry.summary }} {{ entry.tags | join: ' ' }}">
+    {% capture mechanic_search %}{{ entry.name }} {{ entry.category }} {{ entry.summary }} {{ entry.tags | join: ' ' }}{% endcapture %}
+    <article class="wiki-card" id="{{ entry.id }}" data-card data-search="{{ mechanic_search | strip_html | escape }}">
       <header>
         <p class="eyebrow">{{ entry.source | default: group.name }}</p>
         <h3>{{ entry.name }}</h3>
@@ -47,3 +48,4 @@ permalink: /mechanics/
 </section>
 {% endfor %}
 </div>
+

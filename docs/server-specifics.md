@@ -1,12 +1,12 @@
 ---
 layout: default
-title: ServerSpecific設定
-description: ServerSpecific設定キー一覧。
+title: キー設定
+description: ゲーム内キー設定一覧。
 permalink: /server-specifics/
 ---
 <section class="page-hero">
   <div>
-    <p class="eyebrow">Server Specifics</p>
+    <p class="eyebrow">Controls</p>
     <h1>キー設定</h1>
     <p>ゲーム内の「設定 → Server Specifics」から設定する項目です。プレイヤー向け案内としてそのままDiscordやゲーム内告知に流用できます。</p>
   </div>
@@ -20,7 +20,8 @@ permalink: /server-specifics/
   <h2>設定項目</h2>
   <div class="card-grid">
   {% for entry in site.data.server_specifics %}
-    <article class="wiki-card" id="{{ entry.id }}" data-card data-search="{{ entry.name }} {{ entry.default }} {{ entry.recommended }} {{ entry.summary }} {{ entry.tags | join: ' ' }}">
+    {% capture specific_search %}{{ entry.name }} {{ entry.default }} {{ entry.recommended }} {{ entry.summary }} {{ entry.tags | join: ' ' }}{% endcapture %}
+    <article class="wiki-card" id="{{ entry.id }}" data-card data-search="{{ specific_search | strip_html | escape }}">
       <header>
         <p class="eyebrow">{{ entry.input_type }}</p>
         <h3>{{ entry.name }}</h3>

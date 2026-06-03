@@ -6,15 +6,15 @@ description: Slafight Plugin EXILEDのユーザー向けWiki。
 <section class="hero">
   <p class="hero-kicker">SCP: Secret Laboratory / EXILED</p>
   <h1>Slafight Plugin Wiki</h1>
-  <p>Discordフォーラムに散らばりがちなカスタムロール、アイテム、特殊イベント、マップギミックをGitHub Pagesでまとめるためのデータ駆動Wikiです。追加や修正は <code>docs/_data/*.yml</code> を編集するだけで反映されます。</p>
+  <p>シャープ鯖で追加されているカスタムロール、アイテム、特殊イベント、マップギミックをまとめたユーザー向けWikiです。気になる要素は上の検索かカテゴリから確認できます。</p>
   <div class="hero-actions">
     <a class="button" href="{{ '/roles/' | relative_url }}">ロールを見る</a>
-    <a class="button secondary" href="{{ '/maintenance/' | relative_url }}">更新方法</a>
+    <a class="button secondary" href="{{ '/items/' | relative_url }}">アイテムを見る</a>
   </div>
 </section>
 
 <section class="content-section">
-  <h2>主要カテゴリ</h2>
+  <h2>まず見るカテゴリ</h2>
   <div class="section-grid">
     <a class="wiki-card" href="{{ '/roles/' | relative_url }}" data-card data-search="roles custom role scp mtf chaos goc">
       <p class="eyebrow">{{ site.data.roles | size }} entries</p>
@@ -40,21 +40,16 @@ description: Slafight Plugin EXILEDのユーザー向けWiki。
 </section>
 
 <section class="content-section">
-  <h2>運用向け</h2>
+  <h2>プレイに役立つ情報</h2>
   <div class="section-grid">
-    <a class="wiki-card" href="{{ '/mechanics/' | relative_url }}">
-      <p class="eyebrow">EventHandler</p>
-      <h3>共通仕様</h3>
-      <p>ラウンド開始時の共通処理、ロビー表示、ゲートロック、SCP切断時の代替スポーンなど。</p>
-    </a>
     <a class="wiki-card" href="{{ '/abilities/' | relative_url }}">
       <p class="eyebrow">Abilities</p>
       <h3>アビリティ</h3>
-      <p>ServerSpecificキーから使う特殊能力の効果と主な利用者。</p>
+      <p>キー設定から使う特殊能力の効果と主な利用者。</p>
     </a>
     <a class="wiki-card" href="{{ '/server-specifics/' | relative_url }}">
       <p class="eyebrow">Controls</p>
-      <h3>ServerSpecific設定</h3>
+      <h3>キー設定</h3>
       <p>近接チャット、キャラクター名、アビリティ切替/使用、シークレットコード。</p>
     </a>
     <a class="wiki-card" href="{{ '/credits/' | relative_url }}">
@@ -64,20 +59,3 @@ description: Slafight Plugin EXILEDのユーザー向けWiki。
     </a>
   </div>
 </section>
-
-<section class="content-section">
-  <h2>便利リンク</h2>
-  <div class="section-grid">
-    <a class="wiki-card" href="{{ '/internal/scp914-keycard-flow.html' | relative_url }}">
-      <p class="eyebrow">Reference</p>
-      <h3>SCP-914 Keycard Flow</h3>
-      <p>実装から整理したキーカード変換の早見表。既存HTMLをそのまま公開対象にしています。</p>
-    </a>
-    <a class="wiki-card" href="{{ '/maintenance/' | relative_url }}">
-      <p class="eyebrow">Maintainer</p>
-      <h3>追加・更新ルール</h3>
-      <p>フォーラム投稿ではなくデータに追記していくためのテンプレートとGitHub Pages設定。</p>
-    </a>
-  </div>
-</section>
-

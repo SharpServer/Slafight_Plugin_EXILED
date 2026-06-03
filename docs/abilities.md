@@ -1,14 +1,14 @@
 ---
 layout: default
 title: アビリティ
-description: ServerSpecificから使うアビリティ一覧。
+description: キー設定から使うアビリティ一覧。
 permalink: /abilities/
 ---
 <section class="page-hero">
   <div>
     <p class="eyebrow">Abilities</p>
     <h1>アビリティ</h1>
-    <p>一部SCPや特殊ロールが使用できる能力です。利用にはServerSpecificの「アビリティ切り替え」と「アビリティ使用」の設定が必要です。</p>
+    <p>一部SCPや特殊ロールが使用できる能力です。利用にはゲーム内キー設定の「アビリティ切り替え」と「アビリティ使用」の設定が必要です。</p>
   </div>
   <div class="filter-box">
     <label for="ability-filter">このページを絞り込み</label>
@@ -23,7 +23,8 @@ permalink: /abilities/
   <h2>{{ group.name }}</h2>
   <div class="card-grid">
   {% for ability in group.items %}
-    <article class="wiki-card" id="{{ ability.id }}" data-card data-search="{{ ability.name }} {{ ability.category }} {{ ability.users | join: ' ' }} {{ ability.summary }} {{ ability.tags | join: ' ' }}">
+    {% capture ability_search %}{{ ability.name }} {{ ability.category }} {{ ability.users | join: ' ' }} {{ ability.summary }} {{ ability.tags | join: ' ' }}{% endcapture %}
+    <article class="wiki-card" id="{{ ability.id }}" data-card data-search="{{ ability_search | strip_html | escape }}">
       <header>
         <p class="eyebrow">{{ ability.category }}</p>
         <h3>{{ ability.name }}</h3>

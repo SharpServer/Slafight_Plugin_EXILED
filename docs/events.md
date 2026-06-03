@@ -8,7 +8,7 @@ permalink: /events/
   <div>
     <p class="eyebrow">Special Events</p>
     <h1>特殊イベント</h1>
-    <p>イベントキューに載る特殊ラウンドの概要です。ロビー表示は実装上の <code>LocalizedName</code> と <code>TriggerRequirement</code> を参照しますが、ここでは実際の最低人数や季節条件も併記しています。</p>
+    <p>通常ラウンドとは違う流れになる特殊イベントの概要です。発生条件、目的、主な展開を確認できます。</p>
   </div>
   <div class="filter-box">
     <label for="event-filter">このページを絞り込み</label>
@@ -21,7 +21,8 @@ permalink: /events/
   <h2>イベント一覧</h2>
   <div class="card-grid">
   {% for event in site.data.events %}
-    <article class="wiki-card" id="{{ event.id }}" data-card data-search="{{ event.name }} {{ event.event_type }} {{ event.status }} {{ event.requirement }} {{ event.summary }} {{ event.tags | join: ' ' }}">
+    {% capture event_search %}{{ event.name }} {{ event.event_type }} {{ event.status }} {{ event.requirement }} {{ event.summary }} {{ event.tags | join: ' ' }}{% endcapture %}
+    <article class="wiki-card" id="{{ event.id }}" data-card data-search="{{ event_search | strip_html | escape }}">
       <header>
         <p class="eyebrow">{{ event.event_type }}{% if event.status %} / {{ event.status }}{% endif %}</p>
         <h3>{{ event.name }}</h3>

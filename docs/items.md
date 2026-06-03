@@ -8,7 +8,7 @@ permalink: /items/
   <div>
     <p class="eyebrow">Custom Items</p>
     <h1>カスタムアイテム</h1>
-    <p>カード、武器、防具、回復アイテム、S-NAV、特殊ギミック系アイテムを分類しています。性能修正は <code>docs/_data/items.yml</code> の該当項目を更新します。</p>
+    <p>カード、武器、防具、回復アイテム、S-NAV、特殊ギミック系アイテムを分類しています。</p>
   </div>
   <div class="filter-box">
     <label for="item-filter">このページを絞り込み</label>
@@ -23,7 +23,8 @@ permalink: /items/
   <h2>{{ group.name }}</h2>
   <div class="card-grid">
   {% for item in group.items %}
-    <article class="wiki-card" id="{{ item.id }}" data-card data-search="{{ item.name }} {{ item.category }} {{ item.base }} {{ item.summary }} {{ item.effect }} {{ item.stats }} {{ item.tags | join: ' ' }}">
+    {% capture item_search %}{{ item.name }} {{ item.category }} {{ item.base }} {{ item.summary }} {{ item.effect }} {{ item.stats }} {{ item.tags | join: ' ' }}{% endcapture %}
+    <article class="wiki-card" id="{{ item.id }}" data-card data-search="{{ item_search | strip_html | escape }}">
       <header>
         <p class="eyebrow">{{ item.base | default: item.category }}{% if item.version %} / {{ item.version }}{% endif %}</p>
         <h3>{{ item.name }}</h3>
