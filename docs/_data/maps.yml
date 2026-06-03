@@ -1,0 +1,226 @@
+- id: gate-a-bridge
+  name: Gate A Bridge
+  zone: 地上
+  kind: 構造物
+  summary: Gate Aの落下事故防止と見栄えのために作られた橋。
+  notes:
+    - 橋上に柵がないのは予算と時間の都合。将来改修される可能性あり。
+  tags: [surface, gate-a]
+
+- id: ez-armory
+  name: 上層武器庫
+  zone: 上層
+  kind: 部屋
+  entrance: Gate B側
+  access: 武器権限3
+  summary: 武器ロッカーが詰め込まれた上層武器庫。GoC Railgunが置かれているため重要度が高い。
+  tags: [entrance, armory, goc]
+
+- id: ez-communications-control
+  name: 上層通信・管制室
+  zone: 上層
+  kind: 部屋
+  entrance: 元上層段差付きPC部屋
+  summary: 施設内SCPの収容状況や報告書を確認できる管制室。警備員カードもある。
+  tags: [entrance, control]
+
+- id: ez-cafeteria
+  name: 上層カフェテリア
+  zone: 上層
+  kind: 部屋
+  entrance: 上層でオレンジ色に光っている扉
+  summary: 財団職員が休息する憩いの場。偶に誰かが商売をしていて賑わっている。
+  tags: [entrance, cafeteria]
+
+- id: ez-facility-manager-office
+  name: 上層施設管理者オフィス室
+  zone: 上層
+  kind: 部屋
+  entrance: 上層廊下のFACILITY MANAGER OFFICE扉
+  summary: 施設管理者が日常業務を行う場所。管理者の秘蔵ファイルが眠っているという噂がある。
+  tags: [entrance, office]
+
+- id: hcz-incinerator-control
+  name: 焼却炉管制室
+  zone: 中層
+  kind: 部屋
+  summary: 焼却炉の管制をするための部屋。収容技術者カードが置かれている。
+  tags: [hcz, incinerator]
+
+- id: scp127-room-renovation
+  name: SCP-127部屋改修
+  zone: 中層
+  kind: 改修
+  summary: SCP-127部屋の127チャンバー前に収容権限2以上のドアが追加され、中にオレンジカードが置かれる。
+  notes:
+    - SCP-127部屋上空の橋にあるSCP収容部屋扉はSCP-3114のスポーン場所として調整されている。
+  tags: [hcz, scp127, scp3114]
+
+- id: storage-13
+  name: Storage-13
+  zone: 中層
+  kind: 部屋
+  entrance: 核弾頭部屋の＊＊＊からアクセス
+  summary: Old Memory...につながる保管区画。
+  tags: [hcz, storage]
+
+- id: old-memory-terminal
+  name: Old Memory... Terminal
+  zone: 中層
+  kind: 部屋
+  entrance: HCZ実験室のエレベーター
+  summary: 様々な物が置かれている特殊空間。何か特別なことが起きる可能性がある。
+  tags: [hcz, terminal]
+
+- id: storage-06
+  name: Storage-06
+  zone: 中層
+  kind: 部屋
+  status: アクセス拒否
+  summary: "|--[アクセスが拒否されました]--|"
+  tags: [hcz, classified]
+
+- id: hcz-scp682-room
+  name: 中層SCP-682収容室
+  zone: 中層
+  kind: 部屋
+  entrance: 中層SCP-106収容室奥のエレベーター
+  summary: 広大な空間で、中央の小さな箱にSCP-682が収容されている。奥に謎の機械があるという噂がある。
+  tags: [hcz, scp682]
+
+- id: hcz-toilet
+  name: 中層トイレ
+  zone: 中層
+  kind: 部屋
+  entrance: 中層直線通路のトイレと書かれた扉
+  summary: 職員の要望から作られた比較的新しいトイレ。警備員の落とし物カードが落ちていることがある。
+  tags: [hcz, toilet]
+
+- id: hcz-server-room
+  name: 中層サーバールーム
+  zone: 中層
+  kind: 部屋
+  entrance: サーバールーム前扉
+  summary: 新しいサーバールームが不評だったため、以前の形に戻された部屋。懐かしいスタイルのサーバールーム。
+  tags: [hcz, server]
+
+- id: scp106-sinkhole
+  name: Sinkhole
+  zone: 下層
+  kind: SCP-106関連
+  summary: 下層などに出現する黒い渦。中心に立つとポケットディメンションに送られる。
+  tags: [lcz, scp106]
+
+- id: scp106-femur-breaker
+  name: Femur Breaker
+  zone: 下層
+  kind: SCP-106関連
+  summary: SCP-106収容室で誰かが犠牲になった後、隣のボタンを押すとSCP-106を収容できる。
+  tags: [lcz, scp106]
+
+- id: pdex
+  name: ポケットディメンション拡張（PDEx）
+  zone: 下層
+  kind: SCP-106関連
+  summary: SCP-106が存在している時にポケットディメンション脱出に失敗すると、1/4の確率でSCP-106と共に飛ばされる。
+  notes:
+    - SCP-106に許可されると脱出できる。
+  tags: [lcz, scp106, pdex]
+
+- id: scp3005-room
+  name: 下層SCP-3005収容室
+  zone: 下層
+  kind: 部屋
+  entrance: プランテーションの部屋のガラス奥の扉
+  summary: SCP-3005の収容室。中にはへんてこな本と、担当収容技術者の落とし物があるらしい。
+  tags: [lcz, scp3005, fifthist]
+
+- id: scp330-change
+  name: SCP-330の変更
+  zone: 下層
+  kind: アイテム変更
+  summary: ピンクキャンディーやハロウィン限定色のキャンディーが出現する。
+  notes:
+    - "ピンクキャンディー: 10%。"
+    - "ハロウィン色キャンディー: 22%。"
+    - "その他通常: 68%。"
+  tags: [lcz, scp330, candy]
+
+- id: expanded-lcz-overview
+  name: 拡張下層
+  zone: 拡張下層
+  kind: エリア
+  summary: 日々工事が進められている拡張された下層エリア。SCP-012、SCP-033収容室や監視室などがある。
+  tags: [expanded-lcz]
+
+- id: expanded-lcz-dcells
+  name: 拡張下層Dクラス職員収容房
+  zone: 拡張下層
+  kind: 部屋
+  summary: 増えるDクラス職員をさらに収容するために作られた房。大きな机があり、カードゲームが流行っている。
+  tags: [expanded-lcz, classd]
+
+- id: expanded-lcz-cafeteria
+  name: 拡張下層Dクラス職員食堂
+  zone: 拡張下層
+  kind: 部屋
+  summary: Dクラス職員用の食堂。適当に飯が置かれている。
+  tags: [expanded-lcz, classd]
+
+- id: expanded-lcz-scp012
+  name: 拡張下層SCP-012収容室
+  zone: 拡張下層
+  kind: 部屋
+  entrance: "[MISSING DATA]"
+  summary: SCP-012の収容室。入口情報は未公開。
+  tags: [expanded-lcz, scp012]
+
+- id: expanded-lcz-scp033
+  name: 拡張下層SCP-033収容室
+  zone: 拡張下層
+  kind: 部屋
+  entrance: 拡張下層最初の一直線通路の先の横の扉
+  summary: 謎多きSCP-033が収容されている。通信機を近くに持っていくと不調になるらしい。
+  notes:
+    - 元々SCP-■■■が収容されていた部屋という噂がある。
+  tags: [expanded-lcz, scp033]
+
+- id: expanded-lcz-antimeme-lab
+  name: 拡張下層特殊アノマリー研究室
+  zone: 拡張下層
+  kind: 部屋
+  entrance: 拡張下層と下層をつなぐエレベータールームのロックされた扉
+  summary: 反ミームに関する研究が行われている研究室。研究途中の特別な薬があるとか。
+  tags: [expanded-lcz, antimeme]
+
+- id: expanded-lcz-test-room
+  name: 拡張下層テスト室
+  zone: 拡張下層
+  kind: 部屋
+  entrance: 中央十字から繋がっている通路の横の扉
+  access: 収容レベル2
+  summary: 昔SCP-173の研究などで使われていた研究室。現在は物置で、古くなったS-NAV 300等が置かれている。
+  tags: [expanded-lcz, test]
+
+- id: expanded-lcz-surveillance
+  name: 拡張下層監視室
+  zone: 拡張下層
+  kind: 部屋
+  entrance: 中央十字から繋がる通路を道なりに進んだ先の横の扉
+  access: 管理レベル1
+  summary: 昔使われていた施設全体の監視室。現在は非常用として残るが、ほとんどのシステムは停止している。
+  notes:
+    - 警備員の忘れ物が落ちていることがある。
+  tags: [expanded-lcz, surveillance]
+
+- id: alpha-warhead-effect
+  name: 核弾頭の変更
+  zone: 弾頭 / 施設演出
+  kind: 演出
+  summary: ALPHA WARHEAD爆発10秒前から危険そうな煙が上がり、爆発時に大量の光を放つ。
+  notes:
+    - "旧バージョンのSCP:SLへのオマージュ / 再現として導入。"
+  tags: [warhead, effect]
+
+
+

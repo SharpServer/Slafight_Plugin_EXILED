@@ -1,0 +1,13 @@
+title: Slafight Plugin Wiki
+description: "SCP: Secret Laboratory EXILED plugin content wiki"
+lang: ja
+timezone: Asia/Tokyo
+baseurl: "/Slafight_Plugin_EXILED"
+permalink: pretty
+markdown: kramdown
+
+exclude:
+  - tmp.txt
+  - patch-networksync-research-report.md
+
+

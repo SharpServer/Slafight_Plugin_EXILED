@@ -1,0 +1,39 @@
+---
+layout: null
+permalink: /search.json
+---
+[
+{% assign first = true %}
+{% for role in site.data.roles %}
+{% unless first %},{% endunless %}{% assign first = false %}
+{"type":"ロール","title":{{ role.name | jsonify }},"group":{{ role.side | jsonify }},"summary":{{ role.summary | jsonify }},"tags":{{ role.tags | join: ' ' | jsonify }},"url":"/roles/#{{ role.id }}"}
+{% endfor %}
+{% for item in site.data.items %}
+{% unless first %},{% endunless %}{% assign first = false %}
+{"type":"アイテム","title":{{ item.name | jsonify }},"group":{{ item.category | jsonify }},"summary":{{ item.summary | jsonify }},"tags":{{ item.tags | join: ' ' | jsonify }},"url":"/items/#{{ item.id }}"}
+{% endfor %}
+{% for event in site.data.events %}
+{% unless first %},{% endunless %}{% assign first = false %}
+{"type":"イベント","title":{{ event.name | jsonify }},"group":{{ event.status | jsonify }},"summary":{{ event.summary | jsonify }},"tags":{{ event.tags | join: ' ' | jsonify }},"url":"/events/#{{ event.id }}"}
+{% endfor %}
+{% for entry in site.data.maps %}
+{% unless first %},{% endunless %}{% assign first = false %}
+{"type":"マップ/ギミック","title":{{ entry.name | jsonify }},"group":{{ entry.zone | jsonify }},"summary":{{ entry.summary | jsonify }},"tags":{{ entry.tags | join: ' ' | jsonify }},"url":"/maps/#{{ entry.id }}"}
+{% endfor %}
+{% for entry in site.data.mechanics %}
+{% unless first %},{% endunless %}{% assign first = false %}
+{"type":"共通仕様","title":{{ entry.name | jsonify }},"group":{{ entry.category | jsonify }},"summary":{{ entry.summary | jsonify }},"tags":{{ entry.tags | join: ' ' | jsonify }},"url":"/mechanics/#{{ entry.id }}"}
+{% endfor %}
+{% for ability in site.data.abilities %}
+{% unless first %},{% endunless %}{% assign first = false %}
+{"type":"アビリティ","title":{{ ability.name | jsonify }},"group":{{ ability.category | jsonify }},"summary":{{ ability.summary | jsonify }},"tags":{{ ability.tags | join: ' ' | jsonify }},"url":"/abilities/#{{ ability.id }}"}
+{% endfor %}
+{% for entry in site.data.server_specifics %}
+{% unless first %},{% endunless %}{% assign first = false %}
+{"type":"ServerSpecific","title":{{ entry.name | jsonify }},"group":{{ entry.input_type | jsonify }},"summary":{{ entry.summary | jsonify }},"tags":{{ entry.tags | join: ' ' | jsonify }},"url":"/server-specifics/#{{ entry.id }}"}
+{% endfor %}
+{% for credit in site.data.credits %}
+{% unless first %},{% endunless %}{% assign first = false %}
+{"type":"クレジット","title":{{ credit.title | jsonify }},"group":{{ credit.category | jsonify }},"summary":{{ credit.usage | jsonify }},"tags":{{ credit.license | jsonify }},"url":"/credits/#{{ credit.id }}"}
+{% endfor %}
+]

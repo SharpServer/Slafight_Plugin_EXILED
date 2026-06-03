@@ -1,0 +1,29 @@
+version: v1.8.0.2
+updated: 2026-06-03
+source_note: Discord forum draft and current repository implementation.
+nav:
+  - title: ホーム
+    url: /
+  - title: ロール
+    url: /roles/
+  - title: アイテム
+    url: /items/
+  - title: イベント
+    url: /events/
+  - title: マップ/ギミック
+    url: /maps/
+  - title: 共通仕様
+    url: /mechanics/
+  - title: アビリティ
+    url: /abilities/
+  - title: ServerSpecific
+    url: /server-specifics/
+  - title: クレジット
+    url: /credits/
+  - title: 更新方法
+    url: /maintenance/
+quick_links:
+  - title: SCP-914 Keycard Flow
+    url: /scp914-keycard-flow.html
+    description: SCP-914のキーカード変換を実装から整理した表。
+

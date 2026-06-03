@@ -1,0 +1,150 @@
+- id: scp-foundation-en
+  title: The SCP Foundation
+  category: SCP Foundation関連
+  author: SCP Foundation contributors
+  license: CC BY-SA 3.0
+  usage: SCP-3005等のSCP財団関連コンテンツの元記事・世界観。
+  links:
+    - https://scp-wiki.wikidot.com/
+  notes:
+    - 楽曲やモデル等は外部フォルダから呼び出され、プラグインDLL等に統合されるものではない。
+
+- id: scp-foundation-jp
+  title: SCP-JP
+  category: SCP Foundation関連
+  author: SCP-JP contributors
+  license: CC BY-SA 3.0
+  usage: SCP財団日本語記事・翻訳等の参照元。
+  links:
+    - https://scp-jp.wikidot.com/
+
+- id: omega-warhead-theme
+  title: The Final Flash of Existence (Orchestral Version)
+  category: イベントBGM
+  author: Jacek "Fragik" Rogal
+  license: CC BY-SA 4.0
+  usage: OMEGA WARHEAD関連BGM。
+  links:
+    - https://www.youtube.com/watch?v=KFgx0yRhAHs
+
+- id: delta-warhead-theme
+  title: Delta Warhead Remade
+  category: イベントBGM
+  author: I Dunno
+  license: 要確認
+  usage: DELTA WARHEAD関連BGM。
+  links:
+    - https://www.youtube.com/watch?v=lspAXs4F4sU
+  notes:
+    - 元曲はJacek "Fragik" RogalによるThe Final Flash of ExistenceとAjouraによるThe SCP Foundation Main Theme。
+
+- id: let-there-be-chaos
+  title: Let There Be Chaos - Chaos Insurgency Raid Theme
+  category: イベントBGM
+  author: ksho
+  license: CC BY-SA 3.0
+  usage: CHAOS INSURGENCY RAID / SNOW WARRIERS RAID関連BGM。
+  links:
+    - https://www.youtube.com/watch?v=s5JdvfpuuZ0
+
+- id: operation-blackout-theme
+  title: Operation Blackout使用曲
+  category: イベントBGM
+  author: I Dunno
+  license: 要確認
+  usage: "OPERATION: BLACKOUT関連BGM。"
+  links:
+    - https://www.youtube.com/watch?v=p6WITY_JE4Y
+  notes:
+    - Avery Alexanderの曲とJacek "Fragik" Rogalの曲を含むリミックス的作品。
+
+- id: blackout-source-avery
+  title: Avery Alexander source track
+  category: イベントBGM
+  author: Avery Alexander
+  license: CC BY
+  usage: Operation Blackout使用曲の元素材の一つ。
+  links:
+    - https://www.youtube.com/watch?v=2fig3IQpWnU
+
+- id: blackout-source-fragik
+  title: "SCP:SL OST source track"
+  category: イベントBGM
+  author: Jacek "Fragik" Rogal
+  license: CC BY-SA
+  usage: Operation Blackout使用曲の元素材の一つ。
+  links:
+    - https://www.youtube.com/watch?v=SCcb2bfJLBg
+
+- id: scp-containment-breach-audio
+  title: "SCP: Containment Breach"
+  category: 音声素材
+  author: Joonas Rikkonen (Regalis)
+  license: CC BY-SA 3.0
+  usage: Femur Breaker、Sinkhole、中層Ev等の各種音声素材。
+  links:
+    - https://www.scpcbgame.com/
+
+- id: mtf-e11-theme
+  title: MTF E-11 "NINE-TAILED FOX" - Operator
+  category: 陣営スポーンBGM
+  author: Camelidea
+  license: 要確認
+  usage: MTF E-11スポーンBGM。
+  links:
+    - https://www.youtube.com/watch?v=ypcJWK6epCo
+
+- id: mtf-nu7-theme
+  title: MTF Nu-7 "HAMMER DOWN"
+  category: 陣営スポーンBGM
+  author: Ector Aedus
+  license: CC BY-SA 3.0
+  usage: MTF Nu-7スポーンBGM。
+  links:
+    - https://www.youtube.com/watch?v=gREgDdZRvKA
+
+- id: mtf-alpha0-theme
+  title: MTF Alpha-0 "LAST OPERATION" - We Gotta Run
+  category: 陣営スポーンBGM
+  author: Jacek "Fragik" Rogal
+  license: CC BY-SA 4.0
+  usage: MTF Alpha-0スポーンBGM。
+  links:
+    - https://www.youtube.com/watch?v=keC6yd7hQWg
+
+- id: chaos-theme
+  title: The Chaos Insurgency Theme
+  category: 陣営スポーンBGM
+  author: Jacek "Fragik" Rogal
+  license: CC BY-SA 4.0
+  usage: Chaos InsurgencyスポーンBGM。
+  links:
+    - https://www.youtube.com/watch?v=hZ3HS_ANyak
+
+- id: fifthists-you-and-me
+  title: You and Me
+  category: 陣営スポーンBGM
+  author: Oboebandgeek99 / djkaktus
+  license: CC BY-SA 3.0
+  usage: Fifthists ChurchスポーンBGM。
+  links:
+    - https://scp-wiki.wikidot.com/you-and-me
+  notes:
+    - 記事・歌詞自体はdjkaktus氏。
+
+- id: server-logo-base
+  title: Sunny's Black and White Art / Case Colourless Green
+  category: ロゴ / アートワーク
+  author: SunnyClockwork / dninoue
+  license: CC BY-SA 3.0
+  usage: サーバーロゴのベースアートワーク。
+  links:
+    - https://scp-wiki.wikidot.com/sunny-s-black-and-white-art
+    - https://scp-wiki.wikidot.com/sunny-art-tales
+    - https://orig10.deviantart.net/12ab/f/2016/007/2/4/case_colourless_green_by_sunnyclockwork-d9n2ov3.jpg
+    - https://www.tumblr.com/hisclockworkservants/136815219940/scp-foundation-fanart-case-colourless-green
+    - https://64.media.tumblr.com/28f19e419413cd9fffcfad0fc936cc69/tumblr_o0l5nmXdZ41smuenvo1_400.jpg
+  notes:
+    - 本サーバーのロゴはSunnyClockwork氏のArtworkを元にdninoue氏によって作成。
+    - そのため本サーバーのロゴもCC BY-SA 3.0下で公開される。
+

@@ -1,0 +1,197 @@
+- id: omega-warhead
+  name: OMEGA WARHEAD
+  event_type: OmegaWarhead
+  status: 実装中
+  requirement: 無し
+  min_players: 6
+  summary: 大規模な収容違反に対処するため、Alpha以上の力を持つOMEGA WARHEADを使用するイベント。
+  win_condition: 爆発までに生き延びる、または抵抗する。
+  flow:
+    - OMEGA WARHEADが起動し、爆発猶予が始まる。
+    - 全プレイヤーが爆発対象になる。
+  notes:
+    - ロビー表示上の条件は「無し」だが、実装のMinPlayersRequiredは6。
+  tags: [warhead, omega]
+
+- id: old-delta-warhead
+  name: DELTA WARHEAD
+  event_type: OldDeltaWarhead
+  status: 廃止中
+  requirement: 無し
+  min_players: 0
+  summary: 地上と下層を分断し、除染と共にオブジェクト無力化を狙う旧イベント。
+  notes:
+    - 現在はFacilityTerminationに置き換えられた旧イベント。
+  tags: [warhead, deprecated]
+
+- id: endless-cry
+  name: ENDLESS CRY
+  event_type: EndlessCry
+  status: 実装中
+  requirement: 4人以上のプレイヤー
+  min_players: 4
+  summary: SCP-096が大激怒するイベント。Dクラスが最初の生贄として差し出され、怒り始めると強化されたSCP-096が施設内を駆け回る。
+  flow:
+    - "SCP-096: ANGERが出現する。"
+    - 見たプレイヤーは追跡対象になる。
+  tags: [scp096, scp, event]
+
+- id: scp1509-battlefield
+  name: SCP-1509 BattleField
+  event_type: Scp1509BattleField
+  status: 実装中
+  requirement: 4人以上のプレイヤー
+  min_players: 4
+  summary: 初期スポーン時にカオスとNTFへ分かれ、各階層からランダムに選ばれたマップで近接戦を行う。
+  flow:
+    - マップは各階層の候補からランダム選択。
+    - SCP-1509を中心に戦闘する。
+  tags: [battlefield, scp1509]
+
+- id: fifthists-raid
+  name: THE FIFTHIST'S RAID
+  event_type: FifthistsRaid
+  status: 実装中
+  requirement: 4人以上のプレイヤー
+  min_players: 4
+  summary: SCPの1体がSCP-3005となり、ランダムな人間が第五教会 救出師としてGate B脱出口にスポーンする。
+  win_condition: SCP-3005が脱出口から脱出すると第五教会陣営の勝利。
+  flow:
+    - SCP-3005と第五教会 救出師が出現。
+    - SCP-3005を脱出口まで護送する。
+    - 脱出成功で第五教会勝利。
+  tags: [fifthist, scp3005, raid]
+
+- id: chaos-insurgency-raid
+  name: CHAOS INSURGENCY RAID
+  event_type: NuclearAttack
+  status: 実装中
+  requirement: 5人以上のプレイヤー
+  min_players: 5
+  season: 通常シーズンのみ
+  summary: DELTA COMMANDがSite-02のシステムを乗っ取り、精鋭カオス軍がサイトへ侵入する大型襲撃イベント。
+  win_condition: カオス勢力が生存し任務を進めるとSURFACE ATTACK PROTOCOLへ移行。
+  flow:
+    - 一部SCPプレイヤーがChaos Commandoへ変換される。
+    - CASSIE乗っ取り、施設消灯、テスラ無効化が進む。
+    - カオス生存時はSurface Attackへ移行し、脱出猶予後に爆破される。
+  notes:
+    - Discord原稿では6人以上だが、現実装は5人以上。
+  tags: [chaos, raid, surface-attack]
+
+- id: operation-blackout
+  name: "OPERATION: BLACKOUT"
+  event_type: OperationBlackout
+  status: 現在無効
+  requirement: 無し
+  min_players: 0
+  summary: 全施設停電、階層ロック、発電機復旧を軸にしたイベント案。
+  notes:
+    - 現在の実装ではIsReadyToExecuteがfalseのため通常抽選では実行されない。
+    - Discord原稿上の説明は残っているため、再実装時の下書きとして保持。
+  tags: [blackout, disabled]
+
+- id: snow-warriers-raid
+  name: SNOW WARRIERS RAID
+  event_type: SnowWarriersAttack
+  status: 季節限定
+  requirement: 5人以上のプレイヤー
+  min_players: 5
+  season: クリスマスシーズン
+  summary: Snow Warrier's Divisionを名乗る団体が施設システムを乗っ取り、MEGABALL ATTACKを狙う季節イベント。
+  win_condition: Snow Warrierが一定時間生存すると施設破壊プロトコルへ進む。
+  flow:
+    - 一部SCPプレイヤーがSnowWarrierへ変換される。
+    - CASSIE乗っ取り、ライトアップ、テスラ無効化が進む。
+    - Snow Warrier生存時は巨大攻撃により施設が爆破される。
+  tags: [snow, seasonal, raid]
+
+- id: facility-termination
+  name: FACILITY TERMINATION
+  event_type: FacilityTermination
+  status: 実装中
+  requirement: 無し
+  min_players: 8
+  summary: SCP-5000世界をモチーフにしたサイト攻防戦。機動部隊と施設警備員が正常性、それ以外が人間性陣営として争う。
+  win_condition: 正常性陣営は人間性陣営を終了させる。人間性陣営は狂気を生き延びる。
+  flow:
+    - SCPがSculptureへ変換される。
+    - Alpha-0やUNGOCを含む独自スポーンコンテキストへ切り替わる。
+    - 約22分後、施設終了プロセスが始まり、下層から順にロックダウンと除染が進む。
+    - 最終的にDELTA PROTOCOL WARHEADが爆発する。
+  notes:
+    - ロビー表示上の条件は「無し」だが、実装のMinPlayersRequiredは8。
+  tags: [scp5000, termination, warhead]
+
+- id: revolver-battles
+  name: Revolver Battles
+  event_type: RevolverBattles
+  status: 実装中
+  requirement: 無し
+  min_players: 0
+  summary: 全員にリボルバーと弾薬80発が配られるシンプルな戦闘イベント。
+  flow:
+    - ラウンド中の全プレイヤーにリボルバーと弾薬が配布される。
+  tags: [revolver, battle]
+
+- id: candy-warriers-raid
+  name: Candy Warrier's Raid
+  event_type: CandyWarriersAttack
+  status: 季節限定
+  requirement: 5人以上のプレイヤー
+  min_players: 5
+  season: エイプリルフール / ハロウィン
+  summary: Snow Warrier's Divisionに続いて現れた謎のGoI「Candy Warrier's Division」が施設へ襲撃する。
+  win_condition: Candy Warrierが一定時間生存すると巨大キャンディー攻撃で施設を爆破する。
+  flow:
+    - 一部SCPプレイヤーが季節に応じたCandy Warrierへ変換される。
+    - CASSIE乗っ取り、施設ライトアップ、テスラ無効化が進む。
+    - Candy Warrier生存時はCandy Nukeが落下し施設が爆破される。
+  tags: [candy, seasonal, raid]
+
+- id: sergey-makarov-returns
+  name: -=[管理官の帰還]=-
+  event_type: SergeyMakarovReturns
+  status: 季節限定 / 下書き
+  requirement: April Fools
+  min_players: 8
+  season: エイプリルフール
+  summary: セルゲイ・マカロフ関連のエイプリルフールイベント。詳細説明は未整理。
+  notes:
+    - コード上は実装があるが、ユーザー向け本文は今後追記。
+  tags: [april, draft]
+
+- id: speed-up-event
+  name: ULTIMATE SPEED EX
+  event_type: SpeedUpEvent
+  status: 季節限定 / 下書き
+  requirement: Only available in April fools.
+  min_players: 0
+  season: エイプリルフール
+  summary: 速度上昇系のエイプリルフールイベント。詳細説明は未整理。
+  tags: [april, draft]
+
+- id: case-colourless-green
+  name: CASE COLOURLESS GREEN
+  event_type: CaseColourlessGreen
+  status: 季節限定
+  requirement: 無し
+  min_players: 3
+  season: Fifth Festival
+  summary: 反ミーム爆弾、SCP-3125、Marion Wheeler、Ara Orun、Fifthist Marionetteを用いる第五フェスティバル向けイベント。
+  flow:
+    - AntiMemeBombが配置される。
+    - プレイヤーがMarion Wheeler、SCP-3125、Ara Orun、Fifthist Marionetteに割り当てられる。
+    - SCP-3125が存在する間、観戦者がFifthist Marionetteとして復帰する。
+  tags: [fifthist, antimeme, seasonal]
+
+- id: classic-event
+  name: ClassicEvent
+  event_type: ClassicEvent
+  status: 無効
+  requirement: 不可
+  min_players: 0
+  summary: 現在はIsReadyToExecuteがfalseのため実行不可のイベント。
+  tags: [disabled]
+
+

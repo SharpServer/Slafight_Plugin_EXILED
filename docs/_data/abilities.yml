@@ -1,0 +1,79 @@
+- id: sinkhole
+  name: シンクホール
+  category: SCP系
+  summary: 向いている場所にSinkholeを作成する。
+  users:
+    - SCP-106
+  notes:
+    - Sinkholeの中心に立ったプレイヤーはポケットディメンションへ送られる。
+  tags: [scp106, sinkhole]
+
+- id: magic-missile
+  name: マジックミサイル
+  category: 第五教会系
+  summary: 向いている方向へ第五的なマジックミサイルを撃つ。
+  users:
+    - 第五教会系ロール
+  tags: [fifthist, missile]
+
+- id: allow-escape
+  name: 腐蝕からの脱出
+  category: SCP系
+  summary: PDExから脱出することを許可する。
+  users:
+    - SCP-106
+  tags: [scp106, pdex]
+
+- id: sound-of-fifth
+  name: 第五からの音
+  category: 第五教会系
+  summary: 周囲の生物の目をくらませる。
+  users:
+    - 第五教会系ロール
+  tags: [fifthist, blind]
+
+- id: main-villain
+  name: メインヴィラン
+  category: SCP系
+  summary: ランダムな部屋へテレポートする。
+  users:
+    - SCP-173
+  notes:
+    - Discord原稿上のCDは180秒。
+  tags: [scp173, teleport]
+
+- id: filth-operation
+  name: 汚物作戦
+  category: SCP系
+  summary: 周囲5m以内を汚物まみれにする。
+  users:
+    - SCP-173
+  notes:
+    - Discord原稿上のCDは80秒。
+  tags: [scp173]
+
+- id: scp035-tentacle
+  name: 触手
+  category: SCP系
+  summary: 向いている先にSCP-035の触手を設置する。近づいた人間はダメージを受ける。
+  users:
+    - SCP-035
+  tags: [scp035, tentacle]
+
+- id: old-man-road
+  name: 爺街道
+  category: 季節 / ネタ系
+  summary: 8個の汚物を一定間隔で落とし、汚物の道を生成する。
+  users:
+    - SCP-106 (April Fools)
+  notes:
+    - 代わりにSinkholeが無効化される。
+  tags: [april, scp106]
+
+- id: scp966-speed
+  name: SCP-966速度アビリティ
+  category: SCP系
+  summary: SCP-966向けの速度系アビリティ。詳細説明は未整理。
+  users:
+    - SCP-966
+  tags: [scp966, draft]

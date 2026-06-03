@@ -1,0 +1,136 @@
+- id: welcome-broadcast
+  name: 参加時ウェルカム表示
+  category: ロビー / 表示
+  source: EventHandler.OnVerified
+  summary: プレイヤー認証時にシャープ鯖へのウェルカムブロードキャストを表示する。
+  details:
+    - ラウンド進行中でなければ、少し遅延してロビー情報Hintも表示される。
+  tags: [lobby, broadcast]
+
+- id: lobby-next-event-hint
+  name: 次回イベントとTipsのロビーHint
+  category: ロビー / 表示
+  source: EventHandler.ShowLobbyInfoHint
+  summary: ロビー中、画面下部に次のイベント名とランダムTipsを表示する。
+  details:
+    - 特殊イベントのキューが変わった時にも同期される。
+    - ラウンド開始時にこのHintは削除される。
+  tags: [lobby, event, tips]
+
+- id: player-state-cleanup
+  name: 退出時の状態クリーンアップ
+  category: プレイヤー状態
+  source: EventHandler.OnLeft
+  summary: プレイヤー退出時にデバッグモード、RP名、エフェクト偽同期などの状態を削除する。
+  tags: [cleanup]
+
+- id: early-scp-disconnect-replacement
+  name: 早期SCP切断時の代替スポーン
+  category: プレイヤー状態
+  source: EventHandler.OnLeft
+  summary: ラウンド開始から約3分以内に最後のSCPプレイヤーが切断した場合、死亡者の1人を代替SCPとして復帰させる。
+  details:
+    - SCP-049-2やZombified系は対象外。
+    - 他に生存SCPがいる場合は発動しない。
+  tags: [scp, disconnect, respawn]
+
+- id: round-start-reset
+  name: ラウンド開始時の状態リセット
+  category: ラウンド開始
+  source: EventHandler.OnRoundStarted
+  summary: ラウンド開始時にエフェクト偽同期とSpecificFlagを初期化し、全プレイヤーのロビーHintと古いHintを消す。
+  details:
+    - 各プレイヤーのフラグも初期化される。
+    - Pickupを一度UnSpawnしてから再Spawnする。
+  tags: [round-start, reset]
+
+- id: round-start-cassie
+  name: ラウンド開始CASSIEとライトフリッカー
+  category: ラウンド開始
+  source: EventHandler.OnRoundStarted
+  summary: 一部イベントを除き、ラウンド開始時に収容違反発生のCASSIEを流し、全室のライトを短時間フリッカーさせる。
+  details:
+    - Omega Warhead時は大規模収容違反向けの専用文面になる。
+    - Operation Blackout、SCP-1509 BattleField、Facility Termination、Sergey Makarov Returnsなどではスキップされる。
+  tags: [cassie, lights]
+
+- id: scp173-gate-open
+  name: SCP-173収容室ゲートの自動開放
+  category: ラウンド開始
+  source: EventHandler.OnRoundStarted
+  summary: ラウンド開始後、SCP-173収容室のゲートをアンロックして開放する。
+  tags: [scp173, door]
+
+- id: gate-lock-start
+  name: Gate A / Gate Bの一時ロック
+  category: ラウンド開始
+  source: EventHandler.OnRoundStarted / DoorGet
+  summary: 通常イベントではラウンド開始後にGate A / Gate Bを120秒ロックする。
+  details:
+    - NuclearAttack、SnowWarriersAttack、CandyWarriersAttack、FacilityTermination、SergeyMakarovReturnsではスキップされる。
+    - 通常イベント中にロックされたゲートへ触ると「収容違反への対応として暫くロックされているようだ・・・」というHintを表示する。
+  tags: [gate, door, lock]
+
+- id: spawn-item-seasonal
+  name: 非SCPへの初期補助アイテム
+  category: ロール変更
+  source: EventHandler.OnChangingRole
+  summary: ロール変更後、非SCPでインベントリに空きがあるプレイヤーへ補助アイテムを付与する。
+  details:
+    - 通常シーズンではFlashlightを付与する。
+    - Aprilシーズンではランダムキャンディーを付与する。
+    - 観戦者、インベントリ満杯、既に対象アイテム所持の場合は付与しない。
+  tags: [spawn, item, season]
+
+- id: scp-team-anomalous-target
+  name: SCP同士のAnomalousTarget同期
+  category: ロール変更
+  source: EventHandler.ConfigureScpTeamAnomalousTarget
+  summary: SCPチームのプレイヤーには、他の生存SCPを対象にAnomalousTargetエフェクトを偽同期する。
+  details:
+    - SCPチームでなくなった場合はAnomalousTargetの偽同期を解除する。
+  tags: [scp, effect]
+
+- id: deadman-decon-cancel
+  name: Deadman Switch / 除染キャンセル制御
+  category: イベント制御
+  source: EventHandler.DeadmanCancel / DeconCancel
+  summary: 特殊イベントはフラグを使ってDeadman SwitchやLCZ除染をキャンセルできる。
+  details:
+    - DeadmanDisableが有効な時はDeadman Switch開始を拒否する。
+    - DeconCancellFlagが有効な時は除染開始を拒否する。
+  tags: [warhead, decontamination]
+
+- id: vanilla-scp-termination-cassie
+  name: 通常SCP死亡時の終了アナウンス
+  category: CASSIE / 勝敗演出
+  source: EventHandler.OnDying
+  summary: 通常SCPが死亡すると、CASSIEの終了アナウンスを流す。
+  details:
+    - カスタムロール、SCP-049-2、SCP-079は対象外。
+  tags: [scp, cassie]
+
+- id: scp500-antimeme-and-610
+  name: SCP-500の特殊治療
+  category: アイテム使用
+  source: EventHandler.OnUsed
+  summary: 特定フラグを持つプレイヤーが通常SCP-500を使った時、追加の状態回復が行われる。
+  details:
+    - AntiMemeEffectDisabled中かつScp207Level4フラグがある場合、SCP-207 Level 4とInvigorated 60秒を再付与する。
+    - Infecting610フラグがある場合、SCP-610感染を治療する。
+    - カスタムアイテム化されたSCP-500ではなく通常SCP-500が対象。
+  tags: [scp500, antimeme, scp610]
+
+- id: scp207-resistance
+  name: SCP-207ダメージ耐性
+  category: ダメージ処理
+  source: EventHandler.OnHurting
+  summary: Scp207Resistanceフラグを持つプレイヤーはSCP-207由来のダメージを受けない。
+  tags: [scp207, resistance]
+
+- id: debug-door-info
+  name: デバッグモード中のドア情報記録
+  category: 管理者 / デバッグ
+  source: EventHandler.DoorGet
+  summary: デバッグモードのプレイヤーがドアに触ると、ドア種別、部屋種別、ローカル座標などをDebugModeHandlerへ記録する。
+  tags: [debug, door]

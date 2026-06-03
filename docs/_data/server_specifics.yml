@@ -1,0 +1,44 @@
+- id: proximity-chat
+  name: 近接チャット
+  input_type: Key
+  recommended: V
+  usage: キーを押す
+  summary: SCP-049、SCP-939、Zombified Subjectなど一部ロールが近くの人間と会話するために使う。
+  tags: [voice, proximity]
+
+- id: character-name
+  name: キャラクター名
+  input_type: Text
+  default: 空白
+  usage: 入力して設定
+  summary: RPでキャラクター名を設定する。表示は「キャラ名 (ユーザー名)」形式になる。
+  notes:
+    - 最大20文字まで入力可能。
+    - 空白に戻すと通常の名前に戻る。
+  tags: [rp, name]
+
+- id: ability-switch
+  name: アビリティ切り替え
+  input_type: Key
+  recommended: 中央マウスボタン
+  usage: キーを押す
+  summary: 使用したいアビリティを選択する。
+  notes:
+    - アビリティ使用キーとセットで設定しないと、多くの能力は使えない。
+  tags: [ability, control]
+
+- id: ability-use
+  name: アビリティ使用
+  input_type: Key
+  recommended: 左Alt
+  usage: キーを押す
+  summary: 選択中のアビリティを使用する。
+  tags: [ability, control]
+
+- id: secret-code
+  name: シークレットコード
+  input_type: Text
+  default: 空白
+  usage: 入力して設定
+  summary: 一部の場所へアクセスするために必要なコードを入力する。
+  tags: [code, access]

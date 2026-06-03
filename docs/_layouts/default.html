@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="{{ site.lang | default: 'ja' }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% if page.title %}{{ page.title }} | {% endif %}{{ site.title }}</title>
+  <meta name="description" content="{{ page.description | default: site.description }}">
+  <link rel="stylesheet" href="{{ '/assets/wiki.css' | relative_url }}">
+</head>
+<body data-baseurl="{{ site.baseurl }}">
+  <a class="skip-link" href="#content">本文へ移動</a>
+  <header class="site-header">
+    <div class="header-grid">
+      <a class="brand" href="{{ '/' | relative_url }}" aria-label="Slafight Plugin Wiki home">
+        <span class="brand-mark">S</span>
+        <span>
+          <strong>Slafight Plugin Wiki</strong>
+          <small>{{ site.data.wiki.version }} / updated {{ site.data.wiki.updated }}</small>
+        </span>
+      </a>
+      <div class="global-search" role="search">
+        <label for="global-search-input">Wiki内検索</label>
+        <input id="global-search-input" data-global-search type="search" autocomplete="off" placeholder="ロール、イベント、アイテムを検索">
+        <div class="search-results" data-search-results hidden></div>
+      </div>
+    </div>
+    <nav class="top-nav" aria-label="Primary">
+      {% for item in site.data.wiki.nav %}
+        <a href="{{ item.url | relative_url }}" {% if page.url == item.url %}aria-current="page"{% endif %}>{{ item.title }}</a>
+      {% endfor %}
+    </nav>
+  </header>
+
+  <main id="content" class="page-shell">
+    {{ content }}
+  </main>
+
+  <footer class="site-footer">
+    <p>Data-driven GitHub Pages wiki. Edit <code>docs/_data/*.yml</code> to update content.</p>
+    <p>SCP関連要素は各元記事・素材のライセンスに従います。詳細はクレジットを参照してください。</p>
+  </footer>
+  <script src="{{ '/assets/wiki.js' | relative_url }}" defer></script>
+</body>
+</html>
+
