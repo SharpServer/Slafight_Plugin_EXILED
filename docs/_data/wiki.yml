@@ -1,6 +1,6 @@
 version: v1.8.0.2
 updated: 2026-06-03
-source_note: Discord forum draft and current repository implementation.
+source_note: Public player wiki generated from the current repository data.
 nav:
   - title: ホーム
     url: /

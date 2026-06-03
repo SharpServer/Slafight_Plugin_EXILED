@@ -1,6 +1,6 @@
 - id: scp-173
   name: SCP-173
-  side: "SIDE: SCP"
+  side: SCP陣営
   team: SCP
   base: SCP-173
   hp: 4500
@@ -14,7 +14,7 @@
 
 - id: scp-096-anger
   name: "SCP-096: ANGER"
-  side: "SIDE: SCP"
+  side: SCP陣営
   team: SCP
   base: SCP-096
   condition: ENDLESS CRYイベントでスポーン
@@ -23,7 +23,7 @@
 
 - id: scp-3005
   name: SCP-3005
-  side: "SIDE: SCP"
+  side: SCP陣営
   team: SCP / Fifthist関連
   summary: 非常に第五的な紫の球体。半径2m以内のプレイヤーへ1.5秒ごとに15ダメージを与える。
   condition: THE FIFTHIST'S RAIDでSCPから変換
@@ -33,7 +33,7 @@
 
 - id: scp-3114
   name: SCP-3114
-  side: "SIDE: SCP"
+  side: SCP陣営
   team: SCP
   base: SCP-3114
   hp: 3114
@@ -43,14 +43,14 @@
 
 - id: scp-966
   name: SCP-966
-  side: "SIDE: SCP"
+  side: SCP陣営
   team: SCP
   summary: 背後から忍び寄って人間を狩るSCP。視認自体はしやすいが、966視点では音が非常に大きい。
   tags: [scp]
 
 - id: scp-999
   name: SCP-999
-  side: "SIDE: SCP"
+  side: SCP陣営
   team: SCP / 中立寄り
   condition: 通常時はスポーンしない。管理者限定または期間限定で出現する可能性あり。
   summary: 勝敗に影響しないペット的SCP。一見無害だが、扱いを誤るべきではない。
@@ -58,7 +58,7 @@
 
 - id: scp-035
   name: SCP-035
-  side: "SIDE: SCP"
+  side: SCP陣営
   team: SCP
   base: チュートリアル
   hp: 2500
@@ -75,7 +75,7 @@
 
 - id: scp-610
   name: SCP-610
-  side: "SIDE: SCP"
+  side: SCP陣営
   team: SCP
   base: チュートリアル
   hp: 800
@@ -92,47 +92,47 @@
 
 - id: fifthist-rescue
   name: FIFTHIST RESCUE（第五教会 救出師）
-  side: "SIDE: GoI - Fifthist"
+  side: GoI / 第五教会
   team: 第五教会
   summary: SCP-3005救出のためにSite-02へ侵入した第五教会の実働員。SCPや他の人間陣営との敵対も辞さない。
   condition: THE FIFTHIST'S RAIDで出現
   items:
     - SCP-127
-    - Heavy Armor
+    - 重装アーマー
     - 第五教会 第五デバイス
     - SCP-500
-    - Medkit
-    - Adrenaline
-    - Grenade
+    - 医療キット
+    - アドレナリン
+    - 高性能手榴弾
   tags: [fifthist, goi]
 
 - id: fifthist-priest
   name: FIFTHIST PRIEST（第五教会 司祭）
-  side: "SIDE: GoI - Fifthist"
+  side: GoI / 第五教会
   team: 第五教会
   condition: SCP-3005がFifthist Raid中に脱出すると変化可能
   summary: 第五的存在の恩寵を受けた第五主義者。SCP-3005と同じ範囲反ミームが可能。
   items:
     - SCP-127
-    - Heavy Armor
+    - 重装アーマー
     - 第五教会 司祭デバイス
     - SCP-500 x2
-    - Adrenaline
-    - Grenade
+    - アドレナリン
+    - 高性能手榴弾
   abilities:
     - 自身はアンチミーム効果を受けず、足の速度も通常通り。
   tags: [fifthist, antimeme]
 
 - id: fifthist-convert
   name: FIFTHIST CONVERT（第五教会 改宗者）
-  side: "SIDE: GoI - Fifthist"
+  side: GoI / 第五教会
   team: 第五教会
   summary: 第五教会になったばかりの人。武器は弱く、前線よりサポート寄り。
   tags: [fifthist]
 
 - id: fifthist-marionette
   name: Fifthist Marionette（第五教会 傀儡人形）
-  side: "SIDE: GoI - Fifthist"
+  side: GoI / 第五教会
   team: 第五教会
   base: SCP-049-2
   hp: 100
@@ -144,23 +144,23 @@
 
 - id: chaos-commando
   name: CHAOS COMMANDO（カオス コマンドー）
-  side: "SIDE: GoI - Chaos Insurgency"
+  side: GoI / カオス・インサージェンシー
   team: カオス・インサージェンシー
   base: カオス抑圧兵
   hp: 120
   summary: 大量の弾薬と改造された肉体を持つ、強靭なカオス精鋭兵。
   items:
     - Logicer SUPER
-    - Heavy Armor
-    - Chaos Insurgency Access Device
-    - Medkit x2
-    - Adrenaline
-    - Grenade
+    - 重装アーマー
+    - カオス・インサージェンシーアクセスデバイス
+    - 医療キット x2
+    - アドレナリン
+    - 高性能手榴弾
   tags: [chaos, goi]
 
 - id: chaos-sniper
   name: Chaos Insurgency Sniper（カオス 狙撃兵）
-  side: "SIDE: GoI - Chaos Insurgency"
+  side: GoI / カオス・インサージェンシー
   team: カオス・インサージェンシー
   base: カオス抑圧兵
   hp: 100
@@ -168,13 +168,13 @@
   summary: SL-8Gで遠距離から敵を制圧するカオス狙撃兵。
   items:
     - SL-8G
-    - Combat Armor
-    - Chaos Insurgency Device
+    - 戦闘アーマー
+    - カオス・インサージェンシーアクセスデバイス
   tags: [chaos, sniper]
 
 - id: chaos-intruder
   name: Chaos Insurgency Intruder（カオス 侵入兵）
-  side: "SIDE: GoI - Chaos Insurgency"
+  side: GoI / カオス・インサージェンシー
   team: カオス・インサージェンシー
   base: カオス略奪兵
   hp: 100
@@ -182,44 +182,44 @@
   summary: 施設に侵入する小規模部隊。警備隊の壊滅と仲間の脱出を目指す。
   items:
     - Suppressiver
-    - Combat Armor
-    - Chaos Intruder Device
+    - 戦闘アーマー
+    - カオス侵入兵デバイス
   tags: [chaos]
 
 - id: ntf-lieutenant
   name: Nine-tailed Fox Lieutenant（九尾狐 補佐官）
-  side: "SIDE: Foundation - Mobile Task Forces"
+  side: 財団 / 機動部隊
   team: 財団
   summary: 隊長補佐を目的とし、万一の際は代理・臨時隊長として指示を下せる。
   items:
     - MTF-E11-SR
-    - Heavy Armor
-    - MtfCaptainCard
-    - Medkit
-    - Adrenaline x2
-    - Grenade Flash
-    - Radio
+    - 重装アーマー
+    - MTF隊長カード
+    - 医療キット
+    - アドレナリン x2
+    - 高性能手榴弾 Flash
+    - 無線機
   tags: [foundation, mtf, ntf]
 
 - id: ntf-general
   name: Nine-tailed Fox General（九尾狐 司令官）
-  side: "SIDE: Foundation - Mobile Task Forces"
+  side: 財団 / 機動部隊
   team: 財団
   base: MTF隊長
   hp: 100
   summary: NTFの重鎮。部隊に指令を発し、事態の収束へ導く。
   items:
     - FRMG-X
-    - VipArmor
-    - MtfCaptainCard
+    - 要人用アーマー
+    - MTF隊長カード
     - Serum-D
-    - Advanced Medkit
-    - Radio
+    - Advanced 医療キット
+    - 無線機
   tags: [foundation, mtf, ntf]
 
 - id: ntf-specialist
   name: Nine-tailed Fox Specialist（九尾狐 スペシャリスト）
-  side: "SIDE: Foundation - Mobile Task Forces"
+  side: 財団 / 機動部隊
   team: 財団
   base: MTFスペシャリスト
   hp: 100
@@ -228,13 +228,13 @@
   items:
     - MTF-E11-AR
     - COM-18
-    - Heavy Armor
-    - MTF Captain Keycard
+    - 重装アーマー
+    - MTF隊長カード
   tags: [foundation, mtf, ntf]
 
 - id: sne-purify
   name: "MTF Eta-10: Purify"
-  side: "SIDE: Foundation - Mobile Task Forces"
+  side: 財団 / 機動部隊
   team: 財団
   base: MTF二等兵
   hp: 125
@@ -246,7 +246,7 @@
 
 - id: sne-neutralitist
   name: "MTF Eta-10: Neutralitist"
-  side: "SIDE: Foundation - Mobile Task Forces"
+  side: 財団 / 機動部隊
   team: 財団
   base: MTF二等兵
   hp: 125
@@ -259,7 +259,7 @@
 
 - id: sne-gears
   name: "MTF Eta-10: Gears"
-  side: "SIDE: Foundation - Mobile Task Forces"
+  side: 財団 / 機動部隊
   team: 財団
   base: MTF軍曹
   hp: 125
@@ -273,7 +273,7 @@
 
 - id: sne-operator
   name: "MTF Eta-10: Operator"
-  side: "SIDE: Foundation - Mobile Task Forces"
+  side: 財団 / 機動部隊
   team: 財団
   base: MTF隊長
   hp: 150
@@ -288,53 +288,53 @@
 
 - id: hd-infantry
   name: HAMMERDOWN INFANTRY（ハンマーダウン 歩兵）
-  side: "SIDE: Foundation - Mobile Task Forces"
+  side: 財団 / 機動部隊
   team: 財団
   base: MTF二等兵
   summary: Nu-7の最下級兵。グレネードなど装備が豊富。
   items:
     - CROSSVEC
-    - MtfOperativeCard
-    - Adrenaline
-    - Medkit
-    - Grenade Flash
-    - Grenade
-    - Radio
-    - Infantry Armor
+    - MTF工作員カード
+    - アドレナリン
+    - 医療キット
+    - 高性能手榴弾 Flash
+    - 高性能手榴弾
+    - 無線機
+    - 歩兵用アーマー
   tags: [foundation, mtf, nu7]
 
 - id: hd-commander
   name: HAMMERDOWN COMMANDER（ハンマーダウン 指揮官）
-  side: "SIDE: Foundation - Mobile Task Forces"
+  side: 財団 / 機動部隊
   team: 財団
   summary: Nu-7歩兵を指揮し、制圧を進める指揮官。
   items:
     - MTF-N7-CR
-    - VipArmor
-    - MtfOperativeCard
-    - Adrenaline
-    - Medkit
-    - Grenade
-    - Radio
+    - 要人用アーマー
+    - MTF工作員カード
+    - アドレナリン
+    - 医療キット
+    - 高性能手榴弾
+    - 無線機
   tags: [foundation, mtf, nu7]
 
 - id: hd-marshal
   name: HAMMERDOWN MARSHAL（ハンマーダウン 元帥）
-  side: "SIDE: Foundation - Mobile Task Forces"
+  side: 財団 / 機動部隊
   team: 財団
   summary: Nu-7の重鎮。Weltkrieg級軽機関銃を所持し、部隊を指揮する。
   items:
     - Weltkrieg級軽機関銃
-    - VipArmor
-    - MtfCaptainCard
+    - 要人用アーマー
+    - MTF隊長カード
     - Serum-C
-    - Advanced Medkit
-    - Radio
+    - Advanced 医療キット
+    - 無線機
   tags: [foundation, mtf, nu7]
 
 - id: hd-shotgunner
   name: Hammer Down Shotgunner（ハンマーダウン 砲弾兵）
-  side: "SIDE: Foundation - Mobile Task Forces"
+  side: 財団 / 機動部隊
   team: 財団
   base: MTF二等兵
   hp: 110
@@ -342,13 +342,13 @@
   summary: ショットガン2丁を持つ近距離制圧担当。
   items:
     - Shotgun x2
-    - Infantry Armor
-    - Operative Keycard
+    - 歩兵用アーマー
+    - MTF工作員カード
   tags: [foundation, mtf, nu7]
 
 - id: hd-disarmer
   name: Hammer Down Disarmer（ハンマーダウン 拘束兵）
-  side: "SIDE: Foundation - Mobile Task Forces"
+  side: 財団 / 機動部隊
   team: 財団
   base: MTF二等兵
   hp: 110
@@ -356,13 +356,13 @@
   summary: Disarmer Rifleで対象を拘束する治安維持向けロール。
   items:
     - Disarmer Rifle
-    - Infantry Armor
-    - Operative Keycard
+    - 歩兵用アーマー
+    - MTF工作員カード
   tags: [foundation, mtf, nu7]
 
 - id: evac-guard
   name: Emergency Evacuation Guard
-  side: "SIDE: Foundation - Guards"
+  side: 財団 / 警備員
   team: 財団 / 警備員
   spawn: 下層
   summary: 下層にスポーンする緊急用警備員。職員避難を助ける役割がある。
@@ -370,7 +370,7 @@
 
 - id: security-chief
   name: Security Chief
-  side: "SIDE: Foundation - Guards"
+  side: 財団 / 警備員
   team: 財団 / 警備員
   spawn: 施設管理者室
   summary: 施設管理者室にスポーンする警備員。警備主任カードとFSP-18を持ち、職員を脱出させる。
@@ -381,14 +381,14 @@
 
 - id: chamber-guard
   name: Chamber Guard
-  side: "SIDE: Foundation - Guards"
+  side: 財団 / 警備員
   team: 財団 / 警備員
   summary: Dクラス職員の作業やSCPオブジェクトの監視を行う収容室警備。
   tags: [guard, foundation]
 
 - id: security-team-guard
   name: Security Team Guard（保安部隊）
-  side: "SIDE: Foundation - Guards"
+  side: 財団 / 警備員
   team: 財団 / 警備員
   base: 警備員
   hp: 100
@@ -396,13 +396,13 @@
   summary: 保安部隊の標準警備ロール。
   items:
     - FSP-18
-    - Combat Armor
-    - Guard Keycard
+    - 戦闘アーマー
+    - 警備員カード
   tags: [guard, foundation]
 
 - id: janitor
   name: Janitor
-  side: "SIDE: Neutrals - Class-D Personnel"
+  side: 中立 / Dクラス職員
   team: Dクラス
   base: Dクラス
   hp: 100
@@ -413,7 +413,7 @@
 
 - id: zone-manager
   name: Zone Manager
-  side: "SIDE: Neutrals - Scientist Personnel"
+  side: 中立 / 科学者
   team: 科学者
   summary: 各区画を管理する上位科学者。青カードと黄色カードを持つ。
   items:
@@ -423,7 +423,7 @@
 
 - id: facility-manager
   name: Facility Manager
-  side: "SIDE: Neutrals - Scientist Personnel"
+  side: 中立 / 科学者
   team: 科学者
   summary: 施設を管理する重要な科学者。赤カードを持つ。
   items:
@@ -432,40 +432,40 @@
 
 - id: engineer
   name: Engineer
-  side: "SIDE: Neutrals - Scientist Personnel"
+  side: 中立 / 科学者
   team: 科学者
   summary: 施設点検やタスク処理を担う技術者。最終的に強力なアイテムを得られる可能性がある。
   tags: [scientist, engineer]
 
 - id: object-observer
   name: Object Observer
-  side: "SIDE: Neutrals - Scientist Personnel"
+  side: 中立 / 科学者
   team: 科学者
   summary: 収容室のSCPオブジェクト監視役。少しだけ防具を持つ博士。
   tags: [scientist]
 
 - id: snow-warrier
   name: SnowWarrier
-  side: "SIDE: GoI - Snow Warrier's Division"
+  side: GoI / Snow Warrier's Division
   team: Snow Warrier's Division
   base: チュートリアル
   hp: 1000
   condition: クリスマスシーズンのSnow Warriers Raid
   summary: クリスマス季節に施設へ攻め込む謎のSCPのような存在。
   items:
-    - Scp1509
+    - SCP-1509
     - COM-18
-    - Scp500 x2
-    - O5 Keycard
-    - Heavy Armor
-    - Ammo9x19 x80
+    - SCP-500 x2
+    - O5カード
+    - 重装アーマー
+    - 9x19mm弾薬 x80
   notes:
     - 移動速度は約90%。
   tags: [seasonal, snow]
 
 - id: candy-warrier-april
   name: Candy Warrier (April)
-  side: "SIDE: GoI - Candy Warrier's Division"
+  side: GoI / Candy Warrier's Division
   team: Candy Warrier's Division
   base: チュートリアル
   hp: 1000
@@ -474,14 +474,14 @@
   summary: お菓子的な戦士。April版はPink Candyを多く持つ。
   items:
     - SCP-1509
-    - Pink Candy x6
+    - ピンクキャンディ x6
     - SCP-500 x2
-    - O5 Keycard
+    - O5カード
   tags: [seasonal, candy, april]
 
 - id: candy-warrier-halloween
   name: Candy Warrier (Halloween)
-  side: "SIDE: GoI - Candy Warrier's Division"
+  side: GoI / Candy Warrier's Division
   team: Candy Warrier's Division
   base: チュートリアル
   hp: 1000
@@ -490,14 +490,14 @@
   summary: Halloween版Candy Warrier。レアキャンディを多く持つ。
   items:
     - SCP-1509
-    - Random Rare Candy x6
+    - ランダムレアキャンディ x6
     - SCP-500 x2
-    - O5 Keycard
+    - O5カード
   tags: [seasonal, candy, halloween]
 
 - id: goc-operative
   name: "GoC Broken Dagger: Operative"
-  side: "SIDE: GoI - Global Occult Coalition"
+  side: GoI / 世界オカルト連合
   team: GoC（人類）
   base: MTF二等兵
   hp: 100
@@ -510,22 +510,22 @@
 
 - id: goc-medic
   name: "GoC Broken Dagger: Medic"
-  side: "SIDE: GoI - Global Occult Coalition"
+  side: GoI / 世界オカルト連合
   team: GoC（人類）
   base: MTFスペシャリスト
   hp: 100
   version: v1.7.0.0
-  summary: Advanced Medkitを多く持つ医療担当。
+  summary: Advanced 医療キットを多く持つ医療担当。
   items:
     - E-11-SR
-    - Advanced Medkit x3
+    - Advanced 医療キット x3
     - SCP-500
     - 歩兵用アーマー
   tags: [goc, medic]
 
 - id: goc-communications
   name: "GoC Broken Dagger: Communications"
-  side: "SIDE: GoI - Global Occult Coalition"
+  side: GoI / 世界オカルト連合
   team: GoC（人類）
   base: MTFスペシャリスト
   hp: 100
@@ -541,7 +541,7 @@
 
 - id: goc-thaumaturgist
   name: "GoC Broken Dagger: Thaumaturgist"
-  side: "SIDE: GoI - Global Occult Coalition"
+  side: GoI / 世界オカルト連合
   team: GoC（人類）
   base: MTFスペシャリスト
   hp: 100
@@ -556,7 +556,7 @@
 
 - id: goc-deputy
   name: "GoC Broken Dagger: Deputy"
-  side: "SIDE: GoI - Global Occult Coalition"
+  side: GoI / 世界オカルト連合
   team: GoC（人類）
   base: MTFスペシャリスト
   hp: 100
@@ -571,7 +571,7 @@
 
 - id: goc-squad-leader
   name: "GoC Broken Dagger: Squad Leader"
-  side: "SIDE: GoI - Global Occult Coalition"
+  side: GoI / 世界オカルト連合
   team: GoC（人類）
   base: MTFスペシャリスト
   hp: 110
@@ -583,5 +583,390 @@
     - Serum-C
     - 要人用アーマー
   tags: [goc, leader]
+
+
+
+
+- id: scp-079-custom
+  name: SCP-079
+  side: SCP陣営
+  team: SCP
+  base: SCP-079
+  summary: 施設制御システムを操るSCP。ドアや施設機能を利用し、収容違反を有利に進める。
+  tags: [scp, facility-control]
+
+- id: scp-106-custom
+  name: SCP-106
+  side: SCP陣営
+  team: SCP
+  base: SCP-106
+  summary: Sinkholeやポケットディメンション関連の追加ギミックを扱うSCP。
+  abilities:
+    - Sinkholeを使って対象をポケットディメンションへ送る。
+    - PDExでは脱出を許可する能力を持つ。
+  tags: [scp, scp106, pdex]
+
+- id: scp-682
+  name: SCP-682
+  side: SCP陣営
+  team: SCP
+  base: SCP-939
+  hp: 999
+  summary: 大規模な収容違反で目覚めた不死身の爬虫類。財団に対する強い敵対性を持つ高耐久SCP。
+  tags: [scp, scp682]
+
+- id: scp-3125
+  name: SCP-3125
+  side: GoI / 第五教会
+  team: 第五教会
+  base: MTF隊長
+  condition: CASE COLOURLESS GREENで出現
+  summary: 反ミーム部門を壊滅させた第五的存在。マリオン・ホイーラーの阻止が主目的となる。
+  tags: [fifthist, antimeme, scp3125]
+
+- id: zombified-subject
+  name: Zombified Subject
+  side: SCP陣営
+  team: SCP
+  base: SCP-049-2
+  hp: 125
+  summary: 何らかの要因でゾンビ化した人間。施設に混沌を広げるSCP側の追加ゾンビ。
+  tags: [scp, zombie]
+
+- id: fifthist-guidance
+  name: 第五教会 案内人
+  side: GoI / 第五教会
+  team: 第五教会
+  base: チュートリアル
+  hp: 125
+  summary: 第五教会の案内役。Cane of the Starsで対象を第五主義へ導く。
+  items:
+    - Cane of the Stars
+  tags: [fifthist]
+
+- id: chaos-signal
+  name: カオス・インサージェンシー 通信兵
+  side: GoI / カオス・インサージェンシー
+  team: カオス・インサージェンシー
+  base: カオスライフル兵
+  hp: 100
+  summary: S-Nav 300を使い、施設内のユニークな部屋を捜索する支援兵。
+  items:
+    - カオス・インサージェンシーアクセスデバイス
+    - AK
+    - 戦闘アーマー
+    - S-Nav 300
+  tags: [chaos, navigation]
+
+- id: chaos-tactical-unit
+  name: カオス・インサージェンシー 戦術兵
+  side: GoI / カオス・インサージェンシー
+  team: カオス・インサージェンシー
+  base: カオス略奪兵
+  hp: 100
+  summary: Tactical Revolverを用いて敵を排除する戦術兵。
+  items:
+    - Tactical Revolver
+    - 戦闘アーマー
+    - カオス・インサージェンシーアクセスデバイス
+  tags: [chaos, revolver]
+
+- id: chaos-penal
+  name: カオス・インサージェンシー 懲罰兵
+  side: GoI / カオス・インサージェンシー
+  team: カオス・インサージェンシー
+  base: カオス徴集兵
+  hp: 100
+  summary: 大量の爆発物を持たされた危険なカオス兵。正面戦闘よりも特攻・攪乱に向く。
+  items:
+    - 戦闘アーマー
+    - 高性能手榴弾 x3
+    - SCP-207
+    - Anti SCP-207
+  tags: [chaos, explosive]
+
+- id: chaos-undercover-agent
+  name: カオス・インサージェンシー 潜入工作員
+  side: GoI / カオス・インサージェンシー
+  team: カオス・インサージェンシー
+  base: カオス略奪兵
+  hp: 100
+  summary: 施設内へ潜入した先遣隊。偵察、略奪、味方の支援を担当する。
+  items:
+    - CUA式スパイキット
+    - フラッシュバン
+    - 医療キット
+    - アドレナリン
+    - 戦闘アーマー
+  tags: [chaos, spy]
+
+- id: ntf-detainer
+  name: 九尾狐 拘留兵
+  side: 財団 / 機動部隊
+  team: 財団
+  base: MTF軍曹
+  hp: 100
+  summary: SCiPの行動阻害に特化したNTF特技兵。XE-11 ANOMALY DETAINERで対象の逃走を防ぐ。
+  items:
+    - XE-11 ANOMALY DETAINER
+    - FSP-9
+    - MTF工作員カード
+    - 戦闘アーマー
+  tags: [foundation, mtf, ntf]
+
+- id: ntf-field-medic
+  name: NTF FIELD MEDIC
+  side: 財団 / 機動部隊
+  team: 財団
+  base: MTF二等兵
+  hp: 100
+  summary: S-41 MEDICAL PISTOLで遠距離から味方を治療できる野戦衛生兵。敵も回復するため射線に注意。
+  items:
+    - S-41 MEDICAL PISTOL
+    - CROSSVEC
+    - MTF工作員カード
+    - 戦闘アーマー
+  tags: [foundation, mtf, medic]
+
+- id: hd-shielder
+  name: ハンマーダウン シールド兵
+  side: 財団 / 機動部隊
+  team: 財団
+  base: MTF二等兵
+  hp: 120
+  summary: 大型シールドで部隊を先導し、シールドが破損するまで敵の攻撃を受け止める。
+  items:
+    - 大型シールド
+    - MTF工作員カード
+    - 医療キット
+    - 無線機
+  tags: [foundation, mtf, nu7, shield]
+
+- id: lws-agent
+  name: "Law's Left Hand: Agent"
+  side: 財団 / 機動部隊
+  team: 財団
+  base: MTF二等兵
+  hp: 100
+  summary: Omega-1の実働員。命令に従い、施設の秩序回復を支援する。
+  items:
+    - FSP-9
+    - MTF工作員カード
+    - 戦闘アーマー
+  tags: [foundation, mtf, omega1]
+
+- id: lws-forensic
+  name: "Law's Left Hand: Forensic"
+  side: 財団 / 機動部隊
+  team: 財団
+  base: MTFスペシャリスト
+  hp: 100
+  summary: Omega-1の調査官。施設内の脅威を見極め、部隊の生存を支援する。
+  items:
+    - COM-18
+    - MTF工作員カード
+    - 戦闘アーマー
+  tags: [foundation, mtf, omega1]
+
+- id: lws-liaison
+  name: "Law's Left Hand: Liaison"
+  side: 財団 / 機動部隊
+  team: 財団
+  base: MTF軍曹
+  hp: 110
+  summary: Omega-1の連絡官。味方との連携と重要人物の保護を担当する。
+  items:
+    - CROSSVEC
+    - MTF隊長カード
+    - 重装アーマー
+  tags: [foundation, mtf, omega1]
+
+- id: lws-judgement
+  name: "Law's Left Hand: Judgement"
+  side: 財団 / 機動部隊
+  team: 財団
+  base: MTF隊長
+  hp: 120
+  summary: Omega-1を率いる裁定担当。財団の秩序を回復し、敵対勢力を排除する。
+  items:
+    - E-11-SR
+    - MTF隊長カード
+    - 高性能手榴弾
+    - フラッシュバン
+  tags: [foundation, mtf, omega1]
+
+- id: rrh-warden
+  name: "Red Right Hand: Warden"
+  side: 財団 / 機動部隊
+  team: 財団
+  base: MTF隊長
+  hp: 130
+  summary: Alpha-1の監督官。O5の意思として現場を制圧し、高位職員の脱出を支援する。
+  tags: [foundation, mtf, alpha1]
+
+- id: rrh-enforcer
+  name: "Red Right Hand: Enforcer"
+  side: 財団 / 機動部隊
+  team: 財団
+  base: MTF軍曹
+  hp: 120
+  summary: Alpha-1の執行官。敵対勢力を素早く排除し、部隊の前進を支援する。
+  tags: [foundation, mtf, alpha1]
+
+- id: rrh-aegis
+  name: "Red Right Hand: Aegis"
+  side: 財団 / 機動部隊
+  team: 財団
+  base: MTF軍曹
+  hp: 140
+  summary: Alpha-1の護衛担当。重要人物を守りながら作戦継続を支援する。
+  tags: [foundation, mtf, alpha1]
+
+- id: rrh-assaulter
+  name: "Red Right Hand: Assaulter"
+  side: 財団 / 機動部隊
+  team: 財団
+  base: MTF二等兵
+  hp: 110
+  summary: Alpha-1の突入要員。強襲で敵の戦線を崩し、財団側の優位を作る。
+  tags: [foundation, mtf, alpha1]
+
+- id: ara-orun
+  name: アラ・オルン
+  side: 財団 / 機動部隊
+  team: 財団
+  base: SCP-079
+  hp: 100
+  condition: CASE COLOURLESS GREENで出現
+  summary: ミームで構成された機動部隊。マリオン・ホイーラーを支援し、SCP-3125と傀儡を食い止める。
+  tags: [foundation, mtf, antimeme]
+
+- id: sculpture
+  name: Sculpture
+  side: 財団 / 機動部隊
+  team: 財団
+  base: MTF二等兵
+  summary: Facility TerminationでSCP側から変換される彫刻兵。瞬きの隙を突いて高速移動し、敵を攻撃する。
+  tags: [foundation, facility-termination]
+
+- id: supply-manager
+  name: 施設供給管理官
+  side: 財団 / 警備員
+  team: 財団 / 警備員
+  base: 警備員
+  hp: 100
+  summary: 施設の備品搬出入を管理する職員。施設内で警備員と合流し、避難や防衛を支援する。
+  items:
+    - COM-18
+    - 医療キット x2
+    - 軽装アーマー
+    - 無線機
+  tags: [guard, support]
+
+- id: site-navigator
+  name: サイトナビゲーター
+  side: 中立 / 科学者
+  team: 科学者
+  base: 科学者
+  hp: 100
+  summary: 携帯マップ端末S-NAVを持った研究員。構造が変化し続けるサイト内で道案内役になる。
+  items:
+    - S-Nav 300
+    - 医療キット
+    - 懐中電灯
+  tags: [scientist, navigation]
+
+- id: surveillance
+  name: Surveillance
+  side: 中立 / 科学者
+  team: 科学者
+  base: SCP-079
+  hp: 100
+  summary: SCP-079のような視点で施設を監視する科学者ロール。SCP陣営のボイスチャンネルには参加できない。
+  tags: [scientist, surveillance]
+
+- id: candy-researcher
+  name: お菓子研究者
+  side: 中立 / 科学者
+  team: 科学者
+  base: 科学者
+  hp: 100
+  summary: キャンディー研究に巻き込まれた科学者。SCP-330を持ってスポーンする。
+  items:
+    - 科学者キーカード
+    - SCP-330
+  tags: [scientist, candy]
+
+- id: candy-subject
+  name: 菓子被験者
+  side: 中立 / Dクラス職員
+  team: Dクラス
+  base: Dクラス
+  hp: 100
+  summary: お菓子好きの博士の実験に巻き込まれたDクラス職員。キャンディーを多く持つ。
+  items:
+    - 用務員キーカード
+    - SCP-330
+  tags: [classd, candy]
+
+- id: marion-wheeler
+  name: マリオン・ホイーラー
+  side: 中立 / 科学者
+  team: 科学者
+  base: 科学者
+  hp: 120
+  condition: CASE COLOURLESS GREENで出現
+  summary: 反ミーム部門の部門長。反ミーム爆弾を起動し、アウトブレイクのリセットを目指す。
+  items:
+    - 収容技術者カード
+    - 医療キット x3
+  tags: [scientist, antimeme]
+
+- id: goc-hound-dog
+  name: GoC Hound Dog マークII ホワイトスーツ
+  side: GoI / 世界オカルト連合
+  team: GoC（人類）
+  base: MTFスペシャリスト
+  hp: 120
+  summary: GoC製の戦闘強化服。高速移動、VERITAS、自爆装置、自動認証など複数の機能を持つ強力なロール。
+  items:
+    - 外套ジェネレータ
+    - GOC高出力指向性電磁照射兵装《HID-Ω》
+    - アドレナリン
+    - 医療キット
+  tags: [goc, hound-dog, power-suit]
+
+- id: sergey-makarov
+  name: 施設管理官 - セルゲイ・マカロフ
+  side: その他 / 特殊
+  team: その他
+  base: 科学者
+  hp: 100
+  condition: エイプリルフール系イベントで出現
+  summary: 復讐に憑かれて蘇った施設管理官。持てる全てを使い、自身を裏切った者たちへの復讐を目指す。
+  items:
+    - CROSSVEC
+    - 施設管理官カード
+    - 医療キット x2
+    - 戦闘アーマー
+  tags: [special, april]
+
+- id: sergey-makarov-awaken
+  name: 呪詛 - セルゲイ・マカロフ
+  side: その他 / 特殊
+  team: その他
+  base: SCP-049-2
+  hp: 5000
+  condition: セルゲイ・マカロフ関連イベントで覚醒
+  summary: 怨念に呑まれたセルゲイ・マカロフ。怨みの沼、呪詛、管理官の祟りを使い、邪魔者を排除する。
+  tags: [special, april]
+
+- id: capybara-role
+  name: Xx_CAPYBARA_xX
+  side: その他 / 特殊
+  team: その他
+  base: チュートリアル
+  summary: カピバラ関連のネタ系特殊ロール。
+  tags: [special, joke]
 
 

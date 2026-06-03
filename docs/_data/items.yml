@@ -1,7 +1,7 @@
 - id: fifthist-device
   name: 第五教会 第五デバイス
   category: キーカード / アクセスデバイス
-  base: KeycardCustomTaskForce
+  base: 特殊キーカード
   permission: 収容3 / 武器3 / 管理2
   summary: 第五教会が目的達成のために作ったアクセスデバイス。扉やゲートを第五することで施設に侵入する。
   tags: [keycard, fifthist]
@@ -9,7 +9,7 @@
 - id: fifthist-priest-device
   name: 第五教会 司祭デバイス
   category: キーカード / アクセスデバイス
-  base: KeycardCustomTaskForce
+  base: 特殊キーカード
   permission: 収容3 / 武器3 / 管理3
   summary: 第五教会の司祭用アクセスデバイス。第五デバイスより管理権限が高い。
   tags: [keycard, fifthist]
@@ -17,7 +17,7 @@
 - id: security-chief-card
   name: 警備主任カード
   category: キーカード / アクセスデバイス
-  base: KeycardCustomMetalCase
+  base: 金属ケース型キーカード
   permission: 収容1 / 武器2 / 管理2
   summary: 警備主任が持つカード。
   tags: [keycard, guard]
@@ -25,27 +25,27 @@
 - id: chaos-conscripts-card
   name: 破壊カード
   category: キーカード / アクセスデバイス
-  base: KeycardChaosInsurgency
+  base: カオス・インサージェンシーアクセスデバイス
   permission: 収容2 / 武器2 / 管理2
   summary: カオス徴収兵のデバイス代わりの下級カード。
   tags: [keycard, chaos]
 
 - id: armory-level-1
-  name: Armory Level 1 Keycard
+  name: 武器庫レベル1カード
   category: キーカード / アクセスデバイス
   permission: 武器1 / 管理1
   summary: 軽武装ロッカーを開けられる武器アクセスカード。
   tags: [keycard, armory]
 
 - id: armory-level-2
-  name: Armory Level 2 Keycard
+  name: 武器庫レベル2カード
   category: キーカード / アクセスデバイス
   permission: 武器2 / 管理1
   summary: 重武装ロッカーとEPSを扱える武器アクセスカード。
   tags: [keycard, armory]
 
 - id: armory-level-3
-  name: Armory Level 3 Keycard
+  name: 武器庫レベル3カード
   category: キーカード / アクセスデバイス
   permission: 武器3 / 管理2
   summary: 最高位の武器アクセスを持つ戦術カード。
@@ -54,7 +54,7 @@
 - id: scp-1425
   name: SCP-1425
   category: 医療 / ユーティリティ
-  base: Medkit
+  base: 医療キット
   summary: 第五的な医療キットの見た目のアイテム。
   effect: 使用すると第五教会 改宗者になれる。改宗者も所持しているため、実質的に回復エフェクトのリセットが可能。
   tags: [fifthist, medical]
@@ -62,7 +62,7 @@
 - id: advanced-medkit
   name: ADVANCED MEDKIT
   category: 医療 / ユーティリティ
-  base: Medkit
+  base: 医療キット
   summary: 重篤な負傷も治療可能な大容量医療キット。
   effect: HPを全回復し、AHPを15付与する。
   tags: [medical]
@@ -70,7 +70,7 @@
 - id: serum-d
   name: SERUM-D
   category: 医療 / ユーティリティ
-  base: Adrenaline
+  base: アドレナリン
   summary: SCP-1853の性質を利用して開発された試作強化血清。
   effect: 15秒間、SCP-1853 Level 4相当の効果を得る。
   tags: [serum, buff]
@@ -78,7 +78,7 @@
 - id: serum-c
   name: SERUM-C
   category: 医療 / ユーティリティ
-  base: Adrenaline
+  base: アドレナリン
   summary: SERUM-Dをもとに改良された強化血清。
   effect: SCP-1853 Level 4効果30秒と移動速度15%上昇30秒を得る。
   tags: [serum, buff]
@@ -86,7 +86,7 @@
 - id: snavs
   name: S-NAVs
   category: 医療 / ユーティリティ
-  base: Radio
+  base: 無線機
   summary: 財団が作成したサイト内マップ。迷子対策用のナビゲーション端末。
   effect: Tキーで投げて使用すると、電池を消費して効果範囲内のユニークな部屋までの距離を表示する。SCP-914で強化可能。
   notes:
@@ -114,7 +114,7 @@
 - id: cua-spykit
   name: CUI式スパイキット
   category: 医療 / ユーティリティ
-  base: KeycardCustomSite02
+  base: Site-02カード
   version: v1.7.4.0
   summary: TキーとIキーで見た目をDクラス / カオス・インサージェンシーに変装できる道具。
   notes:
@@ -124,7 +124,7 @@
 - id: toolbox
   name: Toolbox
   category: 医療 / ユーティリティ
-  base: Coin
+  base: コイン
   version: v1.7.5.6
   summary: 施設エンジニアが使う整備点検用ツールキット。
   effect: Tキーでモードを切り替え、ドア破壊/修理、発電機こじ開け、整備用ロックダウンを行える。
@@ -133,16 +133,15 @@
 - id: scp-513
   name: SCP-513
   category: アノマリー / 特殊
-  base: Coin
+  base: コイン
   version: v1.7.5.6
-  summary: 特にこれといった特徴のないカウベル。鳴らすと何かが起きるかもしれない。
-  status: 詳細不明
+  summary: 鳴らすと視線を感じるようになる異常なカウベル。使用後、別の重収容区画に再出現する。
   tags: [scp, anomaly]
 
 - id: throwable-scp244
   name: SCP-244 (投擲)
   category: アノマリー / 特殊
-  base: Flashbang
+  base: フラッシュバン
   version: v1.7.5.6
   summary: 投擲できるよう調整されたSCP-244。
   effect: 投げてしばらくすると壺が割れる。
@@ -151,7 +150,7 @@
 - id: infantry-armor
   name: InfantryArmor
   category: 防具
-  base: CombatArmor
+  base: 戦闘アーマー
   summary: 大規模部隊の歩兵に使われる戦闘アーマー。
   effect: 弾薬容量、スタミナ消費、防御力が向上している。
   tags: [armor]
@@ -159,7 +158,7 @@
 - id: vip-armor
   name: VipArmor
   category: 防具
-  base: HeavyArmor
+  base: 重装アーマー
   summary: 要人の命を守るため、防護に特化したアーマー。
   effect: 全身100%防御、弾薬容量増加、ヒュームシールド50付与。
   tags: [armor]
@@ -167,7 +166,7 @@
 - id: hid-turret
   name: H.I.D Turret
   category: 武器
-  base: Micro HID
+  base: Micro H.I.D.
   summary: 小チャージのみを無限発射できるMicroHID派生。
   stats: MicroHIDの小チャージ相当。壊れると通常の破損性能になる。
   tags: [weapon, hid]
@@ -175,7 +174,7 @@
 - id: mtf-n7-cr
   name: MTF-N7-CR
   category: 武器
-  base: MTF-E11-SR
+  base: E-11-SR
   summary: Nu-7 Commanderが使用する銃。
   stats: ダメージ45、最大弾薬100。ただしリロードは素体の最大値まで減らないと不可。
   tags: [weapon, mtf, nu7]
@@ -191,7 +190,7 @@
 - id: goc-railgun
   name: GoC Railgun
   category: 武器
-  base: Particle Disruptor
+  base: 3-X Particle Disruptor
   summary: ホワイトスーツ主砲を歩兵用に改造したGoC兵装。
   effect: 命中地点にグレネード1個分の爆発を発生させ、対象に2000ダメージを与える。3発モードでは合計6000ダメージ。1発のみ使用可能。
   tags: [weapon, goc]
@@ -199,7 +198,7 @@
 - id: multipurpose-grenade
   name: 多目的グレネード
   category: 武器
-  base: GrenadeHE
+  base: 高性能手榴弾
   summary: マスターキーカード兼清掃用として扱われる、人体等には無害とされるグレネード。
   effect: 汚物清掃に使用。人体には無害なグレネード。
   notes:
@@ -233,7 +232,7 @@
 - id: tactical-revolver
   name: Tactical Revolver
   category: 武器
-  base: Revolver
+  base: リボルバー
   version: v1.7.4.0
   summary: ヘッドショット時に相手へ多少の毒を与える特殊リボルバー。
   tags: [weapon, revolver]
@@ -252,7 +251,7 @@
   base: Jailbird / Particle Disruptor
   version: v1.7.5.6
   summary: Schwarzschild QuasarをSCP-914で魔改造した複合武器。
-  effect: ServerSpecificのモード切替キーでQuasarとEMR-01を切り替えて使える。
+  effect: キー設定のモード切替キーでQuasarとEMR-01を切り替えて使える。
   tags: [weapon, hybrid]
 
 - id: capybara-missile
@@ -266,7 +265,7 @@
 - id: mtf-e11-ar
   name: MTF-E11-AR
   category: 武器
-  base: MTF-E11-SR
+  base: E-11-SR
   version: v1.8.0.0
   summary: 財団機動部隊が保有する対物ライフル。
   effect: コンクリート製の物などに当てると威力が倍増する。
@@ -284,8 +283,277 @@
 - id: disarmer-rifle
   name: Disarmer Rifle
   category: 武器
-  base: MTF-E11-SR
+  base: E-11-SR
   version: v1.8.0.0
   summary: ハンマーダウンが保有する制圧用スナイパーライフル。
   effect: 命中した相手に拘束具を取り付ける。
   tags: [weapon, nu7, restraint]
+
+
+- id: anti-meme-goggle
+  name: 反ミームゴーグル
+  category: 医療 / ユーティリティ
+  base: SCP-1344
+  summary: 反ミーム的影響を遮断する財団装備。
+  effect: SCP-3005への攻撃が通るようになる。
+  tags: [antimeme, equipment]
+
+- id: cane-of-the-stars
+  name: Cane of the Stars
+  category: アノマリー / 特殊
+  base: Jailbird
+  summary: 第五教会の案内人が持つ杖。殴った対象へ第五主義思想を流し込み、改宗させる。
+  tags: [fifthist, weapon]
+
+- id: cloak-generator
+  name: 外套ジェネレータ
+  category: 医療 / ユーティリティ
+  base: SCP-268
+  summary: ホワイトスーツが持つ透明化装置。使用すると透明・非透明を切り替えられる。
+  tags: [goc, stealth]
+
+- id: flashbang-e
+  name: Flashbang-E
+  category: 武器
+  base: フラッシュバン
+  summary: SCPオブジェクトにのみ作用するよう改良されたフラッシュバン。
+  tags: [weapon, antimeme]
+
+- id: goc-recruit-paper
+  name: UNGOC一般工作員セット
+  category: 医療 / ユーティリティ
+  base: 医療キット
+  summary: 一般工作員一人分の装備が入ったセット。使用するとGoC工作員を一人増やせる。
+  tags: [goc, recruit]
+
+- id: anomaly-detainer
+  name: XE-11 ANOMALY DETAINER
+  category: 武器
+  base: E-11-SR
+  summary: 被弾したSCPに強力な鈍足を付与する試作対異常兵装。
+  tags: [weapon, mtf, restraint]
+
+- id: com-77
+  name: COM-77
+  category: 武器
+  base: COM-18
+  summary: COM-18をベースにした7発装填の特殊拳銃。1発の威力が高く、リロードしやすい。
+  tags: [weapon]
+
+- id: goc-emr-x1
+  name: GOC戦略兵装 EMR-X1
+  category: 武器
+  base: 3-X Particle Disruptor
+  summary: GoCのホワイトスーツ用主砲を歩兵運用向けに再設計した電磁加速兵装。
+  tags: [weapon, goc, railgun]
+
+- id: goc-emr-01
+  name: GOC戦略兵装 EMR-01
+  category: 武器
+  base: 3-X Particle Disruptor
+  summary: 世界オカルト連合が正式採用した戦略級電磁加速兵装。
+  tags: [weapon, goc, railgun]
+
+- id: goc-hid-omega
+  name: GOC高出力指向性電磁照射兵装《HID-Ω》
+  category: 武器
+  base: Micro H.I.D.
+  summary: 財団製Micro H.I.D.をGoCが大幅改修した高出力モデル。
+  tags: [weapon, goc, hid]
+
+- id: project-90
+  name: Project-90
+  category: 武器
+  base: CROSSVEC
+  summary: 安定した扱いやすさを重視した特殊CROSSVEC。
+  tags: [weapon]
+
+- id: revolver-x
+  name: Revolver-X
+  category: 武器
+  base: リボルバー
+  summary: ある博士の特注品とされる強化リボルバー。
+  tags: [weapon, revolver]
+
+- id: scp-7381
+  name: SCP-7381
+  category: 武器
+  base: 3-X Particle Disruptor
+  summary: 3-X Particle Disruptorを大型化した特殊兵装。低威力のエネルギー弾を長時間撃ち続けられる。
+  tags: [weapon]
+
+- id: suppressiver
+  name: Suppressiver
+  category: 武器
+  base: FSP-9
+  summary: カオス侵入兵が使用する制圧用の特殊FSP-9。
+  tags: [weapon, chaos]
+
+- id: hid-continuous-model
+  name: MicroHID-C（連続運用モデル）
+  category: 武器
+  base: Micro H.I.D.
+  summary: 財団が運用する低出力型Micro H.I.D.改修モデル。継続使用に向く。
+  tags: [weapon, hid]
+
+- id: unknown-keycard
+  name: 正体不明のキーカード
+  category: キーカード / アクセスデバイス
+  base: 地上アクセスパス
+  summary: 正体不明のキーカード。通常のアクセスパスとは異なる用途を持つ可能性がある。
+  tags: [keycard, mystery]
+
+- id: chaos-intruder-device
+  name: カオス侵入兵アクセスデバイス
+  category: キーカード / アクセスデバイス
+  base: カオス・インサージェンシーアクセスデバイス
+  permission: 収容1 / 武器1 / 管理1
+  summary: カオス侵入部隊用のアクセスデバイス。
+  tags: [keycard, chaos]
+
+- id: mysterious-keycard
+  name: なぞのキーカード
+  category: キーカード / アクセスデバイス
+  base: キーカード
+  summary: 死体が持っていたと思われる謎のカード。
+  tags: [keycard, mystery]
+
+- id: site-director-keycard
+  name: 施設管理長キーカード
+  category: キーカード / アクセスデバイス
+  base: 管理職員カード
+  permission: 収容3 / 武器3 / 管理3
+  summary: 施設管理長用の管理カード。ほぼ全てのエリアにアクセスできる。
+  tags: [keycard, management]
+
+- id: site-navigator-keycard
+  name: 施設ナビゲーターキーカード
+  category: キーカード / アクセスデバイス
+  base: キーカード
+  summary: S-NAV担当職員に支給されるキーカード。
+  tags: [keycard, scientist]
+
+- id: supply-manager-keycard
+  name: 供給管理官キーカード
+  category: キーカード / アクセスデバイス
+  base: 管理職員カード
+  summary: サイト-02の供給管理課職員が持つキーカード。
+  tags: [keycard, guard]
+
+- id: surveillance-keycard
+  name: 監視課職員キーカード
+  category: キーカード / アクセスデバイス
+  base: キーカード
+  summary: 監視担当職員に支給されるキーカード。
+  tags: [keycard, scientist]
+
+- id: fifthist-magic-missile-item
+  name: 第五教会 マジックミサイル
+  category: アノマリー / 特殊
+  base: 特殊キーカード
+  summary: 非常に第五的なマジックミサイルを発射するアイテム。
+  tags: [fifthist, weapon]
+
+- id: master-card
+  name: MasterCard
+  category: キーカード / アクセスデバイス
+  base: カード
+  summary: 何にも使えないように見えるカード。SCP-914では特殊な変換ルートを持つ。
+  tags: [keycard, joke, scp914]
+
+- id: neutralize-grenade
+  name: 対反ミーム無力化グレネード
+  category: 武器
+  base: 高性能手榴弾
+  summary: 反ミーム存在および影響を受けた者を一時的に無力化し、ダメージを与える。
+  tags: [weapon, antimeme]
+
+- id: nvg-normal
+  name: ナイトビジョンゴーグル
+  category: 医療 / ユーティリティ
+  base: 暗視ゴーグル
+  summary: 遠くや暗い場所を見やすくする暗視ゴーグル。使用中は電池を消費する。
+  tags: [nvg, equipment]
+
+- id: nvg-blue
+  name: ナイトビジョンゴーグル - 青
+  category: 医療 / ユーティリティ
+  base: 暗視ゴーグル
+  summary: 視界補助に加え、周囲の情報も確認しやすい青色モデル。使用中は電池を消費する。
+  tags: [nvg, equipment]
+
+- id: nvg-red
+  name: ナイトビジョンゴーグル - 赤
+  category: 医療 / ユーティリティ
+  base: 暗視ゴーグル
+  summary: 電池を消費せずに暗所視界を補助する赤色モデル。
+  tags: [nvg, equipment]
+
+- id: omega-warhead-access-pass
+  name: OMEGA WARHEADアクセスパス
+  category: キーカード / アクセスデバイス
+  base: 地上アクセスパス
+  summary: OMEGA WARHEADサイロへアクセスできる使い捨てカード。
+  notes:
+    - ゲート解放に使うと本来の目的に使えなくなるため注意。
+  tags: [keycard, omega]
+
+- id: playing-card
+  name: Playing Card
+  category: キーカード / アクセスデバイス
+  base: カード
+  summary: ただのトランプ。通常用途はないが、SCP-914では別カードへ変換されることがある。
+  tags: [keycard, joke, scp914]
+
+- id: quarter
+  name: Quarter
+  category: 医療 / ユーティリティ
+  base: コイン
+  summary: 25セント硬貨。通常用途はほぼないが、SCP-914変換に絡むことがある。
+  tags: [coin, scp914]
+
+- id: s41-medical-pistol
+  name: S-41 MEDICAL PISTOL
+  category: 武器
+  base: COM-18
+  summary: 命中した人間に再生効果を付与し、火傷・出血・窒息・心停止を治療する医療拳銃。SCPには効果がない。
+  tags: [weapon, medical]
+
+- id: snav-300
+  name: S-Nav 300
+  category: 医療 / ユーティリティ
+  base: 無線機
+  summary: 近くのユニークな部屋を調べられるナビ端末。投げて使用する。
+  tags: [snav, navigation]
+
+- id: snav-310
+  name: S-Nav 310 Navigator
+  category: 医療 / ユーティリティ
+  base: 無線機
+  summary: S-Nav 300の改良型。電池不要で、より広い範囲のユニークな部屋を調べられる。
+  tags: [snav, navigation]
+
+- id: snav-ultimate
+  name: S-Nav Ultimate
+  category: 医療 / ユーティリティ
+  base: 無線機
+  summary: SCP-914によって強化されたS-Nav。電池不要でマップ範囲が大幅に広がり、SCP情報も得られる。
+  tags: [snav, navigation, scp914]
+
+- id: scp-148
+  name: SCP-148
+  category: アノマリー / 特殊
+  base: SCP-1509
+  summary: プロメテウス研究所製の精神遮断合金剣。SCP特効ダメージとテレパシー防御を持つ。
+  notes:
+    - 質量増加によるリスクに注意。
+  tags: [scp, weapon, antimeme]
+
+- id: veritas
+  name: VERITAS
+  category: 医療 / ユーティリティ
+  base: SCP-1344
+  summary: GoC系ロールが遠距離の敵や脅威を認識するための視覚補助装備。
+  tags: [goc, equipment]
+
+

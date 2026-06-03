@@ -21,10 +21,10 @@ permalink: /events/
   <h2>イベント一覧</h2>
   <div class="card-grid">
   {% for event in site.data.events %}
-    {% capture event_search %}{{ event.name }} {{ event.event_type }} {{ event.status }} {{ event.requirement }} {{ event.summary }} {{ event.tags | join: ' ' }}{% endcapture %}
+    {% capture event_search %}{{ event.name }} {{ event.status }} {{ event.requirement }} {{ event.summary }} {{ event.tags | join: ' ' }}{% endcapture %}
     <article class="wiki-card" id="{{ event.id }}" data-card data-search="{{ event_search | strip_html | escape }}">
       <header>
-        <p class="eyebrow">{{ event.event_type }}{% if event.status %} / {{ event.status }}{% endif %}</p>
+        {% if event.status %}<p class="eyebrow">{{ event.status }}</p>{% endif %}
         <h3>{{ event.name }}</h3>
       </header>
       <p>{{ event.summary }}</p>

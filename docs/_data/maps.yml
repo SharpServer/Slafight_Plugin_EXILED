@@ -61,11 +61,11 @@
   zone: 中層
   kind: 部屋
   entrance: 核弾頭部屋の＊＊＊からアクセス
-  summary: Old Memory...につながる保管区画。
+  summary: 一体何があるんでしょうか？
   tags: [hcz, storage]
 
-- id: old-memory-terminal
-  name: Old Memory... Terminal
+- id: hcz-terminal
+  name: Terminal
   zone: 中層
   kind: 部屋
   entrance: HCZ実験室のエレベーター

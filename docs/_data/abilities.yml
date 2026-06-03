@@ -39,7 +39,7 @@
   users:
     - SCP-173
   notes:
-    - Discord原稿上のCDは180秒。
+    - 再使用までに時間がかかります。
   tags: [scp173, teleport]
 
 - id: filth-operation
@@ -49,7 +49,7 @@
   users:
     - SCP-173
   notes:
-    - Discord原稿上のCDは80秒。
+    - 短めのクールダウンがあります。
   tags: [scp173]
 
 - id: scp035-tentacle
@@ -73,7 +73,8 @@
 - id: scp966-speed
   name: SCP-966速度アビリティ
   category: SCP系
-  summary: SCP-966向けの速度系アビリティ。詳細説明は未整理。
+  summary: SCP-966が移動速度を活かして追跡しやすくなる補助アビリティ。
   users:
     - SCP-966
-  tags: [scp966, draft]
+  tags: [scp966]
+
