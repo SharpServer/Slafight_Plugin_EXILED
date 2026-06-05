@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Exiled.API.Features;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -11,6 +12,8 @@ namespace Slafight_Plugin_EXILED.MainHandlers;
 
 public static class ServerSpecificsHandler
 {
+    private static readonly Dictionary<int, float> DocumentHintDurations = new();
+
     public static void Register()
     {
         ServerSpecificSettingsSync.ServerOnSettingValueReceived += OnSettingValueReceived;
@@ -19,10 +22,37 @@ public static class ServerSpecificsHandler
     public static void Unregister()
     {
         ServerSpecificSettingsSync.ServerOnSettingValueReceived -= OnSettingValueReceived;
+        ClearAll();
+    }
+
+    public static float GetDocumentHintDuration(Player? player)
+    {
+        if (player == null)
+            return ServerSpecifics.DefaultDocumentHintDuration;
+
+        return DocumentHintDurations.TryGetValue(player.Id, out var duration)
+            ? ClampDocumentHintDuration(duration)
+            : ServerSpecifics.DefaultDocumentHintDuration;
+    }
+
+    public static void RemovePlayer(Player? player)
+    {
+        if (player == null)
+            return;
+
+        DocumentHintDurations.Remove(player.Id);
+    }
+
+    public static void ClearAll()
+    {
+        DocumentHintDurations.Clear();
     }
 
     private static void OnSettingValueReceived(ReferenceHub hub, ServerSpecificSettingBase @base)
     {
+        if (hub == null || @base == null)
+            return;
+
         var player = Player.Get(hub);
         if (player == null || !player.IsConnected)
             return;
@@ -35,6 +65,10 @@ public static class ServerSpecificsHandler
 
             case SSPlaintextSetting { SyncInputText: not null } text:
                 HandleText(player, text.SettingId, text.SyncInputText);
+                break;
+
+            case SSSliderSetting slider:
+                HandleSlider(player, slider.SettingId, slider.SyncFloatValue);
                 break;
 
             case SSTwoButtonsSetting { SettingId: 7 } twoButton:
@@ -100,8 +134,7 @@ public static class ServerSpecificsHandler
                 loadout.ActiveAbility?.TryActivateFromInput(player);
             else if (settingId == 4)
             {
-                loadout.CycleNext();
-                AbilityManager.UpdateAbilityHint(player, loadout);
+                AbilityManager.NextSlot(player);
             }
         }
         catch (Exception e)
@@ -126,6 +159,31 @@ public static class ServerSpecificsHandler
             Log.Debug("passcode updated");
             RPNameSetter.SetPasscode(player, text);
         }
+    }
+
+    // =====================
+    //  スライダー (ID: 8=Document表示時間)
+    // =====================
+
+    private static void HandleSlider(Player player, int settingId, float value)
+    {
+        if (player == null)
+            return;
+
+        if (settingId == ServerSpecifics.DocumentHintDurationSettingId)
+        {
+            DocumentHintDurations[player.Id] = ClampDocumentHintDuration(value);
+        }
+    }
+
+    private static float ClampDocumentHintDuration(float value)
+    {
+        if (float.IsNaN(value) || float.IsInfinity(value))
+            return ServerSpecifics.DefaultDocumentHintDuration;
+
+        return Math.Max(
+            ServerSpecifics.MinDocumentHintDuration,
+            Math.Min(ServerSpecifics.MaxDocumentHintDuration, value));
     }
 
     // =====================

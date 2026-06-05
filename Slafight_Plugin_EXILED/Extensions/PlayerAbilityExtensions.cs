@@ -15,14 +15,22 @@ public static class PlayerAbilityExtensions
 
         // TAbility は (Player owner) コンストラクタを持っている前提
         var ability = (TAbility)Activator.CreateInstance(typeof(TAbility), player)!;
-        return loadout.AddAbility(ability);
+        var added = loadout.AddAbility(ability);
+        if (added)
+            AbilityManager.UpdateAbilityHint(player, loadout);
+
+        return added;
     }
 
     // 直接インスタンス渡し版
     public static bool AddAbility(this Player player, AbilityBase ability)
     {
         var loadout = AbilityManager.GetOrCreateLoadout(player);
-        return loadout.AddAbility(ability);
+        var added = loadout.AddAbility(ability);
+        if (added)
+            AbilityManager.UpdateAbilityHint(player, loadout);
+
+        return added;
     }
 
     // アビリティ削除（型指定）
@@ -32,11 +40,21 @@ public static class PlayerAbilityExtensions
         if (!AbilityManager.TryGetLoadout(player, out var loadout))
             return;
 
+        var removed = false;
         for (int i = 0; i < AbilityLoadout.MaxSlots; i++)
         {
             if (loadout.Slots[i] is TAbility)
+            {
                 loadout.Slots[i] = null;
+                removed = true;
+            }
         }
+
+        if (!removed)
+            return;
+
+        loadout.EnsureActiveSlot();
+        AbilityManager.UpdateAbilityHint(player, loadout);
     }
 
     // 全アビリティ削除
@@ -60,7 +78,7 @@ public static class PlayerAbilityExtensions
         if (!AbilityManager.TryGetLoadout(player, out var loadout))
             return;
 
-        loadout.CycleNext();
+        AbilityManager.NextSlot(player);
     }
 
     public static void ShowAbilityHint(this Player player)

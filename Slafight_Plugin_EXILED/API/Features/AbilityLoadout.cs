@@ -9,7 +9,14 @@ public class AbilityLoadout
 
     public int ActiveIndex { get; set; } = 0;
 
-    public AbilityBase ActiveAbility => Slots[ActiveIndex];
+    public AbilityBase ActiveAbility
+    {
+        get
+        {
+            EnsureActiveSlot();
+            return Slots[ActiveIndex];
+        }
+    }
 
     public bool AddAbility(AbilityBase ability)
     {
@@ -24,18 +31,41 @@ public class AbilityLoadout
         return false; // もう入らない
     }
 
-    public void CycleNext()
+    public bool EnsureActiveSlot()
     {
-        if (Slots.Length <= 1) return;
+        if (ActiveIndex is < 0 or >= MaxSlots)
+            ActiveIndex = 0;
 
-        for (int i = 1; i <= MaxSlots; i++)
+        if (Slots[ActiveIndex] != null)
+            return true;
+
+        for (int i = 0; i < MaxSlots; i++)
+        {
+            if (Slots[i] != null)
+            {
+                ActiveIndex = i;
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public bool CycleNext()
+    {
+        if (!EnsureActiveSlot())
+            return false;
+
+        for (int i = 1; i < MaxSlots; i++)
         {
             int idx = (ActiveIndex + i) % MaxSlots;
             if (Slots[idx] != null)
             {
                 ActiveIndex = idx;
-                return;
+                return true;
             }
         }
+
+        return false;
     }
 }

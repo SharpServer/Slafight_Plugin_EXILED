@@ -9,6 +9,7 @@ public static class HudConstId
     public const string PlayerHUD_Event = "PlayerHUD_Event";
     public const string PlayerHUD_Specific = "PlayerHUD_Specific";
     public const string PlayerHUD_Ability = "PlayerHUD_Ability";
+    public const string PlayerHUD_EffectedInfo = "PlayerHUD_EffectedInfo";
     public const string PlayerHUD_Debug = "PlayerHUD_Debug";
     public const string LobbyInfo = "LobbyInfo";
     public const string TemporaryHintService = "DoorLockedInfo";

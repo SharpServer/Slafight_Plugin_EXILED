@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
@@ -32,10 +33,10 @@ internal static class SnavCommon
 
     public static float Consumption(RadioRange mode) => mode switch
     {
-        RadioRange.Short  => 10f,
-        RadioRange.Medium => 20f,
-        RadioRange.Long   => 30f,
-        RadioRange.Ultra  => 40f,
+        RadioRange.Short  => 5f,
+        RadioRange.Medium => 10f,
+        RadioRange.Long   => 25f,
+        RadioRange.Ultra  => 35f,
         _                 => 40f,
     };
 
@@ -52,6 +53,6 @@ internal static class SnavCommon
 
     public static string RoomsHint(RadioRange mode, List<Room> detected, Vector3 origin)
         => detected.Count > 0
-            ? $"[{mode}]見つかった部屋：\n" + string.Join("\n", detected.Select(r => $"{r.Type}: {Vector3.Distance(origin, r.Position):F0}m"))
+            ? $"[{mode}]見つかった部屋：\n" + string.Join("\n", detected.Select(r => $"{r.Type.TranslateRoomName()}: {Vector3.Distance(origin, r.Position):F0}m"))
             : "検知された部屋なし";
 }

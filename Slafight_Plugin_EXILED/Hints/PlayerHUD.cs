@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using HintServiceMeow.Core.Enum;
@@ -157,7 +158,8 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Team, "Team: Undefined", HintAlignment.Left, HintSyncSpeed.Fastest, 24, XCordinate, 885);
         EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Event, "[Event]\n<size=28>Undefined</size>", HintAlignment.Left, HintSyncSpeed.Fast, 26, XCordinate, 120);
         EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Specific, string.Empty, HintAlignment.Left, HintSyncSpeed.Fastest, 24, XCordinate + 350, 885);
-        EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Ability, string.Empty, HintAlignment.Left, HintSyncSpeed.Fastest, 24, XCordinate + 350, 855);
+        EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Ability, string.Empty, HintAlignment.Left, HintSyncSpeed.Fastest, 22, XCordinate + 350, 835);
+        EnsurePlayerHudHint(display, HudConstId.PlayerHUD_EffectedInfo, string.Empty, HintAlignment.Center, HintSyncSpeed.Fastest, 24, 0, 915);
         EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Debug, string.Empty, HintAlignment.Left, HintSyncSpeed.Fast, 24, XCordinate, 345);
     }
 
@@ -282,6 +284,10 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
                 case SyncType.PHUD_Ability:
                     var ab = display.GetHint(HudConstId.PlayerHUD_Ability);
                     if (ab != null) ab.Text = hintText;
+                    break;
+                case SyncType.PHUD_EffectedInfo:
+                    var effected = display.GetHint(HudConstId.PlayerHUD_EffectedInfo);
+                    if (effected != null) effected.Text = hintText;
                     break;
                 case SyncType.PHUD_Debug:
                     var db = display.GetHint(HudConstId.PlayerHUD_Debug);
@@ -445,6 +451,24 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
 
     public void ForceUpdateAll() => AllSyncHUD_();
 
+    public void ForceAbilityHudSync(Player player)
+    {
+        if (!IsPlayerValid(player)) return;
+
+        var display = TryGetDisplay(player);
+        if (display == null) return;
+
+        var abilityHint = display.GetHint(HudConstId.PlayerHUD_Ability);
+        if (abilityHint == null)
+        {
+            PlayerHUDSetup(player);
+            abilityHint = display.GetHint(HudConstId.PlayerHUD_Ability);
+            if (abilityHint == null) return;
+        }
+
+        abilityHint.Text = BuildAbilityHud(player);
+    }
+
     // =========================================================
     // 観戦時の同期
     // =========================================================
@@ -568,29 +592,125 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         if (!AbilityManager.TryGetLoadout(target, out var loadout))
             return string.Empty;
 
-        var active = loadout.ActiveAbility;
-        if (active == null)
+        var entries = GetAbilityEntries(loadout);
+        if (entries.Count == 0)
             return string.Empty;
+
+        var activeEntryIndex = entries.FindIndex(e => e.SlotIndex == loadout.ActiveIndex);
+        if (activeEntryIndex < 0)
+        {
+            loadout.ActiveIndex = entries[0].SlotIndex;
+            activeEntryIndex = 0;
+        }
+
+        var active = entries[activeEntryIndex].Ability;
+        var abilityName = AbilityLocalization.GetDisplayName(active.GetType().Name, target);
+        var statusText = FormatAbilityState(target, active, out var usesText);
+        var countText = $"{activeEntryIndex + 1}/{entries.Count}";
+        var controlText = entries.Count > 1
+            ? "使用:アビリティ使用 / 切替:アビリティ切替"
+            : "使用:アビリティ使用 / 所持:1";
+        var slotSummary = BuildAbilitySlotSummary(target, entries, activeEntryIndex);
+
+        return $"<size=22><color=#ffcc00>Ability {countText}</color> {abilityName} {statusText} Uses:{usesText}</size>\n" +
+               $"<size=18>{controlText} | {slotSummary}</size>";
+    }
+
+    private static List<(int SlotIndex, AbilityBase Ability)> GetAbilityEntries(AbilityLoadout loadout)
+    {
+        var entries = new List<(int SlotIndex, AbilityBase Ability)>();
+
+        for (var i = 0; i < AbilityLoadout.MaxSlots; i++)
+        {
+            var ability = loadout.Slots[i];
+            if (ability != null)
+                entries.Add((i, ability));
+        }
+
+        return entries;
+    }
+
+    private static string BuildAbilitySlotSummary(
+        Player player,
+        IReadOnlyList<(int SlotIndex, AbilityBase Ability)> entries,
+        int activeEntryIndex)
+    {
+        var sb = new StringBuilder();
+
+        for (var i = 0; i < entries.Count; i++)
+        {
+            if (i > 0)
+                sb.Append(" | ");
+
+            var ability = entries[i].Ability;
+            var marker = i == activeEntryIndex
+                ? $"<color=#ffcc00>*{i + 1}</color>"
+                : (i + 1).ToString();
+            var name = ShortenAbilityName(
+                AbilityLocalization.GetDisplayName(ability.GetType().Name, player),
+                8);
+
+            sb.Append(marker)
+                .Append(':')
+                .Append(name)
+                .Append(' ')
+                .Append(FormatCompactAbilityState(player, ability));
+        }
+
+        return sb.ToString();
+    }
+
+    private static string FormatAbilityState(
+        Player player,
+        AbilityBase ability,
+        out string usesText)
+    {
+        usesText = "?";
 
         if (!AbilityBase.TryGetAbilityState(
-                target,
-                active,
-                out bool canUse,
-                out float cdRemain,
-                out int usesLeft,
-                out int maxUses))
-            return string.Empty;
+                player,
+                ability,
+                out var canUse,
+                out var cdRemain,
+                out var usesLeft,
+                out var maxUses))
+            return "<color=#aaaaaa>?</color>";
 
-        string abilityKey = active.GetType().Name;
-        string abilityName = AbilityLocalization.GetDisplayName(abilityKey, target);
+        usesText = maxUses < 0 ? "∞" : Math.Max(0, usesLeft).ToString();
 
-        string cdText = canUse
-            ? "<color=green>READY</color>"
-            : $"<color=yellow>{(int)cdRemain}s</color>";
+        if (maxUses >= 0 && usesLeft <= 0)
+            return "<color=#ff6666>DONE</color>";
 
-        string usesText = (maxUses < 0) ? "∞" : usesLeft.ToString();
+        return canUse
+            ? "<color=#38ff6b>READY</color>"
+            : $"<color=#ffd966>CD {Mathf.CeilToInt(cdRemain)}s</color>";
+    }
 
-        return $"<color=#ffcc00>[{abilityName}]</color> CD: {cdText} Uses: {usesText}";
+    private static string FormatCompactAbilityState(Player player, AbilityBase ability)
+    {
+        if (!AbilityBase.TryGetAbilityState(
+                player,
+                ability,
+                out var canUse,
+                out var cdRemain,
+                out var usesLeft,
+                out var maxUses))
+            return "<color=#aaaaaa>?</color>";
+
+        if (maxUses >= 0 && usesLeft <= 0)
+            return "<color=#ff6666>0</color>";
+
+        return canUse
+            ? "<color=#38ff6b>OK</color>"
+            : $"<color=#ffd966>{Mathf.CeilToInt(cdRemain)}s</color>";
+    }
+
+    private static string ShortenAbilityName(string name, int maxLength)
+    {
+        if (string.IsNullOrEmpty(name) || name.Length <= maxLength)
+            return name;
+
+        return name.Substring(0, Math.Max(1, maxLength - 3)) + "...";
     }
 
     // =========================================================

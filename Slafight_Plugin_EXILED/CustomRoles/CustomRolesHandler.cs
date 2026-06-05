@@ -202,6 +202,7 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
         player.Clear();
         AbilityManager.ClearSlots(player);
         AbilityBase.RevokeAbility(player.Id);
+        EffectedInfoTextProvider.Clear(player);
         CustomShieldState.Clear(player);
         
         var display = player.GetPlayerDisplay();

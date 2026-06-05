@@ -24,6 +24,8 @@ public class ScpStatusHints : IBootstrapHandler
 {
     private const string HintId = "ScpStatusHints_Status";
     private const float UpdateInterval = 0.5f;
+    private const float GeneratorStartupBlinkSeconds = 3f;
+    private const float GeneratorStartupBlinkInterval = 0.8f;
 
     private static readonly Dictionary<int, AbstractHint> TrackingHints = [];
     private static readonly Vector2 BasePosition = new(0, 150);
@@ -433,8 +435,19 @@ public class ScpStatusHints : IBootstrapHandler
 
             string color;
             string statusText;
+            var startupElapsed = Mathf.Max(0f, generator.ActivationTime - generator.CurrentTime);
 
-            if (progress == 0f)
+            if (generator.IsEngaged || progress >= 1f)
+            {
+                color = "red";
+                statusText = "起動済み";
+            }
+            else if (generator.IsActivating && startupElapsed <= GeneratorStartupBlinkSeconds)
+            {
+                color = GetGeneratorStartupBlinkColor(startupElapsed);
+                statusText = $"進行度: {progress:P0} (起動まで{generator.CurrentTime:F0}秒)";
+            }
+            else if (progress == 0f)
             {
                 color = "white";
                 statusText = "未起動";
@@ -448,11 +461,6 @@ public class ScpStatusHints : IBootstrapHandler
             {
                 color = "orange";
                 statusText = $"進行度: {progress:P0} (起動まで{generator.CurrentTime:F0}秒)";
-            }
-            else if (progress >= 1f)
-            {
-                color = "red";
-                statusText = "起動済み";
             }
             else
             {
@@ -471,5 +479,11 @@ public class ScpStatusHints : IBootstrapHandler
         }
 
         return sb.ToString();
+    }
+
+    private static string GetGeneratorStartupBlinkColor(float startupElapsed)
+    {
+        var blinkIndex = Mathf.FloorToInt(startupElapsed / GeneratorStartupBlinkInterval);
+        return blinkIndex % 2 == 0 ? "red" : "yellow";
     }
 }

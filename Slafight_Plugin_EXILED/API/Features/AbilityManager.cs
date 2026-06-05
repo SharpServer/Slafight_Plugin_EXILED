@@ -3,6 +3,7 @@ using System.Linq;
 using System.Text;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
+using Slafight_Plugin_EXILED.Hints;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -38,8 +39,11 @@ public static class AbilityManager
         if (slotIndex is < 0 or >= AbilityLoadout.MaxSlots)
             return false;
 
+        if (loadout.Slots[slotIndex] == null)
+            return false;
+
         loadout.ActiveIndex = slotIndex;
-        // UpdateAbilityHint(player, loadout);
+        UpdateAbilityHint(player, loadout);
         return true;
     }
 
@@ -49,16 +53,20 @@ public static class AbilityManager
         if (!TryGetLoadout(player, out var loadout))
             return false;
 
-        loadout.CycleNext();
-        // UpdateAbilityHint(player, loadout);
+        if (!loadout.CycleNext())
+            return false;
+
+        UpdateAbilityHint(player, loadout);
         return true;
     }
 
     // ★公開メソッド：HUD更新のみ
     public static void UpdateAbilityHint(Player player, AbilityLoadout loadout)
     {
-        // 表示はPlayerHUDのループに任せる。即時反映が必要な場合のみ呼ぶ
-        // PlayerHUD.Instance?.ForceAbilityHudSync(player);
+        if (player == null || loadout == null)
+            return;
+
+        PlayerHUD.Instance?.ForceAbilityHudSync(player);
     }
 
     // プレイヤー全クリア
@@ -69,6 +77,7 @@ public static class AbilityManager
 
         AbilityBase.RevokeAbility(player.Id);
         Loadouts.Remove(player.Id);
+        PlayerHUD.Instance?.ForceAbilityHudSync(player);
     }
 
     // 全員クリア
@@ -93,6 +102,7 @@ public static class AbilityManager
             loadout.Slots[i] = null;
 
         loadout.ActiveIndex = 0;
+        UpdateAbilityHint(player, loadout);
     }
 
     // イベント管理

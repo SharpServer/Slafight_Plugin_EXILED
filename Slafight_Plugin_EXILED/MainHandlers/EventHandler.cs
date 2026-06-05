@@ -134,7 +134,9 @@ public class EventHandler : IBootstrapHandler, IDisposable
     {
         if (ev?.Player == null) return;
         DebugModeHandler.RemovePlayer(ev.Player);
+        ServerSpecificsHandler.RemovePlayer(ev.Player);
         RPNameSetter.Clear(ev.Player);
+        EffectedInfoTextProvider.Clear(ev.Player);
         EffectFakeSyncProvider.RemovePlayer(ev.Player);
 
         if (ev.Player.GetTeam() != CTeam.SCPs || ev.Player.IsVanillaOrCustom(RoleTypeId.Scp0492, CRoleTypeId.Zombified)) return;
@@ -221,6 +223,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
     private void OnRoundRestarted()
     {
         EffectFakeSyncProvider.DisableAll();
+        EffectedInfoTextProvider.ClearAll();
 
         Timing.CallDelayed(0.1f, () =>
         {
@@ -232,6 +235,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
     private static void OnRoundStarted()
     {
         EffectFakeSyncProvider.DisableAll();
+        EffectedInfoTextProvider.ClearAll();
         SpecificFlagsManager.ClearAll();
         foreach (var player in Player.List.ToList().Where(IsPlayerValid))
         {

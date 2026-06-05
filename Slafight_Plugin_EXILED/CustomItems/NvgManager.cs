@@ -47,6 +47,7 @@ public static class NvgManager
 
     private static readonly Dictionary<ushort, NvgRuntimeData> ActiveData  = new();
     private static readonly Dictionary<ushort, float>          BatteryData = new();
+    private static bool _registered;
 
     // --------------------------------------------------------
     // イベント登録 / 解除
@@ -54,17 +55,35 @@ public static class NvgManager
 
     public static void Register()
     {
+        if (_registered) return;
+
         Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
+        Exiled.Events.Handlers.Server.RestartingRound += OnRoundRestarting;
         Exiled.Events.Handlers.Player.ChangingRole  += OnChangingRole;
         Exiled.Events.Handlers.Player.Died          += OnDied;
+        Exiled.Events.Handlers.Player.Left          += OnLeft;
+        Exiled.Events.Handlers.Player.ItemRemoved   += OnItemRemoved;
+
+        _registered = true;
         // Verified / ChangingSpectatedPlayer / Spawned は NetworkVisibilityManager が処理するため不要
     }
 
     public static void Unregister()
     {
+        if (!_registered)
+        {
+            ClearRuntimeState(clearBattery: true);
+            return;
+        }
+
         Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
+        Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarting;
         Exiled.Events.Handlers.Player.ChangingRole  -= OnChangingRole;
         Exiled.Events.Handlers.Player.Died          -= OnDied;
+        Exiled.Events.Handlers.Player.Left          -= OnLeft;
+        Exiled.Events.Handlers.Player.ItemRemoved   -= OnItemRemoved;
+
+        _registered = false;
         ClearRuntimeState(clearBattery: true);
     }
 
@@ -73,6 +92,9 @@ public static class NvgManager
     // --------------------------------------------------------
 
     private static void OnRoundStarted()
+        => ClearRuntimeState(clearBattery: true);
+
+    private static void OnRoundRestarting()
         => ClearRuntimeState(clearBattery: true);
 
     private static void ClearRuntimeState(bool clearBattery)
@@ -87,13 +109,25 @@ public static class NvgManager
     private static void OnChangingRole(ChangingRoleEventArgs ev)
     {
         if (ev?.Player == null) return;
-        StopNvgByOwner(ev.Player, clearBattery: false);
+        StopAllNvgByOwner(ev.Player, clearBattery: false);
     }
 
     private static void OnDied(DiedEventArgs ev)
     {
         if (ev?.Player == null) return;
-        StopNvgByOwner(ev.Player, clearBattery: false);
+        StopAllNvgByOwner(ev.Player, clearBattery: false);
+    }
+
+    private static void OnLeft(LeftEventArgs ev)
+    {
+        if (ev?.Player == null) return;
+        StopAllNvgByOwner(ev.Player, clearBattery: false);
+    }
+
+    private static void OnItemRemoved(ItemRemovedEventArgs ev)
+    {
+        if (ev?.Item == null) return;
+        StopNvgBySerial(ev.Item.Serial, clearBattery: false);
     }
 
     // --------------------------------------------------------
@@ -104,6 +138,11 @@ public static class NvgManager
     public static void StartNvg(Player player, ushort serial, NvgProfile? profile = null)
     {
         if (player == null) return;
+        if (!IsValidOwner(player) || !PlayerHasSerial(player, serial))
+        {
+            Log.Debug($"[NvgManager] StartNvg拒否: 所有者/アイテム不整合 serial={serial}");
+            return;
+        }
 
         var prof = profile ?? NvgProfile.Default;
         Log.Debug($"[NvgManager] StartNvg: {player.Nickname} serial={serial} drain={prof.DrainPerSecond}/s");
@@ -118,8 +157,9 @@ public static class NvgManager
             return;
         }
 
-        // 電池を残したまま既存のライトだけ破棄する
+        // 同一シリアルまたは同一所有者の古いライトを必ず消してから作り直す。
         StopNvgBySerial(serial, clearBattery: false);
+        StopAllNvgByOwner(player, clearBattery: false);
 
         float battery = isInfinite ? MaxBattery
                       : BatteryData.TryGetValue(serial, out var saved) ? saved : MaxBattery;
@@ -143,18 +183,16 @@ public static class NvgManager
         BatteryData[serial] = battery;
         ActiveData[serial]  = data;
 
-        // InitShowState の CallDelayed(0f) と同フレームになるよう、観戦者同期も遅らせる
-        Timing.CallDelayed(0f, () =>
-        {
-            if (player == null || !player.IsConnected) return;
-            SyncSpectatorsForOwner(player, light.Base?.netIdentity, show: true);
-        });
+        ApplyOwnerVisibility(player, light.Base?.netIdentity);
     }
 
     /// <summary>NVG を停止する。電池残量は保持される。</summary>
     public static void StopNvg(Player player, ushort serial)
     {
         if (player == null) return;
+        if (ActiveData.TryGetValue(serial, out var data) && data.OwnerId != player.Id)
+            return;
+
         StopNvgBySerial(serial, clearBattery: false);
     }
 
@@ -165,15 +203,16 @@ public static class NvgManager
     /// <param name="clearBattery">true = 電池データも削除 / false = ライトのみ破棄</param>
     private static void StopNvgBySerial(ushort serial, bool clearBattery)
     {
-        if (!ActiveData.TryGetValue(serial, out var data)) return;
-
-        // 破棄前に所有者の観戦者へ明示 Hide を送る
-        // （SafeDestroy → NetworkServer.Destroy で Mirror が Hide するが、
-        //   RemoveShowState で管理から外れた後にタイミング差で再表示される場合の保険）
-        if (Player.TryGet(data.OwnerId, out var owner))
+        if (!ActiveData.TryGetValue(serial, out var data))
         {
-            SyncSpectatorsForOwner(owner, data.NvgLight?.Base?.netIdentity, show: false);
+            if (clearBattery)
+                BatteryData.Remove(serial);
+            return;
         }
+
+        // 破棄前に全員へ明示 Hide を送る。
+        // 一度でも通常プレイヤーへスポーンが届いた場合の残留をここで潰す。
+        HideFromAll(data.NvgLight?.Base?.netIdentity);
 
         ActiveData.Remove(serial);
         KillRuntimeData(data);
@@ -182,35 +221,51 @@ public static class NvgManager
             BatteryData.Remove(serial);
     }
 
-    private static void StopNvgByOwner(Player player, bool clearBattery)
+    private static void StopAllNvgByOwner(Player player, bool clearBattery)
     {
         if (player == null) return;
 
-        var entry = ActiveData.Values.FirstOrDefault(d => d.OwnerId == player.Id);
-        if (entry == null) return;
-
-        StopNvgBySerial(entry.Serial, clearBattery);
+        foreach (var serial in ActiveData
+                     .Where(kv => kv.Value.OwnerId == player.Id)
+                     .Select(kv => kv.Key)
+                     .ToList())
+        {
+            StopNvgBySerial(serial, clearBattery);
+        }
     }
 
     // --------------------------------------------------------
-    // 観戦者同期ユーティリティ
+    // 可視状態同期ユーティリティ
     // --------------------------------------------------------
 
     /// <summary>
-    /// owner を現在観戦中のプレイヤー全員に対して identity の表示を同期する。
-    /// StartNvg / StopNvg 時の即時補正に使用。
+    /// owner 本人と owner を現在観戦中のプレイヤーだけに identity を表示し、
+    /// それ以外の接続プレイヤーには明示 Hide を送る。
     /// </summary>
-    private static void SyncSpectatorsForOwner(Player owner, Mirror.NetworkIdentity? identity, bool show)
+    private static void ApplyOwnerVisibility(Player owner, Mirror.NetworkIdentity? identity)
     {
         if (owner == null || identity == null) return;
 
-        foreach (var spectator in Player.List)
+        foreach (var target in Player.List)
         {
-            if (spectator == null || !spectator.IsConnected || spectator.IsAlive) continue;
-            if (!spectator.CurrentSpectatingPlayers.Any(s => s?.Id == owner.Id)) continue;
+            if (target == null || !target.IsConnected) continue;
 
-            if (show) spectator.ShowNetworkIdentity(identity);
-            else      spectator.HideNetworkIdentity(identity);
+            bool shouldShow = target.Id == owner.Id ||
+                              (!target.IsAlive && target.CurrentSpectatingPlayers.Any(s => s?.Id == owner.Id));
+
+            if (shouldShow) target.ShowNetworkIdentity(identity);
+            else            target.HideNetworkIdentity(identity);
+        }
+    }
+
+    private static void HideFromAll(Mirror.NetworkIdentity? identity)
+    {
+        if (identity == null) return;
+
+        foreach (var target in Player.List)
+        {
+            if (target == null || !target.IsConnected) continue;
+            target.HideNetworkIdentity(identity);
         }
     }
 
@@ -226,7 +281,7 @@ public static class NvgManager
                 player.CameraTransform.position,
                 player.Rotation.eulerAngles,
                 null,
-                spawn: true);
+                spawn: false);
 
             if (light?.Base == null || light.Base.netIdentity == null)
             {
@@ -234,23 +289,28 @@ public static class NvgManager
                 return null;
             }
 
-            light.Range     = prof.LightRange;
-            light.Intensity = prof.LightIntensity;
+            light.Range     = 0f;
+            light.Intensity = 0f;
             light.Color     = prof.LightColor;
             light.Transform.SetParent(player.Transform, true);
+            light.Spawn();
 
-            // Spawn 直後は Mirror の送信がフレームをまたぐため、
-            // 1フレーム後に InitShowState を送ることで ShowForConnection が確実に届く
-            Timing.CallDelayed(0f, () =>
+            if (light.Base?.netIdentity == null)
             {
-                if (light?.Base == null) return;
-                light.InitShowState(new NetworkShowState
-                {
-                    OwnerId             = player.Id,
-                    ShowToOwner         = true,
-                    SpectatorVisibility = SpectatorVisibility.Show,
-                });
+                Log.Error("[NvgManager] CreateNvgLight: Spawn 後の netIdentity が null");
+                light.SafeDestroy();
+                return null;
+            }
+
+            light.InitShowState(new NetworkShowState
+            {
+                OwnerId             = player.Id,
+                ShowToOwner         = true,
+                SpectatorVisibility = SpectatorVisibility.Show,
             });
+
+            light.Range     = prof.LightRange;
+            light.Intensity = prof.LightIntensity;
 
             return light;
         }
@@ -271,6 +331,7 @@ public static class NvgManager
 
         Timing.KillCoroutines(data.CoroutineHandle);
 
+        HideFromAll(data.NvgLight?.Base?.netIdentity);
         data.NvgLight?.SafeDestroy();
         data.NvgLight = null;
     }
@@ -283,13 +344,20 @@ public static class NvgManager
 
             if (player == null || !player.IsConnected) yield break;
             if (!ActiveData.TryGetValue(serial, out var data)) yield break;
+            if (data.OwnerId != player.Id) yield break;
+
+            if (!player.IsAlive || data.NvgLight?.Base == null)
+            {
+                StopNvgBySerial(serial, clearBattery: false);
+                yield break;
+            }
 
             // インベントリからアイテムが消えていたら強制停止
             // （コマンドによるクリア・その他の異常経路でアイテムが失われた場合の保険）
-            if (!player.Items.Any(i => i.Serial == serial))
+            if (!PlayerHasSerial(player, serial))
             {
                 Log.Debug($"[NvgManager] BatteryLoop: serial={serial} がインベントリから消えた。強制停止。");
-                player.ReferenceHub.DisableWearables(WearableElements.Scp1344Goggles);
+                DisableNvgWearable(player);
                 StopNvgBySerial(serial, clearBattery: false);
                 yield break;
             }
@@ -304,11 +372,6 @@ public static class NvgManager
             if (battery <= 0f)
             {
                 BatteryData[serial] = 0f;
-
-                // 観戦者にライト消灯を明示 Hide してから破棄
-                SyncSpectatorsForOwner(player, data.NvgLight?.Base?.netIdentity, show: false);
-                data.NvgLight?.SafeDestroy();
-                data.NvgLight = null;
 
                 if (prof.UseBlackout)
                     player.EnableEffect<Blindness>(255, 2.5f);
@@ -332,6 +395,24 @@ public static class NvgManager
             }
 
             player.ShowHint($"NVG電池: {(int)battery}%", 1f);
+        }
+    }
+
+    private static bool IsValidOwner(Player player)
+        => player != null && player.IsConnected && player.IsAlive;
+
+    private static bool PlayerHasSerial(Player player, ushort serial)
+        => player != null && player.Items.Any(i => i != null && i.Serial == serial);
+
+    private static void DisableNvgWearable(Player player)
+    {
+        try
+        {
+            player?.ReferenceHub?.DisableWearables(WearableElements.Scp1344Goggles);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[NvgManager] DisableNvgWearable failed: {ex.Message}");
         }
     }
 

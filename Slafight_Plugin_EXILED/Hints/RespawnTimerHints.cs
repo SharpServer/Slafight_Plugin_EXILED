@@ -246,40 +246,84 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
 
     private static (TimeBasedWave? ntf, TimeBasedWave? chaos) GetNextFactionWaves()
     {
-        float shortestNtf = float.MaxValue;
-        float shortestChaos = float.MaxValue;
-        TimeBasedWave? ntf = null;
-        TimeBasedWave? chaos = null;
+        return (
+            GetNextFactionWave(wave => wave is NtfSpawnWave or NtfMiniWave),
+            GetNextFactionWave(wave => wave is ChaosSpawnWave or ChaosMiniWave));
+    }
+
+    private static TimeBasedWave? GetNextFactionWave(Func<SpawnableWaveBase, bool> belongsToFaction)
+    {
+        TimeBasedWave? selected = null;
+        TimeBasedWave? ready = null;
+        TimeBasedWave? moving = null;
+        TimeBasedWave? paused = null;
+        float shortestMoving = float.MaxValue;
+        float shortestPaused = float.MaxValue;
 
         foreach (var wave in WaveManager.Waves)
         {
-            if (wave is not TimeBasedWave timeBasedWave)
+            if (!belongsToFaction(wave) || wave is not TimeBasedWave timeBasedWave)
                 continue;
 
-            // 一時停止中の wave はスキップ（タイマー計算から外す）
-            if (timeBasedWave.Timer.IsForcefullyPaused)
+            if (IsSelectedWave(timeBasedWave))
+                selected = timeBasedWave;
+
+            if (!CanDisplayAsActiveTimer(timeBasedWave))
                 continue;
 
             var timeLeft = timeBasedWave.Timer.TimeLeft;
-            if (wave is NtfSpawnWave or NtfMiniWave)
+
+            if (ready == null && IsSpawnableNow(timeBasedWave))
             {
-                if (timeLeft < shortestNtf)
+                ready = timeBasedWave;
+                continue;
+            }
+
+            // Match WaveTimer.Update: no-token mini waves can count down to 30s and then freeze.
+            if (IsTimerAdvancing(timeBasedWave))
+            {
+                if (timeLeft < shortestMoving)
                 {
-                    shortestNtf = timeLeft;
-                    ntf = timeBasedWave;
+                    shortestMoving = timeLeft;
+                    moving = timeBasedWave;
                 }
             }
-            else if (wave is ChaosSpawnWave or ChaosMiniWave)
+            else if (timeLeft < shortestPaused)
             {
-                if (timeLeft < shortestChaos)
-                {
-                    shortestChaos = timeLeft;
-                    chaos = timeBasedWave;
-                }
+                shortestPaused = timeLeft;
+                paused = timeBasedWave;
             }
         }
 
-        return (ntf, chaos);
+        return selected ?? ready ?? moving ?? paused;
+    }
+
+    private static bool IsSelectedWave(TimeBasedWave wave)
+    {
+        return Respawn.CurrentState != WaveQueueState.Idle && ReferenceEquals(WaveManager._nextWave, wave);
+    }
+
+    private static bool CanDisplayAsActiveTimer(TimeBasedWave wave)
+    {
+        var timer = wave.Timer;
+        return timer != null &&
+               wave.Configuration.IsEnabled &&
+               !timer.IsForcefullyPaused &&
+               !timer.IsOutOfRespawns;
+    }
+
+    private static bool IsSpawnableNow(TimeBasedWave wave)
+    {
+        return wave.IsReadyToSpawn && !wave.Timer.IsPaused;
+    }
+
+    private static bool IsTimerAdvancing(TimeBasedWave wave)
+    {
+        var timer = wave.Timer;
+        return !timer.IsForcefullyPaused &&
+               !timer.IsOutOfRespawns &&
+               (!timer.IsPaused || timer.TimeLeft > WaveTimer.CountdownPauseThresholdSeconds) &&
+               RoundSummary.RoundInProgress();
     }
 
     private static TimeSpan GetWaveTimeLeft(TimeBasedWave? wave)

@@ -89,7 +89,7 @@ internal sealed class SpecialDoorAccessController(float positionToleranceSq)
 
         ev.IsAllowed = rule.CanOpen(ev.Player);
         if (!ev.IsAllowed)
-            ev.Player.ShowHint(rule.HintMessage);
+            ev.Player.ShowHint(rule.HintMessage + "\n<size=22><color=yellow>※ヒントはその辺に落ちている、インタラクトできる報告書などに書いてある事があるよ！</color></size>");
     }
 
     public void Clear()

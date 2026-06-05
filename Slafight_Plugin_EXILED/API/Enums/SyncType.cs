@@ -9,5 +9,6 @@ public enum SyncType
     PHUD_Event,
     PHUD_Specific,
     PHUD_Ability,
+    PHUD_EffectedInfo,
     PHUD_Debug
 }

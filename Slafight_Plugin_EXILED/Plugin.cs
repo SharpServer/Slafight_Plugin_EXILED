@@ -32,7 +32,7 @@ public class Plugin : Plugin<Config>
     public override string Name => "Slafight_Plugin_EXILED";
     public override string Author => "org.sharp-server.jp.scpsl";
     public override string Prefix => "Slafight_Plugin_EXILED";
-    public override Version Version => new(1, 8, 0, 6);
+    public override Version Version => new(1, 8, 1, 0);
         
     public override Version RequiredExiledVersion { get; } = new(9, 14, 2);
 
@@ -46,6 +46,7 @@ public class Plugin : Plugin<Config>
         VoiceRecordingApi.RegisterEvents();
 
         NetworkVisibilityManager.Register();
+        NvgManager.Register();
             
         WearsHandler.Register();
         CRole.RegisterAllEvents();
@@ -111,8 +112,8 @@ public class Plugin : Plugin<Config>
         ProximityChat.Handler.UnregisterEvents();
         VoiceRecordingApi.UnregisterEvents();
 
-        NetworkVisibilityManager.Unregister();
         NvgManager.Unregister();
+        NetworkVisibilityManager.Unregister();
             
         WearsHandler.Unregister();
         CRole.UnregisterAllEvents();

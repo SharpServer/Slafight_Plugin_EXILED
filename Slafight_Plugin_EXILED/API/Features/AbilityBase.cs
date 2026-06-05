@@ -74,7 +74,7 @@ public abstract class AbilityBase
         if (!AbilityManager.TryGetLoadout(Player.Get(playerId), out var loadout))
             return false;
 
-        var activeAbility = loadout.Slots[loadout.ActiveIndex];
+        var activeAbility = loadout.ActiveAbility;
         return activeAbility != null && CanUseNow(playerId, activeAbility.GetType());
     }
 
@@ -216,10 +216,15 @@ public abstract class AbilityBase
         }
 
         // ★ 現在選択中のアビリティかチェック
-        if (!AbilityManager.TryGetLoadout(player, out var loadout) ||
-            loadout.Slots[loadout.ActiveIndex] != this)
+        if (!AbilityManager.TryGetLoadout(player, out var loadout))
         {
-            Log.Debug($"[Ability] Not active ability for {player.Nickname} (this={GetType().Name}, active={loadout.Slots[loadout.ActiveIndex]?.GetType().Name})");
+            Log.Debug($"[Ability] No loadout for {player.Nickname}");
+            return;
+        }
+
+        if (loadout.ActiveAbility != this)
+        {
+            Log.Debug($"[Ability] Not active ability for {player.Nickname} (this={GetType().Name}, active={loadout.ActiveAbility?.GetType().Name})");
             return;
         }
 
@@ -362,11 +367,12 @@ public abstract class AbilityBase
     {
         if (player != null && player.IsConnected &&
             AbilityManager.TryGetLoadout(player, out var loadout) &&
-            loadout.Slots[loadout.ActiveIndex] == this)
+            loadout.ActiveAbility == this)
         {
-            var abilityName = GetType().Name;
+            var abilityName = AbilityLocalization.GetDisplayName(GetType().Name, player);
             player.ShowHint($"<color=yellow>{abilityName} のクールダウンが終了しました。</color>",
                 3f);
+            AbilityManager.UpdateAbilityHint(player, loadout);
         }
     }
     

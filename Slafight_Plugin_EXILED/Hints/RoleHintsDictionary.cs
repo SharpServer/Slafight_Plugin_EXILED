@@ -26,7 +26,7 @@ internal static class RoleHintsDictionary
         // ── SCPs ──────────────────────────────────────────────────────────
         [CRoleTypeId.Scp096Anger]  = ("<color=#c50000>SCP-096: ANGER</color>",    ScpTeam, "怒りに任せ、施設中で暴れまわれ！！！"),
         [CRoleTypeId.Scp3114]      = ("<color=#c50000>SCP-3114</color>",           ScpTeam, "皆に素敵なサプライズをして驚かせましょう！"),
-        [CRoleTypeId.Scp966]       = ("<color=#c50000>SCP-966</color>",            ScpTeam, "背後から忍び寄り、奴らに恐怖を与えよ！"),
+        [CRoleTypeId.Scp966]       = ("<color=#c50000>SCP-966</color>",            ScpTeam, "不可視のまま獲物を眠らせず、疲弊した人間を狩れ。"),
         [CRoleTypeId.Scp682]       = ("<color=#c50000>SCP-682</color>",            ScpTeam, "無敵の爬虫類の力を見せてやれ！！！"),
         [CRoleTypeId.Zombified]    = ("<color=#c50000>Zombified Subject</color>",  ScpTeam, "何らかの要因でゾンビの様になってしまった。とにかく暴れろ！"),
         [CRoleTypeId.Scp106]       = ("<color=#c50000>SCP-106</color>",            ScpTeam, "自身の欲求に従い、財団職員共を弄べ！"),
