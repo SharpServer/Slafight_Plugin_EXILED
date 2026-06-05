@@ -582,11 +582,9 @@
             <ExiledDependenciesDir>$(APPDATA)\EXILED\Plugins\dependencies</ExiledDependenciesDir>
         </PropertyGroup>
         <ItemGroup>
-            <ExiledDependencyFiles Include="$(OutputPath)LabApi.dll" Condition="Exists('$(OutputPath)LabApi.dll')" />
             <ExiledDependencyFiles Include="$(OutputPath)Microsoft.Bcl.AsyncInterfaces.dll" Condition="Exists('$(OutputPath)Microsoft.Bcl.AsyncInterfaces.dll')" />
             <ExiledDependencyFiles Include="$(OutputPath)Newtonsoft.Json.dll" Condition="Exists('$(OutputPath)Newtonsoft.Json.dll')" />
             <ExiledDependencyFiles Include="$(OutputPath)NVorbis.dll" Condition="Exists('$(OutputPath)NVorbis.dll')" />
-            <ExiledDependencyFiles Include="$(OutputPath)ProjectMER.dll" Condition="Exists('$(OutputPath)ProjectMER.dll')" />
             <ExiledDependencyFiles Include="$(OutputPath)System.Buffers.dll" Condition="Exists('$(OutputPath)System.Buffers.dll')" />
             <ExiledDependencyFiles Include="$(OutputPath)System.IO.Pipelines.dll" Condition="Exists('$(OutputPath)System.IO.Pipelines.dll')" />
             <ExiledDependencyFiles Include="$(OutputPath)System.Memory.dll" Condition="Exists('$(OutputPath)System.Memory.dll')" />
@@ -595,7 +593,6 @@
             <ExiledDependencyFiles Include="$(OutputPath)System.Text.Encodings.Web.dll" Condition="Exists('$(OutputPath)System.Text.Encodings.Web.dll')" />
             <ExiledDependencyFiles Include="$(OutputPath)System.Text.Json.dll" Condition="Exists('$(OutputPath)System.Text.Json.dll')" />
             <ExiledDependencyFiles Include="$(OutputPath)System.Threading.Tasks.Extensions.dll" Condition="Exists('$(OutputPath)System.Threading.Tasks.Extensions.dll')" />
-            <ExiledDependencyFiles Include="$(OutputPath)YamlDotNet.dll" Condition="Exists('$(OutputPath)YamlDotNet.dll')" />
             <ExiledDependencyFiles Include="C:\Mono\lib\mono\xbuild\Microsoft\Microsoft.NET.Build.Extensions\net471\lib\System.Net.Http.dll" Condition="Exists('C:\Mono\lib\mono\xbuild\Microsoft\Microsoft.NET.Build.Extensions\net471\lib\System.Net.Http.dll')" />
         </ItemGroup>
         <MakeDir Directories="$(ExiledPluginsDir);$(ExiledDependenciesDir)" />
