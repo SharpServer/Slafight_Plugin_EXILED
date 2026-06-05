@@ -334,7 +334,7 @@ public class Scp966Role : CRole
     {
         player.EnableEffect(EffectType.NightVision, 255, 2.2f);
         player.EnableEffect(EffectType.SilentWalk, 1, 2.2f);
-        player.DisableEffect(EffectType.Invisible);
+        player.EnableEffect(EffectType.Invisible, 255, 2.2f);
     }
 
     private static bool IsInfraredLeaking(Player player)
@@ -342,24 +342,34 @@ public class Scp966Role : CRole
 
     private static void UpdateVisibilityRules()
     {
-        foreach (var viewer in Player.List.ToList())
+        foreach (var scp966 in Player.List.ToList())
         {
-            if (viewer == null || !viewer.IsConnected)
+            if (!IsScp966(scp966))
                 continue;
 
-            if (EffectFakeSyncProvider.IsEnabled(viewer, EffectType.Invisible))
+            if (EffectFakeSyncProvider.IsEnabled(scp966, EffectType.Invisible))
             {
-                EffectFakeSyncProvider.Refresh(viewer, EffectType.Invisible);
+                EffectFakeSyncProvider.Refresh(scp966, EffectType.Invisible);
                 continue;
             }
 
             EffectFakeSyncProvider.SetTargetRule(
-                viewer,
+                scp966,
                 EffectType.Invisible,
-                target => IsScp966(target) && !CanViewerSeeScp966(viewer, target),
+                viewer => IsValidViewer(viewer) &&
+                          !CanViewerSeeScp966(viewer, scp966),
                 255,
                 0.35f,
-                false);
+                true);
+        }
+
+        foreach (var keyOwner in Player.List.ToList())
+        {
+            if (keyOwner == null || !keyOwner.IsConnected || IsScp966(keyOwner))
+                continue;
+
+            // Compatibility cleanup for old viewer-owned Invisible sessions.
+            EffectFakeSyncProvider.Disable(keyOwner, EffectType.Invisible);
         }
     }
 
@@ -390,6 +400,8 @@ public class Scp966Role : CRole
         foreach (var viewer in Player.List.ToList())
         {
             if (viewer == null || viewer.Id == scp966.Id)
+                continue;
+            if (!viewer.IsAlive || viewer.GetTeam() == CTeam.SCPs)
                 continue;
 
             if (CanViewerSeeScp966(viewer, scp966))
@@ -446,7 +458,7 @@ public class Scp966Role : CRole
                 return true;
         }
         
-        if (player.CurrentItem is Firearm firearm && firearm.HasAttachment(AttachmentName.NightVisionSight))
+        if (player.CurrentItem is Firearm { NightVisionEnabled: true })
             return true;
 
         return false;
@@ -510,6 +522,11 @@ public class Scp966Role : CRole
            player.GetTeam() != CTeam.SCPs &&
            player.Role.Type != RoleTypeId.Spectator;
 
+    private static bool IsValidViewer(Player player)
+        => player != null &&
+           player.IsConnected &&
+           player.Id > 0;
+
     private static bool IsScp966(Player player)
         => player != null &&
            player.IsConnected &&
@@ -521,6 +538,7 @@ public class Scp966Role : CRole
         if (player == null) return;
 
         FeastLevels.Remove(player.Id);
+        EffectFakeSyncProvider.Disable(player, EffectType.Invisible);
         Scp966SpeedAbility.StopSpeed(player);
         RoleSpecificTextProvider.Clear(player);
         EffectedInfoTextProvider.Clear(player);
@@ -529,6 +547,18 @@ public class Scp966Role : CRole
         player.DisableEffect(EffectType.SilentWalk);
         player.DisableEffect(EffectType.Slowness);
         player.DisableEffect(EffectType.MovementBoost);
+
+        if (!Player.List.Any(p => p != player && IsScp966(p)))
+        {
+            foreach (var viewer in Player.List.ToList())
+            {
+                if (viewer == null)
+                    continue;
+
+                // Compatibility cleanup for sessions created by the old viewer-owned rule.
+                EffectFakeSyncProvider.Disable(viewer, EffectType.Invisible);
+            }
+        }
     }
 
     private static void OnPlayerLeft(LeftEventArgs ev)
