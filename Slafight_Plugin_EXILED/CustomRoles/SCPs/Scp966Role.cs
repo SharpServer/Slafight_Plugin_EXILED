@@ -33,8 +33,6 @@ public class Scp966Role : CRole
     [
         new(EffectType.NightVision, 255)
     ];
-    protected override Vector3? SpawnPosition { get; } =
-        Room.Get(RoomType.LczGlassBox)?.WorldPosition(Vector3.up * 0.5f);
     private readonly Dictionary<Player, List<Player>> _invisibleEffectivePlayers = [];
     private readonly Dictionary<Player, byte> _speedLevels = [];
     private readonly Dictionary<Player, CoroutineHandle> _visibilityCoroutineHandles = [];
@@ -55,6 +53,7 @@ public class Scp966Role : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
+        player.Position = Room.Get(RoomType.LczGlassBox).WorldPosition(Vector3.up * 0.5f);
         player.Scale = new Vector3(0.94f, 1.15f, 0.94f);
         player.MaxHumeShield = 500f;
         player.HumeShield = player.MaxHumeShield;

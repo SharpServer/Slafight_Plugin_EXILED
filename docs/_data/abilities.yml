@@ -69,26 +69,3 @@
   notes:
     - 代わりにSinkholeが無効化される。
   tags: [april, scp106]
-
-- id: scp966-speed
-  name: 這いよる混沌
-  category: SCP系
-  summary: SCP-966が短時間、静音かつ高速で獲物へ詰め寄る。攻撃すると解除される。
-  users:
-    - SCP-966
-  notes:
-    - CD 35秒。持続8秒。
-    - 空洞骨格で長距離戦に向かないため、接近専用の短い加速として扱う。
-  tags: [scp966, stealth]
-
-- id: scp966-sleep-wave
-  name: ██████波
-  category: SCP系
-  summary: SCP-966が20m以内の人間へ睡眠剥奪を大きく蓄積させ、疲労・混乱・聴覚阻害を与える。
-  users:
-    - SCP-966
-  notes:
-    - CD 55秒。
-    - 原典の睡眠阻害波をSite-02向けに短期戦用の蓄積デバフとして調整している。
-  tags: [scp966, sleep, debuff]
-
