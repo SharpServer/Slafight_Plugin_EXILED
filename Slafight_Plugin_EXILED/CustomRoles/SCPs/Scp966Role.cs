@@ -73,7 +73,8 @@ public class Scp966Role : CRole
 
     protected override void OnRoleHurtingOthers(HurtingEventArgs ev)
     {
-        if (ev.Player is null) return;
+        if (ev.Player is null || ev.Attacker is null) return;
+        ev.Amount = 20f + 1 * _speedLevels[ev.Attacker];
         ev.Player.EnableEffect<Slowness>(20, 10f);
         ev.Player.EnableEffect<Blindness>(40, 10f);
         base.OnRoleHurtingOthers(ev);
