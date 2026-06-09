@@ -235,6 +235,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
     private static void OnRoundStarted()
     {
         EffectFakeSyncProvider.DisableAll();
+        PlayerVisibilitySyncProvider.ClearAll();
         EffectedInfoTextProvider.ClearAll();
         SpecificFlagsManager.ClearAll();
         foreach (var player in Player.List.ToList().Where(IsPlayerValid))

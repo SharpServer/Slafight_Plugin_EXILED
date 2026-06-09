@@ -4,6 +4,7 @@ using System.Linq;
 using CustomPlayerEffects;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
+using InventorySystem.Items.Usables.Scp1344;
 using MEC;
 using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers.Wearables;
 using Slafight_Plugin_EXILED.API.Features;
@@ -210,6 +211,9 @@ public static class NvgManager
             return;
         }
 
+        // NVG由来のブラックアウトを解除
+        TryDisableBlackout(data);
+
         // 破棄前に全員へ明示 Hide を送る。
         // 一度でも通常プレイヤーへスポーンが届いた場合の残留をここで潰す。
         HideFromAll(data.NvgLight?.Base?.netIdentity);
@@ -231,6 +235,26 @@ public static class NvgManager
                      .ToList())
         {
             StopNvgBySerial(serial, clearBattery);
+        }
+    }
+    
+    private static void TryDisableBlackout(NvgRuntimeData data)
+    {
+        if (data == null) return;
+        if (!data.Profile.UseBlackout) return;
+
+        try
+        {
+            Player player = Player.Get(data.OwnerId);
+
+            if (player == null || !player.IsConnected)
+                return;
+
+            player.DisableEffect<Blindness>();
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[NvgManager] TryDisableBlackout failed: {ex.Message}");
         }
     }
 
@@ -373,13 +397,21 @@ public static class NvgManager
             {
                 BatteryData[serial] = 0f;
 
+                // 電池切れ中は StopNvg されるまで常に真っ暗にする。
+                // TickInterval より少し長めに付与して、更新ズレで一瞬切れないようにする。
                 if (prof.UseBlackout)
-                    player.EnableEffect<Blindness>(255, 2.5f);
+                    player.EnableEffect<Blindness>(255, TickInterval + 0.25f);
 
-                player.ShowHint("NVGの電池が切れた…視界が真っ暗になった。", 5f);
+                // ライトは消灯状態にするが、NVG自体の Runtime は残す。
+                if (data.NvgLight?.Base != null)
+                {
+                    data.NvgLight.Intensity = 0f;
+                    data.NvgLight.Range = 0f;
+                }
 
-                StopNvgBySerial(serial, clearBattery: true);
-                yield break;
+                player.ShowHint("NVGの電池が切れた...視界が真っ暗になった。", 1f);
+
+                continue;
             }
 
             // 電池消費
@@ -423,5 +455,77 @@ public static class NvgManager
         public Light?          NvgLight        { get; set; }
         public CoroutineHandle CoroutineHandle { get; set; }
         public NvgProfile      Profile         { get; set; }
+    }
+    
+    public static bool TryGetBattery(ushort serial, out float battery)
+    {
+        battery = 0f;
+        return BatteryData.TryGetValue(serial, out battery);
+    }
+
+    public static float GetBattery(ushort serial, float fallback = 0f)
+        => BatteryData.TryGetValue(serial, out var battery) ? battery : fallback;
+
+    public static bool HasBattery(ushort serial)
+        => BatteryData.TryGetValue(serial, out var battery) && battery > 0f;
+
+    public static bool TrySetBattery(ushort serial, float battery, bool reviveIfDead = false)
+    {
+        battery = Mathf.Clamp(battery, 0f, MaxBattery);
+        BatteryData[serial] = battery;
+
+        if (ActiveData.TryGetValue(serial, out var data) && data.NvgLight != null)
+        {
+            if (battery <= 0f)
+            {
+                data.NvgLight.Intensity = 0f;
+                data.NvgLight.Range = 0f;
+            }
+            else
+            {
+                float ratio = battery / MaxBattery;
+                data.NvgLight.Intensity = data.Profile.LightIntensity * (0.4f + 0.6f * ratio);
+                data.NvgLight.Range = data.Profile.LightRange;
+            }
+        }
+
+        if (reviveIfDead && battery > 0f && ActiveData.TryGetValue(serial, out var active))
+        {
+            var owner = Player.Get(active.OwnerId);
+            if (owner != null && owner.IsConnected && owner.IsAlive)
+            {
+                if (active.Profile.UseBlackout)
+                    owner.DisableEffect<Blindness>();
+            }
+        }
+
+        return true;
+    }
+
+    public static bool AddBattery(ushort serial, float amount)
+    {
+        var current = GetBattery(serial, 0f);
+        return TrySetBattery(serial, current + amount);
+    }
+
+    public static bool DrainBattery(ushort serial, float amount)
+    {
+        var current = GetBattery(serial, 0f);
+        return TrySetBattery(serial, current - amount);
+    }
+
+    public static bool CanStartNvg(ushort serial)
+        => BatteryData.TryGetValue(serial, out var battery) ? battery > 0f : true;
+
+    public static bool IsActive(ushort serial)
+        => ActiveData.ContainsKey(serial);
+    
+    public static bool TryGetPlayerNvgItem(Player? player, ushort serial, out Scp1344Item? item)
+    {
+        item = null;
+        if (player == null) return false;
+
+        item = player.Items.OfType<Scp1344Item>().FirstOrDefault(i => i != null && i.ItemSerial == serial);
+        return item != null;
     }
 }

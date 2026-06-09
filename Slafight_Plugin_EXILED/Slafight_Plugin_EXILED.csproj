@@ -123,6 +123,9 @@
         <Reference Include="UnityEngine.AnimationModule">
             <HintPath>$(SL_References)\UnityEngine.AnimationModule.dll</HintPath>
         </Reference>
+<!--        <Reference Include="UnityEngine.AudioModule">-->
+<!--            <HintPath>$(SL_References)\UnityEngine.AudioModule.dll</HintPath>-->
+<!--        </Reference>-->
         <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
             <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.10.0.1\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
         </Reference>
@@ -168,8 +171,6 @@
         <Compile Include="Abilities\MemeWaveAbility.cs" />
         <Compile Include="Abilities\PlaceTantrumAbility.cs" />
         <Compile Include="Abilities\Scp035TentacleAbility.cs" />
-        <Compile Include="Abilities\Scp966SleepWaveAbility.cs" />
-        <Compile Include="Abilities\Scp966SpeedAbility.cs" />
         <Compile Include="Abilities\SoundOfFifthAbility.cs" />
         <Compile Include="Abilities\TeleprotRandomAbility.cs" />
         <Compile Include="API\Enums\CTeam.cs" />
@@ -187,6 +188,7 @@
         <Compile Include="API\Features\AbilityLoadout.cs" />
         <Compile Include="API\Features\AbilityManager.cs" />
         <Compile Include="API\Features\AbilityParseHelper.cs" />
+        <Compile Include="API\Features\AudioClipApi.cs" />
         <Compile Include="API\Features\CassieHelper.cs" />
         <Compile Include="API\Features\EffectedInfoTextProvider.cs" />
         <Compile Include="API\Features\EffectFakeSyncProvider.cs" />
@@ -203,8 +205,10 @@
         <Compile Include="API\Features\CustomTriggerPoint.cs" />
         <Compile Include="API\Features\GeneratorPrefab.cs" />
         <Compile Include="API\Features\LabApiHandlerRegistry.cs" />
+        <Compile Include="API\Features\LookSoundApi.cs" />
         <Compile Include="API\Features\NetworkVisibilityManager.cs" />
         <Compile Include="API\Features\PlayerSpeakerManager.cs" />
+        <Compile Include="API\Features\PlayerVisiblitySyncProvider.cs" />
         <Compile Include="API\Features\Scp1576Database.cs" />
         <Compile Include="API\Features\Scp914\Scp914Context.cs" />
         <Compile Include="API\Features\Scp914\Scp914Rule.cs" />
