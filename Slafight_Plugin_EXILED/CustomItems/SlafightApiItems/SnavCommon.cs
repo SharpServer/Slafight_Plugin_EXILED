@@ -35,8 +35,8 @@ internal static class SnavCommon
     {
         RadioRange.Short  => 5f,
         RadioRange.Medium => 10f,
-        RadioRange.Long   => 25f,
-        RadioRange.Ultra  => 35f,
+        RadioRange.Long   => 15f,
+        RadioRange.Ultra  => 25f,
         _                 => 40f,
     };
 
