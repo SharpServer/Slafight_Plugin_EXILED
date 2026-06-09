@@ -94,7 +94,15 @@ public class Scp966Role : CRole
     {
         if (!Check(ev.Player)) return;
         ev.IsAllowed = false;
-        _speedLevels[ev.Player]++;
+        ev.Ragdoll?.Destroy();
+        if (_speedLevels[ev.Player] >= 5)
+        {
+            ev.Player.Heal(10f);
+        }
+        else
+        {
+            _speedLevels[ev.Player]++;
+        }
     }
 
     private IEnumerator<float> VisibilityCoroutine(Player player)

@@ -496,6 +496,7 @@ public abstract class CRole
     public string Name => RoleName;
     public string RoleDescription => Description;
     public string RoleDisplayName => DisplayName;
+    public string CustomInfo => SpawnCustomInfo;
     public virtual bool CanUseProximityChat => false;
     public virtual bool ProximityChatEnabledByDefault => CanUseProximityChat;
 

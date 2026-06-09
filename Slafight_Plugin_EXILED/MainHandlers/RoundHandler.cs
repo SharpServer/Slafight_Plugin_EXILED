@@ -1,10 +1,13 @@
 using System.Collections.Generic;
+using Exiled.API.Enums;
+using Exiled.API.Extensions;
 using Exiled.API.Features;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.Extensions;
+using Slafight_Plugin_EXILED.SpecialEvents;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -72,23 +75,22 @@ public class RoundHandler : IBootstrapHandler
         ElapsedTime = 0f;
         while (true)
         {
-            if (Round.IsLobby) yield break;
+            if (Round.IsLobby || SpecialEventsHandler.Instance.NowEvent is SpecialEventType.FacilityTermination) yield break;
             ElapsedTime += 0.1f;
             if (ElapsedTime >= WaitForSpawnTime)
             {
-                Faction faction;
+                SpawnableFaction faction;
                 if (IsSecurityTeamExpected())
                 {
-                    faction = Faction.FoundationStaff;
+                    faction = SpawnableFaction.NtfMiniWave;
                     SpawnSystem.ReplaceNextSpawn(SpawnTypeId.SecurityTeam);
                 }
                 else
                 {
-                    faction = Faction.FoundationEnemy;
+                    faction = SpawnableFaction.ChaosMiniWave;
                     SpawnSystem.ReplaceNextSpawn(SpawnTypeId.ChaosAgents);
                 }
 
-                Respawn.GrantTokens(faction, 1);
                 Respawn.AdvanceTimer(faction, 999);
                 IsAlreadySpawned = true;
                 yield break;

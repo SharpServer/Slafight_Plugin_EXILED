@@ -308,7 +308,7 @@
         <Compile Include="CustomItems\SlafightApiItems\S41MedicalPistol.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardChaosIntruder.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CloakGenerator.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\CUA_SpyKit.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\CuaSpyKit.cs" />
         <Compile Include="CustomItems\SlafightApiItems\DninoueMissile.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunM82.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunScp7381.cs" />

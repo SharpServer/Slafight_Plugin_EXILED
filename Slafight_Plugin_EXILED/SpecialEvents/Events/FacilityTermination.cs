@@ -4,6 +4,7 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
 using MEC;
+using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
@@ -143,7 +144,7 @@ public class FacilityTermination : SpecialEvent
         if (IsEventCanceled()) yield break;
 
         // ブロードキャスト
-        PlayerHUD.Instance.ForceUpdateAll();
+        PlayerHUD.Instance?.ForceUpdateAll();
         foreach (var player in Player.List)
         {
             if (player == null) continue;
@@ -163,9 +164,12 @@ public class FacilityTermination : SpecialEvent
 
         CassieHelper.AnnounceLastOperationArrival();
         SpawnSystem.ReplaceNextSpawn(SpawnTypeId.GoiGoCNormal);
+        Respawn.SetTokens(SpawnableFaction.ChaosWave, 2);
+        Respawn.SetInfluence(Faction.FoundationEnemy, 250f);
+        Respawn.AdvanceTimer(SpawnableFaction.ChaosWave, 30f);
 
         // ===== 22分 待機（イベントのメイン猶予） =====
-        yield return Timing.WaitForSeconds(1320f);
+        yield return Timing.WaitForSeconds(1200f);
         if (IsEventCanceled()) yield break;
 
         // 避難フェーズ開始アナウンス

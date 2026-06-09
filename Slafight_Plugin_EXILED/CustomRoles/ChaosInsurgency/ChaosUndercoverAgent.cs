@@ -27,7 +27,7 @@ public class ChaosUndercoverAgent : CRole
         ItemType.Adrenaline,
         ItemType.ArmorCombat,
         typeof(KeycardConscripts),
-        typeof(CUA_SpyKit),
+        typeof(CuaSpyKit),
     ];
     protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
