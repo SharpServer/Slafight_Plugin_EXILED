@@ -41,13 +41,13 @@ public class Scp966Role : CRole
     
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Scp3114.Disguised += OnDisguised;
+        Exiled.Events.Handlers.Scp3114.Disguising += OnDisguising;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Scp3114.Disguised -= OnDisguised;
+        Exiled.Events.Handlers.Scp3114.Disguising -= OnDisguising;
         base.UnregisterEvents();
     }
 
@@ -90,9 +90,10 @@ public class Scp966Role : CRole
         base.OnRoleChanging(ev);
     }
 
-    private void OnDisguised(DisguisedEventArgs ev)
+    private void OnDisguising(DisguisingEventArgs ev)
     {
         if (!Check(ev.Player)) return;
+        ev.IsAllowed = false;
         _speedLevels[ev.Player]++;
     }
 
