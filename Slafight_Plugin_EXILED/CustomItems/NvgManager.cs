@@ -400,7 +400,7 @@ public static class NvgManager
                 // 電池切れ中は StopNvg されるまで常に真っ暗にする。
                 // TickInterval より少し長めに付与して、更新ズレで一瞬切れないようにする。
                 if (prof.UseBlackout)
-                    player.EnableEffect<Blindness>(255, TickInterval + 0.25f);
+                    player.EnableEffect<Blindness>(255);
 
                 // ライトは消灯状態にするが、NVG自体の Runtime は残す。
                 if (data.NvgLight?.Base != null)
