@@ -136,7 +136,29 @@ public class Scp966Role : CRole
         {
             if (Round.IsLobby || player.IsDead)
                 yield break;
+            switch (_speedLevels[player])
+            {
+                case 1:
+                    player.EnableEffect<Slowness>(30);
+                    break;
+                case 2:
+                    player.EnableEffect<Slowness>(20);
+                    break;
+                case 3:
+                    player.EnableEffect<Slowness>(10);
+                    break;
+                case 4:
+                    player.EnableEffect<Slowness>(0);
+                    break;
+                case 5:
+                    player.EnableEffect<MovementBoost>(10);
+                    break;
+                default:
+                    player.EnableEffect<Slowness>(30);
+                    break;
+            }
             RoleSpecificTextProvider.Set(player, $"Speed Level: {_speedLevels[player]} / 5");
+
             yield return Timing.WaitForSeconds(1f);
         }
     }
