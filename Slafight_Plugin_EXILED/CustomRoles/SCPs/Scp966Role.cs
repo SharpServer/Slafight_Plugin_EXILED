@@ -77,6 +77,8 @@ public class Scp966Role : CRole
         ev.Amount = 20f + 1 * _speedLevels[ev.Attacker];
         ev.Player.EnableEffect<Slowness>(20, 10f);
         ev.Player.EnableEffect<Blindness>(40, 10f);
+        if (HasViewCondition(ev.Player))
+            EffectedInfoTextProvider.Set(ev.Player, "見えない何かから攻撃を受けている・・・？", 3);
         base.OnRoleHurtingOthers(ev);
     }
 
