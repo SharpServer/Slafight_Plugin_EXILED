@@ -166,31 +166,33 @@ public static class Communications
     {
         float elapsed = 0f;
         yield return Timing.WaitForOneFrame;
-        MonitorText = $"<size=10>[===LOG-A71-005555.5===]</size>";
+        MonitorText = $"<size=5>[===LOG-A71-005555.5===]</size>";
         if (Broadcaster is null || _light is null) yield break;
-
-        float duration = 0.05f;
-        Vector3 start = Vector3.one;
-        Vector3 end = Vector3.zero;
-
-        // 閾値を使って「ほぼ 0」なら終わるようにする
-        const float threshold = 0.001f;
-
-        while (Vector3.Distance(Broadcaster.transform.localScale, end) > threshold)
+        if (TextToy is not null)
         {
-            if (Broadcaster is null) yield break;
+            float duration = 0.05f;
+            Vector3 start = Vector3.one;
+            Vector3 end = Vector3.zero;
 
-            Broadcaster.transform.localScale = StaticUtils.GetScale(start, end, elapsed, duration);
+            // 閾値を使って「ほぼ 0」なら終わるようにする
+            const float threshold = 0.001f;
 
-            elapsed += Time.unscaledDeltaTime; // timeScale に依存しない
-            if (elapsed >= duration)
+            while (Vector3.Distance(TextToy.Scale, end) > threshold)
             {
-                // 最終的にピタリに end をセット
-                Broadcaster.transform.localScale = end;
-                break;
-            }
+                if (TextToy is null) yield break;
 
-            yield return Timing.WaitForOneFrame;
+                TextToy.Scale = StaticUtils.GetScale(start, end, elapsed, duration);
+
+                elapsed += Time.unscaledDeltaTime; // timeScale に依存しない
+                if (elapsed >= duration)
+                {
+                    // 最終的にピタリに end をセット
+                    TextToy.Scale = end;
+                    break;
+                }
+
+                yield return Timing.WaitForOneFrame;
+            }
         }
         _playback = SpeakerApi.PlayLoop("br0.ogg", "broadcaster", MapFlags.BroadcasterPoint, parent: Broadcaster?.transform, isSpatial: true, maxDistance: 15.5f, minDistance: 10f);
         yield return Timing.WaitForSeconds(5f);
