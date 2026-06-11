@@ -68,10 +68,7 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
 
     private static void AssignRole(Player? player, List<WeightedRoleEntry> table, RoleSpawnFlags flags)
     {
-        if (player == null) return;
-        if (!player.IsConnected) return;
-        if (player.ReferenceHub == null) return;
-        if (!player.IsRoleUnassigned()) return;
+        if (!IsEligibleInitialRoleTarget(player)) return;
 
         const int maxTries = 20;
         object? choice = null;
@@ -85,16 +82,18 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
 
         if (choice == null) return;
         if (!RoleLimitManager.CanAssign(choice)) return;
-        if (!player.IsConnected || !player.IsRoleUnassigned()) return;
+        if (!IsEligibleInitialRoleTarget(player)) return;
 
         RoleLimitManager.Consume(choice);
 
         switch (choice)
         {
             case RoleTypeId r:
+                Log.Debug($"[FirstRoles] Assign {DescribeRoleTarget(player)} -> {r}");
                 player.SetRole(r, flags);
                 break;
             case CRoleTypeId cr:
+                Log.Debug($"[FirstRoles] Assign {DescribeRoleTarget(player)} -> {cr}");
                 player.SetRole(cr, flags);
                 break;
         }
@@ -113,7 +112,7 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
         _LimitChecker();
 
         var players = Player.List
-            .Where(p => p != null && p.IsConnected && p.IsRoleUnassigned())
+            .Where(IsEligibleInitialRoleTarget)
             .ToList();
 
         if (players.Count == 0)
@@ -132,14 +131,14 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
 
         foreach (var pl in scpPlayers)
         {
-            if (pl != null && pl.IsConnected && pl.IsRoleUnassigned())
+            if (IsEligibleInitialRoleTarget(pl))
                 AssignRole(pl, RoleTables.GetScpRoles(), RoleSpawnFlags.All);
         }
 
         for (int i = 0; i < humanPlayers.Count; i++)
         {
             var pl = humanPlayers[i];
-            if (pl == null || !pl.IsConnected || !pl.IsRoleUnassigned())
+            if (!IsEligibleInitialRoleTarget(pl))
                 continue;
 
             var table = (i % 3) switch
@@ -161,6 +160,22 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
         {
             Round.IsLocked = false;
         });
+    }
+
+    private static bool IsEligibleInitialRoleTarget(Player? player)
+    {
+        return player != null
+               && player.IsConnected
+               && player.ReferenceHub != null
+               && !player.IsHost
+               && !player.ReferenceHub.IsHost
+               && !CRole.IsTeamNpc(player)
+               && player.IsRoleUnassigned();
+    }
+
+    private static string DescribeRoleTarget(Player player)
+    {
+        return $"{player.Nickname} (Id={player.Id}, NetId={player.ReferenceHub.netId}, IsNPC={player.IsNPC}, IsHost={player.IsHost}, HubIsHost={player.ReferenceHub.IsHost}, TeamNpc={CRole.IsTeamNpc(player)})";
     }
 
     private static void OnAssign()

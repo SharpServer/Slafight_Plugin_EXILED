@@ -249,6 +249,12 @@ public static class PlayerSpeakerManager
 
         Log.Debug($"[PlayerSpeakerManager] OnPlayerSpawned: {ev.Player.Nickname} as {ev.Player.Role} (IsAlive: {ev.Player.IsAlive})");
 
+        if (!ShouldManageSpeaker(ev.Player))
+        {
+            DestroyAllForPlayer(ev.Player);
+            return;
+        }
+
         if (ev.Player.IsAlive &&
             ev.Player.Role != PlayerRoles.RoleTypeId.Spectator &&
             ev.Player.Role != PlayerRoles.RoleTypeId.None)
@@ -259,7 +265,7 @@ public static class PlayerSpeakerManager
             {
                 try
                 {
-                    if (player != null && player.IsAlive && player.IsConnected)
+                    if (ShouldManageSpeaker(player) && player.IsAlive)
                     {
                         GetOrCreateSpeaker(
                             player,
@@ -319,7 +325,7 @@ public static class PlayerSpeakerManager
             bool shouldContinue;
             try
             {
-                shouldContinue = player != null && player.IsAlive && player.IsConnected && liveSpeaker.IsValid;
+                shouldContinue = ShouldManageSpeaker(player) && player.IsAlive && liveSpeaker.IsValid;
                 if (shouldContinue)
                     liveSpeaker.SetTransform(player.Position, null);
             }
@@ -336,5 +342,16 @@ public static class PlayerSpeakerManager
         }
 
         Log.Debug($"[PlayerSpeakerManager] FollowPlayerCoroutine[{purpose}]: stopped for {player?.Nickname ?? "Unknown"}");
+    }
+
+    private static bool ShouldManageSpeaker(Player player)
+    {
+        return player != null
+               && player.IsConnected
+               && player.ReferenceHub != null
+               && !player.IsNPC
+               && !player.IsHost
+               && !player.ReferenceHub.IsHost
+               && !CRole.IsTeamNpc(player);
     }
 }
