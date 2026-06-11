@@ -59,34 +59,33 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
         Round.IsLocked = true;
     }
 
-    private void CancelRoundStartedRole(ChangingRoleEventArgs ev)
+    private static void CancelRoundStartedRole(ChangingRoleEventArgs? ev)
     {
+        if (ev == null) return;
         if (ev.Reason == SpawnReason.RoundStart)
-        {
             ev.IsAllowed = false;
-        }
     }
 
-    private static void AssignRole(Player player, List<WeightedRoleEntry> table, RoleSpawnFlags flags)
+    private static void AssignRole(Player? player, List<WeightedRoleEntry> table, RoleSpawnFlags flags)
     {
+        if (player == null) return;
+        if (!player.IsConnected) return;
+        if (player.ReferenceHub == null) return;
+        if (!player.IsRoleUnassigned()) return;
+
         const int maxTries = 20;
         object? choice = null;
 
         for (int i = 0; i < maxTries; i++)
         {
             choice = WeightedRole.Choose(table);
-            if (choice == null)
-                continue;
-
-            if (RoleLimitManager.CanAssign(choice))
+            if (choice != null && RoleLimitManager.CanAssign(choice))
                 break;
         }
 
-        if (choice == null)
-        {
-            Log.Debug($"[FirstRoles] No available role for {player.Nickname} (all limited)");
-            return;
-        }
+        if (choice == null) return;
+        if (!RoleLimitManager.CanAssign(choice)) return;
+        if (!player.IsConnected || !player.IsRoleUnassigned()) return;
 
         RoleLimitManager.Consume(choice);
 
@@ -99,8 +98,6 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
                 player.SetRole(cr, flags);
                 break;
         }
-
-        Log.Debug($"[FirstRoles] Assigned {choice} to {player.Nickname}");
     }
 
     private static void _LimitChecker()
@@ -113,46 +110,45 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
 
     private static void SetupRandomRoles()
     {
-        Log.Debug("[FirstRoles] SetupRandomRoles called");
-
         _LimitChecker();
 
         var players = Player.List
             .Where(p => p != null && p.IsConnected && p.IsRoleUnassigned())
             .ToList();
 
-        int playerCount = players.Count;
-        if (playerCount == 0)
+        if (players.Count == 0)
         {
             Round.IsLocked = false;
             return;
         }
 
         var shuffledPlayers = players.OrderBy(_ => Random.value).ToList();
+        int scpCount = Mathf.Max(1, shuffledPlayers.Count / 5);
 
-        // 1) SCP 人数（5人に1人、最低1人）
-        var scpCount = Mathf.Max(1, playerCount / 5);
-
-        var scpPlayers   = shuffledPlayers.Take(scpCount).ToList();
+        var scpPlayers = shuffledPlayers.Take(scpCount).ToList();
         var humanPlayers = shuffledPlayers.Skip(scpCount).ToList();
 
-        // OnAssign
         OnAssign();
-        
-        // SCP ロール
-        foreach (var pl in scpPlayers)
-            AssignRole(pl, RoleTables.GetScpRoles(), RoleSpawnFlags.All);
 
-        // 人間：3人に1人
-        for (var i = 0; i < humanPlayers.Count; i++)
+        foreach (var pl in scpPlayers)
+        {
+            if (pl != null && pl.IsConnected && pl.IsRoleUnassigned())
+                AssignRole(pl, RoleTables.GetScpRoles(), RoleSpawnFlags.All);
+        }
+
+        for (int i = 0; i < humanPlayers.Count; i++)
         {
             var pl = humanPlayers[i];
+            if (pl == null || !pl.IsConnected || !pl.IsRoleUnassigned())
+                continue;
+
             var table = (i % 3) switch
             {
                 0 => RoleTables.GetClassDRoles(),
                 1 => RoleTables.GetScientistRoles(),
                 _ => RoleTables.GetGuardRoles(),
             };
+
             AssignRole(pl, table, RoleSpawnFlags.All);
         }
 

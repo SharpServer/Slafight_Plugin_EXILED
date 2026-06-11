@@ -118,46 +118,52 @@ public class EventHandler : IBootstrapHandler, IDisposable
 
     private static void OnVerified(VerifiedEventArgs? ev)
     {
-        if (ev?.Player == null) return;
-        ev.Player.InitPlayerFlags();
-        ev.Player.Broadcast(6, "\n<size=28><color=#008cff>シャープ鯖</color>へようこそ！\\n本サーバーはRP鯖です。RPを念頭に置いておく以外の制約は無いので自由に楽しんでください！</size>", Broadcast.BroadcastFlags.Normal, true);
+        var player = ev?.Player;
+        if (player == null) return;
+
+        player.InitPlayerFlags();
+        player.Broadcast(
+            6,
+            "\n<size=28><color=#008cff>シャープ鯖</color>へようこそ！\\n本サーバーはRP鯖です。RPを念頭に置いておく以外の制約は無いので自由に楽しんでください！</size>",
+            Broadcast.BroadcastFlags.Normal,
+            true);
+
         if (Round.InProgress) return;
+
         Timing.CallDelayed(0.05f, () =>
         {
-            if (!IsPlayerValid(ev.Player)) return;
+            if (!IsPlayerValid(player)) return;
             if (Round.InProgress) return;
-            ShowLobbyInfoHint(ev.Player);
+            ShowLobbyInfoHint(player);
         });
     }
 
     private static void OnLeft(LeftEventArgs? ev)
     {
-        if (ev?.Player == null) return;
-        DebugModeHandler.RemovePlayer(ev.Player);
-        ServerSpecificsHandler.RemovePlayer(ev.Player);
-        RPNameSetter.Clear(ev.Player);
-        EffectedInfoTextProvider.Clear(ev.Player);
-        EffectFakeSyncProvider.RemovePlayer(ev.Player);
+        var leaving = ev?.Player;
+        if (leaving == null) return;
 
-        if (ev.Player.GetTeam() != CTeam.SCPs || ev.Player.IsVanillaOrCustom(RoleTypeId.Scp0492, CRoleTypeId.Zombified)) return;
+        DebugModeHandler.RemovePlayer(leaving);
+        ServerSpecificsHandler.RemovePlayer(leaving);
+        RPNameSetter.Clear(leaving);
+        EffectedInfoTextProvider.Clear(leaving);
+        EffectFakeSyncProvider.RemovePlayer(leaving);
+
+        if (leaving.GetTeam() != CTeam.SCPs) return;
+        if (leaving.IsVanillaOrCustom(RoleTypeId.Scp0492, CRoleTypeId.Zombified)) return;
         if (Round.ElapsedTime.TotalSeconds > 179) return;
 
-        int scpAlive = Player.List.Count(p => p != ev.Player && p.IsAlive && p.GetTeam() == CTeam.SCPs);
+        int scpAlive = Player.List.Count(p => p != null && p != leaving && p.IsAlive && p.GetTeam() == CTeam.SCPs);
         if (scpAlive >= 1) return;
 
-        var candidate = Player.List.FirstOrDefault(p => !p.IsAlive);
+        var candidate = Player.List.FirstOrDefault(p => p != null && p.IsConnected && !p.IsAlive && p.IsRoleUnassigned());
         if (candidate == null) return;
 
-        var roleInfo = ev.Player.GetRoleInfo();
-
+        var roleInfo = leaving.GetRoleInfo();
         if (roleInfo.Custom == CRoleTypeId.None)
-        {
             candidate.SetRole(roleInfo.Vanilla);
-        }
         else
-        {
             candidate.SetRole(roleInfo.Custom);
-        }
 
         candidate.ShowHint("※SCPプレイヤーが切断したため代わりにスポーンしました");
     }
@@ -326,41 +332,37 @@ public class EventHandler : IBootstrapHandler, IDisposable
         CandyKindID.Pink,
     ];
 
-    private void OnChangingRole(ChangingRoleEventArgs ev)
+    private void OnChangingRole(ChangingRoleEventArgs? ev)
     {
-        if (ev.Player is null) return;
-        EffectFakeSyncProvider.Disable(ev.Player);
+        var player = ev?.Player;
+        if (player == null) return;
 
-        Timing.CallDelayed(1.05f, () =>
+        EffectFakeSyncProvider.Disable(player);
+
+        var newRole = ev.NewRole;
+
+        Timing.CallDelayed(0.2f, () =>
         {
-            if (!IsPlayerValid(ev.Player)) return;
+            if (!IsPlayerValid(player)) return;
             if (!Round.InProgress) return;
-            ConfigureScpTeamAnomalousTarget(ev.Player);
+            if (newRole == RoleTypeId.Spectator) return;
+            if (!player.IsAlive) return;
 
-            RoleTypeId role = ev.Player.Role;
-            var allowed = role.GetTeam();
-            if (allowed == Team.SCPs) return;
-            
-            // Add Process
+            ConfigureScpTeamAnomalousTarget(player);
+
+            if (player.Role.Team == Team.SCPs) return;
+            if (player.Inventory == null) return;
+            if (player.IsInventoryFull) return;
+
             if (MapFlags.GetSeason() == SeasonTypeId.April)
             {
-                if (ev.Player.HasItem(ItemType.SCP330)) return;
-                if (ev.Player.IsInventoryFull) return;
-                if (ev.NewRole == RoleTypeId.Spectator) return;
-                if (ev.Player.Inventory == null) return;
-
-                Log.Debug("Giving Random candy to " + ev.Player.Nickname);
-                ev.Player.TryAddCandy(_candies.RandomItem());
+                if (!player.HasItem(ItemType.SCP330))
+                    player.TryAddCandy(_candies.RandomItem());
             }
             else
             {
-                if (ev.Player.HasItem(ItemType.Flashlight)) return;
-                if (ev.Player.IsInventoryFull) return;
-                if (ev.NewRole == RoleTypeId.Spectator) return;
-                if (ev.Player.Inventory == null) return;
-
-                Log.Debug("Giving Flashlight to " + ev.Player.Nickname);
-                ev.Player.GiveOrDrop(ItemType.Flashlight);
+                if (!player.HasItem(ItemType.Flashlight))
+                    player.GiveOrDrop(ItemType.Flashlight);
             }
         });
     }
