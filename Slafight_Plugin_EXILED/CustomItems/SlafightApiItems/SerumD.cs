@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
-public class SerumD : CItem
+public class SerumD : CItemUsable
 {
     public override string DisplayName => "Serum-D";
     public override string Description =>
@@ -17,7 +17,7 @@ public class SerumD : CItem
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor   => Color.cyan;
 
-    protected override void OnUsed(UsedItemEventArgs ev)
+    protected override void OnUsedEffect(UsingItemCompletedEventArgs ev)
     {
         ev.Player.EnableEffect(EffectType.Scp1853, 4, 15);
     }

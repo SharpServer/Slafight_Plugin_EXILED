@@ -51,10 +51,12 @@ public static class MapFlags
     public static Vector3 CisrKeycardSurveillancePoint = Vector3.zero;
     public static Vector3 CisrGunRevolverXPoint = Vector3.zero;
     public static Vector3 CisrKeycardAPoint = Vector3.zero;
+    public static Vector3 CisrMedicinePoint = Vector3.zero;
     public static Vector3 CDoorO1 = Vector3.zero;
     public static Vector3 CDoorO2 = Vector3.zero;
     public static Vector3 CDoorO3 = Vector3.zero;
     public static Vector3 CDoorO4 = Vector3.zero;
+    public static Vector3 BroadcasterPoint = Vector3.zero;
     public static readonly List<Vector3> EscapePoints = [];
     
     public static Vector3 FirstTeamSpawnPoint = Vector3.zero;

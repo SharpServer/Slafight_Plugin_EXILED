@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using CustomPlayerEffects;
 using Exiled.Events.EventArgs.Player;
 using MEC;
@@ -10,7 +9,7 @@ using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
-public class Scp1425 : CItem
+public class Scp1425 : CItemUsable
 {
     public override string DisplayName => "SCP-1425";
     public override string Description => "第五的な力を感じる・・・";
@@ -20,24 +19,14 @@ public class Scp1425 : CItem
     protected override Color PickupLightColor   => Color.magenta;
     protected override string PickupSchematicName => "Scp1425Model";
 
-    private readonly Dictionary<int, byte> _readCount = [];
+    protected override int MaxUseCount => 5;
+    protected override bool DestroyItemWhenUsesDepleted => false;
 
-    protected override void OnWaitingForPlayers()
-    {
-        _readCount.Clear();
-    }
-    
-    protected override void OnOwnerDying(DyingEventArgs ev)
-    {
-        if (ev.Player == null) return;
-        _readCount[ev.Player.Id] = 0;
-    }
-
-    protected override void OnUsed(UsedItemEventArgs ev)
+    protected override void OnUsedEffect(UsingItemCompletedEventArgs ev)
     {
         if (ev.Player == null) return;
 
-        var count = _readCount.GetValueOrDefault(ev.Player.Id, (byte)0);
+        var count = MaxUseCount - GetRemainingUses(ev.Item);
 
         switch (count)
         {
@@ -63,16 +52,13 @@ public class Scp1425 : CItem
                     () => ev.Player?.SetRole(CRoleTypeId.FifthistMarionette, RoleSpawnFlags.AssignInventory));
                 break;
             default:
-                _readCount[ev.Player.Id] = 0;
+                SetRemainingUses(ev.Item, MaxUseCount);
                 return;
         }
+    }
 
-        if (count >= 4)
-            _readCount[ev.Player.Id] = 0;
-        else
-            _readCount[ev.Player.Id] = (byte)(count + 1);
-
-        var player = ev.Player;
-        Timing.CallDelayed(0.1f, () => Give(player));
+    protected override void OnUsesDepleted(UsingItemCompletedEventArgs ev)
+    {
+        SetRemainingUses(ev.Item, MaxUseCount);
     }
 }

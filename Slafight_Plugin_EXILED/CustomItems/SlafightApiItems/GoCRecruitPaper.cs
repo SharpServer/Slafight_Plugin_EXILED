@@ -9,7 +9,7 @@ using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
-public class GoCRecruitPaper : CItem
+public class GoCRecruitPaper : CItemUsable
 {
     public override string DisplayName => "UNGOC一般工作員セット";
     public override string Description => "一般工作員一人分のアイテムが入っている。\nこれを使えば工作員を一人だけ増やせる。";
@@ -20,7 +20,9 @@ public class GoCRecruitPaper : CItem
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor   => new(0f, 0f, 200f / 255f);
 
-    protected override void OnUsed(UsedItemEventArgs ev)
+    protected override bool DestroyItemWhenUsesDepleted => false;
+
+    protected override void OnUsedEffect(UsingItemCompletedEventArgs ev)
     {
         if (ev.Player == null) return;
 

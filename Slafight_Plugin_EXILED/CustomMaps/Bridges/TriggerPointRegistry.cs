@@ -164,6 +164,9 @@ public class TriggerPointRegistry : SlafightLabApiHandler
             case "LczS3005D":
                 MapFlags.LczScp3005DocumentPoint = pos;
                 break;
+            case "BroadcasterPoint":
+                MapFlags.BroadcasterPoint = pos;
+                break;
             case "CISR_GoCRailgun":
                 MapFlags.CisrGoCRailgunPoint = pos;
                 break;
@@ -202,6 +205,9 @@ public class TriggerPointRegistry : SlafightLabApiHandler
                 break;
             case "CISR_KeycardA":
                 MapFlags.CisrKeycardAPoint = pos;
+                break;
+            case "CISR_Medicine":
+                MapFlags.CisrMedicinePoint = pos;
                 break;
         }
     }

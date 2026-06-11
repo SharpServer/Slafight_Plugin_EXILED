@@ -116,6 +116,7 @@ public abstract class CItem
             PlayerHandlers.ItemRemoved      += OnAnyItemRemoved;
             PlayerHandlers.DroppingItem     += OnAnyDroppingItem;
             PlayerHandlers.UsingItem        += OnAnyUsingItem;
+            PlayerHandlers.UsingItemCompleted += OnAnyUsingItemCompleted;
             PlayerHandlers.UsedItem         += OnAnyUsedItem;
             PlayerHandlers.Shooting         += OnAnyShooting;
             PlayerHandlers.Shot             += OnAnyShot;
@@ -197,6 +198,7 @@ public abstract class CItem
             PlayerHandlers.ItemRemoved      -= OnAnyItemRemoved;
             PlayerHandlers.DroppingItem     -= OnAnyDroppingItem;
             PlayerHandlers.UsingItem        -= OnAnyUsingItem;
+            PlayerHandlers.UsingItemCompleted -= OnAnyUsingItemCompleted;
             PlayerHandlers.UsedItem         -= OnAnyUsedItem;
             PlayerHandlers.Shooting         -= OnAnyShooting;
             PlayerHandlers.Shot             -= OnAnyShot;
@@ -267,7 +269,7 @@ public abstract class CItem
     protected virtual bool         PickupLightEnabled    => false;
     protected virtual Color        PickupLightColor      => Color.white;
     protected virtual float        PickupLightIntensity  => 0.7f;
-    protected virtual float        PickupLightRange      => 5f;
+    protected virtual float        PickupLightRange      => 3.75f;
     protected virtual LightShadows PickupLightShadowType => LightShadows.None;
 
     // ======================================================
@@ -697,6 +699,7 @@ public abstract class CItem
     protected virtual void OnPickingUp  (PlayerEvents.PickingUpItemEventArgs  ev) { }
     protected virtual void OnDropping   (PlayerEvents.DroppingItemEventArgs   ev) { }
     protected virtual void OnUsing      (PlayerEvents.UsingItemEventArgs      ev) { }
+    protected virtual void OnUsingItemCompleted(PlayerEvents.UsingItemCompletedEventArgs ev) { }
     protected virtual void OnUsed       (PlayerEvents.UsedItemEventArgs       ev) { }
     protected virtual void OnShooting   (PlayerEvents.ShootingEventArgs       ev) { }
     protected virtual void OnShot       (PlayerEvents.ShotEventArgs           ev) { }
@@ -819,6 +822,12 @@ public abstract class CItem
     {
         if (ev?.Item == null) return;
         Dispatch(ev.Item.Serial, ci => ci.OnUsing(ev), nameof(OnUsing));
+    }
+
+    private static void OnAnyUsingItemCompleted(PlayerEvents.UsingItemCompletedEventArgs? ev)
+    {
+        if (ev?.Item == null) return;
+        Dispatch(ev.Item.Serial, ci => ci.OnUsingItemCompleted(ev), nameof(OnUsingItemCompleted));
     }
 
     private static void OnAnyUsedItem(PlayerEvents.UsedItemEventArgs? ev)
@@ -1094,6 +1103,7 @@ public abstract class CItem
     internal void CallOnPickingUp(PlayerEvents.PickingUpItemEventArgs ev)                 => OnPickingUp(ev);
     internal void CallOnDropping (PlayerEvents.DroppingItemEventArgs ev)                  => OnDropping(ev);
     internal void CallOnUsing    (PlayerEvents.UsingItemEventArgs ev)                     => OnUsing(ev);
+    internal void CallOnUsingItemCompleted(PlayerEvents.UsingItemCompletedEventArgs ev)   => OnUsingItemCompleted(ev);
     internal void CallOnUsed     (PlayerEvents.UsedItemEventArgs ev)                      => OnUsed(ev);
     internal void CallOnShooting (PlayerEvents.ShootingEventArgs ev)                      => OnShooting(ev);
     internal void CallOnShot     (PlayerEvents.ShotEventArgs ev)                          => OnShot(ev);

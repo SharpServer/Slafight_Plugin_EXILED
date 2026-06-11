@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
-public class ClassXMemoryForcePil : CItem
+public class ClassXMemoryForcePil : CItemUsable
 {
     public override string DisplayName => "クラスX-記憶補強剤";
     public override string Description =>
@@ -19,15 +19,13 @@ public class ClassXMemoryForcePil : CItem
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor   => Color.yellow;
 
-    protected override void OnUsing(UsingItemEventArgs ev)
-    {
-        if (ev.Player == null) return;
-        if (!ev.Player.HasFlag(SpecificFlagType.AntiMemeEffectDisabled)) return;
-        ev.IsAllowed = false;
-        ev.Player.ShowHint("既に耐性を得ている為、使用できません。");
-    }
+    protected override bool CanStartUse(UsingItemEventArgs ev)
+        => ev.Player != null && !ev.Player.HasFlag(SpecificFlagType.AntiMemeEffectDisabled);
 
-    protected override void OnUsed(UsedItemEventArgs ev)
+    protected override void OnStartUseDenied(UsingItemEventArgs ev)
+        => ev.Player?.ShowHint("既に耐性を得ている為、使用できません。");
+
+    protected override void OnUsedEffect(UsingItemCompletedEventArgs ev)
     {
         if (ev.Player == null) return;
         ev.Player.EnableEffect(EffectType.Invigorated, 60);

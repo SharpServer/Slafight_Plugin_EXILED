@@ -189,6 +189,7 @@
         <Compile Include="API\Features\AbilityLoadout.cs" />
         <Compile Include="API\Features\AbilityManager.cs" />
         <Compile Include="API\Features\AbilityParseHelper.cs" />
+        <Compile Include="API\Features\CItemUsable.cs" />
         <Compile Include="API\Features\AudioClipApi.cs" />
         <Compile Include="API\Features\CassieHelper.cs" />
         <Compile Include="API\Features\EffectedInfoTextProvider.cs" />
@@ -306,6 +307,7 @@
         <Compile Include="CustomItems\SlafightApiItems\KeycardA.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardHimself.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardSupplyManager.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\Medicine.cs" />
         <Compile Include="CustomItems\SlafightApiItems\S41MedicalPistol.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardChaosIntruder.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CloakGenerator.cs" />

@@ -315,6 +315,9 @@ public abstract class CItemHybrid : CItem
     protected override void OnUsing(PlayerEvents.UsingItemEventArgs ev)
         => GetCurrentSub(ev.Item.Serial)?.CallOnUsing(ev);
 
+    protected override void OnUsingItemCompleted(PlayerEvents.UsingItemCompletedEventArgs ev)
+        => GetCurrentSub(ev.Item.Serial)?.CallOnUsingItemCompleted(ev);
+
     protected override void OnUsed(PlayerEvents.UsedItemEventArgs ev)
         => GetCurrentSub(ev.Item.Serial)?.CallOnUsed(ev);
 

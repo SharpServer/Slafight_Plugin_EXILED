@@ -53,6 +53,8 @@ public class TriggerPointItemSpawner : SlafightLabApiHandler
         SpawnIfSet(MapFlags.CisrKeycardArmory3Point, pos => CItem.Get<KeycardArmoryLevel3>()?.Spawn(pos));
         SpawnIfSet(MapFlags.CisrKeycardSurveillancePoint, pos => CItem.Get<KeycardSurveillance>()?.Spawn(pos));
         SpawnIfSet(MapFlags.CisrGunRevolverXPoint, pos => CItem.Get<GunRevolverX>()?.Spawn(pos));
+        SpawnIfSet(MapFlags.CisrKeycardAPoint, pos => CItem.Get<KeycardA>()?.Spawn(pos));
+        SpawnIfSet(MapFlags.CisrMedicinePoint, pos => CItem.Get<Medicine>()?.Spawn(pos));
     }
 
     private static void SpawnIfSet(Vector3 position, System.Action<Vector3> spawn)
