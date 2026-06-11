@@ -11,7 +11,7 @@ public static class EffectedInfoTextProvider
 {
     private static readonly Dictionary<int, int> Versions = new();
 
-    public static void Set(Player player, string text, float duration = 0f)
+    public static void Set(Player player, string? text, float duration = 0f)
     {
         if (player == null) return;
 

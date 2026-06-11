@@ -107,25 +107,25 @@ public static class NvgManager
             BatteryData.Clear();
     }
 
-    private static void OnChangingRole(ChangingRoleEventArgs ev)
+    private static void OnChangingRole(ChangingRoleEventArgs? ev)
     {
         if (ev?.Player == null) return;
         StopAllNvgByOwner(ev.Player, clearBattery: false);
     }
 
-    private static void OnDied(DiedEventArgs ev)
+    private static void OnDied(DiedEventArgs? ev)
     {
         if (ev?.Player == null) return;
         StopAllNvgByOwner(ev.Player, clearBattery: false);
     }
 
-    private static void OnLeft(LeftEventArgs ev)
+    private static void OnLeft(LeftEventArgs? ev)
     {
         if (ev?.Player == null) return;
         StopAllNvgByOwner(ev.Player, clearBattery: false);
     }
 
-    private static void OnItemRemoved(ItemRemovedEventArgs ev)
+    private static void OnItemRemoved(ItemRemovedEventArgs? ev)
     {
         if (ev?.Item == null) return;
         StopNvgBySerial(ev.Item.Serial, clearBattery: false);
@@ -238,7 +238,7 @@ public static class NvgManager
         }
     }
     
-    private static void TryDisableBlackout(NvgRuntimeData data)
+    private static void TryDisableBlackout(NvgRuntimeData? data)
     {
         if (data == null) return;
         if (!data.Profile.UseBlackout) return;
@@ -349,7 +349,7 @@ public static class NvgManager
     // バッテリーループ
     // --------------------------------------------------------
 
-    private static void KillRuntimeData(NvgRuntimeData data)
+    private static void KillRuntimeData(NvgRuntimeData? data)
     {
         if (data == null) return;
 
@@ -436,7 +436,7 @@ public static class NvgManager
     private static bool PlayerHasSerial(Player player, ushort serial)
         => player != null && player.Items.Any(i => i != null && i.Serial == serial);
 
-    private static void DisableNvgWearable(Player player)
+    private static void DisableNvgWearable(Player? player)
     {
         try
         {

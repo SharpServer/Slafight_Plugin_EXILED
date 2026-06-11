@@ -61,7 +61,7 @@ public class Document : ObjectPrefab
         base.OnDestroy();
     }
 
-    protected override void OnToySearchedNearby(PlayerSearchedToyEventArgs ev)
+    protected override void OnToySearchedNearby(PlayerSearchedToyEventArgs? ev)
     {
         if (ev?.Player == null)
             return;

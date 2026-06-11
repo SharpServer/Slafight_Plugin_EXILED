@@ -7,7 +7,7 @@ namespace Slafight_Plugin_EXILED.CustomMaps.Core.Utilities;
 
 internal static class SchematicMover
 {
-    public static IEnumerator<float> Move(SchematicObject schematic, Vector3 startPos, Vector3 offset, float duration)
+    public static IEnumerator<float> Move(SchematicObject? schematic, Vector3 startPos, Vector3 offset, float duration)
     {
         if (schematic?.transform == null || duration <= 0f)
             yield break;

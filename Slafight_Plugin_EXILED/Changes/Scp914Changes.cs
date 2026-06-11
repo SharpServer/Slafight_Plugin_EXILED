@@ -723,7 +723,7 @@ public static class Scp914Changes
     /// 4. Vanilla (Registry ヒット) — Registry 経由で変換
     /// どれにも当たらない場合は何もしない (vanilla 914 / CItem デフォルト挙動に任せる)
     /// </summary>
-    private static void OnUpgradingPickup(UpgradingPickupEventArgs ev)
+    private static void OnUpgradingPickup(UpgradingPickupEventArgs? ev)
     {
         if (ev?.Pickup == null) return;
 
@@ -777,7 +777,7 @@ public static class Scp914Changes
     /// <summary>
     /// インベントリアップグレード版。O5 ワイルドカードも適用する。
     /// </summary>
-    private static void OnUpgradingInventoryItem(UpgradingInventoryItemEventArgs ev)
+    private static void OnUpgradingInventoryItem(UpgradingInventoryItemEventArgs? ev)
     {
         if (ev?.Item == null || ev.Player == null) return;
 

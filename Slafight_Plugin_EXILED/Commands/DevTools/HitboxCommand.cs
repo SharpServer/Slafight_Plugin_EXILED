@@ -440,7 +440,7 @@ public class HitboxCommand : ICommand
         return true;
     }
 
-    private static int ClearOwnerSessions(Player executor, string labelPrefix)
+    private static int ClearOwnerSessions(Player executor, string? labelPrefix)
     {
         int removed = 0;
         foreach (int id in Sessions
@@ -607,7 +607,7 @@ public class HitboxCommand : ICommand
         return false;
     }
 
-    private static bool ShouldIgnoreLookCollider(Player executor, Collider collider)
+    private static bool ShouldIgnoreLookCollider(Player? executor, Collider collider)
     {
         if (collider == null)
             return true;
@@ -637,7 +637,7 @@ public class HitboxCommand : ICommand
         return IsPlayerCollider(executor, collider);
     }
 
-    private static bool IsPlayerCollider(Player player, Collider collider)
+    private static bool IsPlayerCollider(Player? player, Collider collider)
     {
         if (player?.GameObject == null || collider == null)
             return false;
@@ -745,7 +745,7 @@ public class HitboxCommand : ICommand
         AddFallbackPlayerCapsuleSegments(player, segments);
     }
 
-    private static bool TryAddCharacterControllerSegments(Player player, List<(Vector3 start, Vector3 end)> segments)
+    private static bool TryAddCharacterControllerSegments(Player? player, List<(Vector3 start, Vector3 end)> segments)
     {
         if (player?.ReferenceHub?.roleManager?.CurrentRole is not IFpcRole fpcRole)
             return false;
@@ -1047,7 +1047,7 @@ public class HitboxCommand : ICommand
         session.PrimitiveLines.Clear();
     }
 
-    private static bool IsSessionPrimitiveCollider(Collider collider)
+    private static bool IsSessionPrimitiveCollider(Collider? collider)
     {
         GameObject gameObject = collider?.gameObject;
         if (gameObject == null)
@@ -1106,7 +1106,7 @@ public class HitboxCommand : ICommand
             .Take(max);
     }
 
-    private static IEnumerable<Collider> GetPlayerColliders(Player player)
+    private static IEnumerable<Collider> GetPlayerColliders(Player? player)
     {
         if (player?.GameObject == null)
             return [];
@@ -1284,7 +1284,7 @@ public class HitboxCommand : ICommand
         return true;
     }
 
-    private static HitboxDrawPreferences GetPreferences(Player player)
+    private static HitboxDrawPreferences GetPreferences(Player? player)
     {
         string key = player?.UserId ?? string.Empty;
         if (!Preferences.TryGetValue(key, out HitboxDrawPreferences preferences))

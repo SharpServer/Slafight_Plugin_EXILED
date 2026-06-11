@@ -295,7 +295,7 @@ public static class AudioClipApi
         return data;
     }
 
-    private static float[] ConvertToMono48k(float[] input, int sampleRate, int channels)
+    private static float[] ConvertToMono48k(float[]? input, int sampleRate, int channels)
     {
         if (input == null || input.Length == 0)
             return Array.Empty<float>();

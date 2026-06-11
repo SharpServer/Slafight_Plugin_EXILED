@@ -26,7 +26,7 @@ public static class EffectFakeSyncProvider
     public static void SetTargets(
         Player owner,
         EffectType effect,
-        IEnumerable<Player> targets,
+        IEnumerable<Player>? targets,
         byte intensity = DefaultIntensity,
         float refreshInterval = DefaultRefreshInterval,
         bool restoreRealStateOnDisable = true)
@@ -97,13 +97,13 @@ public static class EffectFakeSyncProvider
         }
     }
 
-    public static void Disable(Player owner, EffectType effect)
+    public static void Disable(Player? owner, EffectType effect)
     {
         if (owner is null) return;
         Disable(new SessionKey(owner.Id, effect), owner);
     }
 
-    public static void Disable(Player owner)
+    public static void Disable(Player? owner)
     {
         if (owner is null) return;
 
@@ -117,7 +117,7 @@ public static class EffectFakeSyncProvider
             Disable(key);
     }
 
-    public static void RemovePlayer(Player player)
+    public static void RemovePlayer(Player? player)
     {
         if (player is null) return;
 
@@ -137,7 +137,7 @@ public static class EffectFakeSyncProvider
     private static void SetTargetRule(
         Player owner,
         EffectType effect,
-        Func<Player, bool> shouldShowEffect,
+        Func<Player, bool>? shouldShowEffect,
         byte intensity,
         float refreshInterval,
         bool restoreRealStateOnDisable,

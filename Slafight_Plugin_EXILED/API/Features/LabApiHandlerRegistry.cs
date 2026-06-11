@@ -2,7 +2,7 @@ namespace Slafight_Plugin_EXILED.API.Features;
 
 public static class LabApiHandlerRegistry
 {
-    public static T Register<T>(T current = null) where T : SlafightLabApiHandler, new()
+    public static T Register<T>(T? current = null) where T : SlafightLabApiHandler, new()
     {
         if (current != null)
             return current;

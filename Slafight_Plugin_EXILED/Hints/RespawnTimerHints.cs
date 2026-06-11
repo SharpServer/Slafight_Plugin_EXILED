@@ -70,7 +70,7 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private void OnVerified(VerifiedEventArgs ev)
+    private void OnVerified(VerifiedEventArgs? ev)
     {
         if (ev?.Player == null)
             return;
@@ -78,7 +78,7 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
         Timing.CallDelayed(0.5f, () => EnsureFor(ev.Player));
     }
 
-    private void OnChangingRole(ChangingRoleEventArgs ev)
+    private void OnChangingRole(ChangingRoleEventArgs? ev)
     {
         if (ev?.Player == null)
             return;

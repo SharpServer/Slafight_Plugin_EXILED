@@ -22,7 +22,7 @@ public static class PlayerExtensions
                 break;
 
             case RoleTypeId.Scp049:
-                player.Role.Set(RoleTypeId.Scp049, roleSpawnFlags);
+                player.SetRole(CRoleTypeId.Scp049, roleSpawnFlags);
                 break;
 
             case RoleTypeId.Scp079:

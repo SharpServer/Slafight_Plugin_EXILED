@@ -225,7 +225,7 @@ public abstract class CItem
     /// CItemAutoRegisterIgnore 付き CItem 用:
     /// 手動で生成したインスタンスを UniqueKey マップの「本体」として登録する。
     /// </summary>
-    public static void OverrideItemInstance(string uniqueKey, CItem instance)
+    public static void OverrideItemInstance(string uniqueKey, CItem? instance)
     {
         if (string.IsNullOrEmpty(uniqueKey) || instance == null) return;
         UniqueKeyToItem[uniqueKey] = instance;
@@ -495,7 +495,7 @@ public abstract class CItem
     }
 
     private static IEnumerator<float> TrackPickupLight(
-        Pickup pickup, LabApi.Features.Wrappers.LightSourceToy light)
+        Pickup? pickup, LabApi.Features.Wrappers.LightSourceToy? light)
     {
         while (pickup?.Base?.gameObject != null && light?.Base?.gameObject != null)
         {
@@ -567,8 +567,8 @@ public abstract class CItem
     }
 
     private static IEnumerator<float> TrackPickupSchematic(
-        Pickup pickup,
-        SchematicObject schem,
+        Pickup? pickup,
+        SchematicObject? schem,
         Vector3 offset,
         Vector3 rotationOffset)
     {
@@ -738,7 +738,7 @@ public abstract class CItem
         catch (Exception ex) { Log.Error($"CItem.{tag} error in {ci.GetType().Name}: {ex}"); }
     }
 
-    private static void OnAnyPickingUpItem(PlayerEvents.PickingUpItemEventArgs ev)
+    private static void OnAnyPickingUpItem(PlayerEvents.PickingUpItemEventArgs? ev)
     {
         if (ev?.Pickup == null) return;
         Dispatch(ev.Pickup.Serial, ci => ci.OnPickingUp(ev), nameof(OnPickingUp));
@@ -753,7 +753,7 @@ public abstract class CItem
     /// そのため PickupDestroyed 到達時に SerialToItem から消してはいけない。
     /// SerialToItem のクリアは WaitingForPlayers で一括して行う。
     /// </summary>
-    private static void OnAnyItemAdded(PlayerEvents.ItemAddedEventArgs ev)
+    private static void OnAnyItemAdded(PlayerEvents.ItemAddedEventArgs? ev)
     {
         if (ev?.Player == null || ev.Item == null) return;
 
@@ -798,7 +798,7 @@ public abstract class CItem
         }
     }
 
-    private static void OnAnyItemRemoved(PlayerEvents.ItemRemovedEventArgs ev)
+    private static void OnAnyItemRemoved(PlayerEvents.ItemRemovedEventArgs? ev)
     {
         if (ev?.Item == null) return;
         // ItemRemoved は「インベントリから抜けた」通知。
@@ -809,46 +809,46 @@ public abstract class CItem
         catch (Exception e) { Log.Error($"CItem.OnReleased error in {ci.GetType().Name}: {e}"); }
     }
 
-    private static void OnAnyDroppingItem(PlayerEvents.DroppingItemEventArgs ev)
+    private static void OnAnyDroppingItem(PlayerEvents.DroppingItemEventArgs? ev)
     {
         if (ev?.Item == null) return;
         Dispatch(ev.Item.Serial, ci => ci.OnDropping(ev), nameof(OnDropping));
     }
 
-    private static void OnAnyUsingItem(PlayerEvents.UsingItemEventArgs ev)
+    private static void OnAnyUsingItem(PlayerEvents.UsingItemEventArgs? ev)
     {
         if (ev?.Item == null) return;
         Dispatch(ev.Item.Serial, ci => ci.OnUsing(ev), nameof(OnUsing));
     }
 
-    private static void OnAnyUsedItem(PlayerEvents.UsedItemEventArgs ev)
+    private static void OnAnyUsedItem(PlayerEvents.UsedItemEventArgs? ev)
     {
         if (ev?.Item == null) return;
         Dispatch(ev.Item.Serial, ci => ci.OnUsed(ev), nameof(OnUsed));
     }
 
-    private static void OnAnyShooting(PlayerEvents.ShootingEventArgs ev)
+    private static void OnAnyShooting(PlayerEvents.ShootingEventArgs? ev)
     {
         var item = ev?.Player?.CurrentItem;
         if (item == null) return;
         Dispatch(item.Serial, ci => ci.OnShooting(ev!), nameof(OnShooting));
     }
 
-    private static void OnAnyShot(PlayerEvents.ShotEventArgs ev)
+    private static void OnAnyShot(PlayerEvents.ShotEventArgs? ev)
     {
         var item = ev?.Player?.CurrentItem;
         if (item == null) return;
         Dispatch(item.Serial, ci => ci.OnShot(ev!), nameof(OnShot));
     }
 
-    private static void OnAnyHurting(PlayerEvents.HurtingEventArgs ev)
+    private static void OnAnyHurting(PlayerEvents.HurtingEventArgs? ev)
     {
         var item = ev?.Attacker?.CurrentItem;
         if (item == null) return;
         Dispatch(item.Serial, ci => ci.OnHurtingOthers(ev!), nameof(OnHurtingOthers));
     }
 
-    private static void OnAnyDying(PlayerEvents.DyingEventArgs ev)
+    private static void OnAnyDying(PlayerEvents.DyingEventArgs? ev)
     {
         if (ev?.Player == null) return;
         foreach (var item in ev.Player.Items.ToList())
@@ -860,7 +860,7 @@ public abstract class CItem
         }
     }
 
-    private static void OnAnyChangingItem(PlayerEvents.ChangingItemEventArgs ev)
+    private static void OnAnyChangingItem(PlayerEvents.ChangingItemEventArgs? ev)
     {
         if (ev?.Player == null) return;
 
@@ -886,13 +886,13 @@ public abstract class CItem
         }
     }
 
-    private static void OnAnyThrowingRequest(PlayerEvents.ThrowingRequestEventArgs ev)
+    private static void OnAnyThrowingRequest(PlayerEvents.ThrowingRequestEventArgs? ev)
     {
         if (ev?.Item == null) return;
         Dispatch(ev.Item.Serial, ci => ci.OnThrowingRequest(ev), nameof(OnThrowingRequest));
     }
 
-    private static void OnAnyPickupAdded(MapEvents.PickupAddedEventArgs ev)
+    private static void OnAnyPickupAdded(MapEvents.PickupAddedEventArgs? ev)
     {
         if (ev?.Pickup == null) return;
 
@@ -933,7 +933,7 @@ public abstract class CItem
         }
     }
 
-    private static void OnAnyPickupDestroyed(MapEvents.PickupDestroyedEventArgs ev)
+    private static void OnAnyPickupDestroyed(MapEvents.PickupDestroyedEventArgs? ev)
     {
         if (ev?.Pickup == null) return;
         if (!SerialToItem.TryGetValue(ev.Pickup.Serial, out var ci) || ci == null) return;
@@ -950,13 +950,13 @@ public abstract class CItem
         DestroyPickupSchematicInternal(ev.Pickup.Serial);
     }
 
-    private static void OnAnyUpgradingPickup(Scp914Events.UpgradingPickupEventArgs ev)
+    private static void OnAnyUpgradingPickup(Scp914Events.UpgradingPickupEventArgs? ev)
     {
         if (ev?.Pickup == null) return;
         Dispatch(ev.Pickup.Serial, ci => ci.OnUpgradingPickup(ev), nameof(OnUpgradingPickup));
     }
 
-    private static void OnAnyUpgradingInventoryItem(Scp914Events.UpgradingInventoryItemEventArgs ev)
+    private static void OnAnyUpgradingInventoryItem(Scp914Events.UpgradingInventoryItemEventArgs? ev)
     {
         if (ev?.Item == null) return;
         Dispatch(ev.Item.Serial, ci => ci.OnUpgradingInventoryItem(ev), nameof(OnUpgradingInventoryItem));
@@ -991,7 +991,7 @@ public abstract class CItem
     // Goggles (Scp1344) ディスパッチ
     // ======================================================
 
-    private static void OnAnyScp1344ChangedStatus(Scp1344Events.ChangedStatusEventArgs ev)
+    private static void OnAnyScp1344ChangedStatus(Scp1344Events.ChangedStatusEventArgs? ev)
     {
         if (ev?.Item == null) return;
         if (!SerialToItem.TryGetValue(ev.Item.Serial, out var ci) || ci == null || !ci.IsGoggles) return;
@@ -1024,7 +1024,7 @@ public abstract class CItem
         }
     }
 
-    private static void OnAnyScp1344ChangingStatus(Scp1344Events.ChangingStatusEventArgs ev)
+    private static void OnAnyScp1344ChangingStatus(Scp1344Events.ChangingStatusEventArgs? ev)
     {
         if (ev == null || !ev.IsAllowed || ev.Item == null) return;
         if (!SerialToItem.TryGetValue(ev.Item.Serial, out var ci) || ci == null || !ci.IsGoggles) return;
@@ -1053,7 +1053,7 @@ public abstract class CItem
         }
     }
 
-    private static void OnAnyScp1344Deactivating(Scp1344Events.DeactivatingEventArgs ev)
+    private static void OnAnyScp1344Deactivating(Scp1344Events.DeactivatingEventArgs? ev)
     {
         if (ev == null || !ev.IsAllowed || ev.Item == null) return;
         if (!SerialToItem.TryGetValue(ev.Item.Serial, out var ci) || ci == null || !ci.IsGoggles) return;
@@ -1069,7 +1069,7 @@ public abstract class CItem
 
     public static class SerialTracker
     {
-        public static void ForceRegister(ushort serial, CItem item)
+        public static void ForceRegister(ushort serial, CItem? item)
         {
             if (item == null) return;
             SerialToItem[serial] = item;

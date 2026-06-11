@@ -85,7 +85,7 @@ public class SNAVUltimate : CItem
         var scps = DetectScps(pos, _mode);
 
         var roomsText = rooms.Count > 0
-            ? string.Join("\n", rooms.Select(r => $"{r.Type}: {Vector3.Distance(pos, r.Position):F0}m"))
+            ? string.Join("\n", rooms.Select(r => $"{r.Type.TranslateRoomName()}: {Vector3.Distance(pos, r.Position):F0}m"))
             : "なし";
         var scpsText = scps.Count > 0
             ? string.Join("\n", scps.Select(p => $"{p.Nickname} ({p.Role.Type}): {Vector3.Distance(pos, p.Position):F0}m"))

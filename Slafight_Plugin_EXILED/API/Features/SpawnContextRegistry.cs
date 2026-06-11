@@ -26,7 +26,7 @@ public static class SpawnContextRegistry
         }
     }
 
-    public static void Register(SpawnContext context)
+    public static void Register(SpawnContext? context)
     {
         if (context == null || string.IsNullOrWhiteSpace(context.Name))
         {

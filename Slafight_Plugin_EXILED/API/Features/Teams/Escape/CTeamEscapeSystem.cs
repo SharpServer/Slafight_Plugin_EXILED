@@ -116,7 +116,7 @@ public static class CTeamEscapeRegistry
 
     private static readonly List<Func<CTeamEscapeContext, CTeamEscapeTarget?>> DynamicOverrides = new();
 
-    public static void AddDynamicOverride(Func<CTeamEscapeContext, CTeamEscapeTarget?> rule)
+    public static void AddDynamicOverride(Func<CTeamEscapeContext, CTeamEscapeTarget?>? rule)
     {
         if (rule != null)
             DynamicOverrides.Add(rule);

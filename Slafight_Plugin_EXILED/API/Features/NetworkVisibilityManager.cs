@@ -149,7 +149,7 @@ public static class NetworkVisibilityManager
         _identityCache.Clear();
     }
 
-    private static void OnVerified(VerifiedEventArgs ev)
+    private static void OnVerified(VerifiedEventArgs? ev)
     {
         if (ev?.Player == null) return;
 
@@ -166,7 +166,7 @@ public static class NetworkVisibilityManager
     /// 再送信するため、管理オブジェクトの表示状態を上書き補正する。
     /// 観戦者が生者としてスポーンした場合も同様にリセットが必要。
     /// </summary>
-    private static void OnSpawned(SpawnedEventArgs ev)
+    private static void OnSpawned(SpawnedEventArgs? ev)
     {
         if (ev?.Player == null) return;
 
@@ -184,7 +184,7 @@ public static class NetworkVisibilityManager
         });
     }
 
-    private static void OnChangingSpectatedPlayer(ChangingSpectatedPlayerEventArgs ev)
+    private static void OnChangingSpectatedPlayer(ChangingSpectatedPlayerEventArgs? ev)
     {
         if (ev?.Player == null) return;
 
@@ -216,7 +216,7 @@ public static class NetworkVisibilityManager
     // =========================================================
 
     /// <summary>指定プレイヤーにオブジェクトを表示させる。</summary>
-    public static void ShowNetworkIdentity(this Player player, NetworkIdentity identity)
+    public static void ShowNetworkIdentity(this Player? player, NetworkIdentity identity)
     {
         if (player?.Connection == null || identity == null) return;
         try { NetworkServer.ShowForConnection(identity, player.Connection); }
@@ -224,7 +224,7 @@ public static class NetworkVisibilityManager
     }
 
     /// <summary>指定プレイヤーからオブジェクトを非表示にする。</summary>
-    public static void HideNetworkIdentity(this Player player, NetworkIdentity identity)
+    public static void HideNetworkIdentity(this Player? player, NetworkIdentity identity)
     {
         if (player?.Connection == null || identity == null) return;
         try { NetworkServer.HideForConnection(identity, player.Connection); }
@@ -270,13 +270,13 @@ public static class NetworkVisibilityManager
     public static NetworkShowState? GetShowState(this NetworkIdentity identity)
         => identity != null && _states.TryGetValue(identity.netId, out var s) ? s : null;
 
-    public static NetworkShowState? GetShowState(this Primitive primitive)
+    public static NetworkShowState? GetShowState(this Primitive? primitive)
         => primitive?.Base?.netIdentity?.GetShowState();
 
-    public static NetworkShowState? GetShowState(this Light light)
+    public static NetworkShowState? GetShowState(this Light? light)
         => light?.Base?.netIdentity?.GetShowState();
 
-    public static NetworkShowState? GetShowState(this AdminToys.AdminToyBase toy)
+    public static NetworkShowState? GetShowState(this AdminToys.AdminToyBase? toy)
         => toy?.netIdentity?.GetShowState();
 
     // =========================================================
@@ -313,7 +313,7 @@ public static class NetworkVisibilityManager
     /// <summary>
     /// State を新しいものと丸ごと置き換え、全員に再送信する。
     /// </summary>
-    public static void UpdateShowState(this NetworkIdentity identity, NetworkShowState newState)
+    public static void UpdateShowState(this NetworkIdentity identity, NetworkShowState? newState)
     {
         if (identity == null || newState == null) return;
         uint netId = identity.netId;
@@ -328,7 +328,7 @@ public static class NetworkVisibilityManager
     /// ミューテータで State を部分更新し、全員に再送信する。<br/>
     /// 未登録の場合は新規 State を作成して登録する。
     /// </summary>
-    public static void UpdateShowState(this NetworkIdentity identity, Action<NetworkShowState> mutate)
+    public static void UpdateShowState(this NetworkIdentity identity, Action<NetworkShowState>? mutate)
     {
         if (identity == null || mutate == null) return;
         uint netId = identity.netId;
@@ -349,7 +349,7 @@ public static class NetworkVisibilityManager
     // =========================================================
 
     /// <summary>所有者を設定する。</summary>
-    public static void SetOwner(this NetworkIdentity identity, Player owner, bool showToOwner = true)
+    public static void SetOwner(this NetworkIdentity? identity, Player? owner, bool showToOwner = true)
         => identity?.UpdateShowState(s =>
         {
             s.OwnerId    = owner?.Id;
@@ -357,11 +357,11 @@ public static class NetworkVisibilityManager
         });
 
     /// <summary>所有者を解除する。</summary>
-    public static void ClearOwner(this NetworkIdentity identity)
+    public static void ClearOwner(this NetworkIdentity? identity)
         => identity?.UpdateShowState(s => s.OwnerId = null);
 
     /// <summary>所有者本人への表示を切り替える。</summary>
-    public static void SetShowToOwner(this NetworkIdentity identity, bool show)
+    public static void SetShowToOwner(this NetworkIdentity? identity, bool show)
         => identity?.UpdateShowState(s => s.ShowToOwner = show);
 
     // =========================================================
@@ -369,7 +369,7 @@ public static class NetworkVisibilityManager
     // =========================================================
 
     /// <summary>観戦者への表示方針を変更する。</summary>
-    public static void SetSpectatorVisibility(this NetworkIdentity identity, SpectatorVisibility vis)
+    public static void SetSpectatorVisibility(this NetworkIdentity? identity, SpectatorVisibility vis)
         => identity?.UpdateShowState(s => s.SpectatorVisibility = vis);
 
     // =========================================================
@@ -377,7 +377,7 @@ public static class NetworkVisibilityManager
     // =========================================================
 
     /// <summary>プレイヤーを強制表示リストに追加する。</summary>
-    public static void AddExplicitShow(this NetworkIdentity identity, Player player)
+    public static void AddExplicitShow(this NetworkIdentity? identity, Player player)
     {
         if (player == null) return;
         identity?.UpdateShowState(s =>
@@ -388,7 +388,7 @@ public static class NetworkVisibilityManager
     }
 
     /// <summary>プレイヤーを強制非表示リストに追加する。</summary>
-    public static void AddExplicitHide(this NetworkIdentity identity, Player player)
+    public static void AddExplicitHide(this NetworkIdentity? identity, Player player)
     {
         if (player == null) return;
         identity?.UpdateShowState(s =>
@@ -399,7 +399,7 @@ public static class NetworkVisibilityManager
     }
 
     /// <summary>プレイヤーを ExplicitShow/Hide 両方から除去する。</summary>
-    public static void RemoveExplicit(this NetworkIdentity identity, Player player)
+    public static void RemoveExplicit(this NetworkIdentity? identity, Player player)
     {
         if (player == null) return;
         identity?.UpdateShowState(s =>
@@ -410,15 +410,15 @@ public static class NetworkVisibilityManager
     }
 
     /// <summary>ExplicitShow リストを全クリアする。</summary>
-    public static void ClearExplicitShow(this NetworkIdentity identity)
+    public static void ClearExplicitShow(this NetworkIdentity? identity)
         => identity?.UpdateShowState(s => s.ExplicitShow.Clear());
 
     /// <summary>ExplicitHide リストを全クリアする。</summary>
-    public static void ClearExplicitHide(this NetworkIdentity identity)
+    public static void ClearExplicitHide(this NetworkIdentity? identity)
         => identity?.UpdateShowState(s => s.ExplicitHide.Clear());
 
     /// <summary>ExplicitShow / ExplicitHide 両方を全クリアする。</summary>
-    public static void ClearAllExplicit(this NetworkIdentity identity)
+    public static void ClearAllExplicit(this NetworkIdentity? identity)
         => identity?.UpdateShowState(s =>
         {
             s.ExplicitShow.Clear();
@@ -430,64 +430,64 @@ public static class NetworkVisibilityManager
     // =========================================================
 
     /// <summary>このプレイヤーを identity の強制表示リストに追加する。</summary>
-    public static void AddExplicitShow(this Player player, NetworkIdentity identity)
+    public static void AddExplicitShow(this Player player, NetworkIdentity? identity)
         => identity?.AddExplicitShow(player);
 
     /// <summary>このプレイヤーを identity の強制非表示リストに追加する。</summary>
-    public static void AddExplicitHide(this Player player, NetworkIdentity identity)
+    public static void AddExplicitHide(this Player player, NetworkIdentity? identity)
         => identity?.AddExplicitHide(player);
 
     /// <summary>このプレイヤーを identity の Explicit 両リストから除去する。</summary>
-    public static void RemoveExplicit(this Player player, NetworkIdentity identity)
+    public static void RemoveExplicit(this Player player, NetworkIdentity? identity)
         => identity?.RemoveExplicit(player);
 
     // =========================================================
     // Primitive 向け糖衣構文
     // =========================================================
 
-    public static void InitShowState(this Primitive primitive, NetworkShowState? initialState = null)
+    public static void InitShowState(this Primitive? primitive, NetworkShowState? initialState = null)
         => primitive?.Base?.netIdentity?.InitShowState(initialState);
 
-    public static void RemoveShowState(this Primitive primitive)
+    public static void RemoveShowState(this Primitive? primitive)
         => primitive?.Base?.netIdentity?.RemoveShowState();
 
-    public static void UpdateShowState(this Primitive primitive, NetworkShowState newState)
+    public static void UpdateShowState(this Primitive? primitive, NetworkShowState newState)
         => primitive?.Base?.netIdentity?.UpdateShowState(newState);
 
-    public static void UpdateShowState(this Primitive primitive, Action<NetworkShowState> mutate)
+    public static void UpdateShowState(this Primitive? primitive, Action<NetworkShowState> mutate)
         => primitive?.Base?.netIdentity?.UpdateShowState(mutate);
 
-    public static void SetOwner(this Primitive primitive, Player owner, bool showToOwner = true)
+    public static void SetOwner(this Primitive? primitive, Player owner, bool showToOwner = true)
         => primitive?.Base?.netIdentity?.SetOwner(owner, showToOwner);
 
-    public static void ClearOwner(this Primitive primitive)
+    public static void ClearOwner(this Primitive? primitive)
         => primitive?.Base?.netIdentity?.ClearOwner();
 
-    public static void SetShowToOwner(this Primitive primitive, bool show)
+    public static void SetShowToOwner(this Primitive? primitive, bool show)
         => primitive?.Base?.netIdentity?.SetShowToOwner(show);
 
-    public static void SetSpectatorVisibility(this Primitive primitive, SpectatorVisibility vis)
+    public static void SetSpectatorVisibility(this Primitive? primitive, SpectatorVisibility vis)
         => primitive?.Base?.netIdentity?.SetSpectatorVisibility(vis);
 
-    public static void AddExplicitShow(this Primitive primitive, Player player)
+    public static void AddExplicitShow(this Primitive? primitive, Player player)
         => primitive?.Base?.netIdentity?.AddExplicitShow(player);
 
-    public static void AddExplicitHide(this Primitive primitive, Player player)
+    public static void AddExplicitHide(this Primitive? primitive, Player player)
         => primitive?.Base?.netIdentity?.AddExplicitHide(player);
 
-    public static void RemoveExplicit(this Primitive primitive, Player player)
+    public static void RemoveExplicit(this Primitive? primitive, Player player)
         => primitive?.Base?.netIdentity?.RemoveExplicit(player);
 
-    public static void ClearExplicitShow(this Primitive primitive)
+    public static void ClearExplicitShow(this Primitive? primitive)
         => primitive?.Base?.netIdentity?.ClearExplicitShow();
 
-    public static void ClearExplicitHide(this Primitive primitive)
+    public static void ClearExplicitHide(this Primitive? primitive)
         => primitive?.Base?.netIdentity?.ClearExplicitHide();
 
-    public static void ClearAllExplicit(this Primitive primitive)
+    public static void ClearAllExplicit(this Primitive? primitive)
         => primitive?.Base?.netIdentity?.ClearAllExplicit();
 
-    public static void ApplyShowState(this Primitive primitive)
+    public static void ApplyShowState(this Primitive? primitive)
         => primitive?.Base?.netIdentity?.ApplyShowState();
 
     /// <summary>Primitive を安全に破棄する。</summary>
@@ -500,7 +500,7 @@ public static class NetworkVisibilityManager
     }
 
     /// <summary>Primitive をプレイヤーの Transform に追従させる。</summary>
-    public static void AttachToPlayer(this Primitive primitive, Player player, Vector3 localOffset)
+    public static void AttachToPlayer(this Primitive? primitive, Player? player, Vector3 localOffset)
     {
         if (primitive?.Base == null || player?.Transform == null) return;
         try
@@ -517,49 +517,49 @@ public static class NetworkVisibilityManager
     // Light 向け糖衣構文
     // =========================================================
 
-    public static void InitShowState(this Light light, NetworkShowState? initialState = null)
+    public static void InitShowState(this Light? light, NetworkShowState? initialState = null)
         => light?.Base?.netIdentity?.InitShowState(initialState);
 
-    public static void RemoveShowState(this Light light)
+    public static void RemoveShowState(this Light? light)
         => light?.Base?.netIdentity?.RemoveShowState();
 
-    public static void UpdateShowState(this Light light, NetworkShowState newState)
+    public static void UpdateShowState(this Light? light, NetworkShowState newState)
         => light?.Base?.netIdentity?.UpdateShowState(newState);
 
-    public static void UpdateShowState(this Light light, Action<NetworkShowState> mutate)
+    public static void UpdateShowState(this Light? light, Action<NetworkShowState> mutate)
         => light?.Base?.netIdentity?.UpdateShowState(mutate);
 
-    public static void SetOwner(this Light light, Player owner, bool showToOwner = true)
+    public static void SetOwner(this Light? light, Player owner, bool showToOwner = true)
         => light?.Base?.netIdentity?.SetOwner(owner, showToOwner);
 
-    public static void ClearOwner(this Light light)
+    public static void ClearOwner(this Light? light)
         => light?.Base?.netIdentity?.ClearOwner();
 
-    public static void SetShowToOwner(this Light light, bool show)
+    public static void SetShowToOwner(this Light? light, bool show)
         => light?.Base?.netIdentity?.SetShowToOwner(show);
 
-    public static void SetSpectatorVisibility(this Light light, SpectatorVisibility vis)
+    public static void SetSpectatorVisibility(this Light? light, SpectatorVisibility vis)
         => light?.Base?.netIdentity?.SetSpectatorVisibility(vis);
 
-    public static void AddExplicitShow(this Light light, Player player)
+    public static void AddExplicitShow(this Light? light, Player player)
         => light?.Base?.netIdentity?.AddExplicitShow(player);
 
-    public static void AddExplicitHide(this Light light, Player player)
+    public static void AddExplicitHide(this Light? light, Player player)
         => light?.Base?.netIdentity?.AddExplicitHide(player);
 
-    public static void RemoveExplicit(this Light light, Player player)
+    public static void RemoveExplicit(this Light? light, Player player)
         => light?.Base?.netIdentity?.RemoveExplicit(player);
 
-    public static void ClearExplicitShow(this Light light)
+    public static void ClearExplicitShow(this Light? light)
         => light?.Base?.netIdentity?.ClearExplicitShow();
 
-    public static void ClearExplicitHide(this Light light)
+    public static void ClearExplicitHide(this Light? light)
         => light?.Base?.netIdentity?.ClearExplicitHide();
 
-    public static void ClearAllExplicit(this Light light)
+    public static void ClearAllExplicit(this Light? light)
         => light?.Base?.netIdentity?.ClearAllExplicit();
 
-    public static void ApplyShowState(this Light light)
+    public static void ApplyShowState(this Light? light)
         => light?.Base?.netIdentity?.ApplyShowState();
 
     /// <summary>Light を安全に破棄する。</summary>
@@ -575,49 +575,49 @@ public static class NetworkVisibilityManager
     // AdminToyBase 向け糖衣構文
     // =========================================================
 
-    public static void InitShowState(this AdminToys.AdminToyBase toy, NetworkShowState? initialState = null)
+    public static void InitShowState(this AdminToys.AdminToyBase? toy, NetworkShowState? initialState = null)
         => toy?.netIdentity?.InitShowState(initialState);
 
-    public static void RemoveShowState(this AdminToys.AdminToyBase toy)
+    public static void RemoveShowState(this AdminToys.AdminToyBase? toy)
         => toy?.netIdentity?.RemoveShowState();
 
-    public static void UpdateShowState(this AdminToys.AdminToyBase toy, NetworkShowState newState)
+    public static void UpdateShowState(this AdminToys.AdminToyBase? toy, NetworkShowState newState)
         => toy?.netIdentity?.UpdateShowState(newState);
 
-    public static void UpdateShowState(this AdminToys.AdminToyBase toy, Action<NetworkShowState> mutate)
+    public static void UpdateShowState(this AdminToys.AdminToyBase? toy, Action<NetworkShowState> mutate)
         => toy?.netIdentity?.UpdateShowState(mutate);
 
-    public static void SetOwner(this AdminToys.AdminToyBase toy, Player owner, bool showToOwner = true)
+    public static void SetOwner(this AdminToys.AdminToyBase? toy, Player owner, bool showToOwner = true)
         => toy?.netIdentity?.SetOwner(owner, showToOwner);
 
-    public static void ClearOwner(this AdminToys.AdminToyBase toy)
+    public static void ClearOwner(this AdminToys.AdminToyBase? toy)
         => toy?.netIdentity?.ClearOwner();
 
-    public static void SetShowToOwner(this AdminToys.AdminToyBase toy, bool show)
+    public static void SetShowToOwner(this AdminToys.AdminToyBase? toy, bool show)
         => toy?.netIdentity?.SetShowToOwner(show);
 
-    public static void SetSpectatorVisibility(this AdminToys.AdminToyBase toy, SpectatorVisibility vis)
+    public static void SetSpectatorVisibility(this AdminToys.AdminToyBase? toy, SpectatorVisibility vis)
         => toy?.netIdentity?.SetSpectatorVisibility(vis);
 
-    public static void AddExplicitShow(this AdminToys.AdminToyBase toy, Player player)
+    public static void AddExplicitShow(this AdminToys.AdminToyBase? toy, Player player)
         => toy?.netIdentity?.AddExplicitShow(player);
 
-    public static void AddExplicitHide(this AdminToys.AdminToyBase toy, Player player)
+    public static void AddExplicitHide(this AdminToys.AdminToyBase? toy, Player player)
         => toy?.netIdentity?.AddExplicitHide(player);
 
-    public static void RemoveExplicit(this AdminToys.AdminToyBase toy, Player player)
+    public static void RemoveExplicit(this AdminToys.AdminToyBase? toy, Player player)
         => toy?.netIdentity?.RemoveExplicit(player);
 
-    public static void ClearExplicitShow(this AdminToys.AdminToyBase toy)
+    public static void ClearExplicitShow(this AdminToys.AdminToyBase? toy)
         => toy?.netIdentity?.ClearExplicitShow();
 
-    public static void ClearExplicitHide(this AdminToys.AdminToyBase toy)
+    public static void ClearExplicitHide(this AdminToys.AdminToyBase? toy)
         => toy?.netIdentity?.ClearExplicitHide();
 
-    public static void ClearAllExplicit(this AdminToys.AdminToyBase toy)
+    public static void ClearAllExplicit(this AdminToys.AdminToyBase? toy)
         => toy?.netIdentity?.ClearAllExplicit();
 
-    public static void ApplyShowState(this AdminToys.AdminToyBase toy)
+    public static void ApplyShowState(this AdminToys.AdminToyBase? toy)
         => toy?.netIdentity?.ApplyShowState();
 
     // =========================================================
@@ -681,7 +681,7 @@ public static class NetworkVisibilityManager
     /// 不要になったら SafeDestroy() で破棄すること。
     /// </summary>
     public static Primitive? CreateBlackoutForPlayer(
-        Player owner,
+        Player? owner,
         Vector3 position,
         Vector3? scale = null)
     {

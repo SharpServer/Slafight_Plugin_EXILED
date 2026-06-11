@@ -92,7 +92,7 @@ public class HdShielder : CRole
         ev.HealthDamage = ev.OriginalAmount - actualShieldDamage;
     }
 
-    private void OnScp049Attacking(AttackingEventArgs ev)
+    private void OnScp049Attacking(AttackingEventArgs? ev)
     {
         if (ev?.Target == null || !ev.IsAllowed) return;
         if (!Check(ev.Target)) return;

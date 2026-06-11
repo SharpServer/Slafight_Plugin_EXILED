@@ -139,7 +139,7 @@ public static class WearsHandler
     /// </summary>
     public static void RegisterExternal(
         Player player,
-        Exiled.API.Features.Toys.AdminToy toy,
+        Exiled.API.Features.Toys.AdminToy? toy,
         Vector3? offset = null,
         Transform target = null,
         Quaternion? rotationOffset = null)
@@ -246,7 +246,7 @@ public static class WearsHandler
     /// </summary>
     public static void Wear(
         this Player player,
-        Exiled.API.Features.Toys.AdminToy toy,
+        Exiled.API.Features.Toys.AdminToy? toy,
         Vector3? offset = null,
         Transform target = null,
         Quaternion? rotationOffset = null)
@@ -382,7 +382,7 @@ public static class WearsHandler
     /// </summary>
     public static bool TryWear<TToy>(
         this Player player,
-        TToy toy,
+        TToy? toy,
         out TToy wornToy,
         Vector3? offset = null,
         Transform target = null,
@@ -449,7 +449,7 @@ public static class WearsHandler
         GameObject gameObject,
         Transform target,
         Vector3? offset,
-        Action destroy,
+        Action? destroy,
         Quaternion? rotationOffset,
         string logContext,
         bool removeExisting = true)
@@ -585,7 +585,7 @@ public static class WearsHandler
         PlayerWears.Clear();
     }
 
-    private static void DestroyWear(WearRegistration wear)
+    private static void DestroyWear(WearRegistration? wear)
     {
         if (wear == null)
             return;
@@ -604,7 +604,7 @@ public static class WearsHandler
         }
     }
 
-    private static void DestroyGameObject(GameObject gameObject, Action<GameObject> customDestroy)
+    private static void DestroyGameObject(GameObject gameObject, Action<GameObject>? customDestroy)
     {
         if (customDestroy != null)
         {

@@ -130,7 +130,7 @@ public static class VoiceRecordingApi
     }
 
     public static CoroutineHandle Play(
-        VoiceRecording recording,
+        VoiceRecording? recording,
         Vector3 position,
         string? audioPlayerName = null,
         Transform? parent = null,
@@ -160,7 +160,7 @@ public static class VoiceRecordingApi
             destroyDelay));
     }
 
-    private static void OnVoiceChatting(VoiceChattingEventArgs ev)
+    private static void OnVoiceChatting(VoiceChattingEventArgs? ev)
     {
         if (ev?.Player == null || ev.VoiceMessage.Data == null || ev.VoiceMessage.DataLength <= 0)
             return;

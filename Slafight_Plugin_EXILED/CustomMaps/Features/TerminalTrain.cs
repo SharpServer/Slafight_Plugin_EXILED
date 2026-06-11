@@ -224,7 +224,7 @@ public static class TerminalTrain
     }
 
     // 安全版アニメーション
-    private static IEnumerator<float> AnimSafe(SchematicObject schem, Vector3 startpos, Vector3 endpos, float duration)
+    private static IEnumerator<float> AnimSafe(SchematicObject? schem, Vector3 startpos, Vector3 endpos, float duration)
     {
         if (schem is null || duration <= 0f)
         {

@@ -50,7 +50,7 @@ public sealed class Scp079PingHints : IBootstrapHandler, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private void OnPinging(PingingEventArgs ev)
+    private void OnPinging(PingingEventArgs? ev)
     {
         if (ev?.Room == null)
             return;

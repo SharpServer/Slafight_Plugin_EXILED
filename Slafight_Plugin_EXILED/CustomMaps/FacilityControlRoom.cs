@@ -258,7 +258,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
                actualLevels.Administration >= requiredLevels.Administration;
     }
 
-    private static string BuildRequiredPermissionStatus(FacilityControlRoomFunction function, Keycard keycard)
+    private static string BuildRequiredPermissionStatus(FacilityControlRoomFunction function, Keycard? keycard)
     {
         var hasPermission = keycard != null && HasRequiredPermissions(keycard.Permissions, function.RequiredPermissions);
         var color = hasPermission ? "#57ff7a" : "#ff4d4d";

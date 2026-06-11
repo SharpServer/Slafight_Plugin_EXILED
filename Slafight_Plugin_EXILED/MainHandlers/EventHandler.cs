@@ -116,7 +116,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
         }
     }
 
-    private static void OnVerified(VerifiedEventArgs ev)
+    private static void OnVerified(VerifiedEventArgs? ev)
     {
         if (ev?.Player == null) return;
         ev.Player.InitPlayerFlags();
@@ -130,7 +130,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
         });
     }
 
-    private static void OnLeft(LeftEventArgs ev)
+    private static void OnLeft(LeftEventArgs? ev)
     {
         if (ev?.Player == null) return;
         DebugModeHandler.RemovePlayer(ev.Player);

@@ -292,7 +292,7 @@ public static class SpeakerApi
         return stopped;
     }
 
-    public static int StopClips(params Playback[] playbacks)
+    public static int StopClips(params Playback[]? playbacks)
     {
         if (playbacks == null || playbacks.Length == 0)
             return 0;
@@ -307,7 +307,7 @@ public static class SpeakerApi
         return stopped;
     }
 
-    public static int StopClips(string audioPlayerName, params string[] clipNames)
+    public static int StopClips(string audioPlayerName, params string[]? clipNames)
     {
         if (string.IsNullOrWhiteSpace(audioPlayerName) || clipNames == null || clipNames.Length == 0)
             return 0;
@@ -376,7 +376,7 @@ public static class SpeakerApi
         return true;
     }
 
-    public static int SendAudioFrame(LivePlayback playback, byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
+    public static int SendAudioFrame(LivePlayback playback, byte[]? data, int dataLength, IEnumerable<ReferenceHub>? targets)
     {
         if (!playback.IsValid || data == null || dataLength <= 0 || dataLength > data.Length || targets == null)
         {
@@ -398,7 +398,7 @@ public static class SpeakerApi
         return sent;
     }
 
-    public static int SendAudioFrame(string audioPlayerName, byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
+    public static int SendAudioFrame(string audioPlayerName, byte[]? data, int dataLength, IEnumerable<ReferenceHub>? targets)
     {
         if (string.IsNullOrWhiteSpace(audioPlayerName) || data == null || dataLength <= 0 || dataLength > data.Length || targets == null)
             return 0;
@@ -531,7 +531,7 @@ public static class SpeakerApi
             LivePlaybacksByName.Remove(playback.AudioPlayerName);
     }
 
-    private static float[] ConvertToMono48k(float[] input, int sampleRate, int channels)
+    private static float[] ConvertToMono48k(float[]? input, int sampleRate, int channels)
     {
         if (input == null || input.Length == 0)
             return [];

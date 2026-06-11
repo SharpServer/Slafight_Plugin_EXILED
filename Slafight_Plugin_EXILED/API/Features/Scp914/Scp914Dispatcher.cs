@@ -21,7 +21,7 @@ public static class Scp914Dispatcher
     /// 床 Pickup のアップグレードにルールを適用する。
     /// </summary>
     /// <returns>ルールを適用したか (false = Chance を外してフォールスルー)。</returns>
-    public static bool ApplyPickup(Scp914Rule rule, UpgradingPickupEventArgs ev)
+    public static bool ApplyPickup(Scp914Rule rule, UpgradingPickupEventArgs? ev)
     {
         if (ev?.Pickup == null) return false;
 
@@ -101,7 +101,7 @@ public static class Scp914Dispatcher
     /// インベントリ内アイテムのアップグレードにルールを適用する。
     /// 入力アイテムを Remove し、出力は AddOrDrop (所持者に AddItem、失敗なら床に Pickup)。
     /// </summary>
-    public static bool ApplyInventory(Scp914Rule rule, UpgradingInventoryItemEventArgs ev)
+    public static bool ApplyInventory(Scp914Rule rule, UpgradingInventoryItemEventArgs? ev)
     {
         if (ev?.Player == null || ev.Item == null) return false;
 

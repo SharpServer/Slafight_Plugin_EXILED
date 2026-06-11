@@ -292,7 +292,7 @@ public sealed class CustomShieldState
         Player.ReferenceHub.playerStats.GetModule<AhpStat>().ServerKillAllProcesses();
     }
 
-    private static void OnHurting(HurtingEventArgs ev)
+    private static void OnHurting(HurtingEventArgs? ev)
     {
         if (ev?.Player == null || !ev.IsAllowed) return;
         if (ev.Amount <= 0f && !ev.IsInstantKill) return;
@@ -323,13 +323,13 @@ public sealed class CustomShieldState
         ev.Amount = healthDamage;
     }
 
-    private static void OnChangingRole(ChangingRoleEventArgs ev)
+    private static void OnChangingRole(ChangingRoleEventArgs? ev)
     {
         if (ev?.Player == null || !ev.IsAllowed) return;
         Clear(ev.Player);
     }
 
-    private static void OnLeft(LeftEventArgs ev)
+    private static void OnLeft(LeftEventArgs? ev)
     {
         Clear(ev?.Player);
     }

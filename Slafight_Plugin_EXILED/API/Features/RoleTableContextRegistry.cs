@@ -34,7 +34,7 @@ public static class RoleTableContextRegistry
         }
     }
 
-    public static void Register(RoleTableContext context)
+    public static void Register(RoleTableContext? context)
     {
         if (context == null || string.IsNullOrWhiteSpace(context.Name))
         {

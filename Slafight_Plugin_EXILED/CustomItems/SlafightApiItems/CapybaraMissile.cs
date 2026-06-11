@@ -40,7 +40,7 @@ public class CapybaraMissile : CItemWeapon
         }
     }
 
-    private static IEnumerator<float> MissileCoroutine(Capybara schem, Player pushPlayer)
+    private static IEnumerator<float> MissileCoroutine(Capybara? schem, Player pushPlayer)
     {
         if (schem == null || schem.Transform == null)
         {

@@ -49,7 +49,7 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
     public bool ActivatedAntiMemeProtocol => FacilityControlRoom.IsAntiMemeProtocolActive;
     public bool ActivatedAntiMemeProtocolInPast => FacilityControlRoom.HasAntiMemeProtocolActivatedInPast;
 
-    private static bool IsHideWatchTarget(Player labPlayer)
+    private static bool IsHideWatchTarget(Player? labPlayer)
     {
         if (labPlayer == null)
             return false;
@@ -132,7 +132,7 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
             });
 
     private static void WearRoleSchematic(
-        Player labPlayer,
+        Player? labPlayer,
         string schematicName,
         string logName,
         Vector3? playerScale = null,

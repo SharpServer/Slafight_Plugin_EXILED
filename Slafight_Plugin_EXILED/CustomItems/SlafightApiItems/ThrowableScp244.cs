@@ -79,7 +79,7 @@ public class ThrowableScp244 : CItem
         TrackedCoroutines[ev.Projectile] = coroutineHandle;
     }
 
-    private static IEnumerator<float> TrackPickup(Projectile projectile, Scp244Pickup pickup)
+    private static IEnumerator<float> TrackPickup(Projectile? projectile, Scp244Pickup? pickup)
     {
         while (projectile != null && pickup != null && pickup.GameObject != null)
         {

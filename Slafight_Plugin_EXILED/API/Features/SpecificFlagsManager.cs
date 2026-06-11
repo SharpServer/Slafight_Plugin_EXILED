@@ -125,7 +125,7 @@ public static class SpecificFlagsManager
         Coroutines[player.Id].Add(handle);
     }
 
-    private static IEnumerator<float> RemoveCoroutine(Player player, SpecificFlagType flag, float time)
+    private static IEnumerator<float> RemoveCoroutine(Player? player, SpecificFlagType flag, float time)
     {
         if (!Round.InProgress) yield break;
 

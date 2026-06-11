@@ -15,7 +15,7 @@ public static class UnitPackRegistry
     // SpawnTypeId からの逆引き用（必要なら）
     private static readonly Dictionary<SpawnTypeId, List<UnitPack>> PacksBySpawnType = new();
 
-    public static void Register(UnitPack pack)
+    public static void Register(UnitPack? pack)
     {
         if (pack == null || string.IsNullOrWhiteSpace(pack.Name))
         {

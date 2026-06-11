@@ -126,7 +126,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     // ServerInfoHint / Setup / Main
     // =========================================================
 
-    public void ServerInfoHint(VerifiedEventArgs ev)
+    public void ServerInfoHint(VerifiedEventArgs? ev)
     {
         if (ev?.Player == null) return; // FIX: nullガード
 
@@ -431,7 +431,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         }
     }
 
-    public void AllSyncHUD(ChangingRoleEventArgs ev)
+    public void AllSyncHUD(ChangingRoleEventArgs? ev)
     {
         var player = ev?.Player; // FIX: nullガード
         if (player == null) return;
@@ -473,7 +473,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     // 観戦時の同期
     // =========================================================
 
-    public void Spectate(ChangingSpectatedPlayerEventArgs ev)
+    public void Spectate(ChangingSpectatedPlayerEventArgs? ev)
     {
         // FIX: ev・spectator の nullガード
         if (ev?.Player == null) return;

@@ -89,7 +89,7 @@ public class ScpStatusHints : IBootstrapHandler
         ClearAll();
     }
 
-    private static void OnVerified(VerifiedEventArgs ev)
+    private static void OnVerified(VerifiedEventArgs? ev)
     {
         if (ev?.Player == null)
             return;
@@ -103,7 +103,7 @@ public class ScpStatusHints : IBootstrapHandler
         });
     }
 
-    private static void OnLeft(LeftEventArgs ev)
+    private static void OnLeft(LeftEventArgs? ev)
     {
         if (ev?.Player == null)
             return;
