@@ -163,16 +163,17 @@ public class ScpStatusHints : IBootstrapHandler
 
         var players = Player.List.ToList();
         var scpPlayers = GetScpPlayers(players);
+        var hintRecipients = GetScpHintRecipients(scpPlayers);
         var generatorText = BuildGeneratorText();
 
-        foreach (var player in scpPlayers)
+        foreach (var player in hintRecipients)
             UpdateHint(player, scpPlayers, generatorText);
 
-        var scpIds = new HashSet<int>(scpPlayers.Select(player => player.Id));
+        var recipientIds = new HashSet<int>(hintRecipients.Select(player => player.Id));
 
         foreach (var trackedId in TrackingHints.Keys.ToList())
         {
-            if (scpIds.Contains(trackedId))
+            if (recipientIds.Contains(trackedId))
                 continue;
 
             var player = players.FirstOrDefault(p => p.Id == trackedId);
@@ -327,8 +328,15 @@ public class ScpStatusHints : IBootstrapHandler
     private static List<Player> GetScpPlayers(IEnumerable<Player> players)
     {
         return players
-            .Where(player => IsPlayerValid(player) && !player.IsNPC && player.GetTeam() is CTeam.SCPs && !CRole.IsTeamNpc(player))
+            .Where(player => IsPlayerValid(player) && player.GetTeam() is CTeam.SCPs && !CRole.IsTeamNpc(player))
             .OrderBy(player => player.Id)
+            .ToList();
+    }
+
+    private static List<Player> GetScpHintRecipients(IEnumerable<Player> scpPlayers)
+    {
+        return scpPlayers
+            .Where(player => !player.IsNPC)
             .ToList();
     }
 
