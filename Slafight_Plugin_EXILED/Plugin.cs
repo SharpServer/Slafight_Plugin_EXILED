@@ -32,7 +32,7 @@ public class Plugin : Plugin<Config>
     public override string Name => "Slafight_Plugin_EXILED";
     public override string Author => "org.sharp-server.jp.scpsl";
     public override string Prefix => "Slafight_Plugin_EXILED";
-    public override Version Version => new(1, 8, 1, 0);
+    public override Version Version => new(1, 8, 1, 1);
         
     public override Version RequiredExiledVersion { get; } = new(9, 14, 2);
 
