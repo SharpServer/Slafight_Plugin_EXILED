@@ -171,6 +171,7 @@
         <Compile Include="Abilities\MemeWaveAbility.cs" />
         <Compile Include="Abilities\PlaceTantrumAbility.cs" />
         <Compile Include="Abilities\Scp035TentacleAbility.cs" />
+        <Compile Include="Abilities\SenseOfGreatDoctor.cs" />
         <Compile Include="Abilities\SoundOfFifthAbility.cs" />
         <Compile Include="Abilities\TeleprotRandomAbility.cs" />
         <Compile Include="API\Enums\CTeam.cs" />
@@ -468,6 +469,7 @@
         <Compile Include="CustomRoles\Scientist\Engineer.cs" />
         <Compile Include="CustomRoles\Scientist\Surveillance.cs" />
         <Compile Include="CustomRoles\SCPs\Scp035Role.cs" />
+        <Compile Include="CustomRoles\SCPs\Scp049Role.cs" />
         <Compile Include="CustomRoles\SCPs\Scp079Role.cs" />
         <Compile Include="CustomRoles\SCPs\Scp096Anger.cs" />
         <Compile Include="CustomRoles\SCPs\Scp106Role.cs" />
