@@ -372,4 +372,39 @@ public static class StaticUtils
 
         return result.ToString();
     }
+    
+    /// <summary>
+    /// ColorA から ColorB まで、進行度合い (0.0〜1.0) でグラデーション_color を取得します
+    /// </summary>
+    /// <param name="colorA">開始色</param>
+    /// <param name="colorB">終了色</param>
+    /// <param name="progress">進行度合い (0.0: ColorA, 1.0: ColorB)</param>
+    /// <returns">グラデーション色</returns>
+    public static Color GetGradientColor(Color colorA, Color colorB, float progress)
+    {
+        // 進行度合いを 0.0〜1.0 の範囲に制限
+        progress = Mathf.Clamp(progress, 0f, 1f);
+        
+        // 각 채널を線形インターポレーション
+        return new Color(
+            Mathf.Lerp(colorA.r, colorB.r, progress),
+            Mathf.Lerp(colorA.g, colorB.g, progress),
+            Mathf.Lerp(colorA.b, colorB.b, progress),
+            Mathf.Lerp(colorA.a, colorB.a, progress)
+        );
+    }
+    
+    /// <summary>
+    /// Unity の Color.Lerp を使用した簡易版
+    /// </summary>
+    public static Color GetGradientColorSimple(Color colorA, Color colorB, float progress)
+    {
+        return Color.Lerp(colorA, colorB, Mathf.Clamp(progress, 0f, 1f));
+    }
+    
+    public static Vector3 GetScale(Vector3 a, Vector3 b, float elapsed, float duration)
+    {
+        float t = Mathf.Clamp01(elapsed / duration);
+        return Vector3.Lerp(a, b, t);
+    }
 }
