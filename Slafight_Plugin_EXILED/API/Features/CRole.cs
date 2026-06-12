@@ -1,14 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using CentralAuth;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.CustomItems.API.Features;
 using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Extension;
 using MEC;
-using Mirror;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
@@ -50,7 +48,6 @@ public abstract class CRole
     private static readonly Dictionary<Type, CRole> TypeToRole = new();
     private static readonly Dictionary<int, TeamNpcInfo> TeamNpcs = new();
     private static readonly Dictionary<int, CoroutineHandle> RoleEffectCoroutines = new();
-    private const ulong AuthSyncedUserIdDirtyBit = 1UL;
 
     private static readonly IReadOnlyList<object> EmptyItems = [];
     private static readonly IReadOnlyDictionary<AmmoType, ushort> EmptyAmmo = new Dictionary<AmmoType, ushort>();
@@ -1088,10 +1085,9 @@ public abstract class CRole
                 return;
             }
 
-            npc.HideTeamNpcFromClientPlayerList($"{DisplayName}:spawn");
+            npc.HideNpcFromClientPlayerList($"{DisplayName}:spawn");
 
             var npcId = npc.Id;
-            var playerId = player.Id;
 
             Timing.CallDelayed(RoleSpawnTimings.TeamNpcPostSpawnSetup, () =>
             {
@@ -1099,7 +1095,7 @@ public abstract class CRole
                 var currentNpc = Npc.Get(npcId);
                 if (currentNpc?.ReferenceHub == null) return;
 
-                currentNpc.HideTeamNpcFromClientPlayerList($"{DisplayName}:post-spawn");
+                currentNpc.HideNpcFromClientPlayerList($"{DisplayName}:post-spawn");
                 currentNpc.IsGodModeEnabled = true;
                 currentNpc.IsSpectatable = false;
                 currentNpc.EnableEffect(EffectType.Invisible, 255);

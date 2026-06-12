@@ -6,7 +6,7 @@ namespace Slafight_Plugin_EXILED.Extensions;
 
 public static class NpcExtensions
 {
-    public static void HideTeamNpcFromClientPlayerList(this Npc? npc, string source)
+    public static void HideNpcFromClientPlayerList(this Npc? npc, string source)
     {
         var hub = npc?.ReferenceHub;
         var auth = hub?.authManager;
