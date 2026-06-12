@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
@@ -349,7 +350,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
             if (newRole == RoleTypeId.Spectator) return;
             if (!player.IsAlive) return;
 
-            ConfigureScpTeamAnomalousTarget(player);
+            ConfigureScpTeamAnomalousTarget();
 
             if (player.Role.Team == Team.SCPs) return;
             if (player.Inventory == null) return;
@@ -368,24 +369,13 @@ public class EventHandler : IBootstrapHandler, IDisposable
         });
     }
 
-    private static void ConfigureScpTeamAnomalousTarget(Player player)
+    private static void ConfigureScpTeamAnomalousTarget()
     {
-        if (!IsPlayerValid(player)) return;
-
-        if (!player.IsAlive || player.GetTeam() != CTeam.SCPs)
+        foreach (var target in Player.List)
         {
-            EffectFakeSyncProvider.Disable(player, EffectType.AnomalousTarget);
-            EffectFakeSyncProvider.RefreshAll();
-            return;
+            if (target is null) return;
+            target.EnableEffect<AnomalousTarget>();
         }
-
-        EffectFakeSyncProvider.SetTargetRule(
-            player,
-            EffectType.AnomalousTarget,
-            target => IsPlayerValid(target) &&
-                      target.IsAlive &&
-                      target.GetTeam() == CTeam.SCPs);
-        EffectFakeSyncProvider.RefreshAll();
     }
 
     private void DeadmanCancel(DeadmanSwitchInitiatingEventArgs? ev)

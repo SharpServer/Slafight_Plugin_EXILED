@@ -94,7 +94,7 @@ public class Scp999Role : CRole
         _pendingNato9SwitchesByPlayerId.TryGetValue(ev.Player.Id, out Nato9SwitchState switchState);
         RestoreNato9Profile(ev.Player);
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () => RestoreNato9Profile(ev.Player));
-        Timing.CallDelayed(RoleSpawnTimings.RestoreRoleState, () => RestoreNato9Profile(ev.Player));
+        Timing.CallDelayed(RoleSpawnTimings.RoleStateReapply, () => RestoreNato9Profile(ev.Player));
         Timing.CallDelayed(0.5f, () => ClearNato9Switch(ev.Player, switchState));
     }
 

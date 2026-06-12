@@ -57,8 +57,8 @@ public class Scp173Role : CRole
         float elapsed = 0f;
         while (MapFlags.Scp173SpawnPoint == Vector3.zero && elapsed < 10f)
         {
-            yield return Timing.WaitForSeconds(RoleSpawnTimings.RestoreRoleState);
-            elapsed += RoleSpawnTimings.RestoreRoleState;
+            yield return Timing.WaitForSeconds(RoleSpawnTimings.SpawnPointPollInterval);
+            elapsed += RoleSpawnTimings.SpawnPointPollInterval;
             if (!Check(player)) yield break;
         }
 

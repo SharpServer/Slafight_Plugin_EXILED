@@ -18,6 +18,7 @@ public static class AbilityLocalization
         ["Scp966SpeedAbility"] = "這いよる混沌",
         ["DropBiggerShitAbility"] = "爺街道",
         ["MemeWaveAbility"] = "ミーム波動",
+        ["SenseOfGreatDoctor "] = "名医の感",
     };
     private static readonly Dictionary<string, string> JaNamesSergey = new()
     {

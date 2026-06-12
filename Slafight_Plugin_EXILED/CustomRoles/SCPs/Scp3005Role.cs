@@ -96,7 +96,7 @@ public class Scp3005Role : CRole
         ev.ConsumeHeal = 0f;
         var target = ev.Ragdoll.Owner;
         target?.SetRole(CRoleTypeId.FifthistMarionette);
-        Timing.CallDelayed(RoleSpawnTimings.AfterSpawnFinalize, () => target?.Position = ev.Ragdoll.Position + Vector3.up * 0.15f);
+        Timing.CallDelayed(RoleSpawnTimings.FastSpawnFinalize, () => target?.Position = ev.Ragdoll.Position + Vector3.up * 0.15f);
     }
 
     protected override void OnRoleSpawningRagdoll(SpawningRagdollEventArgs ev)
@@ -110,8 +110,8 @@ public class Scp3005Role : CRole
         float elapsed = 0f;
         while (MapFlags.Scp3005SpawnPoint == Vector3.zero && elapsed < 10f)
         {
-            yield return Timing.WaitForSeconds(RoleSpawnTimings.RestoreRoleState);
-            elapsed += RoleSpawnTimings.RestoreRoleState;
+            yield return Timing.WaitForSeconds(RoleSpawnTimings.SpawnPointPollInterval);
+            elapsed += RoleSpawnTimings.SpawnPointPollInterval;
             if (!Check(player)) yield break;
         }
 
