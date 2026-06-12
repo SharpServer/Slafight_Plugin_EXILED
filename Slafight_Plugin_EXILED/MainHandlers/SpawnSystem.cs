@@ -198,16 +198,35 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
     //  状態フラグ
     // =====================
 
-    private bool _isDefaultWave = true;
+    private bool _defaultWaveGateOpen = true;
+    private CoroutineHandle _defaultWaveResetHandle;
     public static bool Disable = false;
 
-    public static SpawnOverrideMode OverrideMode { get; private set; } = SpawnOverrideMode.None;
-    public static SpawnTypeId? PendingOverrideType { get; private set; }
-    private static bool? PendingMiniWaveOverride { get; set; }
-    public static bool PendingMiniWave => PendingMiniWaveOverride ?? false;
+    private static NextWaveOverride? _pendingOverride;
+
+    public static SpawnOverrideMode OverrideMode => _pendingOverride.HasValue
+        ? SpawnOverrideMode.NextWave
+        : SpawnOverrideMode.None;
+
+    public static SpawnTypeId? PendingOverrideType => _pendingOverride?.SpawnType;
+    public static bool PendingMiniWave => _pendingOverride?.MiniWave ?? false;
 
     public static SpawnSystem Instance { get; private set; }
     private bool _disposed;
+
+    private readonly struct NextWaveOverride
+    {
+        public NextWaveOverride(SpawnTypeId spawnType, bool? miniWave, string source)
+        {
+            SpawnType = spawnType;
+            MiniWave = miniWave;
+            Source = string.IsNullOrWhiteSpace(source) ? "unknown" : source;
+        }
+
+        public SpawnTypeId SpawnType { get; }
+        public bool? MiniWave { get; }
+        public string Source { get; }
+    }
 
     // =====================
     //  コンストラクタ
@@ -217,6 +236,8 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
     {
         Instance = this;
         Exiled.Events.Handlers.Server.RespawningTeam += SpawnHandler;
+        Exiled.Events.Handlers.Server.RestartingRound += OnRoundRestarting;
+        Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
     }
 
     public void Dispose()
@@ -226,6 +247,12 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
 
         _disposed = true;
         Exiled.Events.Handlers.Server.RespawningTeam -= SpawnHandler;
+        Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarting;
+        Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
+
+        if (_defaultWaveResetHandle.IsRunning)
+            Timing.KillCoroutines(_defaultWaveResetHandle);
+
         GC.SuppressFinalize(this);
     }
 
@@ -233,12 +260,10 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
     //  外部からの切り替えAPI
     // =====================
 
-    public static void ReplaceNextSpawn(SpawnTypeId spawnType, bool? isMiniWave = null)
+    public static void ReplaceNextSpawn(SpawnTypeId spawnType, bool? isMiniWave = null, string source = null)
     {
-        OverrideMode = SpawnOverrideMode.NextWave;
-        PendingOverrideType = spawnType;
-        PendingMiniWaveOverride = isMiniWave;
-        Log.Info($"SpawnSystem: Next spawn overridden to {spawnType} (Mini:{isMiniWave?.ToString() ?? "source"})");
+        _pendingOverride = new NextWaveOverride(spawnType, isMiniWave, source ?? "external");
+        Log.Info($"SpawnSystem: Next spawn override queued. Type={spawnType}, Mini={isMiniWave?.ToString() ?? "source"}, Source={_pendingOverride.Value.Source}");
     }
 
     public static void ForceSpawnNow(SpawnTypeId spawnType, bool isMiniWave = false)
@@ -248,11 +273,42 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
         Instance?.SummonForces(spawnType, isMiniWave);
     }
 
-    private static void ResetOverride()
+    private static void ResetOverride(string reason = "manual")
     {
-        OverrideMode = SpawnOverrideMode.None;
-        PendingOverrideType = null;
-        PendingMiniWaveOverride = null;
+        if (_pendingOverride.HasValue)
+        {
+            var pending = _pendingOverride.Value;
+            Log.Debug($"SpawnSystem: Cleared pending override {pending.SpawnType} (Mini={pending.MiniWave?.ToString() ?? "source"}, Source={pending.Source}) because {reason}.");
+        }
+
+        _pendingOverride = null;
+    }
+
+    private static void ResetRuntimeState(string reason)
+    {
+        ResetOverride(reason);
+        Disable = false;
+        Instance?.ResetInstanceRuntimeState(reason);
+    }
+
+    private void ResetInstanceRuntimeState(string reason)
+    {
+        _defaultWaveGateOpen = true;
+
+        if (_defaultWaveResetHandle.IsRunning)
+            Timing.KillCoroutines(_defaultWaveResetHandle);
+
+        Log.Debug($"SpawnSystem: Runtime state reset ({reason}).");
+    }
+
+    private static void OnRoundRestarting()
+    {
+        ResetRuntimeState(nameof(OnRoundRestarting));
+    }
+
+    private static void OnWaitingForPlayers()
+    {
+        ResetRuntimeState(nameof(OnWaitingForPlayers));
     }
 
     // =====================
@@ -265,30 +321,37 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
         ev.IsAllowed = false;
 
         if (Disable)
+        {
+            Log.Debug("SpawnSystem: RespawningTeam ignored because SpawnSystem is disabled.");
             return;
+        }
 
         // 即時オーバーライド（NextWave）
-        if (OverrideMode == SpawnOverrideMode.NextWave && PendingOverrideType.HasValue)
+        if (_pendingOverride.HasValue)
         {
-            var overrideType = PendingOverrideType.Value;
-            var isMiniWave = PendingMiniWaveOverride ?? ev.Wave.IsMiniWave;
+            var pending = _pendingOverride.Value;
+            var overrideType = pending.SpawnType;
+            var isMiniWave = pending.MiniWave ?? ev.Wave.IsMiniWave;
 
             try
             {
                 Log.Info(
-                    $"SpawnSystem: Applying next-wave override. Source={ev.NextKnownTeam} Mini={ev.Wave.IsMiniWave}, Override={overrideType} Mini={isMiniWave}");
+                    $"SpawnSystem: Applying next-wave override. SourceTeam={ev.NextKnownTeam}, SourceMini={ev.Wave.IsMiniWave}, Override={overrideType}, Mini={isMiniWave}, QueuedBy={pending.Source}");
                 SummonForces(overrideType, isMiniWave);
             }
             finally
             {
-                ResetOverride();
+                ResetOverride("override consumed");
             }
 
             return;
         }
 
-        if (!_isDefaultWave)
+        if (!_defaultWaveGateOpen)
+        {
+            Log.Debug("SpawnSystem: RespawningTeam ignored because default wave gate is closed.");
             return;
+        }
 
         SpawnTypeId? decided = null;
 
@@ -299,7 +362,7 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
 
         if (decided is null)
         {
-            Log.Warn($"SpawnSystem: No spawn type decided for ...");
+            Log.Warn($"SpawnSystem: No spawn type decided for {ev.NextKnownTeam} (Mini:{ev.Wave.IsMiniWave}).");
             return;
         }
 
@@ -401,7 +464,7 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
 
     public void SummonForces(SpawnTypeId spawnType, bool isMiniWave)
     {
-        _isDefaultWave = false;
+        CloseDefaultWaveGate();
 
         try
         {
@@ -468,8 +531,27 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
         }
         finally
         {
-            Timing.CallDelayed(RoleSpawnTimings.SpawnSystemDefaultWaveReset, () => _isDefaultWave = true);
+            ScheduleDefaultWaveGateReopen();
         }
+    }
+
+    private void CloseDefaultWaveGate()
+    {
+        _defaultWaveGateOpen = false;
+
+        if (_defaultWaveResetHandle.IsRunning)
+            Timing.KillCoroutines(_defaultWaveResetHandle);
+    }
+
+    private void ScheduleDefaultWaveGateReopen()
+    {
+        _defaultWaveResetHandle = Timing.CallDelayed(RoleSpawnTimings.SpawnSystemDefaultWaveReset, () =>
+        {
+            if (_disposed)
+                return;
+
+            _defaultWaveGateOpen = true;
+        });
     }
 
     // =====================

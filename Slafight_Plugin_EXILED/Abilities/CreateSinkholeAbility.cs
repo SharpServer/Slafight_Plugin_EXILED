@@ -10,37 +10,40 @@ namespace Slafight_Plugin_EXILED.Abilities;
 
 public class CreateSinkholeAbility : AbilityBase
 {
-    // AbilityBase の抽象プロパティを実装
     protected override float DefaultCooldown => 60f;
     protected override int DefaultMaxUses => -1;
 
-    // 完全デフォルト
-    public CreateSinkholeAbility(Player owner)
-        : base(owner) { }
-
-    // コマンドなどから上書きしたいとき用
-    public CreateSinkholeAbility(Player owner, float cooldownSeconds)
-        : base(owner, cooldownSeconds) { }
-
-    public CreateSinkholeAbility(Player owner, float cooldownSeconds, int maxUses)
-        : base(owner, cooldownSeconds, maxUses) { }
+    public CreateSinkholeAbility(Player owner) : base(owner) { }
+    public CreateSinkholeAbility(Player owner, float cooldownSeconds) : base(owner, cooldownSeconds) { }
+    public CreateSinkholeAbility(Player owner, float cooldownSeconds, int maxUses) : base(owner, cooldownSeconds, maxUses) { }
 
     protected override void ExecuteAbility(Player player)
     {
         try
         {
-            var position = player.Position
-                           + player.CameraTransform.forward * 3f
-                           + Vector3.up * 0.5f;
+            const float forwardDistance = 12f;
+            const float downDistance = 10f;
+            const float spawnOffset = 0.01f;
 
-            var sinkholePrefabId = PrefabType.Sinkhole;
-            var sinkhole = PrefabHelper.Spawn(sinkholePrefabId, position, Quaternion.identity);
+            var position = player.Position + player.CameraTransform.forward * 3f;
+
+            if (player.TryGetRaycast(forwardDistance, LayerMasks.OnlyWorldCollision, out var hit))
+            {
+                var probeStart = hit.point + Vector3.up * 3f;
+
+                if (Physics.Raycast(probeStart, Vector3.down, out var groundHit, downDistance, (int)LayerMasks.OnlyWorldCollision))
+                    position = groundHit.point + Vector3.up * spawnOffset;
+                else
+                    position = hit.point + Vector3.up * spawnOffset;
+            }
+
+            var sinkhole = PrefabHelper.Spawn(PrefabType.Sinkhole, position, Quaternion.identity);
             NetworkServer.Spawn(sinkhole);
             Timing.CallDelayed(10f, () => UnityEngine.Object.Destroy(sinkhole));
         }
         catch (Exception ex)
         {
-            Log.Error($"Sinkhole Prefabスポーン失敗: {ex.Message}");
+            Log.Error($"Sinkhole Prefabスポーン失敗: {ex}");
         }
     }
 }

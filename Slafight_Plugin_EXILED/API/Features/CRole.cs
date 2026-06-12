@@ -50,6 +50,7 @@ public abstract class CRole
     private static readonly Dictionary<Type, CRole> TypeToRole = new();
     private static readonly Dictionary<int, TeamNpcInfo> TeamNpcs = new();
     private static readonly Dictionary<int, CoroutineHandle> RoleEffectCoroutines = new();
+    private const ulong AuthSyncedUserIdDirtyBit = 1UL;
 
     private static readonly IReadOnlyList<object> EmptyItems = [];
     private static readonly IReadOnlyDictionary<AmmoType, ushort> EmptyAmmo = new Dictionary<AmmoType, ushort>();
@@ -276,9 +277,11 @@ public abstract class CRole
 
     private static void OnAnyPlayerChangingRole(PlayerEvents.ChangingRoleEventArgs? ev)
     {
-        if (ev?.Player == null) return;
+        if (ev?.Player == null || !ev.IsAllowed) return;
 
         Dispatch(ev.Player, role => role.OnRoleChanging(ev), nameof(OnRoleChanging));
+        if (!ev.IsAllowed) return;
+
         StopRoleEffectCoroutine(ev.Player);
 
         if (!TeamNpcs.TryGetValue(ev.Player.Id, out var oldInfo)) return;
@@ -1085,8 +1088,7 @@ public abstract class CRole
                 return;
             }
 
-            npc.ReferenceHub.authManager.NetworkSyncedUserId = "ID_Dedicated";
-            npc.ReferenceHub.authManager.syncMode = (SyncMode)ClientInstanceMode.DedicatedServer;
+            npc.HideTeamNpcFromClientPlayerList($"{DisplayName}:spawn");
 
             var npcId = npc.Id;
             var playerId = player.Id;
@@ -1097,6 +1099,7 @@ public abstract class CRole
                 var currentNpc = Npc.Get(npcId);
                 if (currentNpc?.ReferenceHub == null) return;
 
+                currentNpc.HideTeamNpcFromClientPlayerList($"{DisplayName}:post-spawn");
                 currentNpc.IsGodModeEnabled = true;
                 currentNpc.IsSpectatable = false;
                 currentNpc.EnableEffect(EffectType.Invisible, 255);

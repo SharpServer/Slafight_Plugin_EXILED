@@ -433,8 +433,10 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
 
     public void AllSyncHUD(ChangingRoleEventArgs? ev)
     {
-        var player = ev?.Player; // FIX: nullガード
-        if (player == null) return;
+        if (ev?.Player == null) return;
+        if (!ev.IsAllowed) return;
+
+        var player = ev.Player;
 
         Timing.CallDelayed(0.5f, () =>
         {

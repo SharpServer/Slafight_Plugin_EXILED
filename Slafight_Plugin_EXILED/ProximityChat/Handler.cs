@@ -65,6 +65,8 @@ public static class Handler
         var player = ev.Player;
         if (player is null)
             return;
+        if (!ev.IsAllowed)
+            return;
 
         // 役職が確定してから判定したいので少しディレイ
         Timing.CallDelayed(1.1f, () =>

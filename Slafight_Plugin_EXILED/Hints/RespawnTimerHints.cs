@@ -82,6 +82,8 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
     {
         if (ev?.Player == null)
             return;
+        if (!ev.IsAllowed)
+            return;
 
         Timing.CallDelayed(0.5f, () => EnsureFor(ev.Player));
     }

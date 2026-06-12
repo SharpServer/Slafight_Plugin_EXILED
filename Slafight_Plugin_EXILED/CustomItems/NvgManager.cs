@@ -110,6 +110,7 @@ public static class NvgManager
     private static void OnChangingRole(ChangingRoleEventArgs? ev)
     {
         if (ev?.Player == null) return;
+        if (!ev.IsAllowed) return;
         StopAllNvgByOwner(ev.Player, clearBattery: false);
     }
 

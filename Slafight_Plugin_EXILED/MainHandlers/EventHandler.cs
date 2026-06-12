@@ -336,6 +336,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
     {
         var player = ev?.Player;
         if (player == null) return;
+        if (!ev.IsAllowed) return;
 
         EffectFakeSyncProvider.Disable(player);
 

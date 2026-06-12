@@ -16,23 +16,37 @@ public class RoundHandler : IBootstrapHandler
     public static void Register()
     {
         Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
+        Exiled.Events.Handlers.Server.RestartingRound += OnRoundRestarting;
+        Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
     }
 
     public static void Unregister()
     {
         Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
+        Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarting;
+        Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
+        ResetState(nameof(Unregister));
     }
 
     private static void OnRoundStarted()
     {
-        IsAlreadySpawned = false;
-        WaitForSpawnTime = 240f;
-        Timing.RunCoroutine(GuardsCoroutine());
+        ResetState(nameof(OnRoundStarted));
+        _guardsCoroutine = Timing.RunCoroutine(GuardsCoroutine());
     }
+
+    private static void OnRoundRestarting()
+        => ResetState(nameof(OnRoundRestarting));
+
+    private static void OnWaitingForPlayers()
+        => ResetState(nameof(OnWaitingForPlayers));
+
+    private const float DefaultWaitForSpawnTime = 240f;
 
     public static float WaitForSpawnTime { get; private set; }
     public static float ElapsedTime { get; private set; }
     public static bool IsAlreadySpawned { get; private set; }
+
+    private static CoroutineHandle _guardsCoroutine;
 
     public static bool IsSecurityTeamExpected()
     {
@@ -41,6 +55,9 @@ public class RoundHandler : IBootstrapHandler
 
         foreach (var player in Player.List)
         {
+            if (!ShouldCountForExpectedTeam(player))
+                continue;
+
             switch (player.GetTeam())
             {
                 case CTeam.ChaosInsurgency:
@@ -75,7 +92,9 @@ public class RoundHandler : IBootstrapHandler
         ElapsedTime = 0f;
         while (true)
         {
-            if (Round.IsLobby || SpecialEventsHandler.Instance.NowEvent is SpecialEventType.FacilityTermination) yield break;
+            if (Round.IsLobby || SpecialEventsHandler.Instance.NowEvent is SpecialEventType.FacilityTermination)
+                yield break;
+
             ElapsedTime += 0.1f;
             if (ElapsedTime >= WaitForSpawnTime)
             {
@@ -83,12 +102,12 @@ public class RoundHandler : IBootstrapHandler
                 if (IsSecurityTeamExpected())
                 {
                     faction = SpawnableFaction.NtfMiniWave;
-                    SpawnSystem.ReplaceNextSpawn(SpawnTypeId.SecurityTeam);
+                    SpawnSystem.ReplaceNextSpawn(SpawnTypeId.SecurityTeam, source: nameof(RoundHandler));
                 }
                 else
                 {
                     faction = SpawnableFaction.ChaosMiniWave;
-                    SpawnSystem.ReplaceNextSpawn(SpawnTypeId.ChaosAgents);
+                    SpawnSystem.ReplaceNextSpawn(SpawnTypeId.ChaosAgents, source: nameof(RoundHandler));
                 }
 
                 Respawn.AdvanceTimer(faction, 999);
@@ -97,5 +116,26 @@ public class RoundHandler : IBootstrapHandler
             }
             yield return Timing.WaitForSeconds(0.1f);
         }
+    }
+
+    private static bool ShouldCountForExpectedTeam(Player player)
+    {
+        return player != null
+               && player.IsConnected
+               && player.ReferenceHub != null
+               && !player.IsHost
+               && !player.ReferenceHub.IsHost
+               && player.Role.Type is not RoleTypeId.None and not RoleTypeId.Spectator;
+    }
+
+    private static void ResetState(string reason)
+    {
+        if (_guardsCoroutine.IsRunning)
+            Timing.KillCoroutines(_guardsCoroutine);
+
+        WaitForSpawnTime = DefaultWaitForSpawnTime;
+        ElapsedTime = 0f;
+        IsAlreadySpawned = false;
+        Log.Debug($"RoundHandler: reset state ({reason}).");
     }
 }

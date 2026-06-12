@@ -485,6 +485,7 @@
         <Compile Include="Extensions\CustomTeamUtils.cs" />
         <Compile Include="Extensions\CustomItemExtensions.cs" />
         <Compile Include="Extensions\MeowExtensions.cs" />
+        <Compile Include="Extensions\NpcExtensions.cs" />
         <Compile Include="Extensions\OnlyChecker.cs" />
         <Compile Include="Extensions\PlayerAbilityExtensions.cs" />
         <Compile Include="Extensions\PlayerCItemBaseExtensions.cs" />
