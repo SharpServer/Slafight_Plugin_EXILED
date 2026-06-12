@@ -39,7 +39,7 @@ public class Trashbox : ObjectPrefab
          _schematicObject = SpawnManagedSchematic("trashbox");
          _triggeredEventsByPlayer.Clear();
 
-         Timing.CallDelayed(0.5f, CreateInteractableToy);
+         ScheduleDelayed(0.5f, CreateInteractableToy);
          base.OnCreate();
     }
 

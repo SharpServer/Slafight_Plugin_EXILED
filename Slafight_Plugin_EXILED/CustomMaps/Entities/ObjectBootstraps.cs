@@ -11,6 +11,8 @@ namespace Slafight_Plugin_EXILED.CustomMaps.Entities;
 
 public class ObjectBootstraps : IBootstrapHandler
 {
+    private static CoroutineHandle _setupHandle;
+
     public static void Register()
     {
         Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
@@ -19,13 +21,15 @@ public class ObjectBootstraps : IBootstrapHandler
     public static void Unregister()
     {
         Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
+        Timing.KillCoroutines(_setupHandle);
     }
 
     private static void OnRoundStarted()
     {
         Trashbox.ResetSharedRoundState();
 
-        Timing.CallDelayed(2.25f, () =>
+        Timing.KillCoroutines(_setupHandle);
+        _setupHandle = Timing.CallDelayed(2.25f, () =>
         {
             SetupObjectPrefabs();
             SetupTantrum();

@@ -39,6 +39,7 @@ public class Scp682Role : CRole
     
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
+        CleanupPlayer(player);
         player.MaxHumeShield = 1200;
         player.HumeShieldRegenerationMultiplier = 13.5f;
 
@@ -68,10 +69,9 @@ public class Scp682Role : CRole
     {
         for (;;)
         {
-            if (player.GetCustomRole() != CRoleTypeId.Scp682)
+            if (player?.ReferenceHub == null || player.GetCustomRole() != CRoleTypeId.Scp682)
             {
-                SpeedLevels.Remove(player);
-                RoleSpecificTextProvider.Clear(player);
+                CleanupPlayer(player);
                 yield break;
             }
 
@@ -100,8 +100,29 @@ public class Scp682Role : CRole
     }
     protected override void OnRoleDying(DyingEventArgs ev)
     {
-        SpeedLevels.Remove(ev.Player);
+        CleanupPlayer(ev.Player);
         CassieHelper.AnnounceTermination(ev, "SCP 6 8 2", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
         base.OnRoleDying(ev);
+    }
+
+    protected override void OnRoleChanging(ChangingRoleEventArgs ev)
+    {
+        CleanupPlayer(ev.Player);
+        base.OnRoleChanging(ev);
+    }
+
+    protected override void OnRoleLeft(LeftEventArgs ev)
+    {
+        CleanupPlayer(ev.Player);
+        base.OnRoleLeft(ev);
+    }
+
+    private static void CleanupPlayer(Player player)
+    {
+        if (player == null)
+            return;
+
+        SpeedLevels.Remove(player);
+        RoleSpecificTextProvider.Clear(player);
     }
 }

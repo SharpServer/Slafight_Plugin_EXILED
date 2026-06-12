@@ -50,17 +50,16 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
     
     protected override void OnRoleDying(DyingEventArgs ev)
     {
-        if (ev.Player != null)
-        {
-            ShyGuyPositions.Remove(ev.Player);
-            _inTryNotToCryAnim.Remove(ev.Player);  // ★安全クリーンアップ
-        }
+        CleanupPlayer(ev.Player);
         CassieHelper.AnnounceTermination(ev, "SCP 0 9 6", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
         base.OnRoleDying(ev);
     }
 
     private void StartAnger(Player player)
     {
+        if (!Check(player) || !ShyGuyPositions.TryGetValue(player, out var shyguyPosition))
+            return;
+
         foreach (Door door in Door.List)
         {
             if (door.Type == DoorType.HeavyContainmentDoor && door.Room.Type == RoomType.Hcz096)
@@ -68,8 +67,6 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
                 door.Lock(DoorLockType.AdminCommand);
             }
         }
-            
-        Vector3 shyguyPosition = ShyGuyPositions[player];
         Vector3 spawnPoint = new Vector3(shyguyPosition.x + 1f, shyguyPosition.y + 0f, shyguyPosition.z);
         Npc term_npc = Npc.Spawn("SCP-096 Chamber Facility Guard", RoleTypeId.FacilityGuard, false, position: spawnPoint);
         term_npc.Transform.localEulerAngles = new Vector3(0, -90, 0);
@@ -95,6 +92,7 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
+        CleanupPlayer(player);
         _inTryNotToCryAnim[player] = false;  // ★セット
 
         player.MaxArtificialHealth = 1000;
@@ -109,6 +107,18 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
         
         Log.Debug("Scp096: Anger was Spawned!");
         Timing.CallDelayed(RoleSpawnTimings.FastSpawnFinalize, () => StartAnger(player));
+    }
+
+    protected override void OnRoleChanging(ChangingRoleEventArgs ev)
+    {
+        CleanupPlayer(ev.Player);
+        base.OnRoleChanging(ev);
+    }
+
+    protected override void OnRoleLeft(LeftEventArgs ev)
+    {
+        CleanupPlayer(ev.Player);
+        base.OnRoleLeft(ev);
     }
 
     private readonly Dictionary<Player, bool> _inTryNotToCryAnim = [];  // そのまま
@@ -178,5 +188,14 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
             player!.DisableEffect(EffectType.MovementBoost);
             player!.DisableEffect(EffectType.Invigorated);
         }
+    }
+
+    private void CleanupPlayer(Player player)
+    {
+        if (player == null)
+            return;
+
+        ShyGuyPositions.Remove(player);
+        _inTryNotToCryAnim.Remove(player);
     }
 }

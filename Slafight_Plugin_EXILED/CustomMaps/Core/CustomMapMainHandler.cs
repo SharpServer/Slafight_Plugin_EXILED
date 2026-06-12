@@ -1,4 +1,5 @@
 using System;
+using Exiled.Events.EventArgs.Player;
 using LabApi.Events.CustomHandlers;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Interface;
@@ -62,6 +63,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
         MapHandler.SpawningTeamVehicle += _surfaceGateBarrier.HandleTeamVehicleSpawn;
         LabApi.Events.Handlers.PlayerEvents.SearchedToy += _toyInteractions.HandleSearchedToy;
         PlayerHandler.InteractingDoor += _doorAccess.HandleInteraction;
+        PlayerHandler.Left += HandlePlayerLeft;
     }
 
     public void Dispose()
@@ -76,8 +78,14 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
         MapHandler.SpawningTeamVehicle -= _surfaceGateBarrier.HandleTeamVehicleSpawn;
         LabApi.Events.Handlers.PlayerEvents.SearchedToy -= _toyInteractions.HandleSearchedToy;
         PlayerHandler.InteractingDoor -= _doorAccess.HandleInteraction;
+        PlayerHandler.Left -= HandlePlayerLeft;
 
         _roundStartup.Dispose();
         GC.SuppressFinalize(this);
+    }
+
+    private void HandlePlayerLeft(LeftEventArgs ev)
+    {
+        _femurBreaker.HandlePlayerLeft(ev.Player);
     }
 }

@@ -136,7 +136,7 @@ public static class AbilityManager
         foreach (var kvp in Loadouts)
         {
             var player = Player.Get(kvp.Key);
-            if (player?.IsConnected == true)
+            if (player?.ReferenceHub != null)
                 AbilityBase.ResetCooldown(player.Id);
         }
     }

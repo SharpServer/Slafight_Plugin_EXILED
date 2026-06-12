@@ -199,6 +199,7 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
         ev.Player.DisableAllEffects();
 
         var player = ev.Player;
+        var playerId = player.Id;
         player.Clear();
         AbilityManager.ClearSlots(player);
         AbilityBase.RevokeAbility(player.Id);
@@ -215,10 +216,14 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
         {
             try
             {
-                if (player.IsConnected)
-                    PlayerHUD.Instance?.HintSync(SyncType.PHUD_Specific, string.Empty, player);
+                var currentPlayer = Player.Get(playerId);
+                if (currentPlayer?.ReferenceHub == null)
+                    return;
 
-                RoleSpecificTextProvider.Clear(player);
+                if (currentPlayer.IsConnected && !currentPlayer.IsNPC)
+                    PlayerHUD.Instance?.HintSync(SyncType.PHUD_Specific, string.Empty, currentPlayer);
+
+                RoleSpecificTextProvider.Clear(currentPlayer);
             }
             catch
             {

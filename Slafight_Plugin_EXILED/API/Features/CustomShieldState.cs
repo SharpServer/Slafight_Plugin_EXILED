@@ -241,7 +241,7 @@ public sealed class CustomShieldState
 
     private IEnumerator<float> DecayLoop()
     {
-        while (Player != null && Player.IsConnected && IsAutoDecayEnabled && DecayPerSecond > 0f)
+        while (IsPlayerUsable(Player) && IsAutoDecayEnabled && DecayPerSecond > 0f)
         {
             if (Value <= 0f)
             {
@@ -263,7 +263,7 @@ public sealed class CustomShieldState
 
         while (elapsed < duration)
         {
-            if (Player == null || !Player.IsConnected)
+            if (!IsPlayerUsable(Player))
                 yield break;
 
             elapsed += Time.deltaTime;
@@ -280,7 +280,7 @@ public sealed class CustomShieldState
     {
         KillAhpProcesses();
 
-        if (value <= 0f || MaxValue <= 0f)
+        if (!IsPlayerUsable(Player) || value <= 0f || MaxValue <= 0f)
             return;
 
         Player.ReferenceHub.playerStats.GetModule<AhpStat>()
@@ -289,6 +289,9 @@ public sealed class CustomShieldState
 
     private void KillAhpProcesses()
     {
+        if (!IsPlayerUsable(Player))
+            return;
+
         Player.ReferenceHub.playerStats.GetModule<AhpStat>().ServerKillAllProcesses();
     }
 
@@ -339,4 +342,7 @@ public sealed class CustomShieldState
 
     private static float Clamp01(float value)
         => Clamp(value, 0f, 1f);
+
+    private static bool IsPlayerUsable(Player player)
+        => player?.ReferenceHub != null;
 }

@@ -21,7 +21,7 @@ public class AntiMemeBomb : ObjectPrefab
     {
          _schematicObject = SpawnManagedSchematic("AntiMemeBomb");
 
-        Timing.CallDelayed(0.5f, CreateInteractableToy);
+        ScheduleDelayed(0.5f, CreateInteractableToy);
         base.OnCreate();
     }
 

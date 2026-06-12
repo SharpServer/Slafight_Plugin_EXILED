@@ -290,7 +290,7 @@ public abstract class CRole
         Timing.CallDelayed(RoleSpawnTimings.TeamNpcCleanupAfterRoleChange, () =>
         {
             var player = Player.Get(playerId);
-            if (player == null || !player.IsConnected) return;
+            if (player == null || player.ReferenceHub == null) return;
 
             if (!TeamNpcs.TryGetValue(player.Id, out var current)) return;
             if (current.NpcId != oldNpcId) return;
@@ -739,7 +739,7 @@ public abstract class CRole
                 Timing.CallDelayed(RoleSpawnTimings.RestoreRoleState, () =>
                 {
                     var p = Player.Get(playerId);
-                    if (p == null || !p.IsConnected) return;
+                    if (p == null || p.ReferenceHub == null) return;
 
                     p.Position = savePosition;
                     p.ClearInventory();
@@ -760,7 +760,7 @@ public abstract class CRole
                 Timing.CallDelayed(RoleSpawnTimings.RestoreRoleState, () =>
                 {
                     var p = Player.Get(playerId);
-                    if (p == null || !p.IsConnected) return;
+                    if (p == null || p.ReferenceHub == null) return;
 
                     p.Position = savePosition;
                 });
@@ -775,7 +775,7 @@ public abstract class CRole
                 Timing.CallDelayed(RoleSpawnTimings.RestoreRoleState, () =>
                 {
                     var p = Player.Get(playerId);
-                    if (p == null || !p.IsConnected) return;
+                    if (p == null || p.ReferenceHub == null) return;
 
                     p.ClearInventory();
 
@@ -832,7 +832,7 @@ public abstract class CRole
         Timing.CallDelayed(RoleSpawnTimings.TeamNpcSpawn, () =>
         {
             var p = Player.Get(id);
-            if (p == null || !p.IsConnected) return;
+            if (p == null || p.ReferenceHub == null) return;
 
             TryCreateTeamNpc(p);
         });
@@ -1019,7 +1019,7 @@ public abstract class CRole
         while (true)
         {
             var player = Player.Get(playerId);
-            if (player == null || !player.IsConnected || !player.IsAlive || !Check(player))
+            if (player == null || player.ReferenceHub == null || !player.IsAlive || !Check(player))
                 break;
 
             ApplyRoleEffects(player, effects);
@@ -1063,8 +1063,8 @@ public abstract class CRole
     private void TryCreateTeamNpc(Player? player)
     {
         if (TeamNpcRoleTypeId == null) return;
-        if (player == null || !player.IsConnected) return;
-        if (player.ReferenceHub == null || player.IsHost || player.ReferenceHub.IsHost || IsTeamNpc(player)) return;
+        if (player == null || player.ReferenceHub == null) return;
+        if (player.IsHost || player.ReferenceHub.IsHost || IsTeamNpc(player)) return;
         if (!Check(player)) return;
 
         CleanupTeamNpc(player);

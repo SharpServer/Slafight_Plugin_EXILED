@@ -22,6 +22,7 @@ public static class TerminalRift
 
     private static CoroutineHandle _animCoroutineHandle;
     private static CoroutineHandle _timeoutHandle;
+    private static CoroutineHandle _setupHandle;
     
     public const float PositionTolerance = 2.25f;
     
@@ -57,7 +58,7 @@ public static class TerminalRift
 
         Log.Debug("[TerminalRift] Unregistering...");
 
-        KillAllCoroutines();
+        Cleanup();
 
         Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
         Exiled.Events.Handlers.Server.RestartingRound -= Cleanup;
@@ -77,14 +78,18 @@ public static class TerminalRift
             Timing.KillCoroutines(_animCoroutineHandle);
         if (_timeoutHandle.IsRunning)
             Timing.KillCoroutines(_timeoutHandle);
+        if (_setupHandle.IsRunning)
+            Timing.KillCoroutines(_setupHandle);
 
         _animCoroutineHandle = default;
         _timeoutHandle = default;
+        _setupHandle = default;
     }
 
     private static void OnRoundStarted()
     {
-        Timing.CallDelayed(1.5f, () => 
+        Cleanup();
+        _setupHandle = Timing.CallDelayed(1.5f, () => 
         {
             ControlObjects.Clear();
             foreach (var map in MapUtils.LoadedMaps.Values)

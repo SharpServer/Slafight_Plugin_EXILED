@@ -183,11 +183,11 @@ public class DevToolFunctionHandler
                 var allNpcs = new List<Npc>();
 
                 foreach (var (npc, _) in rtdNpcs)
-                    if (npc != null && npc.IsConnected)
+                    if (npc?.ReferenceHub != null)
                         allNpcs.Add(npc);
 
                 foreach (var (npc, _) in croleNpcs)
-                    if (npc != null && npc.IsConnected)
+                    if (npc?.ReferenceHub != null)
                         allNpcs.Add(npc);
 
                 allNpcs.ForEach(npc => npc.IsGodModeEnabled = true);
@@ -223,7 +223,7 @@ public class DevToolFunctionHandler
     {
         foreach (var (npc, roleId) in npcs)
         {
-            if (npc == null || !npc.IsConnected) continue;
+            if (npc == null || npc.ReferenceHub == null) continue;
             npc.SetRole(roleId);
         }
     }
@@ -254,7 +254,7 @@ public class DevToolFunctionHandler
     {
         foreach (var (npc, cId) in npcs)
         {
-            if (npc == null || !npc.IsConnected) continue;
+            if (npc == null || npc.ReferenceHub == null) continue;
 
             try
             {
@@ -271,7 +271,7 @@ public class DevToolFunctionHandler
 
     private void ArrangeNpcsRing(IEnumerable<Npc> npcs, Vector3 center, float radius)
     {
-        var arr = npcs.Where(n => n != null && n.IsConnected).ToArray();
+        var arr = npcs.Where(n => n?.ReferenceHub != null).ToArray();
         int count = arr.Length;
         if (count == 0)
             return;

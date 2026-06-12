@@ -33,6 +33,28 @@ public class SpawnObjectPrefab : ICommand
 
     private static readonly Dictionary<Player, ObjectPrefab> Selected = new();
 
+    public static void CleanupPlayer(Player player)
+    {
+        var grabKeys = GrabCoroutines.Keys
+            .Concat(Grabbing.Keys)
+            .Concat(GrabDistance.Keys)
+            .Concat(GrabLocalOffset.Keys)
+            .Concat(GrabRotationOffset.Keys)
+            .Concat(GrabLockRotation.Keys)
+            .Distinct()
+            .Where(key => IsSameOrInvalidPlayer(key, player))
+            .ToArray();
+
+        foreach (var key in grabKeys)
+        {
+            if (key != null)
+                UngrabInternal(key);
+        }
+
+        foreach (var key in Selected.Keys.Where(key => IsSameOrInvalidPlayer(key, player)).ToArray())
+            Selected.Remove(key);
+    }
+
     public bool Execute(ArraySegment<string> arguments, ICommandSender sender, out string response)
     {
         if (!sender.CheckPermission($"slperm.{Command}"))
@@ -854,7 +876,7 @@ public class SpawnObjectPrefab : ICommand
         return true;
     }
 
-    private void UngrabInternal(Player player)
+    private static void UngrabInternal(Player player)
     {
         if (GrabCoroutines.TryGetValue(player, out var handle))
         {
@@ -869,11 +891,14 @@ public class SpawnObjectPrefab : ICommand
         GrabLockRotation.Remove(player);
     }
 
+    private static bool IsSameOrInvalidPlayer(Player key, Player player)
+        => key == null || key.ReferenceHub == null || (player != null && key.Id == player.Id);
+
     private IEnumerator<float> GrabFollowCoroutine(Player player)
     {
         while (Grabbing.TryGetValue(player, out var prefab))
         {
-            if (!player.IsConnected || prefab == null)
+            if (player.ReferenceHub == null || prefab == null)
                 break;
 
             var localOffset = GrabLocalOffset.TryGetValue(player, out var offset)

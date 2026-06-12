@@ -29,6 +29,7 @@ public static class Communications
     ];
 
     private static CoroutineHandle _setupHandle;
+    private static CoroutineHandle _animHandle;
 
     public static void Register()
     {
@@ -63,13 +64,41 @@ public static class Communications
     private static void Reset()
     {
         Timing.KillCoroutines(_setupHandle);
+        Timing.KillCoroutines(_animHandle);
         UnsubscribeInteractable();
+
+        if (_playback is not null)
+            SpeakerApi.Stop((SpeakerApi.Playback)_playback);
+
+        TryDestroy(InteractableToy);
+        TryDestroy(TextToy);
+        TryDestroy(Broadcaster);
+        TryDestroy(_light);
+
         InteractableToy = null;
         TextToy = null;
         Broadcaster = null;
         _playback = null;
         _light = null;
         IsSecretActivated = false;
+    }
+
+    private static void TryDestroy(Exiled.API.Features.Toys.AdminToy? toy)
+    {
+        if (toy == null)
+            return;
+
+        try { toy.Destroy(); }
+        catch { /* ignored */ }
+    }
+
+    private static void TryDestroy(SchematicObject? schematic)
+    {
+        if (schematic == null)
+            return;
+
+        try { schematic.Destroy(); }
+        catch { /* ignored */ }
     }
 
     private static void SetupToys()
@@ -149,7 +178,7 @@ public static class Communications
                 _light?.ShadowType = LightShadows.Hard;
                 _light?.ShadowStrength = 50f;
                 if (Broadcaster is null || _light is null) return;
-                Timing.RunCoroutine(AnimCoroutine());
+                _animHandle = Timing.RunCoroutine(AnimCoroutine());
             }
             else
             {
@@ -254,4 +283,3 @@ public static class Communications
             Broadcaster.gameObject.transform.position = endPos;
     }
 }
-

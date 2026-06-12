@@ -135,7 +135,7 @@ public static class LookSoundApi
         // target として参照されているセッションも止める
         foreach (var s in new List<LookSession>(Sessions.Values))
         {
-            if (s.Target == player)
+            if (s.Target?.Id == player.Id)
                 StopSession(s.Owner);
         }
     }
@@ -157,8 +157,8 @@ public static class LookSoundApi
             try
             {
                 shouldContinue =
-                    owner != null && owner.IsConnected && owner.IsAlive &&
-                    target != null && target.IsConnected && target.IsAlive;
+                    owner != null && owner.ReferenceHub != null && owner.IsAlive &&
+                    target != null && target.ReferenceHub != null && target.IsAlive;
             }
             catch
             {
@@ -197,6 +197,13 @@ public static class LookSoundApi
         }
 
         StopChaseInternal(session);
+        if (owner != null &&
+            Sessions.TryGetValue(owner.Id, out var currentSession) &&
+            ReferenceEquals(currentSession, session))
+        {
+            Sessions.Remove(owner.Id);
+        }
+
         Log.Debug($"[LookSoundApi] LookCoroutine stopped for {owner?.Nickname ?? "Unknown"}");
     }
 

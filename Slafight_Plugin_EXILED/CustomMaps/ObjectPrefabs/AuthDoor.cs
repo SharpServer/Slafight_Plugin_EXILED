@@ -48,7 +48,7 @@ public class AuthDoor : ObjectPrefab
     {
         _schematicObject = SpawnManagedSchematic("MovingDoor");
 
-        Timing.CallDelayed(0.5f, () =>
+        ScheduleDelayed(0.5f, () =>
         {
             CreateInteractableToy();
             // IsOpen=true → OpenIdle(door2) / IsOpen=false → CloseIdle(door0)

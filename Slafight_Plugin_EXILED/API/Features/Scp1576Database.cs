@@ -25,12 +25,17 @@ public class Scp1576DatabaseHandler : IBootstrapHandler
     {
         Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Scp1576TransmissionEnded += OnTransmissionEnded;
+        Exiled.Events.Handlers.Player.Left += OnLeft;
     }
 
     public static void Unregister()
     {
         Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Scp1576TransmissionEnded -= OnTransmissionEnded;
+        Exiled.Events.Handlers.Player.Left -= OnLeft;
+
+        Timing.KillCoroutines(_coroutineHandle);
+        ClearInstances();
     }
 
     private static CoroutineHandle _coroutineHandle;
@@ -38,28 +43,20 @@ public class Scp1576DatabaseHandler : IBootstrapHandler
     private static void OnWaitingForPlayers()
     {
         Timing.KillCoroutines(_coroutineHandle);
+        ClearInstances();
         _coroutineHandle = Timing.RunCoroutine(UpdateCoroutine());
     }
 
     private static void OnTransmissionEnded(Scp1576TransmissionEndedEventArgs ev)
     {
-        if (ev.Player is null) return;
-        var instance = Scp1576Database.Instances.Find(x => x.Player == ev.Player);
-        if (instance is not null)
-        {
-            Scp1576Database.Instances.Remove(instance);
-        }
+        RemovePlayer(ev.Player);
+        UpdateWavePauseState();
+    }
 
-        if (Scp1576Database.Instances.Count <= 0)
-        {
-            WaveManager.Waves.ForEach(x =>
-            {
-                if (x is TimeBasedWave wave)
-                {
-                    wave.Timer.IsForcefullyPaused = false;
-                }
-            });
-        }
+    private static void OnLeft(LeftEventArgs ev)
+    {
+        RemovePlayer(ev.Player);
+        UpdateWavePauseState();
     }
 
     private static IEnumerator<float> UpdateCoroutine()
@@ -68,14 +65,16 @@ public class Scp1576DatabaseHandler : IBootstrapHandler
         {
             if (Round.IsEnded)
             {
-                Scp1576Database.Instances.Clear();
+                ClearInstances();
                 yield break;
             }
+
+            PruneInvalidInstances();
             
             foreach (var player in Player.List)
             {
-                if (player is null || !player.IsAlive) continue;
-                if (Scp1576Database.Instances.Find(x => x.Player == player) != null) continue;
+                if (player is null || player.ReferenceHub == null || !player.IsAlive) continue;
+                if (Scp1576Database.Instances.Find(x => x.Player?.Id == player.Id) != null) continue;
                 if (player.IsEffectActive<CustomPlayerEffects.Scp1576>())
                 {
                     Scp1576 scp1576 = null;
@@ -85,18 +84,46 @@ public class Scp1576DatabaseHandler : IBootstrapHandler
                 }
             }
 
-            if (Scp1576Database.Instances.Count >= 1)
-            {
-                WaveManager.Waves.ForEach(x =>
-                {
-                    if (x is TimeBasedWave wave)
-                    {
-                        wave.Timer.IsForcefullyPaused = true;
-                    }
-                });
-            }
+            UpdateWavePauseState();
 
             yield return Timing.WaitForSeconds(1f);
         }
+    }
+
+    private static void RemovePlayer(Player player)
+    {
+        if (player is null)
+            return;
+
+        Scp1576Database.Instances.RemoveAll(x => x.Player?.Id == player.Id);
+    }
+
+    private static void PruneInvalidInstances()
+    {
+        Scp1576Database.Instances.RemoveAll(x =>
+            x.Player is null ||
+            x.Player.ReferenceHub is null ||
+            !x.Player.IsAlive ||
+            !x.Player.IsEffectActive<CustomPlayerEffects.Scp1576>());
+    }
+
+    private static void ClearInstances()
+    {
+        Scp1576Database.Instances.Clear();
+        SetWavesPaused(false);
+    }
+
+    private static void UpdateWavePauseState()
+    {
+        SetWavesPaused(Scp1576Database.Instances.Count >= 1);
+    }
+
+    private static void SetWavesPaused(bool isPaused)
+    {
+        WaveManager.Waves.ForEach(x =>
+        {
+            if (x is TimeBasedWave wave)
+                wave.Timer.IsForcefullyPaused = isPaused;
+        });
     }
 }

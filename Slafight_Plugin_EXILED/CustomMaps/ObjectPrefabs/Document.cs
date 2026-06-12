@@ -38,7 +38,7 @@ public class Document : ObjectPrefab
         if (ShowModel)
             _schematicObject = SpawnManagedSchematic("Document");
 
-        Timing.CallDelayed(0.5f, CreateInteractableToy);
+        ScheduleDelayed(0.5f, CreateInteractableToy);
         base.OnCreate();
     }
 

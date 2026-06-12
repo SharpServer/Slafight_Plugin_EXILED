@@ -209,7 +209,7 @@ public static class SpeakerApi
 
         var speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, volume);
         var targetIds = targets?
-            .Where(player => !string.IsNullOrEmpty(player.UserId))
+            .Where(player => player?.ReferenceHub != null && !string.IsNullOrEmpty(player.UserId))
             .Select(player => player.UserId)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
@@ -248,18 +248,39 @@ public static class SpeakerApi
 
     public static bool Stop(Playback playback)
     {
-        if (!playback.IsValid)
+        if (playback.ControllerId == 0)
             return false;
 
-        if (PlaybackStreams.TryGetValue(playback.ControllerId, out var stream) && stream.IsRunning)
+        var trackedBeforeStop = IsPlaybackTracked(playback);
+        var ownsController = trackedBeforeStop || playback.IsValid;
+        var removedStream = false;
+        if (ownsController && PlaybackStreams.TryGetValue(playback.ControllerId, out var stream) && stream.IsRunning)
+        {
             Timing.KillCoroutines(stream);
+            removedStream = true;
+        }
 
-        PlaybackStreams.Remove(playback.ControllerId);
-        playback.Speaker.Stop();
-        playback.Speaker.Destroy();
-        AllocatedControllerIds.Remove(playback.ControllerId);
-        RemovePlayback(playback);
-        return true;
+        if (ownsController)
+            PlaybackStreams.Remove(playback.ControllerId);
+
+        var destroyed = false;
+        try
+        {
+            if (playback.Speaker != null && !playback.Speaker.IsDestroyed)
+            {
+                playback.Speaker.Stop();
+                playback.Speaker.Destroy();
+                destroyed = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[SpeakerApi] Stop failed for {playback.AudioPlayerName}/{playback.ControllerId}: {ex.Message}");
+        }
+
+        var removedPlayback = RemovePlayback(playback);
+        var releasedId = !IsControllerTracked(playback.ControllerId) && AllocatedControllerIds.Remove(playback.ControllerId);
+        return destroyed || releasedId || removedPlayback || removedStream;
     }
 
     public static bool StopClip(string audioPlayerName, string clipName)
@@ -324,13 +345,23 @@ public static class SpeakerApi
 
     public static bool TryDestroy(string audioPlayerName)
     {
-        if (string.IsNullOrWhiteSpace(audioPlayerName) || !PlaybacksByName.TryGetValue(audioPlayerName, out var playbacks))
+        if (string.IsNullOrWhiteSpace(audioPlayerName))
             return false;
 
-        foreach (var playback in playbacks.ToArray())
-            Stop(playback);
+        var destroyed = false;
+        if (PlaybacksByName.TryGetValue(audioPlayerName, out var playbacks))
+        {
+            foreach (var playback in playbacks.ToArray())
+                destroyed |= Stop(playback);
+        }
 
-        return true;
+        if (LivePlaybacksByName.TryGetValue(audioPlayerName, out var livePlaybacks))
+        {
+            foreach (var playback in livePlaybacks.ToArray())
+                destroyed |= DestroyLiveSpeaker(playback);
+        }
+
+        return destroyed;
     }
 
     public static int DestroyAll()
@@ -345,8 +376,28 @@ public static class SpeakerApi
 
         PlaybacksByName.Clear();
         LivePlaybacksByName.Clear();
+        PlaybackStreams.Clear();
         AllocatedControllerIds.Clear();
         return playbacks.Length + livePlaybacks.Length;
+    }
+
+    public static int PruneInvalid()
+    {
+        var removed = 0;
+
+        foreach (var playback in PlaybacksByName.Values.SelectMany(p => p).Where(p => !p.IsValid).ToArray())
+        {
+            if (Stop(playback))
+                removed++;
+        }
+
+        foreach (var playback in LivePlaybacksByName.Values.SelectMany(p => p).Where(p => !p.IsValid).ToArray())
+        {
+            if (DestroyLiveSpeaker(playback))
+                removed++;
+        }
+
+        return removed;
     }
 
     public static void SetTransform(Playback playback, Vector3 position, Transform? parent = null)
@@ -367,20 +418,41 @@ public static class SpeakerApi
 
     public static bool DestroyLiveSpeaker(LivePlayback playback)
     {
-        if (!playback.IsValid)
+        if (playback.ControllerId == 0)
             return false;
 
-        playback.Speaker.Destroy();
-        AllocatedControllerIds.Remove(playback.ControllerId);
-        RemoveLivePlayback(playback);
-        return true;
+        var trackedBeforeDestroy = IsLivePlaybackTracked(playback);
+        var ownsController = trackedBeforeDestroy || playback.IsValid;
+        var destroyed = false;
+        try
+        {
+            if (playback.Speaker != null && !playback.Speaker.IsDestroyed)
+            {
+                playback.Speaker.Destroy();
+                destroyed = true;
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[SpeakerApi] DestroyLiveSpeaker failed for {playback.AudioPlayerName}/{playback.ControllerId}: {ex.Message}");
+        }
+
+        var removedPlayback = RemoveLivePlayback(playback);
+        var releasedId = ownsController && !IsControllerTracked(playback.ControllerId) && AllocatedControllerIds.Remove(playback.ControllerId);
+        return destroyed || releasedId || removedPlayback;
     }
 
     public static int SendAudioFrame(LivePlayback playback, byte[]? data, int dataLength, IEnumerable<ReferenceHub>? targets)
     {
-        if (!playback.IsValid || data == null || dataLength <= 0 || dataLength > data.Length || targets == null)
+        if (!playback.IsValid)
         {
-            Log.Debug($"[SpeakerApi] SendAudioFrame: Validation failed. Playback Valid: {playback.IsValid}, Data null: {data == null}, DataLength: {dataLength}, targets null: {targets == null}");
+            DestroyLiveSpeaker(playback);
+            return 0;
+        }
+
+        if (data == null || dataLength <= 0 || dataLength > data.Length || targets == null)
+        {
+            Log.Debug($"[SpeakerApi] SendAudioFrame: Validation failed. Data null: {data == null}, DataLength: {dataLength}, targets null: {targets == null}");
             return 0;
         }
 
@@ -422,35 +494,55 @@ public static class SpeakerApi
     }
 
     public static IEnumerable<string> GetAudioPlayerNames()
-        => PlaybacksByName.Keys.ToArray();
+        => PlaybacksByName.Keys.Concat(LivePlaybacksByName.Keys).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
 
     private static LabSpeakerToy CreateSpeaker(Vector3 position, Transform? parent, bool isSpatial, float maxDistance, float minDistance, float volume)
     {
         minDistance = Mathf.Max(MinimumAudibleDistance, minDistance);
         maxDistance = Mathf.Max(minDistance, maxDistance);
 
-        var speaker = LabSpeakerToy.Create(parent ? Vector3.zero : position, Quaternion.identity, Vector3.one, parent, networkSpawn: false);
-        speaker.ControllerId = AllocateControllerId();
-        speaker.IsSpatial = isSpatial;
-        speaker.MaxDistance = maxDistance;
-        speaker.MinDistance = minDistance;
-        speaker.Volume = volume;
-        speaker.ValidPlayers = null;
-
-        // Force SyncVar values on the base NetworkBehaviour so they are synchronized to clients during Spawn
-        speaker.Base.NetworkControllerId = speaker.ControllerId;
-        speaker.Base.NetworkIsSpatial = isSpatial;
-        speaker.Base.NetworkMaxDistance = maxDistance;
-        speaker.Base.NetworkMinDistance = minDistance;
-        speaker.Base.NetworkVolume = volume;
-
-        if (parent == null)
+        LabSpeakerToy? speaker = null;
+        var controllerId = AllocateControllerId();
+        try
         {
-            speaker.Base.NetworkPosition = position;
-        }
+            speaker = LabSpeakerToy.Create(parent ? Vector3.zero : position, Quaternion.identity, Vector3.one, parent, networkSpawn: false);
+            speaker.ControllerId = controllerId;
+            speaker.IsSpatial = isSpatial;
+            speaker.MaxDistance = maxDistance;
+            speaker.MinDistance = minDistance;
+            speaker.Volume = volume;
+            speaker.ValidPlayers = null;
 
-        speaker.Spawn();
-        return speaker;
+            // Force SyncVar values on the base NetworkBehaviour so they are synchronized to clients during Spawn
+            speaker.Base.NetworkControllerId = speaker.ControllerId;
+            speaker.Base.NetworkIsSpatial = isSpatial;
+            speaker.Base.NetworkMaxDistance = maxDistance;
+            speaker.Base.NetworkMinDistance = minDistance;
+            speaker.Base.NetworkVolume = volume;
+
+            if (parent == null)
+            {
+                speaker.Base.NetworkPosition = position;
+            }
+
+            speaker.Spawn();
+            return speaker;
+        }
+        catch
+        {
+            AllocatedControllerIds.Remove(controllerId);
+            try
+            {
+                if (speaker != null && !speaker.IsDestroyed)
+                    speaker.Destroy();
+            }
+            catch
+            {
+                // ignored
+            }
+
+            throw;
+        }
     }
 
     private static void SetTransform(LabSpeakerToy speaker, Vector3 position, Transform? parent)
@@ -469,6 +561,7 @@ public static class SpeakerApi
 
     private static byte AllocateControllerId()
     {
+        PruneInvalid();
         var used = new HashSet<byte>(AllocatedControllerIds);
 
         foreach (var speaker in LabSpeakerToy.List)
@@ -500,14 +593,16 @@ public static class SpeakerApi
         list.Add(playback);
     }
 
-    private static void RemovePlayback(Playback playback)
+    private static bool RemovePlayback(Playback playback)
     {
         if (!PlaybacksByName.TryGetValue(playback.AudioPlayerName, out var list))
-            return;
+            return false;
 
-        list.RemoveAll(p => p.ControllerId == playback.ControllerId);
+        var removed = list.RemoveAll(p => p.ControllerId == playback.ControllerId) > 0;
         if (list.Count == 0)
             PlaybacksByName.Remove(playback.AudioPlayerName);
+
+        return removed;
     }
 
     private static void AddLivePlayback(LivePlayback playback)
@@ -521,15 +616,29 @@ public static class SpeakerApi
         list.Add(playback);
     }
 
-    private static void RemoveLivePlayback(LivePlayback playback)
+    private static bool RemoveLivePlayback(LivePlayback playback)
     {
         if (!LivePlaybacksByName.TryGetValue(playback.AudioPlayerName, out var list))
-            return;
+            return false;
 
-        list.RemoveAll(p => p.ControllerId == playback.ControllerId);
+        var removed = list.RemoveAll(p => p.ControllerId == playback.ControllerId) > 0;
         if (list.Count == 0)
             LivePlaybacksByName.Remove(playback.AudioPlayerName);
+
+        return removed;
     }
+
+    private static bool IsPlaybackTracked(Playback playback)
+        => PlaybacksByName.TryGetValue(playback.AudioPlayerName, out var list) &&
+           list.Any(p => p.ControllerId == playback.ControllerId);
+
+    private static bool IsLivePlaybackTracked(LivePlayback playback)
+        => LivePlaybacksByName.TryGetValue(playback.AudioPlayerName, out var list) &&
+           list.Any(p => p.ControllerId == playback.ControllerId);
+
+    private static bool IsControllerTracked(byte controllerId)
+        => PlaybacksByName.Values.SelectMany(p => p).Any(p => p.ControllerId == controllerId) ||
+           LivePlaybacksByName.Values.SelectMany(p => p).Any(p => p.ControllerId == controllerId);
 
     private static float[] ConvertToMono48k(float[]? input, int sampleRate, int channels)
     {

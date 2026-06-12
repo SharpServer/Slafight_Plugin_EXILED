@@ -56,6 +56,7 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
         Exiled.Events.Handlers.Server.RestartingRound += OnRoundRestarting;
         Exiled.Events.Handlers.Player.ChangingRole += TrackRoundStartCandidate;
         Exiled.Events.Handlers.Player.Spawned += OnPlayerSpawned;
+        Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
         Exiled.Events.Handlers.Server.RoundStarted += SetupRandomRoles;
     }
 
@@ -69,6 +70,7 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
         Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarting;
         Exiled.Events.Handlers.Player.ChangingRole -= TrackRoundStartCandidate;
         Exiled.Events.Handlers.Player.Spawned -= OnPlayerSpawned;
+        Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
         Exiled.Events.Handlers.Server.RoundStarted -= SetupRandomRoles;
         ResetRuntimeState(nameof(Dispose));
         System.GC.SuppressFinalize(this);
@@ -118,6 +120,18 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
         int playerId = ev.Player.Id;
         var reason = ev.Reason;
         Timing.CallDelayed(RoleSpawnTimings.NextFrame, () => ApplyPlannedRole(playerId, $"spawned:{reason}"));
+    }
+
+    private static void OnPlayerLeft(LeftEventArgs? ev)
+    {
+        if (ev?.Player == null) return;
+
+        int playerId = ev.Player.Id;
+        RoundStartCandidates.Remove(playerId);
+        AppliedInitialRoles.Remove(playerId);
+
+        if (PlannedRoles.Remove(playerId))
+            UnlockRoundIfPlanComplete("player-left");
     }
 
     private static bool TryChooseAssignableRole(List<WeightedRoleEntry> table, out object? choice)
@@ -312,7 +326,6 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
     private static bool IsAssignableFirstRoleTarget(Player? player)
     {
         return player != null
-               && player.IsConnected
                && player.ReferenceHub != null
                && !player.IsHost
                && !player.ReferenceHub.IsHost

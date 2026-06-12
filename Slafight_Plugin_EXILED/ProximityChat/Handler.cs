@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using HintServiceMeow.Core.Enum;
@@ -42,6 +43,7 @@ public static class Handler
         Exiled.Events.Handlers.Player.VoiceChatting += OnPlayerUsingVoiceChat;
         Exiled.Events.Handlers.Server.RestartingRound += OnRoundRestarted;
         Exiled.Events.Handlers.Player.ChangingRole += OnPlayerChangingRole;
+        Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
     }
 
     public static void UnregisterEvents()
@@ -49,16 +51,24 @@ public static class Handler
         Exiled.Events.Handlers.Player.VoiceChatting -= OnPlayerUsingVoiceChat;
         Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarted;
         Exiled.Events.Handlers.Player.ChangingRole -= OnPlayerChangingRole;
+        Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
+        ClearState();
     }
 
     // ====== ロール・ラウンド変化 ======
 
     private static void OnRoundRestarted()
+        => ClearState();
+
+    private static void ClearState()
     {
         ActivatedPlayers.Clear();
         CanUsePlayers.Clear();
         ForcedCanUsePlayers.Clear();
     }
+
+    private static void OnPlayerLeft(LeftEventArgs ev)
+        => RemovePlayer(ev.Player);
 
     private static void OnPlayerChangingRole(ChangingRoleEventArgs ev)
     {
@@ -68,27 +78,32 @@ public static class Handler
         if (!ev.IsAllowed)
             return;
 
+        var playerId = player.Id;
         // 役職が確定してから判定したいので少しディレイ
         Timing.CallDelayed(1.1f, () =>
         {
-            ActivatedPlayers.Remove(player);
-            CanUsePlayers.Remove(player);
+            player = GetUsablePlayer(playerId);
+            if (player == null)
+                return;
+
+            RemovePlayer(player, removeForced: false);
 
             if (CanPlayerUseProximityChat(player))
             {
-                if (!CanUsePlayers.Contains(player))
-                    CanUsePlayers.Add(player);
+                AddPlayer(CanUsePlayers, player);
 
                 if (IsProximityChatForced(player) || ShouldEnableProximityChatByDefault(player))
-                    if (!ActivatedPlayers.Contains(player))
-                        ActivatedPlayers.Add(player);
+                    AddPlayer(ActivatedPlayers, player);
             }
 
-            if (!CanUsePlayers.Contains(player))
+            if (!ContainsPlayer(CanUsePlayers, player))
                 return;
 
-            var listText = string.Join(", ", CanUsePlayers.ConvertAll(p => $"{p.Nickname}({p.Id})"));
+            var listText = string.Join(", ", CanUsePlayers.Where(IsValid).Select(p => $"{p.Nickname}({p.Id})"));
             Log.Debug($"[ProximityChat] CanUsePlayers Updated. List: {listText}");
+
+            if (!CanReceiveHint(player))
+                return;
 
             var hint = new Hint
             {
@@ -100,7 +115,7 @@ public static class Handler
             };
 
             player.AddHint(hint);
-            Timing.CallDelayed(5f, () => player?.RemoveHint(hint));
+            Timing.CallDelayed(5f, () => GetUsablePlayer(playerId)?.RemoveHint(hint));
         });
     }
 
@@ -108,7 +123,7 @@ public static class Handler
 
     public static bool CanPlayerUseProximityChat(Player player)
     {
-        if (player == null)
+        if (!IsValid(player))
             return false;
 
         if (ForcedCanUsePlayers.Contains(player.Id))
@@ -140,11 +155,10 @@ public static class Handler
         {
             ForcedCanUsePlayers.Add(player.Id);
 
-            if (!CanUsePlayers.Contains(player))
-                CanUsePlayers.Add(player);
+            AddPlayer(CanUsePlayers, player);
 
-            if (activate && !ActivatedPlayers.Contains(player))
-                ActivatedPlayers.Add(player);
+            if (activate)
+                AddPlayer(ActivatedPlayers, player);
 
             return;
         }
@@ -153,8 +167,7 @@ public static class Handler
 
         if (!CanPlayerUseProximityChat(player))
         {
-            CanUsePlayers.Remove(player);
-            ActivatedPlayers.Remove(player);
+            RemovePlayer(player, removeForced: false);
         }
     }
 
@@ -162,8 +175,10 @@ public static class Handler
 
     public static void OnPlayerUsingVoiceChat(VoiceChattingEventArgs args)
     {
-        if (args.Player is null)
+        if (!IsValid(args.Player))
             return;
+
+        PrunePlayerLists();
 
         // Proximity チャンネルで送っている時はスルー
         if (args.VoiceMessage.Channel == VoiceChatChannel.Proximity)
@@ -176,7 +191,7 @@ public static class Handler
         if (!CanPlayerUseProximityChat(args.Player))
             return;
 
-        if (!ActivatedPlayers.Contains(args.Player))
+        if (!ContainsPlayer(ActivatedPlayers, args.Player))
             return;
 
         SendProximityMessage(args.Player, args.VoiceMessage, AudioMaxDistance);
@@ -186,7 +201,7 @@ public static class Handler
 
     private static void SendProximityMessage(Player speakerPlayer, VoiceMessage msg, float maxRange)
     {
-        if (speakerPlayer == null)
+        if (!IsValid(speakerPlayer) || speakerPlayer.ReferenceHub == null)
             return;
 
         var targets = new List<ReferenceHub>();
@@ -229,4 +244,57 @@ public static class Handler
         // 生の Opus フレームをそのまま投げる
         liveSpeaker.SendFrame(msg.Data, msg.DataLength, targets);
     }
+
+    private static void AddPlayer(List<Player> players, Player player)
+    {
+        if (!IsValid(player))
+            return;
+
+        players.RemoveAll(p => !IsValid(p) || p.Id == player.Id);
+        players.Add(player);
+    }
+
+    private static bool ContainsPlayer(List<Player> players, Player player)
+        => IsValid(player) && players.Any(p => IsValid(p) && p.Id == player.Id);
+
+    private static void RemovePlayer(Player player, bool removeForced = true)
+    {
+        if (player == null)
+            return;
+
+        ActivatedPlayers.RemoveAll(p => !IsValid(p) || p.Id == player.Id);
+        CanUsePlayers.RemoveAll(p => !IsValid(p) || p.Id == player.Id);
+        if (removeForced)
+            ForcedCanUsePlayers.Remove(player.Id);
+    }
+
+    private static void PrunePlayerLists()
+    {
+        ActivatedPlayers.RemoveAll(p => !IsValid(p));
+        CanUsePlayers.RemoveAll(p => !IsValid(p));
+    }
+
+    private static Player GetUsablePlayer(int playerId)
+    {
+        var player = Player.List.FirstOrDefault(p => p != null && p.Id == playerId);
+        return IsValid(player) ? player : null;
+    }
+
+    private static bool IsValid(Player player)
+    {
+        try
+        {
+            return player != null
+                   && player.ReferenceHub != null
+                   && !player.IsHost
+                   && !player.ReferenceHub.IsHost;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool CanReceiveHint(Player player)
+        => player != null && player.IsConnected && !player.IsNPC;
 }

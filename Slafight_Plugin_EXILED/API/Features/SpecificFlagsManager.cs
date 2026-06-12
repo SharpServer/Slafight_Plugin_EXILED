@@ -121,21 +121,23 @@ public static class SpecificFlagsManager
 
         EnsurePlayerInitialized(player);
 
-        var handle = Timing.RunCoroutine(RemoveCoroutine(player, flag, time));
+        var playerId = player.Id;
+        var handle = Timing.RunCoroutine(RemoveCoroutine(playerId, flag, time));
         Coroutines[player.Id].Add(handle);
     }
 
-    private static IEnumerator<float> RemoveCoroutine(Player? player, SpecificFlagType flag, float time)
+    private static IEnumerator<float> RemoveCoroutine(int playerId, SpecificFlagType flag, float time)
     {
         if (!Round.InProgress) yield break;
 
         yield return Timing.WaitForSeconds(time);
 
+        var player = Player.List.FirstOrDefault(p => p != null && p.Id == playerId);
         if (player?.IsAlive != true || !Round.InProgress) yield break;
 
         player.TryRemoveFlag(flag);
 
-        if (Coroutines.TryGetValue(player.Id, out var list))
+        if (Coroutines.TryGetValue(playerId, out var list))
             list.RemoveAll(h => !h.IsValid);
     }
 

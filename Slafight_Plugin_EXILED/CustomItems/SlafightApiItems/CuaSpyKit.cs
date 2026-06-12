@@ -50,6 +50,7 @@ public class CuaSpyKit : CItemKeycard
     {
         Exiled.Events.Handlers.Item.InspectingItem += OnInspecting;
         Exiled.Events.Handlers.Player.Handcuffing += OnHandcuff;
+        Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
         base.RegisterEvents();
     }
 
@@ -57,6 +58,8 @@ public class CuaSpyKit : CItemKeycard
     {
         Exiled.Events.Handlers.Item.InspectingItem -= OnInspecting;
         Exiled.Events.Handlers.Player.Handcuffing -= OnHandcuff;
+        Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
+        _selectedRoles.Clear();
         base.UnregisterEvents();
     }
 
@@ -74,7 +77,13 @@ public class CuaSpyKit : CItemKeycard
 
     protected override void OnChangingItem(ChangingItemEventArgs ev)
     {
-        Timing.CallDelayed(1.5f, () => Timing.RunCoroutine(Coroutine(ev.Player)));
+        var playerId = ev.Player?.Id ?? 0;
+        Timing.CallDelayed(1.5f, () =>
+        {
+            var player = Player.List.FirstOrDefault(p => p?.ReferenceHub != null && p.Id == playerId);
+            if (player != null)
+                Timing.RunCoroutine(Coroutine(player));
+        });
         base.OnChangingItem(ev);
     }
 
@@ -124,11 +133,17 @@ public class CuaSpyKit : CItemKeycard
         Morph(ev.Player, _infos.First());
     }
 
+    private void OnPlayerLeft(LeftEventArgs ev)
+    {
+        if (ev.Player != null)
+            _selectedRoles.Remove(ev.Player);
+    }
+
     private IEnumerator<float> Coroutine(Player? player)
     {
         while (true)
         {
-            if (Round.IsLobby || player is null || !CheckHeld(player)) yield break;
+            if (Round.IsLobby || player?.ReferenceHub == null || !CheckHeld(player)) yield break;
             if (_selectedRoles.TryGetValue(player, out var info))
             {
                 player.ShowHint($"<size=24>[変身メニュー]\n現在選択中： {info.RoleName}\nTキーで切り替えられ、Iで実行します。", 2.5f);

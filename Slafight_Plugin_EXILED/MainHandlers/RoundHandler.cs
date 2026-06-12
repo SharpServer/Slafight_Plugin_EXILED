@@ -121,7 +121,6 @@ public class RoundHandler : IBootstrapHandler
     private static bool ShouldCountForExpectedTeam(Player player)
     {
         return player != null
-               && player.IsConnected
                && player.ReferenceHub != null
                && !player.IsHost
                && !player.ReferenceHub.IsHost

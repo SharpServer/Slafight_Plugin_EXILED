@@ -19,6 +19,7 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
     private static readonly Dictionary<int, MarkerBinding> MarkerBindings = new();
     private static CoroutineHandle _syncCoroutine;
     private static CoroutineHandle _discoveryCoroutine;
+    private static CoroutineHandle _scheduledSpawnCoroutine;
     private static int _spawnRefreshGeneration;
 
     public static void Register() => _instance = LabApiHandlerRegistry.Register(_instance);
@@ -26,6 +27,10 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
     public static void Unregister()
     {
         ClearMarkerPrefabs();
+        _spawnRefreshGeneration++;
+        if (_scheduledSpawnCoroutine.IsRunning)
+            Timing.KillCoroutines(_scheduledSpawnCoroutine);
+
         if (_discoveryCoroutine.IsRunning)
             Timing.KillCoroutines(_discoveryCoroutine);
 
@@ -77,7 +82,10 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
     private static void ScheduleSpawnFromMarkers(float delay)
     {
         int generation = ++_spawnRefreshGeneration;
-        Timing.CallDelayed(delay, () =>
+        if (_scheduledSpawnCoroutine.IsRunning)
+            Timing.KillCoroutines(_scheduledSpawnCoroutine);
+
+        _scheduledSpawnCoroutine = Timing.CallDelayed(delay, () =>
         {
             if (generation != _spawnRefreshGeneration)
                 return;

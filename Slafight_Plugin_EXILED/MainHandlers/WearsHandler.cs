@@ -454,7 +454,7 @@ public static class WearsHandler
         string logContext,
         bool removeExisting = true)
     {
-        if (player == null || gameObject == null || target == null || destroy == null)
+        if (player == null || player.ReferenceHub == null || gameObject == null || target == null || destroy == null)
             return false;
 
         var id = player.Id;
@@ -541,8 +541,11 @@ public static class WearsHandler
             foreach (var kvp in PlayerWears.ToList())
             {
                 var player = Player.Get(kvp.Key);
-                if (player == null)
+                if (player == null || player.ReferenceHub == null)
+                {
+                    ForceRemoveWearById(kvp.Key);
                     continue;
+                }
 
                 var current = player.GetRoleInfo();
 

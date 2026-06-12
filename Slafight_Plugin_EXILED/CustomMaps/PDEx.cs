@@ -37,6 +37,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
     {
         Exiled.Events.Handlers.Server.RoundStarted += Setup;
         Exiled.Events.Handlers.Player.FailingEscapePocketDimension += JoinPDEx;
+        Exiled.Events.Handlers.Player.Left += OnLeft;
     }
 
     public void Dispose()
@@ -47,6 +48,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
         _disposed = true;
         Exiled.Events.Handlers.Server.RoundStarted -= Setup;
         Exiled.Events.Handlers.Player.FailingEscapePocketDimension -= JoinPDEx;
+        Exiled.Events.Handlers.Player.Left -= OnLeft;
         Timing.KillCoroutines(handle);
         PDExPlayers.Clear();
         System.GC.SuppressFinalize(this);
@@ -62,6 +64,14 @@ public class PDEx : IBootstrapHandler, System.IDisposable
         handle = Timing.RunCoroutine(Coroutine());
     }
 
+    private static void OnLeft(LeftEventArgs ev)
+    {
+        if (ev.Player == null)
+            return;
+
+        PDExPlayers.RemoveAll(player => player?.ReferenceHub == null || player.Id == ev.Player.Id);
+    }
+
     private static IEnumerator<float> Coroutine()
     {
         while (true)
@@ -70,7 +80,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
 
             foreach (var player in Player.List.ToList())
             {
-                if (player is not { IsConnected: true, IsVerified: true }) continue;
+                if (player?.ReferenceHub == null) continue;
                 if (player.Position.y >= -450f) continue;
                 if (player.Zone == ZoneType.Pocket) continue;
                 player.IsGodModeEnabled = true;
@@ -81,7 +91,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
 
             foreach (var player in Player.List.ToList())
             {
-                if (player is not { IsConnected: true, IsVerified: true }) continue;
+                if (player?.ReferenceHub == null) continue;
                 if (!player.IsEffectActive<PocketCorroding>()) continue;
                 if (player.IsGodModeEnabled) player.IsGodModeEnabled = false;
             }
@@ -97,7 +107,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
             int i = 0;
             foreach (var player in Player.List.ToList())
             {
-                if (player is not { IsConnected: true, IsVerified: true }) continue;
+                if (player?.ReferenceHub == null) continue;
                 if (player.GetCustomRole() == CRoleTypeId.Scp106 || (player.GetCustomRole() == CRoleTypeId.None && player.Role.Type == RoleTypeId.Scp106))
                 {
                     i++;
@@ -118,12 +128,13 @@ public class PDEx : IBootstrapHandler, System.IDisposable
             }
             foreach (var player in Player.List.ToList())
             {
-                if (player is not { IsConnected: true, IsVerified: true }) continue;
+                if (player?.ReferenceHub == null) continue;
                 if (player.GetCustomRole() == CRoleTypeId.Scp106 || (player.GetCustomRole() == CRoleTypeId.None && player.Role.Type == RoleTypeId.Scp106))
                 {
                     player.Position = MapFlags.PocketDimensionExitKingJoinPoint;
                     player.AddAbility(new AllowEscapeAbility(player));
-                    player.ShowHint("アビリティ「腐蝕からの解放」が付与されました。\n人間を釈放したくなったら使ってください\nまた、近接チャットも一時的に利用可能です！");
+                    if (player.IsConnected && !player.IsNPC)
+                        player.ShowHint("アビリティ「腐蝕からの解放」が付与されました。\n人間を釈放したくなったら使ってください\nまた、近接チャットも一時的に利用可能です！");
                     Handler.CanUsePlayers.Add(player);
                 }
             }

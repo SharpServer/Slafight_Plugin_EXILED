@@ -31,7 +31,7 @@ public class Vent : ObjectPrefab
     protected override void OnCreate()
     {
         _schematicObject = SpawnManagedSchematic("Vent");
-        Timing.CallDelayed(0.5f, CreateInteractableToy);
+        ScheduleDelayed(0.5f, CreateInteractableToy);
         base.OnCreate();
     }
 

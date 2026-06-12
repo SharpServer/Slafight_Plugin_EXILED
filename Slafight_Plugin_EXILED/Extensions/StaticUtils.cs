@@ -187,6 +187,7 @@ public static class StaticUtils
 
     public static void SaveItems(this Player player)
     {
+        var playerId = player.Id;
         var nowPos = player.Position;
         player.DropItems();
 
@@ -198,8 +199,10 @@ public static class StaticUtils
 
         Timing.CallDelayed(0.5f, () =>
         {
-            if (player?.IsConnected != true) return;
-            var newPos = player.Position + new Vector3(0f, 0.15f, 0f);
+            var currentPlayer = Player.Get(playerId);
+            if (currentPlayer?.ReferenceHub == null) return;
+
+            var newPos = currentPlayer.Position + new Vector3(0f, 0.15f, 0f);
             foreach (var item in saveItems)
                 if (item?.IsSpawned == true) item.Position = newPos;
         });

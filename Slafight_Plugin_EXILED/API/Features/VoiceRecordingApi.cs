@@ -27,6 +27,7 @@ public static class VoiceRecordingApi
             return;
 
         Exiled.Events.Handlers.Player.VoiceChatting += OnVoiceChatting;
+        Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
         Exiled.Events.Handlers.Server.RestartingRound += ClearAll;
         _registered = true;
     }
@@ -37,6 +38,7 @@ public static class VoiceRecordingApi
             return;
 
         Exiled.Events.Handlers.Player.VoiceChatting -= OnVoiceChatting;
+        Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
         Exiled.Events.Handlers.Server.RestartingRound -= ClearAll;
         ClearAll();
         _registered = false;
@@ -174,6 +176,15 @@ public static class VoiceRecordingApi
         }
     }
 
+    private static void OnPlayerLeft(LeftEventArgs ev)
+    {
+        if (ev.Player == null)
+            return;
+
+        foreach (var recording in RecordingsByKey.Values.ToArray())
+            recording.RemovePlayer(ev.Player.Id);
+    }
+
     private static IEnumerator<float> PlayCoroutine(
         VoiceRecording recording,
         string audioPlayerName,
@@ -232,7 +243,7 @@ public static class VoiceRecordingApi
 
         public bool ShouldCapture(VoiceChattingEventArgs ev)
         {
-            if (ev.Player == null)
+            if (ev.Player?.ReferenceHub == null)
                 return false;
 
             if (_channels.Count > 0 && !_channels.Contains(ev.VoiceMessage.Channel))
@@ -338,6 +349,18 @@ public sealed class VoiceRecording
         _decodersByPlayerId.Clear();
         _nextSampleByPlayerId.Clear();
         _lastPacketTimeByPlayerId.Clear();
+    }
+
+    internal void RemovePlayer(int playerId)
+    {
+        if (_decodersByPlayerId.TryGetValue(playerId, out var decoder))
+        {
+            decoder.Dispose();
+            _decodersByPlayerId.Remove(playerId);
+        }
+
+        _nextSampleByPlayerId.Remove(playerId);
+        _lastPacketTimeByPlayerId.Remove(playerId);
     }
 
     private string ComputeHash()

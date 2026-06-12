@@ -53,6 +53,7 @@ public class Scp966Role : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
+        CleanupPlayer(player);
         player.Position = Room.Get(RoomType.LczGlassBox).WorldPosition(Vector3.up * 0.5f);
         player.Scale = new Vector3(0.94f, 1.15f, 0.94f);
         player.MaxHumeShield = 500f;
@@ -74,7 +75,7 @@ public class Scp966Role : CRole
     protected override void OnRoleHurtingOthers(HurtingEventArgs ev)
     {
         if (ev.Player is null || ev.Attacker is null) return;
-        ev.Amount = 20f + 1 * _speedLevels[ev.Attacker];
+        ev.Amount = 20f + (_speedLevels.TryGetValue(ev.Attacker, out var speedLevel) ? speedLevel : 1);
         ev.Player.EnableEffect<Slowness>(20, 10f);
         ev.Player.EnableEffect<Blindness>(40, 10f);
         if (HasViewCondition(ev.Player))
@@ -84,10 +85,20 @@ public class Scp966Role : CRole
 
     protected override void OnRoleChanging(ChangingRoleEventArgs ev)
     {
-        Timing.KillCoroutines(_visibilityCoroutineHandles[ev.Player]);
-        Timing.KillCoroutines(_flickerCoroutineHandles[ev.Player]);
-        Timing.KillCoroutines(_speedCoroutineHandles[ev.Player]);
+        CleanupPlayer(ev.Player);
         base.OnRoleChanging(ev);
+    }
+
+    protected override void OnRoleDying(DyingEventArgs ev)
+    {
+        CleanupPlayer(ev.Player);
+        base.OnRoleDying(ev);
+    }
+
+    protected override void OnRoleLeft(LeftEventArgs ev)
+    {
+        CleanupPlayer(ev.Player);
+        base.OnRoleLeft(ev);
     }
 
     private void OnDisguising(DisguisingEventArgs ev)
@@ -95,13 +106,14 @@ public class Scp966Role : CRole
         if (!Check(ev.Player)) return;
         ev.IsAllowed = false;
         ev.Ragdoll?.Destroy();
-        if (_speedLevels[ev.Player] >= 5)
+        var speedLevel = _speedLevels.TryGetValue(ev.Player, out var level) ? level : (byte)1;
+        if (speedLevel >= 5)
         {
             ev.Player.Heal(10f);
         }
         else
         {
-            _speedLevels[ev.Player]++;
+            _speedLevels[ev.Player] = (byte)(speedLevel + 1);
         }
     }
 
@@ -109,7 +121,7 @@ public class Scp966Role : CRole
     {
         while (true)
         {
-            if (Round.IsLobby || player.IsDead)
+            if (Round.IsLobby || player.ReferenceHub == null || player.IsDead)
                 yield break;
             var result = new List<Player>();
             foreach (var target in Player.List)
@@ -135,7 +147,7 @@ public class Scp966Role : CRole
     {
         while (true)
         {
-            if (Round.IsLobby || player.IsDead)
+            if (Round.IsLobby || player.ReferenceHub == null || player.IsDead)
                 yield break;
             player.CurrentRoom?.TurnOffLights(Random.Range(1f, 3.5f));
             yield return Timing.WaitForSeconds(Random.Range(0f, 7f));
@@ -146,9 +158,12 @@ public class Scp966Role : CRole
     {
         while (true)
         {
-            if (Round.IsLobby || player.IsDead)
+            if (Round.IsLobby || player.ReferenceHub == null || player.IsDead)
                 yield break;
-            switch (_speedLevels[player])
+            if (!_speedLevels.TryGetValue(player, out var speedLevel))
+                yield break;
+
+            switch (speedLevel)
             {
                 case 1:
                     player.EnableEffect<Slowness>(30);
@@ -169,7 +184,7 @@ public class Scp966Role : CRole
                     player.EnableEffect<Slowness>(30);
                     break;
             }
-            RoleSpecificTextProvider.Set(player, $"Speed Level: {_speedLevels[player]} / 5");
+            RoleSpecificTextProvider.Set(player, $"Speed Level: {speedLevel} / 5");
 
             yield return Timing.WaitForSeconds(1f);
         }
@@ -193,5 +208,28 @@ public class Scp966Role : CRole
             return true;
         }
         return player.CurrentItem is Firearm { NightVisionEnabled: true };
+    }
+
+    private void CleanupPlayer(Player player)
+    {
+        if (player == null)
+            return;
+
+        if (_visibilityCoroutineHandles.TryGetValue(player, out var visibilityHandle))
+            Timing.KillCoroutines(visibilityHandle);
+
+        if (_flickerCoroutineHandles.TryGetValue(player, out var flickerHandle))
+            Timing.KillCoroutines(flickerHandle);
+
+        if (_speedCoroutineHandles.TryGetValue(player, out var speedHandle))
+            Timing.KillCoroutines(speedHandle);
+
+        _visibilityCoroutineHandles.Remove(player);
+        _flickerCoroutineHandles.Remove(player);
+        _speedCoroutineHandles.Remove(player);
+        _invisibleEffectivePlayers.Remove(player);
+        _speedLevels.Remove(player);
+        RoleSpecificTextProvider.Clear(player);
+        PlayerVisibilitySyncProvider.ShowToAll(player);
     }
 }

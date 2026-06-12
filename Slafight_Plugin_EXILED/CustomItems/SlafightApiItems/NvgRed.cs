@@ -17,6 +17,7 @@ public class NvgRed : CItemNvg
         LightColor     = Color.red,
         LightRange     = 30f,
         LightIntensity = 10000f,
+        WornBlindnessIntensity = 15,
         UseBlackout    = false,
     };
 

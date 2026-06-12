@@ -16,6 +16,7 @@ namespace Slafight_Plugin_EXILED.API.Features;
 public abstract class ObjectPrefab : IObjectPrefab
 {
     private readonly List<ManagedInteractableToy> _managedInteractables = [];
+    private readonly List<CoroutineHandle> _scheduledCallbacks = [];
     private Vector3 _position = Vector3.zero;
     private Quaternion _rotation = Quaternion.identity;
     private Vector3 _scale = Vector3.one;
@@ -97,6 +98,7 @@ public abstract class ObjectPrefab : IObjectPrefab
 
         InstanceManager.Unregister(ObjectInstanceID);
         Timing.KillCoroutines(AutoDestroyCoroutineHandle);
+        KillScheduledCallbacks();
         OnDestroy();
         DestroyManagedInteractables();
         DestroyManagedSchematic();
@@ -180,6 +182,34 @@ public abstract class ObjectPrefab : IObjectPrefab
             interactable.Toy.Destroy();
 
         _managedInteractables.Clear();
+    }
+
+    protected CoroutineHandle ScheduleDelayed(float delay, Action callback)
+    {
+        CoroutineHandle handle = default;
+        handle = Timing.CallDelayed(delay, () =>
+        {
+            _scheduledCallbacks.Remove(handle);
+
+            if (string.IsNullOrEmpty(ObjectInstanceID) || InstanceManager.Get(ObjectInstanceID) != this)
+                return;
+
+            callback();
+        });
+
+        _scheduledCallbacks.Add(handle);
+        return handle;
+    }
+
+    private void KillScheduledCallbacks()
+    {
+        foreach (var handle in _scheduledCallbacks)
+        {
+            if (handle.IsRunning)
+                Timing.KillCoroutines(handle);
+        }
+
+        _scheduledCallbacks.Clear();
     }
 
     public void SyncManagedObjects()

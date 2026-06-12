@@ -91,11 +91,22 @@ public class Scp999Role : CRole
     {
         if (!Check(ev.Player)) return;
 
+        int playerId = ev.Player.Id;
         _pendingNato9SwitchesByPlayerId.TryGetValue(ev.Player.Id, out Nato9SwitchState switchState);
         RestoreNato9Profile(ev.Player);
-        Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () => RestoreNato9Profile(ev.Player));
-        Timing.CallDelayed(RoleSpawnTimings.RoleStateReapply, () => RestoreNato9Profile(ev.Player));
-        Timing.CallDelayed(0.5f, () => ClearNato9Switch(ev.Player, switchState));
+        Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
+        {
+            var player = GetRolePlayer(playerId);
+            if (player != null)
+                RestoreNato9Profile(player);
+        });
+        Timing.CallDelayed(RoleSpawnTimings.RoleStateReapply, () =>
+        {
+            var player = GetRolePlayer(playerId);
+            if (player != null)
+                RestoreNato9Profile(player);
+        });
+        Timing.CallDelayed(0.5f, () => ClearNato9Switch(playerId, switchState));
     }
 
     private void OnDroppingAmmo(DroppingAmmoEventArgs ev)
@@ -110,8 +121,14 @@ public class Scp999Role : CRole
     {
         if (!Check(ev.Player)) return;
 
+        int playerId = ev.Player.Id;
         ApplyNato9Profile(ev.Player);
-        Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () => ApplyNato9Profile(ev.Player));
+        Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
+        {
+            var player = GetRolePlayer(playerId);
+            if (player != null)
+                ApplyNato9Profile(player);
+        });
     }
 
     private void RememberNato9(Player player)
@@ -184,12 +201,27 @@ public class Scp999Role : CRole
         }
     }
 
-    private void ClearNato9Switch(Player player, Nato9SwitchState? switchState)
+    private void ClearNato9Switch(int playerId, Nato9SwitchState? switchState)
     {
         if (switchState == null) return;
-        if (!_pendingNato9SwitchesByPlayerId.TryGetValue(player.Id, out Nato9SwitchState current)) return;
+        if (!_pendingNato9SwitchesByPlayerId.TryGetValue(playerId, out Nato9SwitchState current)) return;
         if (!ReferenceEquals(current, switchState)) return;
 
+        _pendingNato9SwitchesByPlayerId.Remove(playerId);
+    }
+
+    private Player GetRolePlayer(int playerId)
+    {
+        var player = Player.Get(playerId);
+        return player?.ReferenceHub != null && Check(player) ? player : null;
+    }
+
+    private void CleanupPlayerState(Player player)
+    {
+        if (player == null)
+            return;
+
+        _reserveNato9ByPlayerId.Remove(player.Id);
         _pendingNato9SwitchesByPlayerId.Remove(player.Id);
     }
 
@@ -208,7 +240,20 @@ public class Scp999Role : CRole
 
     protected override void OnRoleDying(DyingEventArgs ev)
     {
+        CleanupPlayerState(ev.Player);
         CassieHelper.AnnounceTermination(ev, "SCP 9 9 9", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
         base.OnRoleDying(ev);
+    }
+
+    protected override void OnRoleChanging(ChangingRoleEventArgs ev)
+    {
+        CleanupPlayerState(ev.Player);
+        base.OnRoleChanging(ev);
+    }
+
+    protected override void OnRoleLeft(LeftEventArgs ev)
+    {
+        CleanupPlayerState(ev.Player);
+        base.OnRoleLeft(ev);
     }
 }

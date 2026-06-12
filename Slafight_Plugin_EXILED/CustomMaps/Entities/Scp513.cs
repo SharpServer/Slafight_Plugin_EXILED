@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
@@ -16,12 +17,16 @@ public static class Scp513
     {
         Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingPlayers;
         Exiled.Events.Handlers.Player.ChangingRole       += OnChangingRole;
+        Exiled.Events.Handlers.Player.Left               += OnLeft;
     }
 
     public static void Unregister()
     {
         Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingPlayers;
         Exiled.Events.Handlers.Player.ChangingRole       -= OnChangingRole;
+        Exiled.Events.Handlers.Player.Left               -= OnLeft;
+        StalkingTargets.Clear();
+        Timing.KillCoroutines(_coroutineHandle);
     }
 
     private static readonly List<Player> StalkingTargets = [];
@@ -36,11 +41,18 @@ public static class Scp513
 
     private static void OnChangingRole(ChangingRoleEventArgs ev)
     {
+        var playerId = ev.Player?.Id ?? 0;
         Timing.CallDelayed(1f, () =>
         {
             if (!ev.IsAllowed) return;
-            RemoveTarget(ev.Player);
+            RemoveTarget(playerId);
         });
+    }
+
+    private static void OnLeft(LeftEventArgs ev)
+    {
+        if (ev.Player != null)
+            RemoveTarget(ev.Player.Id);
     }
 
     public static void AddTarget(Player? player)
@@ -52,8 +64,11 @@ public static class Scp513
     public static void RemoveTarget(Player? player)
     {
         if (player == null) return;
-        StalkingTargets.Remove(player);
+        RemoveTarget(player.Id);
     }
+
+    private static void RemoveTarget(int playerId)
+        => StalkingTargets.RemoveAll(player => player?.ReferenceHub == null || player.Id == playerId);
 
     private static IEnumerator<float> Scp513Coroutine()
     {
@@ -75,9 +90,10 @@ public static class Scp513
 
             yield return Timing.WaitForSeconds(Random.Range(8f, 15f));
 
+            StalkingTargets.RemoveAll(player => player?.ReferenceHub == null);
             foreach (var player in StalkingTargets.ToArray())
             {
-                if (player == null || !player.IsConnected || !player.IsAlive)
+                if (player?.ReferenceHub == null || !player.IsAlive)
                     continue;
 
                 // プレイヤーの前方7.5m

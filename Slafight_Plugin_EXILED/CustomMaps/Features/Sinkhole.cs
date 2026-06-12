@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Hazards;
+using Exiled.Events.EventArgs.Player;
 using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
@@ -33,6 +34,7 @@ public class Sinkhole : IBootstrapHandler, IDisposable
     public Sinkhole()
     {
         Exiled.Events.Handlers.Server.RoundStarted += RoundStartHole;
+        Exiled.Events.Handlers.Player.Left += OnLeft;
     }
 
     public void Dispose()
@@ -42,6 +44,7 @@ public class Sinkhole : IBootstrapHandler, IDisposable
 
         _disposed = true;
         Exiled.Events.Handlers.Server.RoundStarted -= RoundStartHole;
+        Exiled.Events.Handlers.Player.Left -= OnLeft;
         if (_sinkholeHandle.IsRunning)
             Timing.KillCoroutines(_sinkholeHandle);
         Sinkholes.Clear();
@@ -76,12 +79,22 @@ public class Sinkhole : IBootstrapHandler, IDisposable
         _sinkholeHandle = Timing.RunCoroutine(SinkholesCoroutine());
     }
 
+    private void OnLeft(LeftEventArgs ev)
+    {
+        if (ev.Player == null)
+            return;
+
+        JoiningPlayers.RemoveAll(player => player?.ReferenceHub == null || player.Id == ev.Player.Id);
+    }
+
     private IEnumerator<float> SinkholesCoroutine()
     {
         for (;;)
         {
             if (Round.IsLobby || Round.IsEnded)
                 yield break;
+
+            JoiningPlayers.RemoveAll(player => player?.ReferenceHub == null);
 
             Sinkholes.Clear();
             foreach (var hazard in Hazard.List)
@@ -93,7 +106,7 @@ public class Sinkhole : IBootstrapHandler, IDisposable
             foreach (var player in Player.List)
             {
                 // プレイヤー生存・接続チェック
-                if (player == null || !player.IsConnected || !player.IsAlive)
+                if (player?.ReferenceHub == null || !player.IsAlive)
                     continue;
 
                 if (DistargetTeams.Contains(player.GetTeam()) || player.GetCustomRole() == CRoleTypeId.SergeyMakarovAwaken || player.GetCustomRole() == CRoleTypeId.Sculpture)
@@ -114,7 +127,7 @@ public class Sinkhole : IBootstrapHandler, IDisposable
 
                             Timing.CallDelayed(3.1f, () =>
                             {
-                                if (player == null || !player.IsConnected)
+                                if (player?.ReferenceHub == null)
                                     return;
 
                                 player.EnableEffect(EffectType.PocketCorroding);
@@ -122,7 +135,7 @@ public class Sinkhole : IBootstrapHandler, IDisposable
 
                                 Timing.CallDelayed(0.15f, () =>
                                 {
-                                    if (player == null || !player.IsConnected)
+                                    if (player?.ReferenceHub == null)
                                         return;
 
                                     player.IsGodModeEnabled = false;
@@ -150,7 +163,7 @@ public class Sinkhole : IBootstrapHandler, IDisposable
             if (Round.IsLobby || Round.IsEnded)
                 yield break;
 
-            if (player == null || !player.IsConnected || !player.IsAlive)
+            if (player?.ReferenceHub == null || !player.IsAlive)
                 yield break;
 
             elapsedTime += Time.deltaTime;

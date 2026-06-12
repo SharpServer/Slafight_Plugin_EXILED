@@ -103,15 +103,20 @@ public static class PlayerVisibilitySyncProvider
     {
         try
         {
-            if (!IsValid(viewer))
+            if (viewer == null)
                 return;
 
+            var viewerId = viewer.Id;
             foreach (var owner in Player.List.ToArray())
             {
                 if (!IsValid(owner) || owner.Role is not FpcRole fpcRole)
                     continue;
 
-                fpcRole.IsInvisibleFor.Remove(viewer);
+                foreach (var hiddenViewer in fpcRole.IsInvisibleFor.ToArray())
+                {
+                    if (hiddenViewer == null || hiddenViewer.ReferenceHub == null || hiddenViewer.Id == viewerId)
+                        fpcRole.IsInvisibleFor.Remove(hiddenViewer);
+                }
             }
         }
         catch (Exception ex)
@@ -121,5 +126,5 @@ public static class PlayerVisibilitySyncProvider
     }
 
     private static bool IsValid(Player? player)
-        => player != null && player.IsConnected;
+        => player?.ReferenceHub != null;
 }

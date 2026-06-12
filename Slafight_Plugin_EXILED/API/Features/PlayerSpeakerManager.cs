@@ -18,6 +18,8 @@ public static class PlayerSpeakerManager
     private static readonly Dictionary<int, Dictionary<string, CoroutineHandle>> FollowCoroutines
         = new();
 
+    private static readonly Dictionary<int, int> PlayerVersions = new();
+
     private static bool _registered;
 
     // 用途名の定数例
@@ -58,14 +60,18 @@ public static class PlayerSpeakerManager
     public static bool TryGetSpeaker(Player player, string purpose, out SpeakerApi.LivePlayback speaker)
     {
         speaker = default;
-        if (player == null || string.IsNullOrWhiteSpace(purpose))
+        if (!ShouldManageSpeaker(player) || string.IsNullOrWhiteSpace(purpose))
             return false;
 
-        if (!Speakers.TryGetValue(player.Id, out var dict))
+        var playerId = player.Id;
+        if (!Speakers.TryGetValue(playerId, out var dict))
             return false;
 
         if (!dict.TryGetValue(purpose, out var s) || !s.IsValid)
+        {
+            DestroySpeaker(playerId, purpose);
             return false;
+        }
 
         speaker = s;
         return true;
@@ -82,25 +88,36 @@ public static class PlayerSpeakerManager
         float minDistance,
         string speakerName = null)
     {
-        if (player == null || string.IsNullOrWhiteSpace(purpose))
+        if (!ShouldManageSpeaker(player) || string.IsNullOrWhiteSpace(purpose))
             return default;
 
-        if (!Speakers.TryGetValue(player.Id, out var dict))
+        var playerId = player.Id;
+        if (!Speakers.TryGetValue(playerId, out var dict))
         {
             dict = new Dictionary<string, SpeakerApi.LivePlayback>(StringComparer.OrdinalIgnoreCase);
-            Speakers[player.Id] = dict;
+            Speakers[playerId] = dict;
         }
 
         if (dict.TryGetValue(purpose, out var speaker) && speaker.IsValid)
         {
-            Log.Debug($"[PlayerSpeakerManager] GetOrCreateSpeaker[{purpose}]: existing for {player.Nickname} (ID: {player.Id}, ControllerId: {speaker.ControllerId})");
+            Log.Debug($"[PlayerSpeakerManager] GetOrCreateSpeaker[{purpose}]: existing for {player.Nickname} (ID: {playerId}, ControllerId: {speaker.ControllerId})");
             return speaker;
+        }
+
+        if (dict.ContainsKey(purpose))
+        {
+            DestroySpeaker(playerId, purpose);
+            if (!Speakers.TryGetValue(playerId, out dict))
+            {
+                dict = new Dictionary<string, SpeakerApi.LivePlayback>(StringComparer.OrdinalIgnoreCase);
+                Speakers[playerId] = dict;
+            }
         }
 
         speakerName ??= purpose;
 
         speaker = SpeakerApi.CreateLiveSpeaker(
-            $"PlayerSpeaker_{player.Id}_{purpose}",
+            $"PlayerSpeaker_{playerId}_{purpose}",
             player.Position,
             null,
             speakerName: speakerName,
@@ -110,13 +127,13 @@ public static class PlayerSpeakerManager
 
         dict[purpose] = speaker;
 
-        Log.Debug($"[PlayerSpeakerManager] GetOrCreateSpeaker[{purpose}]: created for {player.Nickname} (ID: {player.Id}, ControllerId: {speaker.ControllerId}) at {player.Position}");
+        Log.Debug($"[PlayerSpeakerManager] GetOrCreateSpeaker[{purpose}]: created for {player.Nickname} (ID: {playerId}, ControllerId: {speaker.ControllerId}) at {player.Position}");
 
         // 追従コルーチンの管理
-        if (!FollowCoroutines.TryGetValue(player.Id, out var followDict))
+        if (!FollowCoroutines.TryGetValue(playerId, out var followDict))
         {
             followDict = new Dictionary<string, CoroutineHandle>(StringComparer.OrdinalIgnoreCase);
-            FollowCoroutines[player.Id] = followDict;
+            FollowCoroutines[playerId] = followDict;
         }
 
         if (followDict.TryGetValue(purpose, out var oldHandle))
@@ -126,7 +143,7 @@ public static class PlayerSpeakerManager
         }
 
         // 用途ごとに追従させるかは呼び出し側で決めたいなら引数を足してもOK
-        followDict[purpose] = Timing.RunCoroutine(FollowPlayerCoroutine(player, speaker, purpose));
+        followDict[purpose] = Timing.RunCoroutine(FollowPlayerCoroutine(playerId, speaker, purpose));
         Log.Debug($"[PlayerSpeakerManager] GetOrCreateSpeaker[{purpose}]: started follow coroutine for {player.Nickname}");
 
         return speaker;
@@ -137,21 +154,18 @@ public static class PlayerSpeakerManager
     /// </summary>
     public static void DestroySpeaker(Player player, string purpose)
     {
-        if (player == null || string.IsNullOrWhiteSpace(purpose))
+        if (player == null)
             return;
 
-        int playerId;
-        string nickname;
-        try
-        {
-            playerId = player.Id;
-            nickname = player.Nickname;
-        }
-        catch
-        {
-            return;
-        }
+        DestroySpeaker(player.Id, purpose);
+    }
 
+    public static void DestroySpeaker(int playerId, string purpose)
+    {
+        if (playerId <= 0 || string.IsNullOrWhiteSpace(purpose))
+            return;
+
+        var nickname = GetPlayerName(playerId);
         Log.Debug($"[PlayerSpeakerManager] DestroySpeaker[{purpose}]: request for {nickname} (ID: {playerId})");
 
         if (FollowCoroutines.TryGetValue(playerId, out var followDict) &&
@@ -159,6 +173,9 @@ public static class PlayerSpeakerManager
         {
             Timing.KillCoroutines(handle);
             followDict.Remove(purpose);
+            if (followDict.Count == 0)
+                FollowCoroutines.Remove(playerId);
+
             Log.Debug($"[PlayerSpeakerManager] DestroySpeaker[{purpose}]: killed follow coroutine for {nickname}");
         }
 
@@ -167,8 +184,7 @@ public static class PlayerSpeakerManager
         {
             try
             {
-                if (speaker.IsValid)
-                    speaker.DestroyAudioPlayer();
+                speaker.DestroyAudioPlayer();
             }
             catch (Exception ex)
             {
@@ -176,6 +192,9 @@ public static class PlayerSpeakerManager
             }
 
             dict.Remove(purpose);
+            if (dict.Count == 0)
+                Speakers.Remove(playerId);
+
             Log.Debug($"[PlayerSpeakerManager] DestroySpeaker[{purpose}]: destroyed speaker for {nickname} (ControllerId: {speaker.ControllerId})");
         }
     }
@@ -187,19 +206,16 @@ public static class PlayerSpeakerManager
     {
         if (player == null) return;
 
-        int playerId;
-        string nickname;
-        try
-        {
-            playerId = player.Id;
-            nickname = player.Nickname;
-        }
-        catch
-        {
-            return;
-        }
+        DestroyAllForPlayer(player.Id);
+    }
 
+    public static void DestroyAllForPlayer(int playerId)
+    {
+        if (playerId <= 0) return;
+
+        var nickname = GetPlayerName(playerId);
         Log.Debug($"[PlayerSpeakerManager] DestroyAllForPlayer: {nickname} (ID: {playerId})");
+        InvalidatePlayerVersion(playerId);
 
         if (FollowCoroutines.TryGetValue(playerId, out var followDict))
         {
@@ -212,8 +228,7 @@ public static class PlayerSpeakerManager
         {
             foreach (var s in dict.Values)
             {
-                if (s.IsValid)
-                    s.DestroyAudioPlayer();
+                s.DestroyAudioPlayer();
             }
             Speakers.Remove(playerId);
         }
@@ -234,11 +249,11 @@ public static class PlayerSpeakerManager
         {
             foreach (var speaker in dict.Values)
             {
-                if (speaker.IsValid)
-                    speaker.DestroyAudioPlayer();
+                speaker.DestroyAudioPlayer();
             }
         }
         Speakers.Clear();
+        PlayerVersions.Clear();
     }
 
     // ==== イベント ====
@@ -248,10 +263,12 @@ public static class PlayerSpeakerManager
         if (ev.Player == null) return;
 
         Log.Debug($"[PlayerSpeakerManager] OnPlayerSpawned: {ev.Player.Nickname} as {ev.Player.Role} (IsAlive: {ev.Player.IsAlive})");
+        var playerId = ev.Player.Id;
+        var version = NextPlayerVersion(playerId);
 
         if (!ShouldManageSpeaker(ev.Player))
         {
-            DestroyAllForPlayer(ev.Player);
+            DestroyAllForPlayer(playerId);
             return;
         }
 
@@ -259,12 +276,15 @@ public static class PlayerSpeakerManager
             ev.Player.Role != PlayerRoles.RoleTypeId.Spectator &&
             ev.Player.Role != PlayerRoles.RoleTypeId.None)
         {
-            var player = ev.Player;
             // Proximity 用だけ自動生成する例
             Timing.CallDelayed(1.5f, () =>
             {
                 try
                 {
+                    if (!IsCurrentPlayerVersion(playerId, version))
+                        return;
+
+                    var player = GetManagedPlayer(playerId);
                     if (ShouldManageSpeaker(player) && player.IsAlive)
                     {
                         GetOrCreateSpeaker(
@@ -284,7 +304,7 @@ public static class PlayerSpeakerManager
         }
         else
         {
-            DestroyAllForPlayer(ev.Player);
+            DestroyAllForPlayer(playerId);
         }
     }
 
@@ -293,7 +313,7 @@ public static class PlayerSpeakerManager
         if (ev.Player != null)
         {
             Log.Debug($"[PlayerSpeakerManager] OnPlayerDied: {ev.Player.Nickname} died.");
-            DestroyAllForPlayer(ev.Player);
+            DestroyAllForPlayer(ev.Player.Id);
         }
     }
 
@@ -302,7 +322,7 @@ public static class PlayerSpeakerManager
         if (ev.Player != null)
         {
             Log.Debug($"[PlayerSpeakerManager] OnPlayerLeft: {ev.Player.Nickname} left.");
-            DestroyAllForPlayer(ev.Player);
+            DestroyAllForPlayer(ev.Player.Id);
         }
     }
 
@@ -314,17 +334,18 @@ public static class PlayerSpeakerManager
 
     // 用途キーをログに出せるように拡張
     private static IEnumerator<float> FollowPlayerCoroutine(
-        Player player,
+        int playerId,
         SpeakerApi.LivePlayback liveSpeaker,
         string purpose)
     {
-        Log.Debug($"[PlayerSpeakerManager] FollowPlayerCoroutine[{purpose}]: started for {player.Nickname} (ControllerId: {liveSpeaker.ControllerId})");
+        Log.Debug($"[PlayerSpeakerManager] FollowPlayerCoroutine[{purpose}]: started for {GetPlayerName(playerId)} (ControllerId: {liveSpeaker.ControllerId})");
 
         while (true)
         {
             bool shouldContinue;
             try
             {
+                var player = GetManagedPlayer(playerId);
                 shouldContinue = ShouldManageSpeaker(player) && player.IsAlive && liveSpeaker.IsValid;
                 if (shouldContinue)
                     liveSpeaker.SetTransform(player.Position, null);
@@ -341,17 +362,66 @@ public static class PlayerSpeakerManager
             yield return Timing.WaitForSeconds(0.1f);
         }
 
-        Log.Debug($"[PlayerSpeakerManager] FollowPlayerCoroutine[{purpose}]: stopped for {player?.Nickname ?? "Unknown"}");
+        CleanupStoppedFollow(playerId, purpose, liveSpeaker);
+        Log.Debug($"[PlayerSpeakerManager] FollowPlayerCoroutine[{purpose}]: stopped for {GetPlayerName(playerId)}");
     }
 
     private static bool ShouldManageSpeaker(Player player)
     {
-        return player != null
-               && player.IsConnected
-               && player.ReferenceHub != null
-               && !player.IsNPC
-               && !player.IsHost
-               && !player.ReferenceHub.IsHost
-               && !CRole.IsTeamNpc(player);
+        try
+        {
+            return player != null
+                   && player.ReferenceHub != null
+                   && !player.IsHost
+                   && !player.ReferenceHub.IsHost;
+        }
+        catch
+        {
+            return false;
+        }
     }
+
+    private static void CleanupStoppedFollow(int playerId, string purpose, SpeakerApi.LivePlayback liveSpeaker)
+    {
+        if (FollowCoroutines.TryGetValue(playerId, out var followDict))
+        {
+            followDict.Remove(purpose);
+            if (followDict.Count == 0)
+                FollowCoroutines.Remove(playerId);
+        }
+
+        if (!Speakers.TryGetValue(playerId, out var dict))
+            return;
+
+        if (dict.TryGetValue(purpose, out var current) && current.ControllerId == liveSpeaker.ControllerId)
+        {
+            current.DestroyAudioPlayer();
+            dict.Remove(purpose);
+        }
+
+        if (dict.Count == 0)
+            Speakers.Remove(playerId);
+    }
+
+    private static Player GetManagedPlayer(int playerId)
+    {
+        var player = Player.List.FirstOrDefault(p => p != null && p.Id == playerId);
+        return ShouldManageSpeaker(player) ? player : null;
+    }
+
+    private static string GetPlayerName(int playerId)
+        => GetManagedPlayer(playerId)?.Nickname ?? $"#{playerId}";
+
+    private static int NextPlayerVersion(int playerId)
+    {
+        var version = PlayerVersions.GetValueOrDefault(playerId) + 1;
+        PlayerVersions[playerId] = version;
+        return version;
+    }
+
+    private static void InvalidatePlayerVersion(int playerId)
+        => PlayerVersions[playerId] = PlayerVersions.GetValueOrDefault(playerId) + 1;
+
+    private static bool IsCurrentPlayerVersion(int playerId, int version)
+        => PlayerVersions.TryGetValue(playerId, out var current) && current == version;
 }

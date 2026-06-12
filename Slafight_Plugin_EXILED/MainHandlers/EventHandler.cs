@@ -18,6 +18,7 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
+using Slafight_Plugin_EXILED.Commands.DevTools;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
@@ -100,7 +101,19 @@ public class EventHandler : IBootstrapHandler, IDisposable
     {
         try
         {
-            return p != null && p.IsConnected && p.ReferenceHub != null;
+            return p?.ReferenceHub != null;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool CanReceiveClientUi(Player? p)
+    {
+        try
+        {
+            return IsPlayerValid(p) && p.IsConnected && !p.IsNPC;
         }
         catch
         {
@@ -133,7 +146,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
 
         Timing.CallDelayed(0.05f, () =>
         {
-            if (!IsPlayerValid(player)) return;
+            if (!CanReceiveClientUi(player)) return;
             if (Round.InProgress) return;
             ShowLobbyInfoHint(player);
         });
@@ -149,6 +162,11 @@ public class EventHandler : IBootstrapHandler, IDisposable
         RPNameSetter.Clear(leaving);
         EffectedInfoTextProvider.Clear(leaving);
         EffectFakeSyncProvider.RemovePlayer(leaving);
+        PlayerVisibilitySyncProvider.RemoveViewer(leaving);
+        RoleSpecificTextProvider.Clear(leaving);
+        SpecificFlagsManager.Clear(leaving);
+        SpawnObjectPrefab.CleanupPlayer(leaving);
+        HitboxCommand.CleanupPlayer(leaving);
 
         if (leaving.GetTeam() != CTeam.SCPs) return;
         if (leaving.IsVanillaOrCustom(RoleTypeId.Scp0492, CRoleTypeId.Zombified)) return;
@@ -176,7 +194,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
             if (Round.InProgress) return;
             foreach (var player in Player.List)
             {
-                if (!IsPlayerValid(player)) continue;
+                if (!CanReceiveClientUi(player)) continue;
                 ShowLobbyInfoHint(player);
             }
         });
@@ -247,8 +265,12 @@ public class EventHandler : IBootstrapHandler, IDisposable
         SpecificFlagsManager.ClearAll();
         foreach (var player in Player.List.ToList().Where(IsPlayerValid))
         {
-            ClearLobbyInfoHint(player);
-            player.ShowHint("");
+            if (CanReceiveClientUi(player))
+            {
+                ClearLobbyInfoHint(player);
+                player.ShowHint("");
+            }
+
             player.InitPlayerFlags();
         }
 
@@ -373,7 +395,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
     {
         foreach (var target in Player.List)
         {
-            if (target is null) return;
+            if (target?.GetTeam() is not CTeam.SCPs) return;
             target.EnableEffect<AnomalousTarget>();
         }
     }

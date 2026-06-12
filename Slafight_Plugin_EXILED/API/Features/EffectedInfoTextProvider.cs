@@ -15,6 +15,7 @@ public static class EffectedInfoTextProvider
     {
         if (player == null) return;
 
+        var playerId = player.Id;
         var version = Versions.GetValueOrDefault(player.Id) + 1;
         Versions[player.Id] = version;
 
@@ -25,10 +26,11 @@ public static class EffectedInfoTextProvider
 
         Timing.CallDelayed(duration, () =>
         {
-            if (player == null || !player.IsConnected) return;
-            if (!Versions.TryGetValue(player.Id, out var current) || current != version) return;
+            var currentPlayer = Player.Get(playerId);
+            if (currentPlayer == null || currentPlayer.ReferenceHub == null) return;
+            if (!Versions.TryGetValue(playerId, out var current) || current != version) return;
 
-            Clear(player);
+            Clear(currentPlayer);
         });
     }
 

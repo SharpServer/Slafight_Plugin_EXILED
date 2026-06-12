@@ -354,7 +354,7 @@ public abstract class AbilityBase
         updatedState.CanUse = true;
 
         var player = Player.Get(playerId);
-        if (player == null || !player.IsConnected || updatedState.OwnerAbility == null)
+        if (player == null || player.ReferenceHub == null || updatedState.OwnerAbility == null)
             yield break;
 
         updatedState.OwnerAbility.OnCooldownEnd(player);
@@ -365,7 +365,7 @@ public abstract class AbilityBase
     // ★ 現在選択中アビリティのみヒント表示
     protected virtual void OnCooldownEnd(Player player)
     {
-        if (player != null && player.IsConnected &&
+        if (player != null && player.ReferenceHub != null && player.IsConnected && !player.IsNPC &&
             AbilityManager.TryGetLoadout(player, out var loadout) &&
             loadout.ActiveAbility == this)
         {

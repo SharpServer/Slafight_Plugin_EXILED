@@ -24,6 +24,8 @@ public readonly struct NvgProfile
     public Color LightColor     { get; init; }
     public float LightRange     { get; init; }
     public float LightIntensity { get; init; }
+    /// <summary>装着中に維持する Blindness 強度。0 で装着中 Blindness なし。</summary>
+    public byte  WornBlindnessIntensity { get; init; }
     /// <summary>true のとき、電池切れで Blindness を最大強度で付与する。</summary>
     public bool  UseBlackout    { get; init; }
 
@@ -33,6 +35,7 @@ public readonly struct NvgProfile
         LightColor     = new Color(0.6f, 1f, 0.6f),
         LightRange     = 30f,
         LightIntensity = 10000f,
+        WornBlindnessIntensity = Blindness.MinIntensity,
         UseBlackout    = true,
     };
 }
@@ -136,6 +139,46 @@ public static class NvgManager
     // 公開 API
     // --------------------------------------------------------
 
+    public static bool IsManagedNvg(Scp1344Item? item)
+    {
+        if (item == null) return false;
+
+        return CItem.SerialTracker.TryGet(item.ItemSerial, out var cItem)
+               && cItem is CItemNvg;
+    }
+
+    public static void ReapplyManagedBlindness(Scp1344Item? item)
+    {
+        if (!IsManagedNvg(item)) return;
+
+        try
+        {
+            var player = Player.Get(item.Owner);
+            if (player == null || !player.IsConnected)
+                return;
+
+            if (!ActiveData.ContainsKey(item.ItemSerial))
+                return;
+
+            if (ShouldApplyBlackout(item.ItemSerial))
+            {
+                item.BlindnessEffect.Intensity = 255;
+            }
+            else if (TryGetWornBlindnessIntensity(item.ItemSerial, out var wornIntensity))
+            {
+                item.BlindnessEffect.Intensity = wornIntensity;
+            }
+            else
+            {
+                player.DisableEffect<Blindness>();
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[NvgManager] ReapplyManagedBlindness failed: {ex.Message}");
+        }
+    }
+
     /// <summary>NVG を起動する。プロファイル未指定時は NvgProfile.Default を使用。</summary>
     public static void StartNvg(Player player, ushort serial, NvgProfile? profile = null)
     {
@@ -151,20 +194,19 @@ public static class NvgManager
 
         bool isInfinite = prof.DrainPerSecond <= 0f;
 
-        // 電池0%なら起動しない（無限電池は常に起動可）
-        if (!isInfinite && BatteryData.TryGetValue(serial, out var savedBattery) && savedBattery <= 0f)
+        float battery = isInfinite ? MaxBattery
+                      : BatteryData.TryGetValue(serial, out var saved) ? saved : MaxBattery;
+        battery = Mathf.Clamp(battery, 0f, MaxBattery);
+
+        if (!isInfinite && battery <= 0f)
         {
-            player.ShowHint("このNVGの電池は完全に切れています。", 3f);
-            Log.Debug($"[NvgManager] StartNvg拒否: 電池切れ serial={serial}");
-            return;
+            player.ShowHint("NVGの電池が切れている...視界が真っ暗になった。", 3f);
+            Log.Debug($"[NvgManager] StartNvg: 電池切れ状態で起動 serial={serial}");
         }
 
         // 同一シリアルまたは同一所有者の古いライトを必ず消してから作り直す。
         StopNvgBySerial(serial, clearBattery: false);
         StopAllNvgByOwner(player, clearBattery: false);
-
-        float battery = isInfinite ? MaxBattery
-                      : BatteryData.TryGetValue(serial, out var saved) ? saved : MaxBattery;
 
         var light = CreateNvgLight(player, prof);
         if (light == null)
@@ -184,6 +226,9 @@ public static class NvgManager
 
         BatteryData[serial] = battery;
         ActiveData[serial]  = data;
+
+        if (TryGetPlayerNvgItem(player, serial, out var nvgItem))
+            ReapplyManagedBlindness(nvgItem);
 
         ApplyOwnerVisibility(player, light.Base?.netIdentity);
     }
@@ -437,6 +482,22 @@ public static class NvgManager
     private static bool PlayerHasSerial(Player player, ushort serial)
         => player != null && player.Items.Any(i => i != null && i.Serial == serial);
 
+    private static bool ShouldApplyBlackout(ushort serial)
+        => ActiveData.TryGetValue(serial, out var data)
+           && data.Profile.UseBlackout
+           && BatteryData.TryGetValue(serial, out var battery)
+           && battery <= 0f;
+
+    private static bool TryGetWornBlindnessIntensity(ushort serial, out byte intensity)
+    {
+        intensity = 0;
+        if (!ActiveData.TryGetValue(serial, out var data))
+            return false;
+
+        intensity = data.Profile.WornBlindnessIntensity;
+        return intensity > 0;
+    }
+
     private static void DisableNvgWearable(Player? player)
     {
         try
@@ -495,7 +556,9 @@ public static class NvgManager
             var owner = Player.Get(active.OwnerId);
             if (owner != null && owner.IsConnected && owner.IsAlive)
             {
-                if (active.Profile.UseBlackout)
+                if (TryGetPlayerNvgItem(owner, serial, out var nvgItem))
+                    ReapplyManagedBlindness(nvgItem);
+                else if (active.Profile.UseBlackout)
                     owner.DisableEffect<Blindness>();
             }
         }

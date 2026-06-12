@@ -59,6 +59,7 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
     {
 
         Exiled.Events.Handlers.Player.Escaping += CancelDefaultEscape;
+        Exiled.Events.Handlers.Player.Left += OnLeft;
         Exiled.Events.Handlers.Server.RoundStarted += AddEscapeCoroutine;
         Exiled.Events.Handlers.Server.RestartingRound += ResetRoundState;
     }
@@ -70,6 +71,7 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
 
         _disposed = true;
         Exiled.Events.Handlers.Player.Escaping -= CancelDefaultEscape;
+        Exiled.Events.Handlers.Player.Left -= OnLeft;
         Exiled.Events.Handlers.Server.RoundStarted -= AddEscapeCoroutine;
         Exiled.Events.Handlers.Server.RestartingRound -= ResetRoundState;
         ResetRoundState();
@@ -124,6 +126,7 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
 
     public void SaveItems(Player player)
     {
+        var playerId = player.Id;
         var nowPos = player.Position;
         player.DropItems();
 
@@ -135,8 +138,10 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
 
         Timing.CallDelayed(0.5f, () =>
         {
-            if (player?.IsConnected != true) return;
-            var newPos = player.Position + new Vector3(0f, 0.15f, 0f);
+            var refreshedPlayer = Player.List.FirstOrDefault(p => p?.Id == playerId);
+            if (refreshedPlayer?.ReferenceHub == null) return;
+
+            var newPos = refreshedPlayer.Position + new Vector3(0f, 0.15f, 0f);
             foreach (var item in saveItems)
                 if (item?.IsSpawned == true) item.Position = newPos;
         });
@@ -171,6 +176,8 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
 
     private CoroutineHandle _escapeCoroutine;
     private CoroutineHandle _setupCoroutine;
+    private readonly HashSet<int> _escapedPlayers = [];
+    private readonly Dictionary<int, CoroutineHandle> _escapeTimers = new();
 
     public void AddEscapeCoroutine()
     {
@@ -190,15 +197,34 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
         if (_setupCoroutine.IsRunning)
             Timing.KillCoroutines(_setupCoroutine);
 
+        foreach (var timer in _escapeTimers.Values)
+            Timing.KillCoroutines(timer);
+
+        _escapeTimers.Clear();
+        _escapedPlayers.Clear();
+
         ClearEscapeOverrides();
         EvacuationRoundEndState.Reset();
     }
 
+    private void OnLeft(LeftEventArgs ev)
+    {
+        ClearEscapeTracking(ev.Player?.Id);
+    }
+
+    private void ClearEscapeTracking(int? playerId)
+    {
+        if (!playerId.HasValue)
+            return;
+
+        _escapedPlayers.Remove(playerId.Value);
+
+        if (_escapeTimers.Remove(playerId.Value, out var timer))
+            Timing.KillCoroutines(timer);
+    }
+
     private IEnumerator<float> EscapeCoroutine()
     {
-        var escapedPlayers = new HashSet<int>();
-        var escapeTimers = new Dictionary<int, CoroutineHandle>();
-
         for (;;)
         {
             if (Round.IsLobby) yield break;
@@ -208,13 +234,13 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
             {
                 if (player?.IsAlive != true) continue;
 
-                if (escapeTimers.TryGetValue(player.Id, out var timer) && !timer.IsRunning)
+                if (_escapeTimers.TryGetValue(player.Id, out var timer) && !timer.IsRunning)
                 {
-                    escapedPlayers.Remove(player.Id);
-                    escapeTimers.Remove(player.Id);
+                    _escapedPlayers.Remove(player.Id);
+                    _escapeTimers.Remove(player.Id);
                 }
 
-                if (escapedPlayers.Contains(player.Id)) continue;
+                if (_escapedPlayers.Contains(player.Id)) continue;
 
                 var playerPos = player.Position;
                 for (int i = 0; i < EscapePoints.Count; i++)
@@ -222,12 +248,13 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
                     if ((playerPos - EscapePoints[i]).sqrMagnitude <= EscapeRadiusSqr)
                     {
                         Escape(player);
-                        escapedPlayers.Add(player.Id);
+                        _escapedPlayers.Add(player.Id);
 
-                        escapeTimers[player.Id] = Timing.CallDelayed(5f, () =>
+                        int escapedPlayerId = player.Id;
+                        _escapeTimers[escapedPlayerId] = Timing.CallDelayed(5f, () =>
                         {
-                            escapedPlayers.Remove(player.Id);
-                            escapeTimers.Remove(player.Id);
+                            _escapedPlayers.Remove(escapedPlayerId);
+                            _escapeTimers.Remove(escapedPlayerId);
                         });
                         break;
                     }

@@ -20,6 +20,7 @@ public class NvgBlue : CItemNvg
         LightColor     = Color.blue,
         LightRange     = 180f,
         LightIntensity = 10000f,
+        WornBlindnessIntensity = 15,
         UseBlackout    = true,
     };
 

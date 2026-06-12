@@ -54,6 +54,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         Exiled.Events.Handlers.Server.RoundStarted += AllSyncHUD_;
         Exiled.Events.Handlers.Server.RestartingRound += DestroyHints;
         Exiled.Events.Handlers.Player.ChangingSpectatedPlayer += Spectate;
+        Exiled.Events.Handlers.Player.Left += OnLeft;
 
         // 旧仕様と同じく、コルーチンはプラグイン生存中ずっと回す
         _specificAbilityLoop = Timing.RunCoroutine(SpecificInfoHudLoop());
@@ -74,6 +75,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         Exiled.Events.Handlers.Server.RoundStarted -= AllSyncHUD_;
         Exiled.Events.Handlers.Server.RestartingRound -= DestroyHints;
         Exiled.Events.Handlers.Player.ChangingSpectatedPlayer -= Spectate;
+        Exiled.Events.Handlers.Player.Left -= OnLeft;
 
         if (_specificAbilityLoop.IsRunning)
             Timing.KillCoroutines(_specificAbilityLoop);
@@ -102,6 +104,18 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         try
         {
             return p != null && p.IsConnected && p.ReferenceHub != null;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool HasReferenceHub(Player? p)
+    {
+        try
+        {
+            return p?.ReferenceHub != null;
         }
         catch
         {
@@ -436,11 +450,12 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         if (ev?.Player == null) return;
         if (!ev.IsAllowed) return;
 
-        var player = ev.Player;
+        var playerId = ev.Player.Id;
 
         Timing.CallDelayed(0.5f, () =>
         {
-            if (!IsPlayerValid(player)) return; // FIX: 遅延後の生存確認
+            var player = Player.List.FirstOrDefault(p => p?.Id == playerId);
+            if (player == null || !IsPlayerValid(player)) return; // FIX: 遅延後の生存確認
             if (player.Role?.Team == Team.Dead) return;
             ApplyRoleInfo(player, player);
         });
@@ -534,6 +549,23 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
             {
                 Log.Debug($"[Spectate] Ability hint error: {e.Message}");
             }
+        }
+    }
+
+    private void OnLeft(LeftEventArgs? ev)
+    {
+        if (ev?.Player == null)
+            return;
+
+        int playerId = ev.Player.Id;
+        _spectateTargets.Remove(playerId);
+
+        foreach (var spectatorId in _spectateTargets
+                     .Where(x => x.Value.Id == playerId || !HasReferenceHub(x.Value))
+                     .Select(x => x.Key)
+                     .ToList())
+        {
+            _spectateTargets.Remove(spectatorId);
         }
     }
 

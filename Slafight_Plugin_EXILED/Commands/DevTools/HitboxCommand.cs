@@ -440,6 +440,22 @@ public class HitboxCommand : ICommand
         return true;
     }
 
+    public static void CleanupPlayer(Player player)
+    {
+        if (player == null)
+            return;
+
+        foreach (int id in Sessions
+                     .Where(pair =>
+                         pair.Value.OwnerUserId == player.UserId ||
+                         pair.Value.SelfViewer?.Id == player.Id)
+                     .Select(pair => pair.Key)
+                     .ToArray())
+        {
+            StopSession(id);
+        }
+    }
+
     private static int ClearOwnerSessions(Player executor, string? labelPrefix)
     {
         int removed = 0;
