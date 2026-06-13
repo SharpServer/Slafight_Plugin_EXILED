@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
@@ -86,6 +87,9 @@ public abstract class ScpcbBatteryBase : CItemUsable
             return;
 
         if (Behavior != BatteryBehavior.Recharge)
+            return;
+        
+        if (!ev.IsThrown)
             return;
 
         ev.IsAllowed = false;
@@ -318,7 +322,12 @@ public abstract class ScpcbBatteryBase : CItemUsable
         Timing.CallDelayed(0.1f, () =>
         {
             if (player.ReferenceHub != null && player.IsAlive)
-                player.Kill("Strange Batteryによる感電死");
+            {
+                SpeakerApi.Play("PowerUp.ogg", "BatteryStrange", player.Position, isSpatial: true, maxDistance: 8.5f, minDistance:7.5f);
+                player.ExplodeEffect(ProjectileType.FragGrenade);
+                player.Vaporize();
+                player.ShowHint("<color=red>うわあああああああああ...!!!\n<size=24>あなたは奇妙なバッテリーで感電死した!!!!!</size></color>", 5.5f);
+            }
         });
     }
 }
@@ -330,6 +339,7 @@ public sealed class ScpcbBattery9V : ScpcbBatteryBase
         "小型の角形電池。ドロップで充電対象を選び、使用すると対象のバッテリーを満充電にする。";
 
     protected override string UniqueKey => "ScpcbBattery9V";
+    protected override string? PickupSchematicName => "Battery9V";
     protected override Color PickupLightColor => Color.yellow;
 }
 
@@ -341,6 +351,7 @@ public sealed class ScpcbBattery18V : ScpcbBatteryBase
 
     protected override string UniqueKey => "ScpcbBattery18V";
     protected override BatteryBehavior Behavior => BatteryBehavior.Inert;
+    protected override string? PickupSchematicName => "Battery18V";
     protected override Color PickupLightColor => new(1f, 0.45f, 0f);
 }
 
@@ -352,7 +363,8 @@ public sealed class ScpcbBatteryStrange : ScpcbBatteryBase
 
     protected override string UniqueKey => "ScpcbBatteryStrange";
     protected override BatteryBehavior Behavior => BatteryBehavior.Lethal;
-    protected override Color PickupLightColor => Color.magenta;
+    protected override string? PickupSchematicName => "BatteryStrange";
+    protected override bool PickupLightEnabled => false;
 }
 
 public interface IRechargeableBatteryTarget

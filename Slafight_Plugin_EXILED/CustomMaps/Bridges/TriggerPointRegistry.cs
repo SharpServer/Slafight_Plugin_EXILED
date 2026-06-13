@@ -217,6 +217,21 @@ public class TriggerPointRegistry : SlafightLabApiHandler
             case "CISR_Medicine":
                 MapFlags.CisrMedicinePoint = pos;
                 break;
+            case "CISR_B9v":
+                MapFlags.CisrBattery9VPoint = pos;
+                break;
+            case "CISR_B18v":
+                MapFlags.CisrBattery18VPoint = pos;
+                break;
+            case "CISR_BStr":
+                MapFlags.CisrBatteryStrangeVPoint = pos;
+                break;
+            case "CISR_MasterCard":
+                MapFlags.CisrMasterCardPoint = pos;
+                break;
+            case "CISR_PlayingCard":
+                MapFlags.CisrPlayingCardPoint = pos;
+                break;
         }
     }
 }

@@ -395,6 +395,7 @@
         <Compile Include="CustomMaps\Features\WarheadBoomEffectUtil.cs" />
         <Compile Include="CustomMaps\GateAEnding.cs" />
         <Compile Include="CustomMaps\Bridges\ObjectPrefabHandler.cs" />
+        <Compile Include="CustomMaps\Bridges\ItemSpawnpointCItemBridge.cs" />
         <Compile Include="CustomMaps\Bridges\SchematicObjectPrefabBridge.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\AntiMemeBomb.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\HIDTurretObject.cs" />

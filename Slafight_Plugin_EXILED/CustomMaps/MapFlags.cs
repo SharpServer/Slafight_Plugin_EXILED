@@ -52,6 +52,11 @@ public static class MapFlags
     public static Vector3 CisrGunRevolverXPoint = Vector3.zero;
     public static Vector3 CisrKeycardAPoint = Vector3.zero;
     public static Vector3 CisrMedicinePoint = Vector3.zero;
+    public static Vector3 CisrBattery9VPoint = Vector3.zero;
+    public static Vector3 CisrBattery18VPoint = Vector3.zero;
+    public static Vector3 CisrBatteryStrangeVPoint = Vector3.zero;
+    public static Vector3 CisrMasterCardPoint = Vector3.zero;
+    public static Vector3 CisrPlayingCardPoint = Vector3.zero;
     public static Vector3 CDoorO1 = Vector3.zero;
     public static Vector3 CDoorO2 = Vector3.zero;
     public static Vector3 CDoorO3 = Vector3.zero;

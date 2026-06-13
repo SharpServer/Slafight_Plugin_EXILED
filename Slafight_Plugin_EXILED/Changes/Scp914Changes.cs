@@ -339,6 +339,10 @@ public static class Scp914Changes
         {
             Coarse = Scp914Rule.ToCItem<NvgBlue>(),
         });
+        Scp914Registry.RegisterVanilla(ItemType.Flashlight, new ()
+        {
+            VeryFine = Scp914Rule.Weighted((0.5f, Scp914Rule.ToCItem<ScpcbBattery9V>()))
+        });
     }
 
     /// <summary>Exiled CustomItem 固有の変換ルール (将来の CustomItem 専用ルール用に確保)。</summary>
