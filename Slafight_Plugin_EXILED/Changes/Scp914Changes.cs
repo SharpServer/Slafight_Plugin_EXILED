@@ -463,6 +463,33 @@ public static class Scp914Changes
             VeryFine = Scp914Rule.ToCItem<SNAVUltimate>(),
         });
 
+        Scp914Registry.RegisterCItem<ScpcbBattery9V>(new()
+        {
+            Rough = Scp914Rule.Destroy,
+            Coarse = Scp914Rule.Destroy,
+            OneToOne = Scp914Rule.ToCItem<ScpcbBattery9V>(),
+            Fine = Scp914Rule.ToCItem<ScpcbBattery18V>(),
+            VeryFine = Scp914Rule.ToCItem<ScpcbBatteryStrange>(),
+        });
+
+        Scp914Registry.RegisterCItem<ScpcbBattery18V>(new()
+        {
+            Rough = Scp914Rule.ToCItem<ScpcbBattery9V>(),
+            Coarse = Scp914Rule.ToCItem<ScpcbBattery9V>(),
+            OneToOne = Scp914Rule.ToCItem<ScpcbBattery18V>(),
+            Fine = Scp914Rule.ToCItem<ScpcbBatteryStrange>(),
+            VeryFine = Scp914Rule.ToCItem<ScpcbBatteryStrange>(),
+        });
+
+        Scp914Registry.RegisterCItem<ScpcbBatteryStrange>(new()
+        {
+            Rough = Scp914Rule.ToCItem<ScpcbBattery18V>(),
+            Coarse = Scp914Rule.ToCItem<ScpcbBattery9V>(),
+            OneToOne = Scp914Rule.ToCItem<ScpcbBatteryStrange>(),
+            Fine = Scp914Rule.Destroy,
+            VeryFine = Scp914Rule.Destroy,
+        });
+
         // ===== ここからキーカード CItem 系 =====
         // 施設系: Janitor < Scientist < ZoneManager < ResearchCoordinator < ContainmentEngineer < FacilityManager < SiteDirector < O5
         // 軍系: Armory1 < Guard = ChaosIntruder < Armory2 < SecurityChief < MTFPrivate < MTFOperative < MTFCaptain = ChaosInsurgency < SiteDirector < O5

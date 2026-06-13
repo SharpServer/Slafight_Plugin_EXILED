@@ -320,6 +320,7 @@
         <Compile Include="CustomItems\SlafightApiItems\NvgBlue.cs" />
         <Compile Include="CustomItems\SlafightApiItems\NvgRed.cs" />
         <Compile Include="CustomItems\SlafightApiItems\SchwarzschildRailbreaker.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\ScpcbBatteries.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Veritas.cs" />
         <Compile Include="CustomItems\NvgManager.cs" />
         <Compile Include="CustomItems\CustomItemsManager.cs" />
