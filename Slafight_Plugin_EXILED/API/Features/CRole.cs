@@ -143,6 +143,14 @@ public abstract class CRole
                     continue;
                 }
 
+                if (TypeToRole.ContainsKey(type) ||
+                    UniqueRoleToRole.ContainsKey(instance.UniqueRoleKey) ||
+                    (instance.CRoleTypeId != CRoleTypeId.None && RoleIdToRole.ContainsKey(instance.CRoleTypeId)))
+                {
+                    Log.Warn($"CRole.RegisterAllEvents: {type.Name} role={instance.UniqueRoleKey}/{instance.CRoleTypeId} is already registered, skipping duplicate");
+                    continue;
+                }
+
                 bool autoRegisterEvents =
                     type.GetCustomAttributes(typeof(CRoleAutoRegisterIgnoreAttribute), true).Length == 0;
 
@@ -602,8 +610,16 @@ public abstract class CRole
         if (!TryGet(roleTypeId, out var role))
             return false;
 
-        role.SpawnRole(player, roleSpawnFlags);
-        return true;
+        try
+        {
+            role.SpawnRole(player, roleSpawnFlags);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"CRole.TrySpawn failed for {role.GetType().Name} ({roleTypeId}) on {player.Nickname}: {ex}");
+            return false;
+        }
     }
 
     private static bool TryCreateUnregisteredInstance(CRoleTypeId roleTypeId, out CRole? role)

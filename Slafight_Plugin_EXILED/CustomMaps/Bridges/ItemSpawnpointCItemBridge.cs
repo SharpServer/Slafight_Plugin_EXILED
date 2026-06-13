@@ -89,14 +89,22 @@ public class ItemSpawnpointCItemBridge : IBootstrapHandler
         if (pickup == null)
             return false;
 
-        ApplySpawnpointSettings(pickup, spawnpoint, rotation, parent);
-        pickupBase = TryGetPickupBase(pickup);
-        if (pickupBase != null)
-            return true;
+        try
+        {
+            ApplySpawnpointSettings(pickup, spawnpoint, rotation, parent);
+            pickupBase = pickup.Base;
+            if (pickupBase != null)
+                return true;
 
-        Log.Warn($"[ItemSpawnpointCItemBridge] CItem '{customItemKey}' spawned without an ItemPickupBase.");
-        pickup.Destroy();
-        return false;
+            Log.Warn($"[ItemSpawnpointCItemBridge] CItem '{customItemKey}' spawned without an ItemPickupBase.");
+            pickup.Destroy();
+            return false;
+        }
+        catch
+        {
+            pickup.Destroy();
+            throw;
+        }
     }
 
     private static bool TryGiveCItem(string customItemKey, ItemPickupBase pickup, LabApi.Features.Wrappers.Player player)
@@ -129,9 +137,4 @@ public class ItemSpawnpointCItemBridge : IBootstrapHandler
         pickup.IsLocked = !spawnpoint.CanBePickedUp;
     }
 
-    private static ItemPickupBase? TryGetPickupBase(Exiled.API.Features.Pickups.Pickup pickup)
-    {
-        PropertyInfo? baseProperty = pickup.GetType().GetProperty("Base", BindingFlags.Public | BindingFlags.Instance);
-        return baseProperty?.GetValue(pickup) as ItemPickupBase;
-    }
 }

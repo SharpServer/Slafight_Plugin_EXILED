@@ -388,6 +388,11 @@ public abstract class CItemHybrid : CItem
         // ─────────────────────────────────────────────────────────────────
     }
 
+    protected override void OnSerialUntracked(ushort serial)
+    {
+        _serialModeIndex.Remove(serial);
+    }
+
     protected override void OnUpgradingPickup(Scp914Events.UpgradingPickupEventArgs ev)
         => GetCurrentSub(ev.Pickup.Serial)?.CallOnUpgradingPickup(ev);
 

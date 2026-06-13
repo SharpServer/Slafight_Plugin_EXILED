@@ -17,6 +17,11 @@ namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
 public class Scp096Anger : CRole  // 属性なしで自動登録
 {
+    private const float TryNotToCryDuration = 35f;
+    private const float TargetRetentionInputDuration = TryNotToCryDuration + 5f;
+    private const float RageRefreshDuration = 35f;
+    private const string ChamberGuardName = "SCP-096 Chamber Facility Guard";
+
     protected override string RoleName { get; set; } = "SCP-096";
     protected override string Description { get; set; } =
         "<size=24><color=red>SCP-096: Anger</color>\nSCP-096の怒りと悲しみが再び不安定化し、本来の力が戻ってきた！\n<color=red>自分を見てきた相手を地の底まで追いかけろ！！！</color>";
@@ -35,6 +40,7 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
         Log.Info("[Scp096Anger] RegisterEvents");  // 確認用
         Exiled.Events.Handlers.Scp096.Enraging += OnEnraging;
         Exiled.Events.Handlers.Scp096.AddingTarget += OnTargetAdded;
+        Exiled.Events.Handlers.Scp096.RemovingTarget += OnRemovingTarget;
         Exiled.Events.Handlers.Scp096.CalmingDown += OnCalming;
         base.RegisterEvents();
     }
@@ -44,6 +50,7 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
         Log.Info("[Scp096Anger] UnregisterEvents");
         Exiled.Events.Handlers.Scp096.Enraging -= OnEnraging;
         Exiled.Events.Handlers.Scp096.AddingTarget -= OnTargetAdded;
+        Exiled.Events.Handlers.Scp096.RemovingTarget -= OnRemovingTarget;
         Exiled.Events.Handlers.Scp096.CalmingDown -= OnCalming;
         base.UnregisterEvents();
     }
@@ -68,7 +75,7 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
             }
         }
         Vector3 spawnPoint = new Vector3(shyguyPosition.x + 1f, shyguyPosition.y + 0f, shyguyPosition.z);
-        Npc term_npc = Npc.Spawn("SCP-096 Chamber Facility Guard", RoleTypeId.FacilityGuard, false, position: spawnPoint);
+        Npc term_npc = Npc.Spawn(ChamberGuardName, RoleTypeId.FacilityGuard, false, position: spawnPoint);
         term_npc.Transform.localEulerAngles = new Vector3(0, -90, 0);
     }
 
@@ -83,7 +90,7 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
         }
         foreach (var npc in Npc.List)
         {
-            if (npc.CustomName == "SCP-096 Chamber Facility Guard")
+            if (npc.CustomName == ChamberGuardName)
             {
                 npc.Destroy();
             }
@@ -135,23 +142,48 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
         ev.Player.EnableEffect(EffectType.Slowness, 95);
         ev.Player.EnableEffect(EffectType.DamageReduction, 90);
         SpeakerApi.Play("096Angered.ogg", "Scp096", ev.Player.Position, true, ev.Player.Transform, false, 80f, 0f);
-        Timing.CallDelayed(35f, () =>
+        Timing.CallDelayed(0.1f, () =>
+        {
+            if (!Check(ev.Player) || !_inTryNotToCryAnim.GetValueOrDefault(ev.Player, false))
+                return;
+
+            ev.Scp096.ShowRageInput(TargetRetentionInputDuration);
+        });
+
+        Timing.CallDelayed(TryNotToCryDuration, () =>
         {
             if (!Check(ev.Player)) return;
             _inTryNotToCryAnim.Remove(ev.Player);  // 安全削除
-            ChangeSpeedState(ev.Player, true);
             ev.Player.DisableEffect(EffectType.DamageReduction);
-            ev.Scp096.Enrage(999f);
+
+            if (!HasLivingEnemyTarget(ev.Scp096))
+            {
+                ChangeSpeedState(ev.Player, false);
+                return;
+            }
+
+            ChangeSpeedState(ev.Player, true);
+            ev.Scp096.Enrage(RageRefreshDuration);
         });
+    }
+
+    private void OnRemovingTarget(RemovingTargetEventArgs ev)
+    {
+        if (!Check(ev.Player)) return;
+        if (!ShouldPersistTarget(ev.Target)) return;
+
+        ev.IsAllowed = false;
+        RefreshRageTimer(ev.Scp096);
     }
 
     private void OnCalming(CalmingDownEventArgs ev)
     {
         if (!Check(ev.Player)) return;
-        if (ev.Scp096.Targets.Count != 0)
+        if (HasLivingEnemyTarget(ev.Scp096))
         {
+            RefreshRageTimer(ev.Scp096);
             ev.IsAllowed = false;
-            ev.ShouldClearEnragedTimeLeft = true;
+            ev.ShouldClearEnragedTimeLeft = false;
             return;
         }
         ChangeSpeedState(ev.Player, false);
@@ -171,6 +203,31 @@ public class Scp096Anger : CRole  // 属性なしで自動登録
                     scp096Role.Calm();
             });
         }
+    }
+
+    private static bool HasLivingEnemyTarget(Scp096Role scp096Role)
+    {
+        foreach (Player target in scp096Role.Targets)
+        {
+            if (ShouldPersistTarget(target))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool ShouldPersistTarget(Player target)
+    {
+        return target is { IsConnected: true, IsAlive: true } && target.GetTeam() is not CTeam.SCPs;
+    }
+
+    private static void RefreshRageTimer(Scp096Role scp096Role)
+    {
+        if (!scp096Role.RageManager.IsEnraged)
+            return;
+
+        scp096Role.EnragedTimeLeft = RageRefreshDuration;
+        scp096Role.TotalEnrageTime = RageRefreshDuration;
     }
 
     private void ChangeSpeedState([CanBeNull] Player player, bool isFast)

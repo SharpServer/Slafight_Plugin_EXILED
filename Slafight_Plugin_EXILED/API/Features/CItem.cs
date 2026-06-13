@@ -157,6 +157,13 @@ public abstract class CItem
                     continue;
                 }
 
+                if (RegisteredInstances.Any(item => item.GetType() == type) ||
+                    UniqueKeyToItem.ContainsKey(instance.UniqueKey))
+                {
+                    Log.Warn($"CItem.RegisterAllItems: {type.Name} key={instance.UniqueKey} is already registered, skipping duplicate");
+                    continue;
+                }
+
                 bool autoRegisterEvents =
                     type.GetCustomAttributes(typeof(CItemAutoRegisterIgnoreAttribute), true).Length == 0;
 
@@ -379,12 +386,14 @@ public abstract class CItem
     {
         if (player == null) return null;
 
+        Item? item = null;
+
         // ペンディング状態をセット。finally で必ずクリアする。
         _pendingGiveCItem          = this;
         _pendingGiveDisplayMessage = displayMessage;
         try
         {
-            var item = player.AddItem(BaseItem);
+            item = player.AddItem(BaseItem);
             if (item == null) return null;
 
             // AddItem は同期で ItemAdded を発火するため、
@@ -401,6 +410,7 @@ public abstract class CItem
         }
         catch (Exception ex)
         {
+            CleanupFailedGivenItem(player, item);
             Log.Error($"CItem.Give failed ({GetType().Name}): {ex}");
             return null;
         }
@@ -415,10 +425,12 @@ public abstract class CItem
     /// <summary>指定位置にこの CItem の Pickup を生成する。</summary>
     public virtual Pickup? Spawn(Vector3 position)
     {
+        Pickup? pickup = null;
+
         _pendingSpawnCItem = this;
         try
         {
-            var pickup = CreatePickupForSpawn(position);
+            pickup = CreatePickupForSpawn(position);
             if (pickup == null) return null;
 
             // CreatePickupForSpawn は内部で PickupAdded を同期発火するため、
@@ -435,6 +447,7 @@ public abstract class CItem
         }
         catch (Exception ex)
         {
+            CleanupFailedSpawnedPickup(pickup);
             Log.Error($"CItem.Spawn failed ({GetType().Name}): {ex}");
             return null;
         }
@@ -463,6 +476,61 @@ public abstract class CItem
     /// Pickup の生成方法そのものを変えたい場合は <see cref="CreatePickupForSpawn"/> を override する。
     /// </summary>
     protected virtual void CustomizePickup(Pickup pickup) { }
+
+    /// <summary>
+    /// SerialToItem から tracking が外れる直前の通知。
+    /// CItemHybrid の mode map など、派生クラス側の serial 状態を同時に掃除するために使う。
+    /// </summary>
+    protected virtual void OnSerialUntracked(ushort serial) { }
+
+    private static void UntrackSerial(ushort serial)
+    {
+        if (SerialToItem.TryGetValue(serial, out var ci) && ci != null)
+        {
+            try { ci.OnSerialUntracked(serial); }
+            catch (Exception ex) { Log.Warn($"CItem.OnSerialUntracked error in {ci.GetType().Name}: {ex}"); }
+        }
+
+        SerialToItem.Remove(serial);
+    }
+
+    private static void CleanupFailedGivenItem(Player? player, Item? item)
+    {
+        if (item == null) return;
+
+        UntrackSerial(item.Serial);
+
+        try
+        {
+            if (player?.Items.Any(i => i?.Serial == item.Serial) == true)
+                player.RemoveItem(item, destroy: true);
+            else
+                item.Destroy();
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"CItem.CleanupFailedGivenItem failed for serial={item.Serial}: {ex}");
+        }
+    }
+
+    private static void CleanupFailedSpawnedPickup(Pickup? pickup)
+    {
+        if (pickup == null) return;
+
+        var serial = pickup.Serial;
+        UntrackSerial(serial);
+        DestroyPickupLightInternal(serial);
+        DestroyPickupSchematicInternal(serial);
+
+        try
+        {
+            pickup.Destroy();
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"CItem.CleanupFailedSpawnedPickup failed for serial={serial}: {ex}");
+        }
+    }
 
     // ======================================================
     // Pickup ライト制御
@@ -621,7 +689,7 @@ public abstract class CItem
         {
             if (item == null || !Check(item)) continue;
 
-            SerialToItem.Remove(item.Serial);
+            UntrackSerial(item.Serial);
             if (destroy) player.RemoveItem(item, destroy: true);
             return true;
         }
