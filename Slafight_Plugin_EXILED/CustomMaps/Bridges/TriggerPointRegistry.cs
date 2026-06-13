@@ -175,63 +175,6 @@ public class TriggerPointRegistry : SlafightLabApiHandler
             case "BroadcasterPoint":
                 MapFlags.BroadcasterPoint = pos;
                 break;
-            case "CISR_GoCRailgun":
-                MapFlags.CisrGoCRailgunPoint = pos;
-                break;
-            case "CISR_Scp1425":
-                MapFlags.CisrScp1425Point = pos;
-                break;
-            case "CISR_SNAV300":
-                MapFlags.CisrSnav300Point = pos;
-                break;
-            case "CISR_MFP":
-                MapFlags.CisrMemoryForcePillPoint = pos;
-                break;
-            case "CISR_SCP513":
-                MapFlags.CisrScp513Point = pos;
-                break;
-            case "CISR_SQ":
-                MapFlags.CisrSchwarzschildQuasarPoint = pos;
-                break;
-            case "CISR_AntiMemeGrenade":
-                MapFlags.CisrAntiMemeGrenadePoint = pos;
-                break;
-            case "CISR_KeycardArmory1":
-                MapFlags.CisrKeycardArmory1Point = pos;
-                break;
-            case "CISR_KeycardArmory2":
-                MapFlags.CisrKeycardArmory2Point = pos;
-                break;
-            case "CISR_KeycardArmory3":
-                MapFlags.CisrKeycardArmory3Point = pos;
-                break;
-            case "CISR_KeycardSurveillance":
-                MapFlags.CisrKeycardSurveillancePoint = pos;
-                break;
-            case "CISR_GunRevolverX":
-                MapFlags.CisrGunRevolverXPoint = pos;
-                break;
-            case "CISR_KeycardA":
-                MapFlags.CisrKeycardAPoint = pos;
-                break;
-            case "CISR_Medicine":
-                MapFlags.CisrMedicinePoint = pos;
-                break;
-            case "CISR_B9v":
-                MapFlags.CisrBattery9VPoint = pos;
-                break;
-            case "CISR_B18v":
-                MapFlags.CisrBattery18VPoint = pos;
-                break;
-            case "CISR_BStr":
-                MapFlags.CisrBatteryStrangeVPoint = pos;
-                break;
-            case "CISR_MasterCard":
-                MapFlags.CisrMasterCardPoint = pos;
-                break;
-            case "CISR_PlayingCard":
-                MapFlags.CisrPlayingCardPoint = pos;
-                break;
         }
     }
 }

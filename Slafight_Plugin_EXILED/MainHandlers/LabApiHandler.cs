@@ -21,7 +21,6 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
 {
     private static LabApiHandler _instance;
     private static TriggerPointRegistry _triggerPointRegistry;
-    private static TriggerPointItemSpawner _triggerPointItemSpawner;
 
     public static LabApiHandler Instance => _instance;
 
@@ -29,12 +28,10 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
     {
         _instance = LabApiHandlerRegistry.Register(_instance);
         _triggerPointRegistry = LabApiHandlerRegistry.Register(_triggerPointRegistry);
-        _triggerPointItemSpawner = LabApiHandlerRegistry.Register(_triggerPointItemSpawner);
     }
 
     public static void Unregister()
     {
-        LabApiHandlerRegistry.Unregister(ref _triggerPointItemSpawner);
         LabApiHandlerRegistry.Unregister(ref _triggerPointRegistry);
         LabApiHandlerRegistry.Unregister(ref _instance);
     }

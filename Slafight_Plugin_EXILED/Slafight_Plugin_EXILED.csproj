@@ -406,7 +406,6 @@
         <Compile Include="CustomMaps\ObjectPrefabs\Trashbox.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Vent.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\WarheadBoomEffect.cs" />
-        <Compile Include="CustomMaps\Bridges\TriggerPointItemSpawner.cs" />
         <Compile Include="CustomMaps\Bridges\TriggerPointRegistry.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosIntruder.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosPenal.cs" />
