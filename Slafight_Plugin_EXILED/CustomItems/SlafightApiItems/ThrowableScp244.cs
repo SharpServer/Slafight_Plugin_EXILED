@@ -37,15 +37,13 @@ public class ThrowableScp244 : CItem
     {
         Exiled.Events.Handlers.Player.ThrownProjectile -= OnThrown;
         Exiled.Events.Handlers.Map.ExplodingGrenade -= OnExploding;
+        ClearTrackedProjectiles(destroyPickups: true);
         base.UnregisterEvents();
     }
 
     protected override void OnWaitingForPlayers()
     {
-        TrackedPickups?.Clear();
-        foreach (var handle in TrackedCoroutines.Values)
-            Timing.KillCoroutines(handle);
-        TrackedCoroutines.Clear();
+        ClearTrackedProjectiles(destroyPickups: true);
 
         var armoryDoor = Door.Get(DoorType.HczArmory);
         if (armoryDoor == null) return;
@@ -116,5 +114,24 @@ public class ThrowableScp244 : CItem
 
         // クリーンアップ
         TrackedPickups.Remove(ev.Projectile);
+    }
+
+    private static void ClearTrackedProjectiles(bool destroyPickups)
+    {
+        foreach (var handle in TrackedCoroutines.Values)
+            Timing.KillCoroutines(handle);
+
+        TrackedCoroutines.Clear();
+
+        if (destroyPickups && TrackedPickups != null)
+        {
+            foreach (var pickup in TrackedPickups.Values)
+            {
+                try { pickup?.Destroy(); }
+                catch { /* ignored */ }
+            }
+        }
+
+        TrackedPickups?.Clear();
     }
 }

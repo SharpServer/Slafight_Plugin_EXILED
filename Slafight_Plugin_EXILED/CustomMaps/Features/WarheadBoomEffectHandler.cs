@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Warhead;
@@ -11,6 +12,9 @@ namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 
 public static class WarheadBoomEffectHandler
 {
+    private static readonly List<CoroutineHandle> ExtraHandles = [];
+    private static readonly List<Exiled.API.Features.Toys.Light> ExtraLights = [];
+
     public static void Register()
     {
         Exiled.Events.Handlers.Warhead.Starting += InvokeCoroutine;
@@ -21,9 +25,7 @@ public static class WarheadBoomEffectHandler
     {
         Exiled.Events.Handlers.Warhead.Starting -= InvokeCoroutine;
         Exiled.Events.Handlers.Warhead.Detonated -= OnDetonated;
-        Timing.KillCoroutines(_handle);
-        WarheadBoomEffectUtil.StopAllEffects();
-        IsBooming = false;
+        CleanupRunningEffects();
     }
     private static CoroutineHandle _handle;
 
@@ -31,6 +33,7 @@ public static class WarheadBoomEffectHandler
 
     private static void OnDetonated()
     {
+        CleanupExtraHandles();
         IsBooming = false;
         if (Round.IsLobby) return;
         foreach (var player in Player.List)
@@ -63,6 +66,7 @@ public static class WarheadBoomEffectHandler
         }
         IsBooming = false;
         Timing.KillCoroutines(_handle);
+        CleanupExtraHandles();
         _handle = Timing.RunCoroutine(EffectCoroutine());
     }
 
@@ -107,7 +111,7 @@ public static class WarheadBoomEffectHandler
 
                 // 残り 0.3秒になるまで待ってからフラッシュ
                 float flashDelay = estimatedRemaining - 0.3f;
-                Timing.RunCoroutine(FlashAfterDelayCoroutine(effectPos, flashDelay));
+                ExtraHandles.Add(Timing.RunCoroutine(FlashAfterDelayCoroutine(effectPos, flashDelay)));
 
                 yield break;
             }
@@ -122,7 +126,7 @@ public static class WarheadBoomEffectHandler
         if (delay > 0f)
             yield return Timing.WaitForSeconds(delay);
 
-        Timing.RunCoroutine(FlashCoroutine(position));
+        ExtraHandles.Add(Timing.RunCoroutine(FlashCoroutine(position)));
     }
 
     // ================================================================
@@ -148,6 +152,7 @@ public static class WarheadBoomEffectHandler
             spawn:    true,
             color:    flashColor
         );
+        ExtraLights.Add(light);
         light.LightType  = LightType.Point;
         light.Intensity  = 0f;
         light.Range      = 1f;
@@ -182,5 +187,31 @@ public static class WarheadBoomEffectHandler
         // ── 後片付け ───────────────────────────────────────────────
         light.Intensity = 0f;
         light.Destroy();
+        ExtraLights.Remove(light);
+    }
+
+    private static void CleanupRunningEffects()
+    {
+        Timing.KillCoroutines(_handle);
+        _handle = default;
+        CleanupExtraHandles();
+        WarheadBoomEffectUtil.StopAllEffects();
+        IsBooming = false;
+    }
+
+    private static void CleanupExtraHandles()
+    {
+        foreach (var handle in ExtraHandles)
+            Timing.KillCoroutines(handle);
+
+        ExtraHandles.Clear();
+
+        foreach (var light in ExtraLights.ToArray())
+        {
+            try { light?.Destroy(); }
+            catch { /* ignored */ }
+        }
+
+        ExtraLights.Clear();
     }
 }

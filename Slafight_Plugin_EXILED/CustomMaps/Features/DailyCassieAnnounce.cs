@@ -21,18 +21,18 @@ public static class DailyCassieAnnounce
     {
         Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
         Exiled.Events.Handlers.Server.RoundEnded -= OnRoundEnded;
+        ResetState();
     }
 
     private static void OnRoundStarted()
     {
+        ResetState();
         _handle = Timing.RunCoroutine(EasterEggLoop());
     }
 
     private static void OnRoundEnded(Exiled.Events.EventArgs.Server.RoundEndedEventArgs ev)
     {
-        Timing.KillCoroutines(_handle);
-        _experiment7777Step = 0;
-        _experiment7777Active = false;
+        ResetState();
     }
 
     // ========== 実験7777 シーケンス管理 ==========
@@ -161,6 +161,14 @@ public static class DailyCassieAnnounce
 
     private static readonly Random _random = new Random();
     private static CoroutineHandle _handle;
+
+    private static void ResetState()
+    {
+        Timing.KillCoroutines(_handle);
+        _handle = default;
+        _experiment7777Step = 0;
+        _experiment7777Active = false;
+    }
 
     // ========== メインループ ==========
     private static IEnumerator<float> EasterEggLoop()

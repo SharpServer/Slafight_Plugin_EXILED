@@ -1,5 +1,6 @@
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using System.Collections.Generic;
 using MEC;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
@@ -9,6 +10,8 @@ namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
 
 public class TriggerPointItemSpawner : SlafightLabApiHandler
 {
+    private static readonly List<CoroutineHandle> PendingSpawns = [];
+
     protected override void RegisterEvents(EventSubscriptionScope subscriptions)
     {
         subscriptions.Add(
@@ -16,14 +19,21 @@ public class TriggerPointItemSpawner : SlafightLabApiHandler
             () => LabApi.Events.Handlers.ServerEvents.RoundStarted -= OnRoundStarted);
     }
 
+    protected override void OnDisposed()
+    {
+        ClearPendingSpawns();
+    }
+
     private static void OnRoundStarted()
     {
-        Timing.CallDelayed(1.05f, () =>
+        ClearPendingSpawns();
+
+        PendingSpawns.Add(Timing.CallDelayed(1.05f, () =>
         {
             CItem.Get<NvgNormal>()?.Spawn(Room.Get(RoomType.Hcz939).WorldPosition(Vector3.up * 1.5f));
-        });
+        }));
 
-        Timing.CallDelayed(2.25f, SpawnItems);
+        PendingSpawns.Add(Timing.CallDelayed(2.25f, SpawnItems));
     }
 
     private static void SpawnItems()
@@ -61,5 +71,13 @@ public class TriggerPointItemSpawner : SlafightLabApiHandler
     {
         if (position != Vector3.zero)
             spawn(position);
+    }
+
+    private static void ClearPendingSpawns()
+    {
+        foreach (var handle in PendingSpawns)
+            Timing.KillCoroutines(handle);
+
+        PendingSpawns.Clear();
     }
 }

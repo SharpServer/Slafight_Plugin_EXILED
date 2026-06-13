@@ -10,6 +10,7 @@ using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers.Wearables;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using ExiledScp1344 = Exiled.API.Features.Items.Scp1344;
 using Light = Exiled.API.Features.Toys.Light;
 
 namespace Slafight_Plugin_EXILED.CustomItems;
@@ -51,6 +52,7 @@ public static class NvgManager
 
     private static readonly Dictionary<ushort, NvgRuntimeData> ActiveData  = new();
     private static readonly Dictionary<ushort, float>          BatteryData = new();
+    private static readonly Dictionary<int, string>            LastNvgInfoByOwner = new();
     private static bool _registered;
 
     // --------------------------------------------------------
@@ -104,8 +106,14 @@ public static class NvgManager
     private static void ClearRuntimeState(bool clearBattery)
     {
         foreach (var data in ActiveData.Values)
+        {
+            ClearNvgInfo(data);
             KillRuntimeData(data);
+        }
+
         ActiveData.Clear();
+        LastNvgInfoByOwner.Clear();
+
         if (clearBattery)
             BatteryData.Clear();
     }
@@ -199,10 +207,7 @@ public static class NvgManager
         battery = Mathf.Clamp(battery, 0f, MaxBattery);
 
         if (!isInfinite && battery <= 0f)
-        {
-            player.ShowHint("NVGの電池が切れている...視界が真っ暗になった。", 3f);
             Log.Debug($"[NvgManager] StartNvg: 電池切れ状態で起動 serial={serial}");
-        }
 
         // 同一シリアルまたは同一所有者の古いライトを必ず消してから作り直す。
         StopNvgBySerial(serial, clearBattery: false);
@@ -230,6 +235,7 @@ public static class NvgManager
         if (TryGetPlayerNvgItem(player, serial, out var nvgItem))
             ReapplyManagedBlindness(nvgItem);
 
+        UpdateNvgInfo(player, serial);
         ApplyOwnerVisibility(player, light.Base?.netIdentity);
     }
 
@@ -259,6 +265,7 @@ public static class NvgManager
 
         // NVG由来のブラックアウトを解除
         TryDisableBlackout(data);
+        ClearNvgInfo(data);
 
         // 破棄前に全員へ明示 Hide を送る。
         // 一度でも通常プレイヤーへスポーンが届いた場合の残留をここで潰す。
@@ -435,7 +442,14 @@ public static class NvgManager
             var prof = data.Profile;
 
             // 無限電池はそのまま継続
-            if (prof.DrainPerSecond <= 0f) continue;
+            if (prof.DrainPerSecond <= 0f)
+            {
+                if (TryGetPlayerNvgItem(player, serial, out var infiniteNvgItem))
+                    ReapplyManagedBlindness(infiniteNvgItem);
+
+                UpdateNvgInfo(player, serial);
+                continue;
+            }
 
             float battery = BatteryData.TryGetValue(serial, out var b) ? b : 0f;
 
@@ -446,7 +460,12 @@ public static class NvgManager
                 // 電池切れ中は StopNvg されるまで常に真っ暗にする。
                 // TickInterval より少し長めに付与して、更新ズレで一瞬切れないようにする。
                 if (prof.UseBlackout)
-                    player.EnableEffect<Blindness>(255);
+                {
+                    if (TryGetPlayerNvgItem(player, serial, out var blackoutNvgItem))
+                        ReapplyManagedBlindness(blackoutNvgItem);
+                    else
+                        player.EnableEffect<Blindness>(255);
+                }
 
                 // ライトは消灯状態にするが、NVG自体の Runtime は残す。
                 if (data.NvgLight?.Base != null)
@@ -455,7 +474,7 @@ public static class NvgManager
                     data.NvgLight.Range = 0f;
                 }
 
-                player.ShowHint("NVGの電池が切れた...視界が真っ暗になった。", 1f);
+                UpdateNvgInfo(player, serial);
 
                 continue;
             }
@@ -465,6 +484,11 @@ public static class NvgManager
             battery = Math.Max(0f, battery - drain);
             BatteryData[serial] = battery;
 
+            if (TryGetPlayerNvgItem(player, serial, out var nvgItem))
+                ReapplyManagedBlindness(nvgItem);
+
+            UpdateNvgInfo(player, serial);
+
             // 残量に応じて輝度を落とす
             if (data.NvgLight?.Base != null)
             {
@@ -472,7 +496,6 @@ public static class NvgManager
                 data.NvgLight.Intensity = prof.LightIntensity * (0.4f + 0.6f * ratio);
             }
 
-            player.ShowHint($"NVG電池: {(int)battery}%", 1f);
         }
     }
 
@@ -496,6 +519,60 @@ public static class NvgManager
 
         intensity = data.Profile.WornBlindnessIntensity;
         return intensity > 0;
+    }
+
+    private static void UpdateNvgInfo(Player? player, ushort serial)
+    {
+        if (player == null || !player.IsConnected) return;
+        if (!ActiveData.TryGetValue(serial, out var data)) return;
+
+        bool isInfinite = data.Profile.DrainPerSecond <= 0f;
+        float battery = isInfinite
+            ? MaxBattery
+            : BatteryData.TryGetValue(serial, out var storedBattery) ? storedBattery : 0f;
+        bool blackout = !isInfinite && battery <= 0f && data.Profile.UseBlackout;
+
+        string text = BuildNvgInfoText(battery, isInfinite, blackout);
+        if (LastNvgInfoByOwner.TryGetValue(player.Id, out var previous) && previous == text)
+            return;
+
+        LastNvgInfoByOwner[player.Id] = text;
+        EffectedInfoTextProvider.Set(player, text);
+    }
+
+    private static string BuildNvgInfoText(float battery, bool isInfinite, bool blackout)
+    {
+        if (blackout)
+            return "<color=#ff5555>NVG電池: 0% - 電池切れ</color>";
+
+        if (isInfinite)
+            return "<color=#88ff88>NVG電池: ∞</color>";
+
+        int percent = Mathf.Clamp((int)battery, 0, 100);
+        string color = percent <= 15 ? "#ffdd66" : "#88ff88";
+        return $"<color={color}>NVG電池: {percent}%</color>";
+    }
+
+    private static void ClearNvgInfo(NvgRuntimeData? data)
+    {
+        if (data == null) return;
+
+        try
+        {
+            var player = Player.Get(data.OwnerId);
+            if (player == null || !player.IsConnected)
+            {
+                LastNvgInfoByOwner.Remove(data.OwnerId);
+                return;
+            }
+
+            if (LastNvgInfoByOwner.Remove(player.Id))
+                EffectedInfoTextProvider.Clear(player);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[NvgManager] ClearNvgInfo failed: {ex.Message}");
+        }
     }
 
     private static void DisableNvgWearable(Player? player)
@@ -563,6 +640,13 @@ public static class NvgManager
             }
         }
 
+        if (ActiveData.TryGetValue(serial, out var activeInfo))
+        {
+            var owner = Player.Get(activeInfo.OwnerId);
+            if (owner != null && owner.IsConnected)
+                UpdateNvgInfo(owner, serial);
+        }
+
         return true;
     }
 
@@ -589,7 +673,11 @@ public static class NvgManager
         item = null;
         if (player == null) return false;
 
-        item = player.Items.OfType<Scp1344Item>().FirstOrDefault(i => i != null && i.ItemSerial == serial);
+        item = player.Items
+            .OfType<ExiledScp1344>()
+            .FirstOrDefault(i => i != null && i.Serial == serial)
+            ?.Base;
+
         return item != null;
     }
 }

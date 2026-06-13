@@ -139,13 +139,15 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
         Vector3? offset = null,
         Action<Player, SchematicObject> afterAttach = null)
     {
+        if (labPlayer == null)
+            return;
+
+        var networkId = labPlayer.NetworkId;
+
         Timing.CallDelayed(1.5f, () =>
         {
-            if (labPlayer == null)
-                return;
-
-            var exiledPlayer = Exiled.API.Features.Player.Get(labPlayer.NetworkId);
-            if (exiledPlayer == null)
+            var exiledPlayer = Exiled.API.Features.Player.Get(networkId);
+            if (exiledPlayer?.ReferenceHub == null)
             {
                 Log.Warn($"[LabApiHandler] {logName}: Exiled player not found.");
                 return;
@@ -163,16 +165,27 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
             }
 
             if (playerScale.HasValue)
-                labPlayer.Scale = playerScale.Value;
+                exiledPlayer.Scale = playerScale.Value;
 
             WearsHandler.RegisterExternal(exiledPlayer, schem, offset);
 
             Timing.CallDelayed(0.5f, () =>
             {
+                var currentPlayer = Exiled.API.Features.Player.Get(networkId);
+                if (currentPlayer?.ReferenceHub == null)
+                {
+                    schem?.Destroy();
+                    return;
+                }
+
                 if (schem == null || schem.transform == null)
                     return;
 
-                afterAttach?.Invoke(labPlayer, schem);
+                var currentLabPlayer = Player.Get(currentPlayer.ReferenceHub);
+                if (currentLabPlayer == null)
+                    return;
+
+                afterAttach?.Invoke(currentLabPlayer, schem);
             });
         });
     }

@@ -11,6 +11,7 @@ namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
 public class TriggerPointRegistry : SlafightLabApiHandler
 {
     private static int _refreshGeneration;
+    private static CoroutineHandle _refreshHandle;
 
     protected override void RegisterEvents(EventSubscriptionScope subscriptions)
     {
@@ -20,6 +21,12 @@ public class TriggerPointRegistry : SlafightLabApiHandler
         subscriptions.Add(
             () => ProjectMER.Events.Handlers.Schematic.SchematicSpawned += OnSchematicSpawned,
             () => ProjectMER.Events.Handlers.Schematic.SchematicSpawned -= OnSchematicSpawned);
+    }
+
+    protected override void OnDisposed()
+    {
+        _refreshGeneration++;
+        Timing.KillCoroutines(_refreshHandle);
     }
 
     private static void OnWaitingForPlayers()
@@ -36,7 +43,8 @@ public class TriggerPointRegistry : SlafightLabApiHandler
     private static void ScheduleRefresh(float delay)
     {
         int generation = ++_refreshGeneration;
-        Timing.CallDelayed(delay, () =>
+        Timing.KillCoroutines(_refreshHandle);
+        _refreshHandle = Timing.CallDelayed(delay, () =>
         {
             if (generation != _refreshGeneration)
                 return;

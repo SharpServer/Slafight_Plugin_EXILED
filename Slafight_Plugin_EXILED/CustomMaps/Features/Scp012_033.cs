@@ -141,7 +141,7 @@ public static class Scp012_033
             var scp012Pos = scp012Obj.Position;
 
             var alivePlayers = Player.List
-                .Where(p => p.IsConnected && !p.IsHost && !p.IsNPC)
+                .Where(p => p.ReferenceHub != null && !p.IsHost && !p.ReferenceHub.IsHost && p.IsAlive)
                 .ToList();
 
             foreach (var player in alivePlayers)
@@ -151,7 +151,7 @@ public static class Scp012_033
             }
 
             // 切断済みプレイヤーを掃除
-            foreach (var kvp in Effecteds.Where(kvp => !kvp.Key.IsConnected).ToList())
+            foreach (var kvp in Effecteds.Where(kvp => kvp.Key?.ReferenceHub == null).ToList())
                 Effecteds.Remove(kvp.Key);
 
             yield return Timing.WaitForSeconds(0.5f);

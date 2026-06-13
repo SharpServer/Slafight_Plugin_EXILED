@@ -194,6 +194,12 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
             if (Round.IsLobby || !_sessions.ContainsKey(session.Player))
                 yield break;
 
+            if (session.Player?.ReferenceHub == null)
+            {
+                EndSession(session.Player, null);
+                yield break;
+            }
+
             if (Vector3.Distance(session.Player.Position, session.ConsolePosition) > SessionMaxDistance)
             {
                 EndSession(session.Player, "<size=24>制御室操作を終了しました。\n制御盤から離れました。</size>");
@@ -219,7 +225,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
         Timing.KillCoroutines(session.HintLoop);
         _sessions.Remove(player);
 
-        if (!string.IsNullOrWhiteSpace(hint))
+        if (!string.IsNullOrWhiteSpace(hint) && player.ReferenceHub != null && player.IsConnected && !player.IsNPC)
             player.ShowHint(hint, 3.5f);
     }
 
