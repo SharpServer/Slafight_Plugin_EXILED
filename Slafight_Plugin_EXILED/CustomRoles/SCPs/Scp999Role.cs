@@ -53,12 +53,12 @@ public class Scp999Role : CRole
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
             var current = Player.Get(playerId);
-            if (current == null)
+            if (!Check(current) || !IsSafeRolePlayer(current))
                 return;
 
             var position = current.Position;
             current.Role.Set(RoleTypeId.Tutorial, RoleSpawnFlags.AssignInventory);
-            current.Position = position;
+            TrySetPlayerPosition(current, position, "Scp999Role role swap");
             AssignIdentity(current);
             ApplySpawnSpecificFlags(current);
             FinalizeSpawnState(current);
@@ -66,10 +66,10 @@ public class Scp999Role : CRole
             Timing.CallDelayed(RoleSpawnTimings.NextFrame, () =>
             {
                 var next = Player.Get(playerId);
-                if (next == null)
+                if (!Check(next) || !IsSafeRolePlayer(next))
                     return;
 
-                next.Position = position;
+                TrySetPlayerPosition(next, position, "Scp999Role next-frame restore");
                 ApplySpawnSpecificFlags(next);
                 next.SetCustomInfo("SCP-999");
             });

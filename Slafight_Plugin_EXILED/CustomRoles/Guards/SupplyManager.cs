@@ -38,16 +38,19 @@ public class SupplyManager : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
+        var playerId = player.Id;
+
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
-            if (Random.Range(0, 2) == 0)
-            {
-                player.Position = MapFlags.SupplyManagerSpawnPointA;
-            }
-            else
-            {
-                player.Position = MapFlags.SupplyManagerSpawnPointB;
-            }
+            var current = Player.Get(playerId);
+            if (!Check(current))
+                return;
+
+            var position = Random.Range(0, 2) == 0
+                ? MapFlags.SupplyManagerSpawnPointA
+                : MapFlags.SupplyManagerSpawnPointB;
+
+            TrySetPlayerPosition(current, position, nameof(SupplyManager));
         });
     }
 }

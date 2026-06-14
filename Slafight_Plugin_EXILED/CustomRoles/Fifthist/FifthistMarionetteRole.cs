@@ -29,15 +29,18 @@ public class FifthistMarionetteRole : CRole
         var scp3125 = Player.List.FirstOrDefault(p => p.GetCustomRole() is CRoleTypeId.Scp3125);
         if (scp3125 is not null)
         {
-            player.Position = scp3125.Position + Vector3.up * 0.15f;
+            TrySetPlayerPosition(player, scp3125.Position + Vector3.up * 0.15f, nameof(FifthistMarionetteRole));
         }
         else if (player.CurrentRoom is null)
         {
-            player.Position = Room.Random(ZoneType.HeavyContainment).WorldPosition(Vector3.up*1.05f);
+            TrySetPlayerPosition(
+                player,
+                Room.Random(ZoneType.HeavyContainment).WorldPosition(Vector3.up * 1.05f),
+                nameof(FifthistMarionetteRole));
         }
         else
         {
-            player.Position += Vector3.up * 0.85f;
+            TrySetPlayerPosition(player, player.Position + Vector3.up * 0.85f, nameof(FifthistMarionetteRole));
         }
     }
 }

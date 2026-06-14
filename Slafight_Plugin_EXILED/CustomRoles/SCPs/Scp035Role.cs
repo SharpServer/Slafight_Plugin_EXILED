@@ -91,7 +91,7 @@ public class Scp035Role : CRole
 
         FrozenPlayers.Remove(player.Id);
 
-        player.Position = Room.Get(RoomType.Hcz939).WorldPosition(Vector3.up * 0.65f);
+        TrySetPlayerPosition(player, Room.Get(RoomType.Hcz939).WorldPosition(Vector3.up * 0.65f), nameof(Scp035Role));
 
         player.TryWear("SCP035", player.Transform, out var schematicObject, (Vector3.forward * 0.205f)+(Vector3.up*0.6f));
         schematicObject.Scale *= 1.185f;

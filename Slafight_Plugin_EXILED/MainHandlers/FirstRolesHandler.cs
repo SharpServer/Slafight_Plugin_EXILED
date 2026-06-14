@@ -17,6 +17,7 @@ namespace Slafight_Plugin_EXILED.MainHandlers;
 public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
 {
     public static FirstRolesHandler Instance { get; private set; }
+    public static bool IsRoundStartAssignmentActive => Instance?._roundLockedByFirstRoles == true;
 
     public static void Register()
     {
@@ -86,7 +87,6 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
         _assignedCount = 0;
         _coroutineHandle = default;
         FirstRoleAssignedPlayerIds.Clear();
-        RoleSyncReadiness.Clear();
 
         if (unlockRound)
             UnlockRound($"{reason} cleanup");
@@ -117,11 +117,6 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
         try
         {
             CollectUnassignedPlayersFromList();
-            PruneRoundStartQueue();
-            var roleSyncWaiter = WaitForQueuedRoleSyncReadiness();
-            while (roleSyncWaiter.MoveNext())
-                yield return roleSyncWaiter.Current;
-
             PruneRoundStartQueue();
 
             if (_roundStartSpawnQueue.Count == 0)
@@ -218,52 +213,6 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
         }
 
         QueueRoundStartPlayer(player, "Spawned(RoundStart)");
-    }
-
-    private IEnumerator<float> WaitForQueuedRoleSyncReadiness()
-    {
-        float waited = 0f;
-        bool loggedWait = false;
-
-        while (waited < RoleSpawnTimings.FirstRolesSyncReadyTimeout &&
-               HasQueuedPlayersWaitingForRoleSync(out int waitingCount))
-        {
-            if (!loggedWait)
-            {
-                loggedWait = true;
-                Log.Debug($"[FirstRoles] Waiting for vanilla role sync settle: players={waitingCount}");
-            }
-
-            yield return Timing.WaitForSeconds(RoleSpawnTimings.FirstRolesSyncReadyPollInterval);
-            waited += RoleSpawnTimings.FirstRolesSyncReadyPollInterval;
-        }
-
-        if (HasQueuedPlayersWaitingForRoleSync(out int remainingCount))
-            Log.Warn($"[FirstRoles] Vanilla role sync did not settle for {remainingCount} player(s) before timeout; continuing with guarded assignment.");
-    }
-
-    private bool HasQueuedPlayersWaitingForRoleSync(out int waitingCount)
-    {
-        waitingCount = 0;
-
-        foreach (int playerId in _roundStartSpawnQueue)
-        {
-            var player = Player.Get(playerId);
-            if (!IsEligibleForFirstRole(player) || !IsFirstRoleUnassigned(player))
-                continue;
-
-            if (player.IsNPC)
-                continue;
-
-            if (!RoleSyncReadiness.IsSelfRoleSyncSettled(
-                    player.ReferenceHub,
-                    settleSeconds: 0f))
-            {
-                waitingCount++;
-            }
-        }
-
-        return waitingCount > 0;
     }
 
     private void CollectUnassignedPlayersFromList()

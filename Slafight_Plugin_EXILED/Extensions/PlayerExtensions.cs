@@ -12,6 +12,9 @@ public static class PlayerExtensions
     public static void SetRole(this Player player, RoleTypeId roleTypeId,
         RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
     {
+        if (!CanSetRoleSafely(player, roleTypeId))
+            return;
+
         Log.Debug($"[SetRole-Vanilla] {player.Nickname} -> {roleTypeId} (flags: {roleSpawnFlags})");
         switch (roleTypeId)
         {
@@ -142,9 +145,49 @@ public static class PlayerExtensions
     public static void SetRole(this Player player, CRoleTypeId roleTypeId,
         RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
     {
+        if (!CanSetRoleSafely(player, roleTypeId))
+            return;
+
         Log.Debug($"[SetRole-Custom] {player.Nickname} -> {roleTypeId} (flags: {roleSpawnFlags})");
         if (!CRole.TrySpawn(player, roleTypeId, roleSpawnFlags))
             Log.Warn($"[SetRole-Custom] Unknown or unavailable CRoleTypeId: {roleTypeId}");
+    }
+
+    private static bool CanSetRoleSafely(Player player, object role)
+    {
+        try
+        {
+            if (player == null)
+            {
+                Log.Warn($"[SetRole] Skipped {role}: player is null.");
+                return false;
+            }
+
+            if (player.ReferenceHub == null)
+            {
+                Log.Warn($"[SetRole] Skipped {role} for {player.Nickname}: ReferenceHub is null.");
+                return false;
+            }
+
+            if (!player.IsNPC && !player.IsConnected)
+            {
+                Log.Warn($"[SetRole] Skipped {role} for {player.Nickname}: player is not connected.");
+                return false;
+            }
+
+            if (player.Role.Type == RoleTypeId.Destroyed)
+            {
+                Log.Warn($"[SetRole] Skipped {role} for {player.Nickname}: current role is Destroyed.");
+                return false;
+            }
+
+            return true;
+        }
+        catch (System.Exception ex)
+        {
+            Log.Warn($"[SetRole] Skipped {role}: invalid player target ({ex.Message}).");
+            return false;
+        }
     }
 
     public static void SetCustomInfo(this Player player, string Info)

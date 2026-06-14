@@ -33,11 +33,17 @@ public class HideAdmin : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
+        var playerId = player.Id;
+
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
-            player.IsBypassModeEnabled = true;
-            player.IsNoclipPermitted = true;
-            player.IsSpectatable = false;
+            var current = Player.Get(playerId);
+            if (!Check(current) || !IsSafeRolePlayer(current))
+                return;
+
+            current.IsBypassModeEnabled = true;
+            current.IsNoclipPermitted = true;
+            current.IsSpectatable = false;
         });
     }
 }

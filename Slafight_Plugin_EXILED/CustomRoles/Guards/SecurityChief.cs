@@ -36,9 +36,18 @@ public class SecurityChief : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
+        var playerId = player.Id;
+
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
-            player.Position = Room.Get(RoomType.EzChef).WorldPosition(Vector3.up * 0.75f);
+            var current = Player.Get(playerId);
+            if (!Check(current))
+                return;
+
+            TrySetPlayerPosition(
+                current,
+                Room.Get(RoomType.EzChef).WorldPosition(Vector3.up * 0.75f),
+                nameof(SecurityChief));
         });
     }
 }

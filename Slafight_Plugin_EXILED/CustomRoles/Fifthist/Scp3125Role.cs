@@ -39,10 +39,15 @@ public class Scp3125Role : CRole
         player.EnableEffect(EffectType.Slowness, 30);
 
         player.AddAbility<MemeWaveAbility>();
+        var playerId = player.Id;
         Timing.CallDelayed(RoleSpawnTimings.Scp3125Startup, () =>
         {
-            Timing.RunCoroutine(Scp3125HintSyncCoroutine(player));
-            Timing.RunCoroutine(Scp3125Coroutine(player));
+            var current = Player.Get(playerId);
+            if (!Check(current) || !IsSafeRolePlayer(current))
+                return;
+
+            Timing.RunCoroutine(Scp3125HintSyncCoroutine(current));
+            Timing.RunCoroutine(Scp3125Coroutine(current));
         });
     }
     

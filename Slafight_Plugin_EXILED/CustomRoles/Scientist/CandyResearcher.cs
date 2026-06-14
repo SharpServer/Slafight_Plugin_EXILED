@@ -29,9 +29,15 @@ public class CandyResearcher : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
+        var playerId = player.Id;
+
         Timing.CallDelayed(RoleSpawnTimings.NextFrame, () =>
         {
-            if (Scp330Bag.TryGetBag(player.ReferenceHub, out var bag))
+            var current = Player.Get(playerId);
+            if (!Check(current) || !IsSafeRolePlayer(current))
+                return;
+
+            if (Scp330Bag.TryGetBag(current.ReferenceHub, out var bag))
             {
                 bag.Candies.Clear();
                 var rareCandies = new List<CandyKindID>
@@ -49,6 +55,6 @@ public class CandyResearcher : CRole
         });
         
         Door.Get(DoorType.Scp330).IsOpen = true;
-        player.Position = Door.Get(DoorType.Scp330).Position + (Vector3.up * 0.8f);
+        TrySetPlayerPosition(player, Door.Get(DoorType.Scp330).Position + (Vector3.up * 0.8f), nameof(CandyResearcher));
     }
 }

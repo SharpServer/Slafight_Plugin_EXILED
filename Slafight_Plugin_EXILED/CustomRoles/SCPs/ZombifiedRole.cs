@@ -27,11 +27,14 @@ public class ZombifiedRole : CRole
     {
         if (player.CurrentRoom is null)
         {
-            player.Position = Room.Random(ZoneType.HeavyContainment).WorldPosition(Vector3.up*1.05f);
+            TrySetPlayerPosition(
+                player,
+                Room.Random(ZoneType.HeavyContainment).WorldPosition(Vector3.up * 1.05f),
+                nameof(ZombifiedRole));
         }
         else
         {
-            player.Position += Vector3.up * 0.85f;
+            TrySetPlayerPosition(player, player.Position + Vector3.up * 0.85f, nameof(ZombifiedRole));
         }
     }
 }

@@ -33,21 +33,26 @@ public class SnowWarrior : CRole
         LabApiHandler.SchemSnowWarrior(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
 
         const int maxHealth = 1000;
+        var playerId = player.Id;
 
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
-            CustomInfoDisplay.Apply(player, "<color=#FFFFFF>SNOW WARRIOR</color>");
-            player.MaxHealth = maxHealth;
-            player.Health = maxHealth;
+            var current = Player.Get(playerId);
+            if (!Check(current) || !IsSafeRolePlayer(current))
+                return;
 
-            player.AddItem(ItemType.SCP1509);
-            player.AddItem(ItemType.GunCOM18);
-            player.AddItem(ItemType.ArmorHeavy);
-            player.AddItem(ItemType.SCP500);
-            player.AddItem(ItemType.SCP500);
-            player.AddItem(ItemType.KeycardO5);
+            CustomInfoDisplay.Apply(current, "<color=#FFFFFF>SNOW WARRIOR</color>");
+            current.MaxHealth = maxHealth;
+            current.Health = maxHealth;
 
-            player.SetAmmo(AmmoType.Nato9, 50);
+            current.AddItem(ItemType.SCP1509);
+            current.AddItem(ItemType.GunCOM18);
+            current.AddItem(ItemType.ArmorHeavy);
+            current.AddItem(ItemType.SCP500);
+            current.AddItem(ItemType.SCP500);
+            current.AddItem(ItemType.KeycardO5);
+
+            current.SetAmmo(AmmoType.Nato9, 50);
         });
     }
 }

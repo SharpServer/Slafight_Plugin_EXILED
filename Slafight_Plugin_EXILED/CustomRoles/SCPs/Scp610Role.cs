@@ -43,7 +43,7 @@ public class Scp610Role : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        player.Position = Room.Get(RoomType.Hcz939).WorldPosition(Vector3.up * 0.65f);
+        TrySetPlayerPosition(player, Room.Get(RoomType.Hcz939).WorldPosition(Vector3.up * 0.65f), nameof(Scp610Role));
 
         player.TryWear("scp-610", player.Transform, out var schematicObject, (Vector3.down * 1f));
         //schematicObject.Scale *= 1.185f;

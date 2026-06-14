@@ -32,14 +32,20 @@ public class SergeyMakarovAwakenRole : CRole
     {
         player.DisableAllEffects();
         var pos = Door.Get(DoorType.Scp106Primary).Position + Vector3.up * 0.15f;
-        player.Position = pos;
+        TrySetPlayerPosition(player, pos, nameof(SergeyMakarovAwakenRole));
 
         player.AddAbility(new CreateSinkholeAbility(player));
         player.AddAbility(new MagicMissileAbility(player));
         player.AddAbility(new SoundOfFifthAbility(player));
+
+        var playerId = player.Id;
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
-            RPNameSetter.SetForcedCustomName(player, $"セルゲイ・マカロフ ({player.Nickname})");
+            var current = Player.Get(playerId);
+            if (!Check(current) || !IsSafeRolePlayer(current))
+                return;
+
+            RPNameSetter.SetForcedCustomName(current, $"セルゲイ・マカロフ ({current.Nickname})");
         });
     }
 

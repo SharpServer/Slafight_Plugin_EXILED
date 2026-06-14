@@ -14,11 +14,11 @@ public static class RoleSpawnTimings
     public const float TeamNpcSpawn = 0.6f;
     public const float TeamNpcPostSpawnSetup = 0.6f;
     public const float TeamNpcCleanupAfterRoleChange = 1f;
-    public const float FirstRolesSyncReadyPollInterval = 0.05f;
-    public const float FirstRolesSyncReadyTimeout = 2f;
     public const float FirstRolesNpcApplyRetry = 0.6f;
     public const float RoleSyncMinSendInterval = 0.2f;
     public const float RoleSyncInitialPackRetryInterval = 0.2f;
+    public const float RoleSyncInitialPackReadySettle = 0.5f;
+    public const float RoleSyncInitialPackMaxWait = 30f;
     public const float SpawnSystemDefaultWaveReset = NextFrame;
     public const float CustomRoleRemovalCleanup = 1f;
     public const float HudRecreateAfterClear = 0.25f;

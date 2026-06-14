@@ -31,9 +31,15 @@ public class CandySubject : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
+        var playerId = player.Id;
+
         Timing.CallDelayed(RoleSpawnTimings.NextFrame, () =>
         {
-            if (Scp330Bag.TryGetBag(player.ReferenceHub, out var bag))
+            var current = Player.Get(playerId);
+            if (!Check(current) || !IsSafeRolePlayer(current))
+                return;
+
+            if (Scp330Bag.TryGetBag(current.ReferenceHub, out var bag))
             {
                 bag.Candies.Clear();
                 var rareCandies = new List<CandyKindID>

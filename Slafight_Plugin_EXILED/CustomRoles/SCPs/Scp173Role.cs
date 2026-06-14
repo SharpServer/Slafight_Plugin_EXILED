@@ -63,7 +63,42 @@ public class Scp173Role : CRole
         }
 
         yield return Timing.WaitForSeconds(RoleSpawnTimings.AfterRoleSet);
-        player.Position = MapFlags.Scp173SpawnPoint;
+        if (!Check(player))
+            yield break;
+
+        TrySetPosition(player, MapFlags.Scp173SpawnPoint, nameof(WaitAndTeleport));
+    }
+
+    private static bool IsSafePlayerTarget(Player player)
+    {
+        try
+        {
+            return player?.ReferenceHub != null &&
+                   (player.IsNPC || player.IsConnected) &&
+                   player.Role.Type != RoleTypeId.Destroyed;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static void TrySetPosition(Player player, Vector3 position, string context)
+    {
+        if (!IsSafePlayerTarget(player))
+        {
+            Log.Warn($"[Scp173Role] Skipped teleport during {context}: target is no longer valid.");
+            return;
+        }
+
+        try
+        {
+            player.Position = position;
+        }
+        catch (System.Exception ex)
+        {
+            Log.Warn($"[Scp173Role] Skipped teleport during {context}: {ex.Message}");
+        }
     }
 
     private void OnBlinking(BlinkingEventArgs ev)

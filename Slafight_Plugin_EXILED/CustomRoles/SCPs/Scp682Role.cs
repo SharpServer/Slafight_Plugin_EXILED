@@ -62,7 +62,42 @@ public class Scp682Role : CRole
         }
 
         yield return Timing.WaitForSeconds(RoleSpawnTimings.AfterRoleSet);
-        player.Position = MapFlags.Scp682SpawnPoint;
+        if (!Check(player))
+            yield break;
+
+        TrySetPosition(player, MapFlags.Scp682SpawnPoint, nameof(WaitAndTeleport));
+    }
+
+    private static bool IsSafePlayerTarget(Player player)
+    {
+        try
+        {
+            return player?.ReferenceHub != null &&
+                   (player.IsNPC || player.IsConnected) &&
+                   player.Role.Type != RoleTypeId.Destroyed;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static void TrySetPosition(Player player, Vector3 position, string context)
+    {
+        if (!IsSafePlayerTarget(player))
+        {
+            Log.Warn($"[Scp682Role] Skipped teleport during {context}: target is no longer valid.");
+            return;
+        }
+
+        try
+        {
+            player.Position = position;
+        }
+        catch (System.Exception ex)
+        {
+            Log.Warn($"[Scp682Role] Skipped teleport during {context}: {ex.Message}");
+        }
     }
 
     private IEnumerator<float> Coroutine(Player player)

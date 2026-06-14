@@ -706,7 +706,7 @@ public abstract class CRole
 
     protected void SpawnConfiguredRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
     {
-        if (player == null) return;
+        if (!IsSafeRolePlayer(player)) return;
 
         RunCommonSpawnLifecycle(player, roleSpawnFlags);
         OnRoleSpawnStarting(player, roleSpawnFlags);
@@ -756,9 +756,9 @@ public abstract class CRole
                 Timing.CallDelayed(RoleSpawnTimings.RestoreRoleState, () =>
                 {
                     var p = Player.Get(playerId);
-                    if (p == null || p.ReferenceHub == null) return;
+                    if (!IsSafeRolePlayer(p)) return;
 
-                    p.Position = savePosition;
+                    TrySetPlayerPosition(p, savePosition, "RestoreRoleState/None");
                     p.ClearInventory();
 
                     foreach (var item in items)
@@ -777,9 +777,9 @@ public abstract class CRole
                 Timing.CallDelayed(RoleSpawnTimings.RestoreRoleState, () =>
                 {
                     var p = Player.Get(playerId);
-                    if (p == null || p.ReferenceHub == null) return;
+                    if (!IsSafeRolePlayer(p)) return;
 
-                    p.Position = savePosition;
+                    TrySetPlayerPosition(p, savePosition, "RestoreRoleState/AssignInventory");
                 });
                 break;
             }
@@ -792,7 +792,7 @@ public abstract class CRole
                 Timing.CallDelayed(RoleSpawnTimings.RestoreRoleState, () =>
                 {
                     var p = Player.Get(playerId);
-                    if (p == null || p.ReferenceHub == null) return;
+                    if (!IsSafeRolePlayer(p)) return;
 
                     p.ClearInventory();
 
@@ -888,7 +888,7 @@ public abstract class CRole
 
     protected void ApplyBaseRole(Player? player, RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
     {
-        if (player == null || SpawnBaseRole == null) return;
+        if (!IsSafeRolePlayer(player) || SpawnBaseRole == null) return;
         player.Role.Set(SpawnBaseRole.Value, SpawnBaseRoleFlags ?? roleSpawnFlags);
     }
 
@@ -1011,7 +1011,41 @@ public abstract class CRole
     protected void ApplySpawnPosition(Player? player)
     {
         if (player == null || SpawnPosition == null) return;
-        player.Position = SpawnPosition.Value;
+        TrySetPlayerPosition(player, SpawnPosition.Value, "SpawnPosition");
+    }
+
+    protected static bool IsSafeRolePlayer(Player? player)
+    {
+        try
+        {
+            return player?.ReferenceHub != null &&
+                   (player.IsNPC || player.IsConnected) &&
+                   player.Role.Type != RoleTypeId.Destroyed;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    protected static bool TrySetPlayerPosition(Player? player, Vector3 position, string context)
+    {
+        if (!IsSafeRolePlayer(player))
+        {
+            Log.Warn($"CRole skipped position update during {context}: player is no longer valid.");
+            return false;
+        }
+
+        try
+        {
+            player.Position = position;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"CRole skipped position update during {context}: {ex.Message}");
+            return false;
+        }
     }
 
     protected void ApplySpawnSpecificFlags(Player? player)

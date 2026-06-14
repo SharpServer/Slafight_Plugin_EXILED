@@ -32,6 +32,6 @@ public class Engineer : CRole
     {
         var room = Room.Get(RoomType.HczTestRoom);
         if (room != null)
-            player.Position = room.WorldPosition(new Vector3(0f, 1f, 0f));
+            TrySetPlayerPosition(player, room.WorldPosition(new Vector3(0f, 1f, 0f)), nameof(Engineer));
     }
 }

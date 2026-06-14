@@ -19,9 +19,15 @@ public class HideWatch : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
+        var playerId = player.Id;
+
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
-            player.ChangeAppearance(RoleTypeId.Spectator);
+            var current = Player.Get(playerId);
+            if (!Check(current) || !IsSafeRolePlayer(current))
+                return;
+
+            current.ChangeAppearance(RoleTypeId.Spectator);
         });
     }
 }

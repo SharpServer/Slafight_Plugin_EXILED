@@ -40,8 +40,9 @@ public class Scp3114Role : CRole
         Room SpawnRoom = Room.Get(RoomType.Hcz127);
         Log.Debug(SpawnRoom.Position);
         Vector3 offset = new Vector3(0f,13f,0f);
-        player.Position = SpawnRoom.Position + SpawnRoom.Rotation * offset;
-        player.Rotation = SpawnRoom.Rotation;
+        if (TrySetPlayerPosition(player, SpawnRoom.Position + SpawnRoom.Rotation * offset, nameof(Scp3114Role)))
+            player.Rotation = SpawnRoom.Rotation;
+
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
             Ragdoll classd = Ragdoll.CreateAndSpawn(RoleTypeId.ClassD, "D-9341","For You",SpawnRoom.Position + SpawnRoom.Rotation * offset,SpawnRoom.Rotation);

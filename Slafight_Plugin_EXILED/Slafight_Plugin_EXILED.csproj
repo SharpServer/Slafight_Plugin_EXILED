@@ -228,7 +228,6 @@
         <Compile Include="API\Features\ObjectPrefab.cs" />
         <Compile Include="API\Features\PrefabSaveData.cs" />
         <Compile Include="API\Features\RoleLimitManager.cs" />
-        <Compile Include="API\Features\RoleSyncReadiness.cs" />
         <Compile Include="API\Features\RoleSpawnTimings.cs" />
         <Compile Include="API\Features\RoleTableContext.cs" />
         <Compile Include="API\Features\RoleTableContextRegistry.cs" />

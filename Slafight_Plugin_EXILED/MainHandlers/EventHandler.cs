@@ -372,8 +372,6 @@ public class EventHandler : IBootstrapHandler, IDisposable
             if (newRole == RoleTypeId.Spectator) return;
             if (!player.IsAlive) return;
 
-            ConfigureScpTeamAnomalousTarget();
-
             if (player.Role.Team == Team.SCPs) return;
             if (player.Inventory == null) return;
             if (player.IsInventoryFull) return;
@@ -389,15 +387,6 @@ public class EventHandler : IBootstrapHandler, IDisposable
                     player.GiveOrDrop(ItemType.Flashlight);
             }
         });
-    }
-
-    private static void ConfigureScpTeamAnomalousTarget()
-    {
-        foreach (var target in Player.List)
-        {
-            if (target?.GetTeam() is not CTeam.SCPs) return;
-            target.EnableEffect<AnomalousTarget>();
-        }
     }
 
     private void DeadmanCancel(DeadmanSwitchInitiatingEventArgs? ev)

@@ -43,11 +43,17 @@ public class ChaosUndercoverAgent : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
+        var playerId = player.Id;
+
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
+            var current = Player.Get(playerId);
+            if (!Check(current))
+                return;
+
             var data = StaticUtils.GetWorldFromRoomLocal(RoomType.HczCrossRoomWater, new Vector3(-4.98f, -9.25f, 2.3f), new Vector3(0f, 270f, 0f));
-            player.Position = data.worldPosition;
-            player.Rotation = data.worldRotation;
+            if (TrySetPlayerPosition(current, data.worldPosition, nameof(ChaosUndercoverAgent)))
+                current.Rotation = data.worldRotation;
         });
     }
 }

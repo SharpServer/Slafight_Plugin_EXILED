@@ -88,19 +88,11 @@ public static class PlayerRoleManagerRoleSyncPatch
     private static void SendNow(PlayerRoleManager manager, ReferenceHub targetHub, uint targetNetId)
     {
         LastRoleSyncTimeByTarget[targetNetId] = Time.realtimeSinceStartup;
-        bool sentToTargetClient = false;
 
         foreach (var receiverHub in ReferenceHub.AllHubs.ToArray())
         {
-            if (!TrySendToReceiver(manager, targetHub, receiverHub))
-                continue;
-
-            if (TryGetHubNetId(receiverHub, out var receiverNetId) && receiverNetId == targetNetId)
-                sentToTargetClient = true;
+            TrySendToReceiver(manager, targetHub, receiverHub);
         }
-
-        if (sentToTargetClient)
-            RoleSyncReadiness.MarkSelfRoleSyncSent(targetHub);
     }
 
     private static bool TrySendToReceiver(PlayerRoleManager manager, ReferenceHub targetHub, ReferenceHub receiverHub)
@@ -122,6 +114,9 @@ public static class PlayerRoleManagerRoleSyncPatch
 
             if (spoofedRole.HasValue)
                 targetRole = spoofedRole.Value;
+
+            if (targetRole is RoleTypeId.None or RoleTypeId.Destroyed)
+                return false;
 
             var connection = ((NetworkBehaviour)receiverHub).connectionToClient;
             ((NetworkConnection)connection).Send(
@@ -155,30 +150,22 @@ public static class PlayerRoleManagerRoleSyncPatch
             if (targetHub?.roleManager == null)
                 return false;
 
+            if (((NetworkBehaviour)targetHub).isLocalPlayer)
+                return false;
+
+            if (targetHub.Mode == ClientInstanceMode.Unverified)
+                return false;
+
+            var currentRole = targetHub.roleManager.CurrentRole;
+            if (currentRole == null || currentRole.RoleTypeId is RoleTypeId.None or RoleTypeId.Destroyed)
+                return false;
+
             targetNetId = ((NetworkBehaviour)targetHub).netId;
             return targetNetId != 0;
         }
         catch (Exception ex)
         {
             Log.Warn($"[RoleSyncGuard] Invalid role sync target: {ex.Message}");
-            return false;
-        }
-    }
-
-    private static bool TryGetHubNetId(ReferenceHub hub, out uint netId)
-    {
-        netId = 0;
-
-        try
-        {
-            if (hub == null)
-                return false;
-
-            netId = ((NetworkBehaviour)hub).netId;
-            return netId != 0;
-        }
-        catch
-        {
             return false;
         }
     }
@@ -224,7 +211,6 @@ public static class PlayerRoleManagerRoleSyncPatch
 [HarmonyPatch(typeof(PlayerRolesNetUtils), nameof(PlayerRolesNetUtils.HandleSpawnedPlayer))]
 public static class PlayerRolesNetUtilsHandleSpawnedPlayerPatch
 {
-    private const int MaxPackSendAttempts = 15;
     private static readonly HashSet<ReferenceHub> PendingInitialPacks = [];
 
     [HarmonyPrefix]
@@ -233,11 +219,11 @@ public static class PlayerRolesNetUtilsHandleSpawnedPlayerPatch
         if (!NetworkServer.active)
             return true;
 
-        TrySendInitialRolePack(hub, 0);
+        TrySendInitialRolePack(hub, Time.realtimeSinceStartup + RoleSpawnTimings.RoleSyncInitialPackMaxWait, 0f);
         return false;
     }
 
-    private static void TrySendInitialRolePack(ReferenceHub hub, int attempt)
+    private static void TrySendInitialRolePack(ReferenceHub hub, float deadline, float readySince)
     {
         if (hub == null)
             return;
@@ -247,7 +233,7 @@ public static class PlayerRolesNetUtilsHandleSpawnedPlayerPatch
 
         if (!IsReadyForInitialRolePack(hub))
         {
-            if (attempt >= MaxPackSendAttempts)
+            if (Time.realtimeSinceStartup >= deadline)
             {
                 Log.Warn($"[RoleSyncGuard] Initial role pack skipped; receiver did not become ready: {DescribeHub(hub)}");
                 return;
@@ -259,7 +245,24 @@ public static class PlayerRolesNetUtilsHandleSpawnedPlayerPatch
             Timing.CallDelayed(RoleSpawnTimings.RoleSyncInitialPackRetryInterval, () =>
             {
                 PendingInitialPacks.Remove(hub);
-                TrySendInitialRolePack(hub, attempt + 1);
+                TrySendInitialRolePack(hub, deadline, 0f);
+            });
+
+            return;
+        }
+
+        if (readySince <= 0f)
+            readySince = Time.realtimeSinceStartup;
+
+        if (Time.realtimeSinceStartup - readySince < RoleSpawnTimings.RoleSyncInitialPackReadySettle)
+        {
+            if (!PendingInitialPacks.Add(hub))
+                return;
+
+            Timing.CallDelayed(RoleSpawnTimings.RoleSyncInitialPackRetryInterval, () =>
+            {
+                PendingInitialPacks.Remove(hub);
+                TrySendInitialRolePack(hub, deadline, readySince);
             });
 
             return;
@@ -366,6 +369,9 @@ public static class PlayerRolesNetUtilsWriteRoleSyncInfoPackPatch
 
         try
         {
+            if (!IsValidPackTarget(receiverHub, targetHub, out _))
+                return false;
+
             if (!TryGetPackRole(receiverHub, targetHub, out var targetRole))
                 return false;
 
@@ -398,25 +404,84 @@ public static class PlayerRolesNetUtilsWriteRoleSyncInfoPackPatch
 
         try
         {
-            if (targetHub == null || targetHub.roleManager == null)
-                return false;
-
-            if (((NetworkBehaviour)targetHub).isLocalPlayer || ((NetworkBehaviour)targetHub).netId == 0)
+            if (!IsValidPackTarget(receiverHub, targetHub, out _))
                 return false;
 
             var currentRole = targetHub.roleManager.CurrentRole;
-            if (currentRole == null || currentRole.RoleTypeId == RoleTypeId.Destroyed)
+            if (currentRole == null || currentRole.RoleTypeId is RoleTypeId.None or RoleTypeId.Destroyed)
                 return false;
 
             targetRole = currentRole is IObfuscatedRole obfuscatedRole
                 ? obfuscatedRole.GetRoleForUser(receiverHub)
                 : currentRole.RoleTypeId;
 
-            return true;
+            return targetRole is not RoleTypeId.None and not RoleTypeId.Destroyed;
         }
         catch (Exception ex)
         {
             Log.Warn($"[RoleSyncGuard] Failed to resolve pack role for {DescribeHub(targetHub)}: {ex.Message}");
+            return false;
+        }
+    }
+
+    private static bool IsValidPackTarget(ReferenceHub receiverHub, ReferenceHub targetHub, out string reason)
+    {
+        reason = string.Empty;
+
+        try
+        {
+            if (receiverHub == null)
+            {
+                reason = "receiver is null";
+                return false;
+            }
+
+            if (targetHub == null)
+            {
+                reason = "target is null";
+                return false;
+            }
+
+            if (ReferenceEquals(receiverHub, targetHub))
+            {
+                reason = "target is receiver";
+                return false;
+            }
+
+            if (targetHub.roleManager == null)
+            {
+                reason = "target roleManager is null";
+                return false;
+            }
+
+            var targetBehaviour = (NetworkBehaviour)targetHub;
+            if (targetBehaviour.isLocalPlayer || targetBehaviour.netId == 0)
+            {
+                reason = "target has no network identity";
+                return false;
+            }
+
+            if (targetHub.Mode == ClientInstanceMode.Unverified)
+            {
+                reason = "target is unverified";
+                return false;
+            }
+
+            if (targetHub.Mode != ClientInstanceMode.DedicatedServer)
+            {
+                var targetConnection = targetBehaviour.connectionToClient;
+                if (targetConnection == null || !targetConnection.isReady)
+                {
+                    reason = "target connection is not ready";
+                    return false;
+                }
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            reason = ex.Message;
             return false;
         }
     }

@@ -41,7 +41,7 @@ public class SergeyMakarovRole : CRole
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
         var pos = Room.Get(RoomType.HczIncineratorWayside).WorldPosition(new Vector3(0f,12.55f,0f));
-        player.Position = pos;
+        TrySetPlayerPosition(player, pos, nameof(SergeyMakarovRole));
 
         UnitPackRegistry.TryGet("MTF_NtfNormal", out var ntfpack);
         UnitPackRegistry.TryGet("GOI_ChaosBackup", out var ntfbackupPack);
@@ -69,10 +69,15 @@ public class SergeyMakarovRole : CRole
         );
         SpawnContextRegistry.Register(chaosOnlyContext);
         SpawnContextRegistry.SetActive("SM_VanillaOnly");
-        
+
+        var playerId = player.Id;
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
-            RPNameSetter.SetForcedCustomName(player, $"セルゲイ・マカロフ ({player.Nickname})");
+            var current = Player.Get(playerId);
+            if (!Check(current) || !IsSafeRolePlayer(current))
+                return;
+
+            RPNameSetter.SetForcedCustomName(current, $"セルゲイ・マカロフ ({current.Nickname})");
         });
         Timing.RunCoroutine(SergeySharedContents.SergeySharedCoroutine(player));
     }

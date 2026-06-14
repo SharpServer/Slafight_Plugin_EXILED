@@ -31,9 +31,15 @@ public class FacilityManager : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
+        var playerId = player.Id;
+
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
         {
-            player.Position = MapFlags.FacilityManagerSpawnPoint;
+            var current = Player.Get(playerId);
+            if (!Check(current))
+                return;
+
+            TrySetPlayerPosition(current, MapFlags.FacilityManagerSpawnPoint, nameof(FacilityManager));
         });
     }
 }
