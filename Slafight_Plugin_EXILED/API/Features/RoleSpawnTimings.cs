@@ -14,6 +14,7 @@ public static class RoleSpawnTimings
     public const float TeamNpcSpawn = 0.6f;
     public const float TeamNpcPostSpawnSetup = 0.6f;
     public const float TeamNpcCleanupAfterRoleChange = 1f;
+    public const float FirstRolesNpcApplyRetry = 0.6f;
     public const float FirstRolesRoundUnlockFallback = 5f;
     public const float SpawnSystemDefaultWaveReset = NextFrame;
     public const float CustomRoleRemovalCleanup = 1f;

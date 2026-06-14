@@ -35,8 +35,10 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
     private static readonly HashSet<int> RoundStartCandidates = [];
     private static readonly Dictionary<int, PlannedInitialRole> PlannedRoles = new();
     private static readonly HashSet<int> AppliedInitialRoles = [];
+    private static readonly HashSet<int> PendingNpcRoleApplies = [];
     private static CoroutineHandle _roundUnlockFallback;
     private static bool _planBuilt;
+    private const int MaxNpcApplyAttempts = 8;
 
     private readonly struct PlannedInitialRole
     {
@@ -95,6 +97,7 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
         RoundStartCandidates.Clear();
         PlannedRoles.Clear();
         AppliedInitialRoles.Clear();
+        PendingNpcRoleApplies.Clear();
         _planBuilt = false;
 
         Log.Debug($"[FirstRoles] Reset runtime state ({reason})");
@@ -108,7 +111,8 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
         if (!IsAssignableFirstRoleTarget(ev.Player)) return;
 
         RoundStartCandidates.Add(ev.Player.Id);
-        Log.Debug($"[FirstRoles] RoundStart candidate {DescribeRoleTarget(ev.Player)} vanilla={ev.NewRole} flags={ev.SpawnFlags}");
+        ev.IsAllowed = false;
+        Log.Debug($"[FirstRoles] RoundStart candidate {DescribeRoleTarget(ev.Player)} vanilla={ev.NewRole} flags={ev.SpawnFlags} cancelled=true");
     }
 
     private static void OnPlayerSpawned(SpawnedEventArgs? ev)
@@ -129,6 +133,7 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
         int playerId = ev.Player.Id;
         RoundStartCandidates.Remove(playerId);
         AppliedInitialRoles.Remove(playerId);
+        PendingNpcRoleApplies.Remove(playerId);
 
         if (PlannedRoles.Remove(playerId))
             UnlockRoundIfPlanComplete("player-left");
@@ -160,7 +165,7 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
         Log.Debug($"[FirstRoles] Plan {DescribeRoleTarget(player)} -> {DescribePlannedRole(choice)}");
     }
 
-    private static void ApplyPlannedRole(int playerId, string source)
+    private static void ApplyPlannedRole(int playerId, string source, int attempt = 0)
     {
         if (!PlannedRoles.TryGetValue(playerId, out var planned)) return;
         if (AppliedInitialRoles.Contains(playerId)) return;
@@ -175,9 +180,9 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
             return;
         }
 
-        if (player!.IsRoleUnassigned())
+        if (player!.IsNPC && !IsNpcReadyForFirstRole(player))
         {
-            Log.Debug($"[FirstRoles] Wait for stable spawned state: {DescribeRoleTarget(player)} ({source})");
+            ScheduleNpcRoleApplyRetry(playerId, source, attempt);
             return;
         }
 
@@ -196,7 +201,31 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
                 break;
         }
 
+        PendingNpcRoleApplies.Remove(playerId);
         UnlockRoundIfPlanComplete(source);
+    }
+
+    private static void ScheduleNpcRoleApplyRetry(int playerId, string source, int attempt)
+    {
+        if (attempt >= MaxNpcApplyAttempts)
+        {
+            PendingNpcRoleApplies.Remove(playerId);
+            AppliedInitialRoles.Add(playerId);
+            PlannedRoles.Remove(playerId);
+            Log.Warn($"[FirstRoles] Drop planned role for unstable NPC Id={playerId} after {attempt} attempts ({source})");
+            UnlockRoundIfPlanComplete(source);
+            return;
+        }
+
+        if (!PendingNpcRoleApplies.Add(playerId))
+            return;
+
+        Log.Debug($"[FirstRoles] Delay NPC initial role Id={playerId} attempt={attempt + 1}/{MaxNpcApplyAttempts} ({source})");
+        Timing.CallDelayed(RoleSpawnTimings.FirstRolesNpcApplyRetry, () =>
+        {
+            PendingNpcRoleApplies.Remove(playerId);
+            ApplyPlannedRole(playerId, $"npc-delay:{source}", attempt + 1);
+        });
     }
 
     private static void _LimitChecker()
@@ -330,6 +359,16 @@ public class FirstRolesHandler : IBootstrapHandler, System.IDisposable
                && !player.IsHost
                && !player.ReferenceHub.IsHost
                && !CRole.IsTeamNpc(player);
+    }
+
+    private static bool IsNpcReadyForFirstRole(Player player)
+    {
+        if (!player.IsNPC)
+            return true;
+
+        return player.ReferenceHub != null
+               && player.ReferenceHub.netId != 0
+               && player.ReferenceHub.authManager != null;
     }
 
     private static string DescribePlannedRole(object role)

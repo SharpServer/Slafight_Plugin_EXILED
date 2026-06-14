@@ -831,17 +831,32 @@ public abstract class CRole
                 };
             }
 
-            var display = p.GetPlayerDisplay();
-            display.TryGetHint(HudConstId.CRoleSpawned, out var oldHint);
-            if (oldHint != null) p.RemoveHint(oldHint);
-            p.AddHint(hint);
+            try
+            {
+                var display = p.GetPlayerDisplay();
+                display.TryGetHint(HudConstId.CRoleSpawned, out var oldHint);
+                if (oldHint != null) p.RemoveHint(oldHint);
+                p.AddHint(hint);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"CRole.RunCommonSpawnLifecycle: failed to show spawn hint for {p.Nickname}: {ex.Message}");
+                return;
+            }
 
             Timing.CallDelayed(DescriptionDuration, () =>
             {
                 var p2 = Player.Get(id);
                 if (p2 == null || !p2.IsConnected) return;
 
-                p2.RemoveHint(hint);
+                try
+                {
+                    p2.RemoveHint(hint);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn($"CRole.RunCommonSpawnLifecycle: failed to clear spawn hint for {p2.Nickname}: {ex.Message}");
+                }
             });
         });
 

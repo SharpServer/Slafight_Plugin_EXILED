@@ -12,26 +12,35 @@ public static class AbilityManager
     public static readonly Dictionary<int, AbilityLoadout> Loadouts = new();
 
     // 「必ず作る」用
-    public static AbilityLoadout GetOrCreateLoadout(Player player)
+    public static AbilityLoadout? GetOrCreateLoadout(Player? player)
     {
-        if (!Loadouts.TryGetValue(player.Id, out var loadout))
+        if (!TryGetPlayerId(player, out var playerId))
+            return null;
+
+        if (!Loadouts.TryGetValue(playerId, out var loadout))
         {
             loadout = new AbilityLoadout();
-            Loadouts[player.Id] = loadout;
+            Loadouts[playerId] = loadout;
         }
+
         return loadout;
     }
 
     // 「あれば取るだけ」用
-    public static bool TryGetLoadout(Player player, out AbilityLoadout loadout)
-        => Loadouts.TryGetValue(player.Id, out loadout);
+    public static bool TryGetLoadout(Player? player, out AbilityLoadout loadout)
+    {
+        loadout = null!;
+        return TryGetPlayerId(player, out var playerId) &&
+               Loadouts.TryGetValue(playerId, out loadout);
+    }
 
     // 現在選択中のアビリティ使用可能か
-    public static bool CanUseActiveAbility(Player player)
-        => AbilityBase.CanUseSelectedAbility(player.Id);
+    public static bool CanUseActiveAbility(Player? player)
+        => TryGetPlayerId(player, out var playerId) &&
+           AbilityBase.CanUseSelectedAbility(playerId);
 
     // スロット切り替え
-    public static bool SwitchToSlot(Player player, int slotIndex)
+    public static bool SwitchToSlot(Player? player, int slotIndex)
     {
         if (!TryGetLoadout(player, out var loadout))
             return false;
@@ -48,7 +57,7 @@ public static class AbilityManager
     }
 
     // 次スロットへ
-    public static bool NextSlot(Player player)
+    public static bool NextSlot(Player? player)
     {
         if (!TryGetLoadout(player, out var loadout))
             return false;
@@ -61,39 +70,36 @@ public static class AbilityManager
     }
 
     // ★公開メソッド：HUD更新のみ
-    public static void UpdateAbilityHint(Player player, AbilityLoadout loadout)
+    public static void UpdateAbilityHint(Player? player, AbilityLoadout? loadout)
     {
-        if (player == null || loadout == null)
+        if (!CanSyncHud(player) || loadout == null)
             return;
 
-        PlayerHUD.Instance?.ForceAbilityHudSync(player);
+        PlayerHUD.Instance?.ForceAbilityHudSync(player!);
     }
 
     // プレイヤー全クリア
-    public static void ClearPlayer(Player player)
+    public static void ClearPlayer(Player? player)
     {
-        if (player == null)
+        if (!TryGetPlayerId(player, out var playerId))
             return;
 
-        AbilityBase.RevokeAbility(player.Id);
-        Loadouts.Remove(player.Id);
-        PlayerHUD.Instance?.ForceAbilityHudSync(player);
+        AbilityBase.RevokeAbility(playerId);
+        Loadouts.Remove(playerId);
+
+        if (CanSyncHud(player))
+            PlayerHUD.Instance?.ForceAbilityHudSync(player!);
     }
 
     // 全員クリア
     public static void ClearAllLoadouts()
     {
-        foreach (var kvp in Loadouts.ToArray())
-        {
-            AbilityBase.RevokeAbility(kvp.Key);
-            Loadouts.Remove(kvp.Key);
-        }
-
+        AbilityBase.RevokeAllPlayers();
         Loadouts.Clear();
     }
 
     // スロットだけクリア
-    public static void ClearSlots(Player player)
+    public static void ClearSlots(Player? player)
     {
         if (!TryGetLoadout(player, out var loadout))
             return;
@@ -133,11 +139,11 @@ public static class AbilityManager
 
     private static void OnRoundStarted()
     {
-        foreach (var kvp in Loadouts)
+        foreach (var playerId in Loadouts.Keys.ToArray())
         {
-            var player = Player.Get(kvp.Key);
+            var player = Player.Get(playerId);
             if (player?.ReferenceHub != null)
-                AbilityBase.ResetCooldown(player.Id);
+                AbilityBase.ResetCooldown(playerId);
         }
     }
 
@@ -157,7 +163,7 @@ public static class AbilityManager
     }
 
     // デバッグ用
-    public static string GetLoadoutInfo(Player player)
+    public static string GetLoadoutInfo(Player? player)
     {
         if (!TryGetLoadout(player, out var loadout))
             return "No loadout";
@@ -170,5 +176,38 @@ public static class AbilityManager
             sb.AppendLine($"Slot{i}: {ability?.GetType().Name ?? "空"}");
         }
         return sb.ToString();
+    }
+
+    private static bool TryGetPlayerId(Player? player, out int playerId)
+    {
+        playerId = 0;
+
+        try
+        {
+            if (player == null)
+                return false;
+
+            playerId = player.Id;
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool CanSyncHud(Player? player)
+    {
+        try
+        {
+            return player != null &&
+                   player.ReferenceHub != null &&
+                   player.IsConnected &&
+                   !player.IsNPC;
+        }
+        catch
+        {
+            return false;
+        }
     }
 }

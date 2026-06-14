@@ -65,8 +65,12 @@ public abstract class CItemWeapon : CItem
 
         ApplyFirearmCustomization(item);
         var pickup = item.CreatePickup(position);
-        if (pickup != null && Scale != Vector3.one)
+        if (pickup == null)
+            return null;
+
+        if (Scale != Vector3.one)
             pickup.Scale = Scale;
+
         return pickup;
     }
 

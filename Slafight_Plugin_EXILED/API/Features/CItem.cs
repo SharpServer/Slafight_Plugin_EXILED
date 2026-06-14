@@ -62,6 +62,7 @@ public abstract class CItem
     // Pickup に追従する Schematic
     private static readonly Dictionary<ushort, SchematicObject> PickupSchematics = new();
     private static readonly Dictionary<ushort, CoroutineHandle> PickupSchematicCoroutines = new();
+    private static readonly HashSet<ushort> ActivePickupAddedDispatches = [];
 
     private static bool _eventsSubscribed;
 
@@ -184,6 +185,7 @@ public abstract class CItem
         RegisteredInstances.Clear();
         UniqueKeyToItem.Clear();
         SerialToItem.Clear();
+        ActivePickupAddedDispatches.Clear();
         _pendingGiveCItem = null;
         _pendingGiveDisplayMessage = false;
         _pendingSpawnCItem = null;
@@ -433,12 +435,17 @@ public abstract class CItem
             pickup = CreatePickupForSpawn(position);
             if (pickup == null) return null;
 
-            // CreatePickupForSpawn は内部で PickupAdded を同期発火するため、
-            // OnAnyPickupAdded 内で SerialToItem 登録済みのはず。保険登録。
-            if (!SerialToItem.ContainsKey(pickup.Serial))
+            // CreatePickupForSpawn は基本的に PickupAdded を発火するが、
+            // EXILED / LabAPI 側の経路差で同期イベントを拾えないことがある。
+            // 取り逃した場合も Serial 追跡だけで終わらせず、PickupAdded 相当の初期化を走らせる。
+            if (!SerialToItem.TryGetValue(pickup.Serial, out var tracked) || !ReferenceEquals(tracked, this))
             {
+                if (tracked != null && !ReferenceEquals(tracked, this))
+                    Log.Warn($"[CItem] Spawn: serial={pickup.Serial} was tracked by {tracked.GetType().Name}, overriding with {GetType().Name}.");
+
                 SerialToItem[pickup.Serial] = this;
-                Log.Warn($"[CItem] Spawn: PickupAdded missed for serial={pickup.Serial}, force-registered.");
+                Log.Warn($"[CItem] Spawn: PickupAdded missed for serial={pickup.Serial}, force-registered and dispatched fallback.");
+                DispatchPickupAddedFallback(this, pickup);
             }
 
             CustomizePickup(pickup);
@@ -519,6 +526,7 @@ public abstract class CItem
 
         var serial = pickup.Serial;
         UntrackSerial(serial);
+        ActivePickupAddedDispatches.Remove(serial);
         DestroyPickupLightInternal(serial);
         DestroyPickupSchematicInternal(serial);
 
@@ -969,6 +977,51 @@ public abstract class CItem
         Dispatch(ev.Item.Serial, ci => ci.OnThrowingRequest(ev), nameof(OnThrowingRequest));
     }
 
+    private static void DispatchPickupAdded(
+        CItem ci,
+        Pickup pickup,
+        MapEvents.PickupAddedEventArgs? ev)
+    {
+        if (!ActivePickupAddedDispatches.Add(pickup.Serial))
+            return;
+
+        if (ev != null)
+        {
+            try { ci.OnPickupAdded(ev); }
+            catch (Exception ex) { Log.Error($"CItem.OnPickupAdded error in {ci.GetType().Name}: {ex}"); }
+        }
+
+        if (ci.PickupLightEnabled)
+            ci.AddPickupLight(pickup);
+
+        if (!string.IsNullOrEmpty(ci.PickupSchematicName))
+        {
+            AttachPickupSchematic(
+                pickup,
+                ci.PickupSchematicName!,
+                ci.PickupSchematicOffset,
+                ci.PickupSchematicRotationOffset,
+                ci.PickupSchematicScale);
+        }
+    }
+
+    private static void DispatchPickupAddedFallback(CItem ci, Pickup pickup)
+    {
+        MapEvents.PickupAddedEventArgs? ev = null;
+
+        try
+        {
+            if (pickup.Base != null)
+                ev = new MapEvents.PickupAddedEventArgs(pickup.Base);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[CItem] Spawn: failed to create PickupAdded fallback event for serial={pickup.Serial}: {ex.Message}");
+        }
+
+        DispatchPickupAdded(ci, pickup, ev);
+    }
+
     private static void OnAnyPickupAdded(MapEvents.PickupAddedEventArgs? ev)
     {
         if (ev?.Pickup == null) return;
@@ -993,21 +1046,7 @@ public abstract class CItem
             return; // 追跡対象外
         }
 
-        try { ci.OnPickupAdded(ev); }
-        catch (Exception ex) { Log.Error($"CItem.OnPickupAdded error in {ci.GetType().Name}: {ex}"); }
-
-        if (ci.PickupLightEnabled)
-            ci.AddPickupLight(ev.Pickup);
-
-        if (!string.IsNullOrEmpty(ci.PickupSchematicName))
-        {
-            AttachPickupSchematic(
-                ev.Pickup,
-                ci.PickupSchematicName!,
-                ci.PickupSchematicOffset,
-                ci.PickupSchematicRotationOffset,
-                ci.PickupSchematicScale);
-        }
+        DispatchPickupAdded(ci, ev.Pickup, ev);
     }
 
     private static void OnAnyPickupDestroyed(MapEvents.PickupDestroyedEventArgs? ev)
@@ -1023,6 +1062,7 @@ public abstract class CItem
         // SerialToItem の掃除は WaitingForPlayers に任せる。
 
         // ライト / Schematic は Pickup が消えたら不要なので即破棄。
+        ActivePickupAddedDispatches.Remove(ev.Pickup.Serial);
         DestroyPickupLightInternal(ev.Pickup.Serial);
         DestroyPickupSchematicInternal(ev.Pickup.Serial);
     }
@@ -1043,6 +1083,7 @@ public abstract class CItem
     {
         // ラウンド間: 全シリアルをクリア
         SerialToItem.Clear();
+        ActivePickupAddedDispatches.Clear();
 
         foreach (var serial in PickupLights.Keys.ToList())
             DestroyPickupLightInternal(serial);

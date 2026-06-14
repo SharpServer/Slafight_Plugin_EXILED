@@ -185,32 +185,40 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
     
     private static void CustomRoleRemover(ChangingRoleEventArgs ev)
     {
-        if (!ev.IsAllowed) return;
-        Log.Debug($"[CustomRoleRemover] Reset ALL for {ev.Player?.Nickname} (role change {ev.Player?.Role} -> {ev.NewRole})");
-
-        ev.Player!.UniqueRole = null;
-        ev.Player.CustomInfo = null;
-        ev.Player.Scale = new Vector3(1f, 1f, 1f);
-        ev.Player.IsSpectatable = true;
-        ev.Player.IsGodModeEnabled = false;
-        ev.Player.IsNoclipPermitted = false;
-        ev.Player.IsBypassModeEnabled = false;
-        ev.Player.ClearCustomInfo();
-        ev.Player.DisableAllEffects();
+        if (!ev.IsAllowed || ev.Player == null) return;
 
         var player = ev.Player;
         var playerId = player.Id;
-        player.Clear();
-        AbilityManager.ClearSlots(player);
-        AbilityBase.RevokeAbility(player.Id);
-        EffectedInfoTextProvider.Clear(player);
-        CustomShieldState.Clear(player);
-        
-        var display = player.GetPlayerDisplay();
-        display.TryGetHint("CRoleSpawnedHint", out var oldHint);
-        if (oldHint != null) player.RemoveHint(oldHint);
-        
-        CItem.RebuildHybridStateFor(player);
+        Log.Debug($"[CustomRoleRemover] Reset ALL for {player.Nickname} (role change {player.Role} -> {ev.NewRole})");
+
+        RunCleanup("identity", () =>
+        {
+            player.UniqueRole = null;
+            player.CustomInfo = null;
+            player.Scale = new Vector3(1f, 1f, 1f);
+            player.IsSpectatable = true;
+            player.IsGodModeEnabled = false;
+            player.IsNoclipPermitted = false;
+            player.IsBypassModeEnabled = false;
+            player.ClearCustomInfo();
+            player.DisableAllEffects();
+        });
+
+        RunCleanup("player state", () => player.Clear());
+        RunCleanup("abilities", () =>
+        {
+            AbilityManager.ClearSlots(player);
+            AbilityBase.RevokeAbility(player.Id);
+        });
+        RunCleanup("effect text", () => EffectedInfoTextProvider.Clear(player));
+        RunCleanup("shield state", () => CustomShieldState.Clear(player));
+        RunCleanup("spawn hint", () =>
+        {
+            var display = player.GetPlayerDisplay();
+            display.TryGetHint("CRoleSpawnedHint", out var oldHint);
+            if (oldHint != null) player.RemoveHint(oldHint);
+        });
+        RunCleanup("hybrid item state", () => CItem.RebuildHybridStateFor(player));
 
         Timing.CallDelayed(RoleSpawnTimings.CustomRoleRemovalCleanup, () =>
         {
@@ -230,6 +238,18 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
                 // ignore
             }
         });
+    }
+
+    private static void RunCleanup(string tag, Action action)
+    {
+        try
+        {
+            action();
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[CustomRoleRemover] {tag} cleanup failed: \n{ex}");
+        }
     }
 
     public static void AbilityResetInRoundRestarting()

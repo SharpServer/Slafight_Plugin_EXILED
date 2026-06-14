@@ -10,8 +10,13 @@ public static class PlayerAbilityExtensions
     public static bool AddAbility<TAbility>(this Player player)
         where TAbility : AbilityBase
     {
+        if (player == null)
+            return false;
+
         Log.Debug($"[Ability] Add {typeof(TAbility).Name} to {player.Nickname}");
         var loadout = AbilityManager.GetOrCreateLoadout(player);
+        if (loadout == null)
+            return false;
 
         // TAbility は (Player owner) コンストラクタを持っている前提
         var ability = (TAbility)Activator.CreateInstance(typeof(TAbility), player)!;
@@ -25,7 +30,13 @@ public static class PlayerAbilityExtensions
     // 直接インスタンス渡し版
     public static bool AddAbility(this Player player, AbilityBase ability)
     {
+        if (player == null || ability == null)
+            return false;
+
         var loadout = AbilityManager.GetOrCreateLoadout(player);
+        if (loadout == null)
+            return false;
+
         var added = loadout.AddAbility(ability);
         if (added)
             AbilityManager.UpdateAbilityHint(player, loadout);
