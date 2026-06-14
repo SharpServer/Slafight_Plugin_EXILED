@@ -482,6 +482,7 @@
         <Compile Include="CustomRoles\SCPs\ZombifiedRole.cs" />
         <Compile Include="Extensions\AbilityResetUtil.cs" />
         <Compile Include="Extensions\ColorExtensions.cs" />
+        <Compile Include="Extensions\CustomBooleans.cs" />
         <Compile Include="Extensions\CustomTeamUtils.cs" />
         <Compile Include="Extensions\CustomItemExtensions.cs" />
         <Compile Include="Extensions\MeowExtensions.cs" />
