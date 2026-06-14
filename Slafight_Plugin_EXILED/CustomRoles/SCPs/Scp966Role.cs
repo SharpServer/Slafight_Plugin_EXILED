@@ -121,6 +121,7 @@ public class Scp966Role : CRole
     {
         while (true)
         {
+            if (!Check(player)) yield break;
             if (Round.IsLobby || player.ReferenceHub == null || player.IsDead)
                 yield break;
             var result = new List<Player>();
@@ -132,10 +133,9 @@ public class Scp966Role : CRole
                     result.Add(target);
                 }
 
-                if (result.Contains(player) && !_invisibleEffectivePlayers.ContainsKey(target))
-                {
-                    target.CurrentRoom?.SetRoomLightsForTargetOnly(target, false);
-                }
+                // 966 が見えるプレイヤーは暗く、見えないプレイヤーは明るく
+                bool isVisible = result.Contains(target);
+                target.CurrentRoom?.SetRoomLightsForTargetOnly(target, !isVisible);
             }
             _invisibleEffectivePlayers[player] = result;
             PlayerVisibilitySyncProvider.SetHiddenRule(player, p => !result.Contains(p));
@@ -143,10 +143,11 @@ public class Scp966Role : CRole
         }
     }
 
-    private static IEnumerator<float> FlickerCoroutine(Player player)
+    private IEnumerator<float> FlickerCoroutine(Player player)
     {
         while (true)
         {
+            if (!Check(player)) yield break;
             if (Round.IsLobby || player.ReferenceHub == null || player.IsDead)
                 yield break;
             player.CurrentRoom?.TurnOffLights(Random.Range(1f, 3.5f));
@@ -158,6 +159,7 @@ public class Scp966Role : CRole
     {
         while (true)
         {
+            if (!Check(player)) yield break;
             if (Round.IsLobby || player.ReferenceHub == null || player.IsDead)
                 yield break;
             if (!_speedLevels.TryGetValue(player, out var speedLevel))

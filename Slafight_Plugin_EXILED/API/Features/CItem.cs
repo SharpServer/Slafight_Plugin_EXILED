@@ -380,89 +380,89 @@ public abstract class CItem
     // ======================================================
 
     /// <summary>
-    /// プレイヤーにこの CItem を付与する。
-    /// AddItem の呼び出しで同期的に ItemAdded が発火し、
-    /// OnAnyItemAdded 内で SerialToItem 登録と OnAcquired ディスパッチが完了する。
-    /// </summary>
-    public virtual Item? Give(Player? player, bool displayMessage = false)
+/// プレイヤーにこの CItem を付与する。
+/// AddItem の戻り値を正とし、その場で SerialToItem 登録を行う。
+/// ItemAdded は補助として扱い、必須依存しない。
+/// </summary>
+public virtual Item? Give(Player? player, bool displayMessage = false)
+{
+    if (player == null) return null;
+
+    Item? item = null;
+
+    try
     {
-        if (player == null) return null;
-
-        Item? item = null;
-
-        // ペンディング状態をセット。finally で必ずクリアする。
+        // ここでは pending は「誰が呼んだか」をイベント側に伝える用途だけに絞る。
         _pendingGiveCItem          = this;
         _pendingGiveDisplayMessage = displayMessage;
-        try
-        {
-            item = player.AddItem(BaseItem);
-            if (item == null) return null;
 
-            // AddItem は同期で ItemAdded を発火するため、
-            // ここに到達した時点では SerialToItem は既に登録済みのはず。
-            // 万一 ItemAdded を拾えなかった場合の保険。
-            if (!SerialToItem.ContainsKey(item.Serial))
-            {
-                SerialToItem[item.Serial] = this;
-                Log.Warn($"[CItem] Give: ItemAdded missed for serial={item.Serial}, force-registered.");
-            }
+        item = player.AddItem(BaseItem);
+        if (item == null) return null;
 
-            CustomizeItem(item);
-            return item;
-        }
-        catch (Exception ex)
-        {
-            CleanupFailedGivenItem(player, item);
-            Log.Error($"CItem.Give failed ({GetType().Name}): {ex}");
-            return null;
-        }
-        finally
-        {
-            // 同期発火の ItemAdded がすでにクリアしている場合でも二重クリアは無害。
-            _pendingGiveCItem          = null;
-            _pendingGiveDisplayMessage = false;
-        }
+        // AddItem のイベント順序に依存せず、戻り値で即登録する。
+        SerialToItem[item.Serial] = this;
+
+        // ここでの登録が真実なので、ItemAdded で二重登録されても問題ない設計にする。
+        CustomizeItem(item);
+        return item;
     }
-
-    /// <summary>指定位置にこの CItem の Pickup を生成する。</summary>
-    public virtual Pickup? Spawn(Vector3 position)
+    catch (Exception ex)
     {
-        Pickup? pickup = null;
-
-        _pendingSpawnCItem = this;
-        try
-        {
-            pickup = CreatePickupForSpawn(position);
-            if (pickup == null) return null;
-
-            // CreatePickupForSpawn は基本的に PickupAdded を発火するが、
-            // EXILED / LabAPI 側の経路差で同期イベントを拾えないことがある。
-            // 取り逃した場合も Serial 追跡だけで終わらせず、PickupAdded 相当の初期化を走らせる。
-            if (!SerialToItem.TryGetValue(pickup.Serial, out var tracked) || !ReferenceEquals(tracked, this))
-            {
-                if (tracked != null && !ReferenceEquals(tracked, this))
-                    Log.Warn($"[CItem] Spawn: serial={pickup.Serial} was tracked by {tracked.GetType().Name}, overriding with {GetType().Name}.");
-
-                SerialToItem[pickup.Serial] = this;
-                Log.Warn($"[CItem] Spawn: PickupAdded missed for serial={pickup.Serial}, force-registered and dispatched fallback.");
-                DispatchPickupAddedFallback(this, pickup);
-            }
-
-            CustomizePickup(pickup);
-            OnSpawned(pickup);
-            return pickup;
-        }
-        catch (Exception ex)
-        {
-            CleanupFailedSpawnedPickup(pickup);
-            Log.Error($"CItem.Spawn failed ({GetType().Name}): {ex}");
-            return null;
-        }
-        finally
-        {
-            _pendingSpawnCItem = null;
-        }
+        CleanupFailedGivenItem(player, item);
+        Log.Error($"CItem.Give failed ({GetType().Name}): {ex}");
+        return null;
     }
+    finally
+    {
+        // pending は「使えたらラッキー」程度の補助情報なので必ずクリアする。
+        _pendingGiveCItem          = null;
+        _pendingGiveDisplayMessage = false;
+    }
+}
+
+/// <summary>指定位置にこの CItem の Pickup を生成する（安全版）。</summary>
+public virtual Pickup? Spawn(Vector3 position)
+{
+    Pickup? pickup = null;
+
+    try
+    {
+        _pendingSpawnCItem = this;
+
+        pickup = CreatePickupForSpawn(position);
+        if (pickup == null) return null;
+
+        // CreatePickupForSpawn のイベント順序に依存せず、戻り値で即登録。
+        if (SerialToItem.TryGetValue(pickup.Serial, out var tracked) &&
+            tracked != null &&
+            !ReferenceEquals(tracked, this))
+        {
+            // ここは情報として Debug に落とすだけにする。Warn スパム防止。
+            Log.Debug($"[CItem] Spawn: serial={pickup.Serial} was tracked by {tracked.GetType().Name}, overriding with {GetType().Name}.");
+        }
+
+        SerialToItem[pickup.Serial] = this;
+
+        // PickupAdded を取りこぼしても最低限の初期化はここで完了させる。
+        CustomizePickup(pickup);
+        OnSpawned(pickup);
+
+        // PickupAdded 側でライトや Schematic を張るためのフォールバック。
+        DispatchPickupAddedFallback(this, pickup);
+
+        return pickup;
+    }
+    catch (Exception ex)
+    {
+        CleanupFailedSpawnedPickup(pickup);
+        Log.Error($"CItem.Spawn failed ({GetType().Name}): {ex}");
+        return null;
+    }
+    finally
+    {
+        _pendingSpawnCItem = null;
+    }
+}
 
     /// <summary>
     /// Pickup の生成方法を差し替えたい場合のフック。
@@ -824,13 +824,8 @@ public abstract class CItem
     }
 
     /// <summary>
-    /// EXILED のイベント発火順（拾い直し時）:
-    ///   1. PickingUpItem
-    ///   2. ItemAdded      ← ここで SerialToItem 登録 + OnAcquired
-    ///   3. PickupDestroyed← この時点ではすでに「拾い直し済み」
-    ///
-    /// そのため PickupDestroyed 到達時に SerialToItem から消してはいけない。
-    /// SerialToItem のクリアは WaitingForPlayers で一括して行う。
+    /// EXILED の ItemAdded。戻り値で既に SerialToItem 登録されている前提で、
+    /// 「誰由来か分からない場合のみ pending 情報を使う」ように変更。
     /// </summary>
     private static void OnAnyItemAdded(PlayerEvents.ItemAddedEventArgs? ev)
     {
@@ -839,41 +834,53 @@ public abstract class CItem
         CItem? ci;
         bool   displayMessage;
 
-        if (_pendingGiveCItem != null)
+        // すでに Give/Spawn 側で SerialToItem 登録済みなら、それを優先する。
+        if (SerialToItem.TryGetValue(ev.Item.Serial, out var existing) && existing != null)
         {
-            // Give() 由来: ペンディングマーカーから CItem を確定
-            ci            = _pendingGiveCItem;
+            ci             = existing;
+            displayMessage = true;
+
+            Log.Debug($"[CItem] ItemAdded(tracked): serial={ev.Item.Serial} ci={ci.GetType().Name}");
+        }
+        else if (_pendingGiveCItem != null)
+        {
+            // ここはあくまで「補助経路」。miss しても致命傷ではない。
+            ci             = _pendingGiveCItem;
             displayMessage = _pendingGiveDisplayMessage;
 
-            // ペンディングをクリア（Give() の finally でも行うが先にクリアして安全に）
             _pendingGiveCItem          = null;
             _pendingGiveDisplayMessage = false;
 
             SerialToItem[ev.Item.Serial] = ci;
-            Log.Debug($"[CItem] ItemAdded(give): serial={ev.Item.Serial} ci={ci.GetType().Name}");
-        }
-        else if (SerialToItem.TryGetValue(ev.Item.Serial, out var existing) && existing != null)
-        {
-            // 床からの拾い直し / SCP-914 経由 / 他プラグイン由来 で
-            // 既に SerialToItem にある場合（Pickup として追跡中だったケース）
-            ci            = existing;
-            displayMessage = true;
-            Log.Debug($"[CItem] ItemAdded(tracked): serial={ev.Item.Serial} ci={ci.GetType().Name}");
+
+            Log.Debug($"[CItem] ItemAdded(give-pending): serial={ev.Item.Serial} ci={ci.GetType().Name}");
         }
         else
         {
-            // 追跡対象外のアイテム
+            // 追跡対象外。以前の warn / debug スパムは削る。
             Log.Debug($"[CItem] ItemAdded(unknown): serial={ev.Item.Serial}");
             return;
         }
 
-        try { ci.OnAcquired(ev, displayMessage); }
-        catch (Exception e) { Log.Error($"CItem.OnAcquired error in {ci.GetType().Name}: {e}"); }
+        try
+        {
+            ci.OnAcquired(ev, displayMessage);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"CItem.OnAcquired error in {ci.GetType().Name}: {e}");
+        }
 
         if (displayMessage && ci.ShowPickedUpHint)
         {
-            try { ci.ShowPickedUpMessage(ev.Player); }
-            catch (Exception e) { Log.Error($"CItem.ShowPickedUpMessage error in {ci.GetType().Name}: {e}"); }
+            try
+            {
+                ci.ShowPickedUpMessage(ev.Player);
+            }
+            catch (Exception e)
+            {
+                Log.Error($"CItem.ShowPickedUpMessage error in {ci.GetType().Name}: {e}");
+            }
         }
     }
 
@@ -1022,28 +1029,34 @@ public abstract class CItem
         DispatchPickupAdded(ci, pickup, ev);
     }
 
+    /// <summary>
+    /// EXILED の PickupAdded。戻り値登録済みを優先し、
+    /// pending はあくまで補助として扱うようにして安全化。
+    /// </summary>
     private static void OnAnyPickupAdded(MapEvents.PickupAddedEventArgs? ev)
     {
         if (ev?.Pickup == null) return;
 
         CItem? ci;
 
-        if (_pendingSpawnCItem != null)
+        // すでに Spawn/Give 経由で登録されているならそれを使う。
+        if (SerialToItem.TryGetValue(ev.Pickup.Serial, out var existing) && existing != null)
         {
-            // Spawn() 由来
+            ci = existing;
+            Log.Debug($"[CItem] PickupAdded(tracked): serial={ev.Pickup.Serial} ci={ci.GetType().Name}");
+        }
+        else if (_pendingSpawnCItem != null)
+        {
+            // pending は補助。ここで登録しておけば最低限結びつく。
             ci = _pendingSpawnCItem;
             SerialToItem[ev.Pickup.Serial] = ci;
-            Log.Debug($"[CItem] PickupAdded(spawn): serial={ev.Pickup.Serial} ci={ci.GetType().Name}");
-        }
-        else if (SerialToItem.TryGetValue(ev.Pickup.Serial, out var existing) && existing != null)
-        {
-            // ドロップ由来（インベントリ→床への遷移）
-            ci = existing;
-            Log.Debug($"[CItem] PickupAdded(drop): serial={ev.Pickup.Serial} ci={ci.GetType().Name}");
+
+            Log.Debug($"[CItem] PickupAdded(spawn-pending): serial={ev.Pickup.Serial} ci={ci.GetType().Name}");
         }
         else
         {
-            return; // 追跡対象外
+            // 追跡対象外。静かに無視。
+            return;
         }
 
         DispatchPickupAdded(ci, ev.Pickup, ev);
