@@ -79,7 +79,7 @@ public class Plugin : Plugin<Config>
         ServerSpecificSettingsSync.SendToAll();
         Log.Debug($"Settings List: \n{ServerSpecificSettingsSync.DefinedSettings}");
             
-        HarmonyInstance = new Harmony(this.Name);
+        HarmonyInstance = new Harmony($"{Name}.{DateTime.UtcNow.Ticks}");
         HarmonyInstance.PatchAll();
 
         // ここから差し替え
@@ -144,7 +144,7 @@ public class Plugin : Plugin<Config>
         DebugModeHandler.ClearAll();
         RPNameSetter.ClearAll();
             
-        HarmonyInstance.UnpatchAll(this.Name);
+        HarmonyInstance?.UnpatchAll(HarmonyInstance.Id);
         HarmonyInstance = null;
             
         ServerSpecificSettingsSync.DefinedSettings = [];

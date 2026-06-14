@@ -189,7 +189,14 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
 
         var player = ev.Player;
         var playerId = player.Id;
-        Log.Debug($"[CustomRoleRemover] Reset ALL for {player.Nickname} (role change {player.Role} -> {ev.NewRole})");
+        var uniqueRole = player.UniqueRole;
+        if (string.IsNullOrEmpty(uniqueRole))
+        {
+            Log.Debug($"[CustomRoleRemover] Skip vanilla role change for {player.Nickname} ({player.Role} -> {ev.NewRole})");
+            return;
+        }
+
+        Log.Debug($"[CustomRoleRemover] Reset custom role {uniqueRole} for {player.Nickname} (role change {player.Role} -> {ev.NewRole})");
 
         RunCleanup("identity", () =>
         {

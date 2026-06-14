@@ -13,7 +13,6 @@ public static class PlayerExtensions
         RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
     {
         Log.Debug($"[SetRole-Vanilla] {player.Nickname} -> {roleTypeId} (flags: {roleSpawnFlags})");
-        player.UniqueRole = null;
         switch (roleTypeId)
         {
             // ==== SCP ====

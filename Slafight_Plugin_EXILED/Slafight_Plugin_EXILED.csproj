@@ -228,6 +228,7 @@
         <Compile Include="API\Features\ObjectPrefab.cs" />
         <Compile Include="API\Features\PrefabSaveData.cs" />
         <Compile Include="API\Features\RoleLimitManager.cs" />
+        <Compile Include="API\Features\RoleSyncReadiness.cs" />
         <Compile Include="API\Features\RoleSpawnTimings.cs" />
         <Compile Include="API\Features\RoleTableContext.cs" />
         <Compile Include="API\Features\RoleTableContextRegistry.cs" />
@@ -557,6 +558,7 @@
         <Compile Include="Hints\Scp079PingHints.cs" />
         <Compile Include="Hints\ScpStatusHints.cs" />
         <Compile Include="Patches\CandyPatch.cs" />
+        <Compile Include="Patches\PlayerRoleManagerRoleSyncPatch.cs" />
         <Compile Include="Patches\Scp1344NvgBlindnessPatch.cs" />
         <Compile Include="Patches\Scp914ProcessorFix.cs" />
         <Compile Include="Plugin.cs" />
