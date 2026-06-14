@@ -26,7 +26,6 @@ public class FirstRolesHandler : IBootstrapHandler
     // RoundStart 由来の Spawned プレイヤーを収集
     private List<Player> _roundStartSpawnQueue;
     private int _assignedCount;
-    private bool _assigning;
     private CoroutineHandle _coroutineHandle;
 
     public FirstRolesHandler()
@@ -51,7 +50,6 @@ public class FirstRolesHandler : IBootstrapHandler
 
         _roundStartSpawnQueue = [];
         _assignedCount = 0;
-        _assigning = false;
         _coroutineHandle = default;
 
         FirstRoleAssigned.Clear();
@@ -63,7 +61,6 @@ public class FirstRolesHandler : IBootstrapHandler
     {
         _roundStartSpawnQueue = [];
         _assignedCount = 0;
-        _assigning = false;
 
         _LimitChecker();
         OnAssign();
@@ -102,8 +99,6 @@ public class FirstRolesHandler : IBootstrapHandler
             Round.IsLocked = false;
             yield break;
         }
-
-        _assigning = true;
 
         var shuffled = _roundStartSpawnQueue.OrderBy(_ => Random.value).ToList();
         int total    = shuffled.Count;
