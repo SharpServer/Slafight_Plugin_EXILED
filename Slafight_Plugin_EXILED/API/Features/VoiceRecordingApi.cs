@@ -234,7 +234,7 @@ public static class VoiceRecordingApi
             Position = position;
             Radius = radius;
             _playerFilter = playerFilter;
-            _channels = channels.Length > 0 ? new HashSet<VoiceChatChannel>(channels) : [];
+            _channels = channels.Length > 0 ? [..channels] : [];
         }
 
         public VoiceRecording Recording { get; }

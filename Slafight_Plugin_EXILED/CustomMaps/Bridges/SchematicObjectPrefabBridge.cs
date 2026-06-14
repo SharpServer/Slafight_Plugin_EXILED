@@ -104,7 +104,7 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
         }
 
         int spawned = 0;
-        HashSet<int> seenMarkers = new();
+        HashSet<int> seenMarkers = [];
         foreach (Object marker in Object.FindObjectsByType(markerType, FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {
             if (!TryReadMarker(marker, out MarkerData data))

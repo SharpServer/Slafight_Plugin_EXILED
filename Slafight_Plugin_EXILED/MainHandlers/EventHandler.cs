@@ -175,7 +175,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
         int scpAlive = Player.List.Count(p => p != null && p != leaving && p.IsAlive && p.GetTeam() == CTeam.SCPs);
         if (scpAlive >= 1) return;
 
-        var candidate = Player.List.FirstOrDefault(p => p != null && p.IsConnected && !p.IsAlive && p.IsRoleUnassigned());
+        var candidate = Player.List.FirstOrDefault(p => p != null && p.IsConnected && !p.IsAlive);
         if (candidate == null) return;
 
         var roleInfo = leaving.GetRoleInfo();

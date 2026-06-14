@@ -23,6 +23,9 @@ public abstract class ObjectPrefab : IObjectPrefab
     private string _objectInstanceID = string.Empty;
     private SchematicObject? _managedSchematic;
 
+    // Destroy 冪等化用
+    private bool _isDestroyed;
+
     public string ObjectInstanceID
     {
         get => _objectInstanceID;
@@ -80,10 +83,10 @@ public abstract class ObjectPrefab : IObjectPrefab
 
     public virtual ObjectPrefab Create()
     {
-        Log.Debug($"[ObjectPrefab]{this.GetType().Name} Create Invoked.");
+        Log.Debug($"[ObjectPrefab]{GetType().Name} Create Invoked.");
         ObjectInstanceID = Guid.NewGuid().ToString("N")[..5];
         InstanceManager.Register(this);
-        if (AutoDestroyEnabled)
+        if (AutoDestroyEnabled && AutoDestroyTime > 0f)
             AutoDestroyCoroutineHandle = Timing.RunCoroutine(AutoDestroy());
         OnCreate();
         return this;
@@ -91,15 +94,31 @@ public abstract class ObjectPrefab : IObjectPrefab
 
     public virtual void Destroy()
     {
-        Log.Debug($"[ObjectPrefab]{this.GetType().Name} Destroy Invoked.");
-
-        if (string.IsNullOrEmpty(ObjectInstanceID))
+        // すでに Destroy 済みなら何もしない
+        if (_isDestroyed)
             return;
 
-        InstanceManager.Unregister(ObjectInstanceID);
-        Timing.KillCoroutines(AutoDestroyCoroutineHandle);
+        _isDestroyed = true;
+
+        Log.Debug($"[ObjectPrefab]{GetType().Name} Destroy Invoked.");
+
+        if (!string.IsNullOrEmpty(ObjectInstanceID))
+            InstanceManager.Unregister(ObjectInstanceID);
+
+        if (AutoDestroyCoroutineHandle.IsRunning)
+            Timing.KillCoroutines(AutoDestroyCoroutineHandle);
+
         KillScheduledCallbacks();
-        OnDestroy();
+
+        try
+        {
+            OnDestroy();
+        }
+        catch (Exception e)
+        {
+            Log.Error($"[ObjectPrefab]{GetType().Name} OnDestroy exception: {e}");
+        }
+
         DestroyManagedInteractables();
         DestroyManagedSchematic();
     }
@@ -133,8 +152,21 @@ public abstract class ObjectPrefab : IObjectPrefab
 
     protected void DestroyManagedSchematic()
     {
-        _managedSchematic?.Destroy();
+        var schematic = _managedSchematic;
         _managedSchematic = null;
+
+        if (schematic == null)
+            return;
+
+        try
+        {
+            // 安全な Destroy を呼ぶ
+            schematic.Destroy();
+        }
+        catch (Exception e)
+        {
+            Log.Error($"[ObjectPrefab]{GetType().Name} DestroyManagedSchematic exception: {e}");
+        }
     }
 
     protected InteractableToy CreateManagedInteractable(
@@ -170,7 +202,7 @@ public abstract class ObjectPrefab : IObjectPrefab
             if (!ReferenceEquals(i.Toy, toy))
                 return false;
 
-            if (destroy)
+            if (destroy && !i.Toy.IsDestroyed)
                 i.Toy.Destroy();
             return true;
         });
@@ -179,7 +211,17 @@ public abstract class ObjectPrefab : IObjectPrefab
     protected void DestroyManagedInteractables()
     {
         foreach (var interactable in _managedInteractables.ToList())
-            interactable.Toy.Destroy();
+        {
+            try
+            {
+                if (!interactable.Toy.IsDestroyed)
+                    interactable.Toy.Destroy();
+            }
+            catch (Exception e)
+            {
+                Log.Error($"[ObjectPrefab]{GetType().Name} DestroyManagedInteractables exception: {e}");
+            }
+        }
 
         _managedInteractables.Clear();
     }
@@ -191,7 +233,8 @@ public abstract class ObjectPrefab : IObjectPrefab
         {
             _scheduledCallbacks.Remove(handle);
 
-            if (string.IsNullOrEmpty(ObjectInstanceID) || InstanceManager.Get(ObjectInstanceID) != this)
+            // すでに Destroy 済み or インスタンス再登録済みでない場合は何もしない
+            if (_isDestroyed || string.IsNullOrEmpty(ObjectInstanceID) || InstanceManager.Get(ObjectInstanceID) != this)
                 return;
 
             callback();
@@ -214,6 +257,9 @@ public abstract class ObjectPrefab : IObjectPrefab
 
     public void SyncManagedObjects()
     {
+        if (_isDestroyed)
+            return;
+
         if (_managedSchematic != null)
         {
             _managedSchematic.Position = Position;

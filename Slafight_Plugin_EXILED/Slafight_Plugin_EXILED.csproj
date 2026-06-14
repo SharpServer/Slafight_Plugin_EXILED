@@ -222,7 +222,6 @@
         <Compile Include="API\Features\VoiceRecordingApi.cs" />
         <Compile Include="API\Features\CRole.cs" />
         <Compile Include="API\Features\CRoom.cs" />
-        <Compile Include="API\Features\CustomBooleans.cs" />
         <Compile Include="API\Features\Common\DefinitionSourceLoader.cs" />
         <Compile Include="API\Features\GlobalVentManager.cs" />
         <Compile Include="API\Features\CItemNvg.cs" />

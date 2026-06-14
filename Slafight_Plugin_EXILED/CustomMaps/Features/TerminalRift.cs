@@ -207,7 +207,7 @@ public static class TerminalRift
         if (ev.Player == null || !ev.IsAllowed) return;
         try
         {
-            ev.Player.DisableAllEffects();
+            ev.Player.DisableEffect<PitDeath>();
             ev.Player.EnableEffect(EffectType.SpawnProtected, 3.5f);
         }
         catch

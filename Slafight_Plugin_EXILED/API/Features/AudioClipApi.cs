@@ -56,7 +56,7 @@ public static class AudioClipApi
 
         Log.Info($"[AudioClipApi] CreateClipObject name={name}, samples={samples}, ch={channels}, freq={frequency}, stream={stream}");
 
-        var clip = method.Invoke(null, new object[] { name, samples, channels, frequency, stream });
+        var clip = method.Invoke(null, [name, samples, channels, frequency, stream]);
         if (clip == null)
             throw new InvalidOperationException("AudioClip.Create returned null.");
 
@@ -105,13 +105,13 @@ public static class AudioClipApi
             "SetData",
             BindingFlags.Public | BindingFlags.Instance,
             null,
-            new[] { typeof(float[]), typeof(int) },
+            [typeof(float[]), typeof(int)],
             null);
 
         if (method == null)
             throw new MissingMethodException("AudioClip.SetData(float[], int) not found.");
 
-        var ok = method.Invoke(clip, new object[] { data, offsetSamples });
+        var ok = method.Invoke(clip, [data, offsetSamples]);
 
         Log.Info($"[AudioClipApi] SetData.Invoke result={ok}");
 
@@ -284,11 +284,12 @@ public static class AudioClipApi
         int samples = Convert.ToInt32(samplesProp.GetValue(clip));
         var data = new float[samples];
 
-        var getData = type.GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance, null, new[] { typeof(float[]), typeof(int) }, null);
+        var getData = type.GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance, null, [typeof(float[]), typeof(int)
+        ], null);
         if (getData == null)
             throw new MissingMethodException("AudioClip.GetData(float[], int) not found.");
 
-        var ok = getData.Invoke(clip, new object[] { data, 0 });
+        var ok = getData.Invoke(clip, [data, 0]);
         if (ok is bool b && !b)
             throw new InvalidOperationException("AudioClip.GetData failed.");
 
@@ -298,7 +299,7 @@ public static class AudioClipApi
     private static float[] ConvertToMono48k(float[]? input, int sampleRate, int channels)
     {
         if (input == null || input.Length == 0)
-            return Array.Empty<float>();
+            return [];
 
         channels = Math.Max(1, channels);
         int frameCount = input.Length / channels;

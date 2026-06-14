@@ -25,25 +25,25 @@ public sealed class DefaultTeamEscapeRuleSource : CTeamEscapeRuleSource
             CTeamEscapeTarget.CustomRole(CRoleTypeId.GoCOperative));
 
         yield return DefineTeamRule("ClassDEscortFoundation", 100, CTeam.ClassD, FoundationTeams, CTeamEscapeTarget.VanillaRole(RoleTypeId.NtfPrivate));
-        yield return DefineTeamRule("ClassDEscortFifthists", 100, CTeam.ClassD, new[] { CTeam.Fifthists }, CTeamEscapeTarget.CustomRole(CRoleTypeId.FifthistConvert));
-        yield return DefineTeamRule("ClassDEscortGoC", 100, CTeam.ClassD, new[] { CTeam.GoC }, CTeamEscapeTarget.CustomRole(CRoleTypeId.GoCOperative));
+        yield return DefineTeamRule("ClassDEscortFifthists", 100, CTeam.ClassD, [CTeam.Fifthists], CTeamEscapeTarget.CustomRole(CRoleTypeId.FifthistConvert));
+        yield return DefineTeamRule("ClassDEscortGoC", 100, CTeam.ClassD, [CTeam.GoC], CTeamEscapeTarget.CustomRole(CRoleTypeId.GoCOperative));
         yield return DefineTeamRule("ClassDEscapeDefault", 200, CTeam.ClassD, null, CTeamEscapeTarget.VanillaRole(RoleTypeId.ChaosConscript));
 
         yield return DefineTeamRule("ScientistEscortInsurgency", 100, CTeam.Scientists, InsurgencyTeams, CTeamEscapeTarget.VanillaRole(RoleTypeId.ChaosConscript));
-        yield return DefineTeamRule("ScientistEscortFifthists", 100, CTeam.Scientists, new[] { CTeam.Fifthists }, CTeamEscapeTarget.CustomRole(CRoleTypeId.FifthistConvert));
-        yield return DefineTeamRule("ScientistEscortGoC", 100, CTeam.Scientists, new[] { CTeam.GoC }, CTeamEscapeTarget.CustomRole(CRoleTypeId.GoCOperative));
+        yield return DefineTeamRule("ScientistEscortFifthists", 100, CTeam.Scientists, [CTeam.Fifthists], CTeamEscapeTarget.CustomRole(CRoleTypeId.FifthistConvert));
+        yield return DefineTeamRule("ScientistEscortGoC", 100, CTeam.Scientists, [CTeam.GoC], CTeamEscapeTarget.CustomRole(CRoleTypeId.GoCOperative));
         yield return DefineTeamRule("ScientistEscapeDefault", 200, CTeam.Scientists, null, CTeamEscapeTarget.VanillaRole(RoleTypeId.NtfSpecialist));
 
         yield return DefineTeamRule("ChaosEscortFoundation", 100, CTeam.ChaosInsurgency, FoundationTeams, CTeamEscapeTarget.VanillaRole(RoleTypeId.NtfPrivate));
-        yield return DefineTeamRule("ChaosEscortFifthists", 100, CTeam.ChaosInsurgency, new[] { CTeam.Fifthists }, CTeamEscapeTarget.CustomRole(CRoleTypeId.FifthistConvert));
-        yield return DefineTeamRule("ChaosEscortGoC", 100, CTeam.ChaosInsurgency, new[] { CTeam.GoC }, CTeamEscapeTarget.CustomRole(CRoleTypeId.GoCOperative));
+        yield return DefineTeamRule("ChaosEscortFifthists", 100, CTeam.ChaosInsurgency, [CTeam.Fifthists], CTeamEscapeTarget.CustomRole(CRoleTypeId.FifthistConvert));
+        yield return DefineTeamRule("ChaosEscortGoC", 100, CTeam.ChaosInsurgency, [CTeam.GoC], CTeamEscapeTarget.CustomRole(CRoleTypeId.GoCOperative));
 
         yield return DefineTeamRule("FoundationEscortInsurgency", 100, CTeam.FoundationForces, InsurgencyTeams, CTeamEscapeTarget.VanillaRole(RoleTypeId.ChaosConscript));
-        yield return DefineTeamRule("FoundationEscortFifthists", 100, CTeam.FoundationForces, new[] { CTeam.Fifthists }, CTeamEscapeTarget.CustomRole(CRoleTypeId.FifthistConvert));
-        yield return DefineTeamRule("FoundationEscortGoC", 100, CTeam.FoundationForces, new[] { CTeam.GoC }, CTeamEscapeTarget.CustomRole(CRoleTypeId.GoCOperative));
+        yield return DefineTeamRule("FoundationEscortFifthists", 100, CTeam.FoundationForces, [CTeam.Fifthists], CTeamEscapeTarget.CustomRole(CRoleTypeId.FifthistConvert));
+        yield return DefineTeamRule("FoundationEscortGoC", 100, CTeam.FoundationForces, [CTeam.GoC], CTeamEscapeTarget.CustomRole(CRoleTypeId.GoCOperative));
         yield return DefineTeamRule("GuardsEscortInsurgency", 100, CTeam.Guards, InsurgencyTeams, CTeamEscapeTarget.VanillaRole(RoleTypeId.ChaosConscript));
-        yield return DefineTeamRule("GuardsEscortFifthists", 100, CTeam.Guards, new[] { CTeam.Fifthists }, CTeamEscapeTarget.CustomRole(CRoleTypeId.FifthistConvert));
-        yield return DefineTeamRule("GuardsEscortGoC", 100, CTeam.Guards, new[] { CTeam.GoC }, CTeamEscapeTarget.CustomRole(CRoleTypeId.GoCOperative));
+        yield return DefineTeamRule("GuardsEscortFifthists", 100, CTeam.Guards, [CTeam.Fifthists], CTeamEscapeTarget.CustomRole(CRoleTypeId.FifthistConvert));
+        yield return DefineTeamRule("GuardsEscortGoC", 100, CTeam.Guards, [CTeam.GoC], CTeamEscapeTarget.CustomRole(CRoleTypeId.GoCOperative));
 
         yield return DefineTeamRule("FifthistsEscortInsurgency", 100, CTeam.Fifthists, InsurgencyTeams, CTeamEscapeTarget.VanillaRole(RoleTypeId.ChaosConscript));
         yield return DefineTeamRule("FifthistsEscortFoundation", 100, CTeam.Fifthists, FoundationTeams, CTeamEscapeTarget.VanillaRole(RoleTypeId.NtfPrivate));
@@ -51,15 +51,15 @@ public sealed class DefaultTeamEscapeRuleSource : CTeamEscapeRuleSource
     }
 
     private static readonly CTeam[] FoundationTeams =
-    {
+    [
         CTeam.FoundationForces,
         CTeam.Scientists,
         CTeam.Guards
-    };
+    ];
 
     private static readonly CTeam[] InsurgencyTeams =
-    {
+    [
         CTeam.ChaosInsurgency,
         CTeam.ClassD
-    };
+    ];
 }

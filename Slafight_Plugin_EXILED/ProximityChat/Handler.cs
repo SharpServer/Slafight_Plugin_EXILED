@@ -21,9 +21,9 @@ public static class Handler
 {
     // ====== 設定・状態 ======
 
-    public static readonly List<Player> ActivatedPlayers = new();
-    public static readonly List<Player> CanUsePlayers = new();
-    private static readonly HashSet<int> ForcedCanUsePlayers = new();
+    public static readonly List<Player> ActivatedPlayers = [];
+    public static readonly List<Player> CanUsePlayers = [];
+    private static readonly HashSet<int> ForcedCanUsePlayers = [];
 
     public static float AudioMaxDistance = 20f;
     public static float AudioMinDistance = 7.5f;
