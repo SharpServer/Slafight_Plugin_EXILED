@@ -180,6 +180,7 @@ public class FirstRolesHandler : IBootstrapHandler
         {
             Timing.CallDelayed(RoleSpawnTimings.FirstRolesNpcApplyRetry, () =>
             {
+                if (player == null) return;
                 _roundStartSpawnQueue.Add(player);
                 Log.Debug(
                     $"[FirstRoles] Spawned(RoundStart) collected: {player.Nickname} (queue size={_roundStartSpawnQueue.Count})");
