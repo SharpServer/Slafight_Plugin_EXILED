@@ -720,6 +720,7 @@ public abstract class CRole
 
         OnRoleSpawned(player, roleSpawnFlags);
         AssignIdentity(player);
+        ApplySpawnSpecificFlags(player);
 
         var playerId = player.Id;
 
