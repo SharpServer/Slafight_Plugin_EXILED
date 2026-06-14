@@ -27,6 +27,7 @@ public static class Handler
 
     public static float AudioMaxDistance = 20f;
     public static float AudioMinDistance = 7.5f;
+    public static float AudioVolume => Mathf.Max(0f, Plugin.Singleton?.Config?.ProximityChatVolume ?? 1f);
     public static bool AudioIsSpatial = true;
 
     public static readonly List<RoleTypeId> AllowedRoleTypes =

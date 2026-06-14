@@ -86,6 +86,7 @@ public static class PlayerSpeakerManager
         bool isSpatial,
         float maxDistance,
         float minDistance,
+        float volume = 1f,
         string speakerName = null)
     {
         if (!ShouldManageSpeaker(player) || string.IsNullOrWhiteSpace(purpose))
@@ -123,7 +124,8 @@ public static class PlayerSpeakerManager
             speakerName: speakerName,
             isSpatial: isSpatial,
             maxDistance: maxDistance,
-            minDistance: minDistance);
+            minDistance: minDistance,
+            volume: volume);
 
         dict[purpose] = speaker;
 
@@ -293,6 +295,7 @@ public static class PlayerSpeakerManager
                             isSpatial: ProximityChat.Handler.AudioIsSpatial,
                             maxDistance: ProximityChat.Handler.AudioMaxDistance,
                             minDistance: ProximityChat.Handler.AudioMinDistance,
+                            volume: ProximityChat.Handler.AudioVolume,
                             speakerName: "ProximityVoice");
                     }
                 }

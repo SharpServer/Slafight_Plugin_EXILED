@@ -30,6 +30,9 @@ public class Config : IConfig
         set => _audioReferences = value;
     }
 
+    [Description("ProximityChat のスピーカー音量倍率。1.0 が通常音量、2.0 で約2倍です")]
+    public float ProximityChatVolume { get; set; } = 2f;
+
     [Description("SpecialEvent（ゲーム中に低確率で発生するイベント）の有効/無効を設定します")]
     public bool EventAllowed { get; set; } = true;
 
