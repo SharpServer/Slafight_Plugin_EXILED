@@ -5,17 +5,19 @@ namespace Slafight_Plugin_EXILED.Hints;
 
 internal static class RoleHintsDictionary
 {
-    private const string ScpTeam       = "<color=#c50000>The SCPs</color>";
-    private const string FoundTeam     = "<color=#00b7eb>The Foundation</color>";
-    private const string ChaosTeam     = "<color=#228b22>Chaos Insurgency</color>";
-    private const string FifthTeam     = "<color=#ff00fa>The Fifthists</color>";
-    private const string GoCTeam       = "<color=#0000c8>Global Occult Coalition</color>";
-    private const string NeutFoundTeam = "<color=#faff86>Neutral - Side Foundation</color>";
-    private const string NeutChaosTeam = "<color=#ee7600>Neutral - Side Chaos</color>";
+    private const string ScpTeam        = "<color=#c50000>The SCPs</color>";
+    private const string FoundTeam      = "<color=#00b7eb>The Foundation</color>";
+    private const string ChaosTeam      = "<color=#228b22>Chaos Insurgency</color>";
+    private const string FifthTeam      = "<color=#ff00fa>The Fifthists</color>";
+    private const string GoCTeam        = "<color=#0000c8>Global Occult Coalition</color>";
+    private const string InitiativeTeam = $"<color={ServerColors.BlueGreen}>Horizon Initiative</color>";
+    private const string NeutFoundTeam  = "<color=#faff86>Neutral - Side Foundation</color>";
+    private const string NeutChaosTeam  = "<color=#ee7600>Neutral - Side Chaos</color>";
 
     private const string FoundObj = "研究員を救出し、施設の秩序を守護せよ。";
     private const string ChaosObj = "Dクラス職員を救出し、施設を略奪せよ。";
     private const string GoCObj   = "人類第一に、財団に抵抗せよ。";
+    private const string InitObj  = "いにしあちぶてすと";
     private const string AlphaObj = "<b>秩序のために、必要な犠牲を厭わず施設を掌握せよ。</b>";
     private const string OmegaObj = "<b>法のために、秩序の暴走を許さず施設を守護せよ。</b>";
 
@@ -107,6 +109,9 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.GoCDeputy]         = ("<color=#0000c8>Broken Dagger: Deputy</color>",        GoCTeam, GoCObj),
         [CRoleTypeId.GoCSquadLeader]    = ("<color=#0000c8>Broken Dagger: Squad Leader</color>",  GoCTeam, GoCObj),
         [CRoleTypeId.GoCHoundDog]       = ("<color=#0000c8>Hound Dog: White Suit</color>",        GoCTeam, GoCObj),
+        
+        // ── Initiative ────────────────────────────────────────────────────
+        [CRoleTypeId.InitiativeUltimateJesus] = ($"<color={ServerColors.BlueGreen}>Horizon Initiative Ultimate Jesus</color>", InitiativeTeam, InitObj),
 
         // ── Others ────────────────────────────────────────────────────────
         [CRoleTypeId.SnowWarrior] = (
