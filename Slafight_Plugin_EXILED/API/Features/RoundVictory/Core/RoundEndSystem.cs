@@ -39,6 +39,7 @@ public static class RoundEndReasons
 /// <summary>
 /// vanilla の勝利計算へ渡すために操作するラウンド統計値の種類。
 /// </summary>
+[Obsolete("RoundEndのスコアは弄らない方針になりました。")]
 public enum RoundEndScoreMode
 {
     /// <summary>
@@ -377,6 +378,7 @@ public static class RoundEndExecutor
 
     private static void ApplyScore(RoundEndDefinition definition)
     {
+        return;
         switch (definition.ScoreMode)
         {
             case RoundEndScoreMode.None:

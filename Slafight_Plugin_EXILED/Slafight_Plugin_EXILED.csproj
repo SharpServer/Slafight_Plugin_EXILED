@@ -297,6 +297,7 @@
         <Compile Include="Commands\DevTools\SpawnUniversal.cs" />
         <Compile Include="Commands\DevTools\SpawnWave.cs" />
         <Compile Include="Commands\DevTools\StatusCommand.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\Bloodyknife.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CapybaraMissile.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ArmorInfantry.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ArmorVip.cs" />
