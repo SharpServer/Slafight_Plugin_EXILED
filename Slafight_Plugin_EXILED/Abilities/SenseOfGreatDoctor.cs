@@ -51,6 +51,8 @@ public class SenseOfGreatDoctor : AbilityBase
             if (player == null || !player.IsAlive || player.Role is not Scp049Role)
                 break;
 
+            player.EnableEffect<MovementBoost>(10, 1f);
+
             Vector3 center = player.Position;
 
             foreach (Player target in Player.List)

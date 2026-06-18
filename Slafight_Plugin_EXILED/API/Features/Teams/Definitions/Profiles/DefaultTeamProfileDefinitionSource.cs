@@ -42,6 +42,7 @@ public sealed class DefaultTeamProfileDefinitionSource : CTeamProfileDefinitionS
             Map(CTeam.Sarkic, CTeamGroup.Undefined),
             Map(CTeam.AWCY, CTeamGroup.Undefined),
             Map(CTeam.BlackQueen, CTeamGroup.Undefined),
+            Map(CTeam.Initiative, CTeamGroup.Undefined),
             Map(CTeam.Moderators, CTeamGroup.Undefined));
     }
 }

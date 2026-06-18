@@ -29,4 +29,5 @@ public enum SpawnTypeId
     GoiGoCBackup,
     GoiSnowNormal,
     GoiSnowBackup,
+    GoiHorizonInitiative,
 }

@@ -46,7 +46,7 @@ public class Trashbox : ObjectPrefab
     private void CreateInteractableToy()
     {
         _interactableToy = CreateManagedInteractable(
-            interactionDuration: 5f,
+            interactionDuration: 3.5f,
             shape: InvisibleInteractableToy.ColliderShape.Box,
             localOffset: InteractableLocalOffset,
             baseScale: InteractableBaseScale);

@@ -217,6 +217,7 @@
         <Compile Include="API\Features\Scp914\Scp914RuleSet.cs" />
         <Compile Include="API\Features\Scp914\Scp914Dispatcher.cs" />
         <Compile Include="API\Features\Scp914\Scp914Registry.cs" />
+        <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\HorizonInitiative.cs" />
         <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\MtfCoreForceUnitPacks.cs" />
         <Compile Include="API\Features\SpeakerApi.cs" />
         <Compile Include="API\Features\VoiceRecordingApi.cs" />
@@ -454,6 +455,7 @@
         <Compile Include="CustomRoles\Guards\SecurityChief.cs" />
         <Compile Include="CustomRoles\Guards\SecurityTeamGuard.cs" />
         <Compile Include="CustomRoles\Guards\SupplyManager.cs" />
+        <Compile Include="CustomRoles\Initiative\UltimateJesus.cs" />
         <Compile Include="CustomRoles\Moderators\HideAdmin.cs" />
         <Compile Include="CustomRoles\Moderators\HideWatch.cs" />
         <Compile Include="CustomRoles\Moderators\ModeratorRole.cs" />

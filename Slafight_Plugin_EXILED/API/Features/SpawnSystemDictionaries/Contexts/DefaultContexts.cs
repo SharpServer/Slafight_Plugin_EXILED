@@ -20,6 +20,7 @@ public static class DefaultContexts
         UnitPackRegistry.TryGet("MTF_Rrh",            out var rrhPack);
         UnitPackRegistry.TryGet("GOI_ChaosBackup",    out var chaosBackupPack);
         UnitPackRegistry.TryGet("GOI_FifthistBackup", out var fifthBackupPack);
+        UnitPackRegistry.TryGet("GOI_Initiative", out var initiativePack);
         
         UnitPackRegistry.TryGet("SecurityTeam",       out var securityTeamPack);
         UnitPackRegistry.TryGet("ChaosAgents",        out var chaosAgentsPack);
@@ -42,6 +43,7 @@ public static class DefaultContexts
             chaosBackupPack,
             fifthNormalPack,
             fifthBackupPack,
+            initiativePack,
             
             securityTeamPack,
             chaosAgentsPack

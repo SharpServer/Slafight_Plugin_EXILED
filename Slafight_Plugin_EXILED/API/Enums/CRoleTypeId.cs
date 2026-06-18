@@ -102,6 +102,9 @@ public enum CRoleTypeId
     GoCOperative,
     GoCHoundDog,
     
+    // ==== Initiative ==== //
+    InitiativeUltimateJesus,
+    
     // ==== Others ==== //
     SnowWarrior,
     CandyWarriorApril,
