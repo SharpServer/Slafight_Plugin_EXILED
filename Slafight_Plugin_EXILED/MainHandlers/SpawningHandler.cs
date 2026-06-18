@@ -211,6 +211,11 @@ public class SpawningHandler : IBootstrapHandler, IDisposable
                 CassieHelper.AnnounceGoCEnter(spawnCount);
                 break;
             
+            case SpawnTypeId.GoiHorizonInitiative:
+                SpeakerApi.Play("_w_initiative.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                CassieHelper.AnnounceInitiativeEnter(spawnCount);
+                break;
+            
             // ==== EXPERIMENTAL FEATURES ==== //
             case SpawnTypeId.SecurityTeam:
                 TerminalTrain.Start();
