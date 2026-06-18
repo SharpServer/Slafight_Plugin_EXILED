@@ -266,6 +266,13 @@ public class Scp035Role : CRole
 
             var state = GetState(player);
 
+            if (state.NowState is Scp035StateType.Awaken or Scp035StateType.FullyAwaken)
+            {
+                if (player.IsCuffed)
+                {
+                    player.RemoveHandcuffs();
+                }
+            }
             if (state.NowState == Scp035StateType.FullyAwaken)
             {
                 // 完全覚醒用コルーチンへ移行
@@ -331,6 +338,11 @@ public class Scp035Role : CRole
             }
 
             var state = GetState(player);
+            
+            if (player.IsCuffed)
+            {
+                player.RemoveHandcuffs();
+            }
 
             // 他から勝手に状態を変えられても、ここで強制上書きする
             if (state.NowState != Scp035StateType.FullyAwaken)

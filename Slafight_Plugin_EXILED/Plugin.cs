@@ -159,7 +159,7 @@ public class Plugin : Plugin<Config>
         {
             try
             {
-                await SendPlayerCountAsync(Player.List.Where(p => !p.IsNPC).ToList().Count);
+                await SendPlayerCountAsync(Player.List.Where(p => !p.IsNPC && !p.IsHost).ToList().Count);
             }
             catch (Exception ex)
             {

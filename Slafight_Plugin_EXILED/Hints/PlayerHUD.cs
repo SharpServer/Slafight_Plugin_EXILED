@@ -987,7 +987,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
             $"<color=#aaaaaa>Elapsed:</color> {Round.ElapsedTime:mm\\:ss}  " +
             $"<color=#aaaaaa>UptimeRounds:</color> {Round.UptimeRounds}  " +
             $"<color=#aaaaaa>All Players:</color> {Player.List.Count} " +
-            $"<color=#aaaaaa>Connected Players:</color> {Player.List.Count(p => !p.IsNPC)} " +
+            $"<color=#aaaaaa>Connected Players:</color> {Player.List.Count(p => !p.IsNPC && !p.IsHost)} " +
             $"<color=#aaaaaa>Npcs:</color> {Npc.List.Count} "
         );
 
