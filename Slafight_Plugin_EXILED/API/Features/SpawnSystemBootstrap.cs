@@ -15,6 +15,7 @@ public static class UnitPackBootstrap
         MtfSeeNoEvilUnitPacks.Register();
         MtfCoreForceUnitPacks.Register();
         SnowWarriorsPacks.Register();
+        HorizonInitiativeUnitPacks.Register();
     }
 
     public static void UnregisterAllPacks()
