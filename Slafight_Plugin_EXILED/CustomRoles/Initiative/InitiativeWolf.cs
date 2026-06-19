@@ -3,11 +3,13 @@ using AdminToys;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Roles;
+using Exiled.Events.EventArgs.Scp049;
 using PlayerRoles;
 using ProjectMER.Features.Extensions;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.MainHandlers;
+using Slafight_Plugin_EXILED.Patches;
 using UnityEngine;
 using Light = Exiled.API.Features.Toys.Light;
 
@@ -27,6 +29,16 @@ public class InitiativeWolf : CRole
     [
         new(EffectType.MovementBoost, 23)
     ];
+
+    public override void RegisterEvents()
+    {
+        Exiled.Events.Handlers.Scp049.ActivatingSense += OnActivatingSense;
+    }
+
+    public override void UnregisterEvents()
+    {
+        Exiled.Events.Handlers.Scp049.ActivatingSense -= OnActivatingSense;
+    }
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
@@ -50,5 +62,15 @@ public class InitiativeWolf : CRole
         player.TryWear(light.AdminToyBase, out var toy, slot: "bodyLight");
         toy.transform.localPosition = Vector3.zero;
         base.OnRoleSpawned(player, roleSpawnFlags);
+    }
+
+    private void OnActivatingSense(ActivatingSenseEventArgs ev)
+    {
+        if (ev == null || !Check(ev.Player))
+            return;
+
+        ev.Target = Scp049InitiativeSensePatch.TryFindInitiativeTarget(ev.Scp049.SenseAbility, out Player target)
+            ? target
+            : null;
     }
 }

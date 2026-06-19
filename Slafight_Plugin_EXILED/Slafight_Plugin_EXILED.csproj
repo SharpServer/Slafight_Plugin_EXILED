@@ -569,6 +569,7 @@
         <Compile Include="Patches\CandyPatch.cs" />
         <Compile Include="Patches\PlayerRoleManagerRoleSyncPatch.cs" />
         <Compile Include="Patches\Scp1344NvgBlindnessPatch.cs" />
+        <Compile Include="Patches\Scp049InitiativeSensePatch.cs" />
         <Compile Include="Patches\Scp914ProcessorFix.cs" />
         <Compile Include="Plugin.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
