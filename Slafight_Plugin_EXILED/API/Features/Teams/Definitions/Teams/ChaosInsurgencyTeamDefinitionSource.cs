@@ -17,7 +17,6 @@ public sealed class ChaosInsurgencyTeamDefinitionSource : CTeamDefinitionSource
             true,
             roundEndDefinition: RoundEndDefinition.Vanilla(
                 "ChaosWin",
-                CTeam.ChaosInsurgency,
-                RoundEndScoreMode.EscapedDClasses));
+                CTeam.ChaosInsurgency));
     }
 }

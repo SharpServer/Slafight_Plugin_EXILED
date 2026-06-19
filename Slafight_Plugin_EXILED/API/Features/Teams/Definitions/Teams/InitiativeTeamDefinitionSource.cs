@@ -25,8 +25,6 @@ public sealed class InitiativeTeamDefinitionSource : CTeamDefinitionSource
             roundEndDefinition: RoundEndDefinition.Custom(
                 "InitiativeWin",
                 CTeam.Initiative,
-                $"<b><size=80><color={ServerColors.BlueGreen}>境界線イニシアチブ</color>の勝利</size></b>",
-                RoundEndScoreMode.KillsByScp,
-                555));
+                $"<b><size=80><color={ServerColors.BlueGreen}>境界線イニシアチブ</color>の勝利</size></b>"));
     }
 }

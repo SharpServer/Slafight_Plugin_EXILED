@@ -23,7 +23,6 @@ public sealed class GoCTeamDefinitionSource : CTeamDefinitionSource
             roundEndDefinition: RoundEndDefinition.Custom(
                 "GoCWin",
                 CTeam.GoC,
-                "<b><size=80><color=#0000c8>世界オカルト連合</color>の勝利</size></b>",
-                RoundEndScoreMode.EscapedDClasses));
+                "<b><size=80><color=#0000c8>世界オカルト連合</color>の勝利</size></b>"));
     }
 }

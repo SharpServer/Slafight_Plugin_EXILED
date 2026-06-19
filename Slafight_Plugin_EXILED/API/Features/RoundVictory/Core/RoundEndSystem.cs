@@ -37,33 +37,6 @@ public static class RoundEndReasons
 }
 
 /// <summary>
-/// vanilla の勝利計算へ渡すために操作するラウンド統計値の種類。
-/// </summary>
-[Obsolete("RoundEndのスコアは弄らない方針になりました。")]
-public enum RoundEndScoreMode
-{
-    /// <summary>
-    /// ラウンド統計値を操作しません。
-    /// </summary>
-    None,
-
-    /// <summary>
-    /// <see cref="Round.KillsByScp"/> を操作します。
-    /// </summary>
-    KillsByScp,
-
-    /// <summary>
-    /// <see cref="Round.EscapedDClasses"/> を操作します。
-    /// </summary>
-    EscapedDClasses,
-
-    /// <summary>
-    /// <see cref="Round.EscapedScientists"/> を操作します。
-    /// </summary>
-    EscapedScientists,
-}
-
-/// <summary>
 /// ラウンド終了時に実行する処理を表します。
 /// </summary>
 public sealed class RoundEndDefinition
@@ -74,9 +47,7 @@ public sealed class RoundEndDefinition
     /// <param name="debugName">ログや調査用の識別名。</param>
     /// <param name="winnerTeam">勝利チーム。</param>
     /// <param name="specificReason">特殊理由。null の場合はチームの標準終了定義として扱います。</param>
-    /// <param name="scoreMode">操作するラウンド統計値。</param>
-    /// <param name="scoreValue">統計値へ代入する値。</param>
-    /// <param name="useVanillaEndRound">true の場合、統計値の操作後に <see cref="Round.EndRound(bool)"/> を呼びます。</param>
+    /// <param name="useVanillaEndRound">true の場合、<see cref="Round.EndRound(bool)"/> を呼びます。</param>
     /// <param name="victoryHint">独自勝利として全員に表示するヒント。null の場合は表示しません。</param>
     /// <param name="hintDuration">勝利ヒントの表示秒数。</param>
     /// <param name="overrideIntercom">勝利表示中にインターコム override を有効化するか。</param>
@@ -86,8 +57,6 @@ public sealed class RoundEndDefinition
         string debugName,
         CTeam winnerTeam,
         string? specificReason = null,
-        RoundEndScoreMode scoreMode = RoundEndScoreMode.None,
-        int scoreValue = 999,
         bool useVanillaEndRound = false,
         string? victoryHint = null,
         float hintDuration = 555f,
@@ -98,8 +67,6 @@ public sealed class RoundEndDefinition
         DebugName = debugName;
         WinnerTeam = winnerTeam;
         SpecificReason = specificReason;
-        ScoreMode = scoreMode;
-        ScoreValue = scoreValue;
         UseVanillaEndRound = useVanillaEndRound;
         VictoryHint = victoryHint;
         HintDuration = hintDuration;
@@ -124,17 +91,7 @@ public sealed class RoundEndDefinition
     public string? SpecificReason { get; }
 
     /// <summary>
-    /// 操作するラウンド統計値。
-    /// </summary>
-    public RoundEndScoreMode ScoreMode { get; }
-
-    /// <summary>
-    /// 統計値へ代入する値。
-    /// </summary>
-    public int ScoreValue { get; }
-
-    /// <summary>
-    /// true の場合、統計値の操作後に vanilla の <see cref="Round.EndRound(bool)"/> を呼びます。
+    /// true の場合、vanilla の <see cref="Round.EndRound(bool)"/> を呼びます。
     /// </summary>
     public bool UseVanillaEndRound { get; }
 
@@ -165,19 +122,16 @@ public sealed class RoundEndDefinition
 
     public static RoundEndDefinition Vanilla(
         string debugName,
-        CTeam winnerTeam,
-        RoundEndScoreMode scoreMode) =>
-        new(debugName, winnerTeam, scoreMode: scoreMode, useVanillaEndRound: true, restartDelay: null);
+        CTeam winnerTeam) =>
+        new(debugName, winnerTeam, useVanillaEndRound: true, restartDelay: null);
 
     public static RoundEndDefinition Custom(
         string debugName,
         CTeam winnerTeam,
         string victoryHint,
-        RoundEndScoreMode scoreMode = RoundEndScoreMode.None,
-        int scoreValue = 999,
         string? specificReason = null,
         Action? beforeEnd = null) =>
-        new(debugName, winnerTeam, specificReason, scoreMode, scoreValue, victoryHint: victoryHint, beforeEnd: beforeEnd);
+        new(debugName, winnerTeam, specificReason, victoryHint: victoryHint, beforeEnd: beforeEnd);
 }
 
 internal readonly struct RoundEndDefinitionKey : IEquatable<RoundEndDefinitionKey>
@@ -361,7 +315,6 @@ public static class RoundEndExecutor
     {
         definition.BeforeEnd?.Invoke();
         ClearPlayerHints();
-        ApplyScore(definition);
 
         if (definition.UseVanillaEndRound)
         {
@@ -374,27 +327,6 @@ public static class RoundEndExecutor
 
         if (definition.RestartDelay is { } delay)
             ScheduleRestartIfRoundActive(delay);
-    }
-
-    private static void ApplyScore(RoundEndDefinition definition)
-    {
-        return;
-        switch (definition.ScoreMode)
-        {
-            case RoundEndScoreMode.None:
-                break;
-            case RoundEndScoreMode.KillsByScp:
-                Round.KillsByScp = definition.ScoreValue;
-                break;
-            case RoundEndScoreMode.EscapedDClasses:
-                Round.EscapedDClasses = definition.ScoreValue;
-                break;
-            case RoundEndScoreMode.EscapedScientists:
-                Round.EscapedScientists = definition.ScoreValue;
-                break;
-            default:
-                throw new ArgumentOutOfRangeException(nameof(definition.ScoreMode), definition.ScoreMode, null);
-        }
     }
 
     private static void ClearPlayerHints()

@@ -26,8 +26,6 @@ public sealed class FifthistsTeamDefinitionSource : CTeamDefinitionSource
             roundEndDefinition: RoundEndDefinition.Custom(
                 "FifthistWin",
                 CTeam.Fifthists,
-                "<b><size=80><color=#ff00fa>第五教会</color>の勝利</size></b>",
-                RoundEndScoreMode.KillsByScp,
-                555));
+                "<b><size=80><color=#ff00fa>第五教会</color>の勝利</size></b>"));
     }
 }

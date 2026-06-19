@@ -18,7 +18,6 @@ public sealed class OthersTeamDefinitionSource : CTeamDefinitionSource
             roundEndDefinition: RoundEndDefinition.Custom(
                 "UnknownOthersWin",
                 CTeam.Others,
-                "<b><size=80><color=#ffffff>UNKNOWN TEAM</color>の勝利</size></b>",
-                RoundEndScoreMode.EscapedDClasses));
+                "<b><size=80><color=#ffffff>UNKNOWN TEAM</color>の勝利</size></b>"));
     }
 }

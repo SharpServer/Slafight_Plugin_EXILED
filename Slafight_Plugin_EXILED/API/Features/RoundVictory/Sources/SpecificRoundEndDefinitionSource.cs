@@ -12,7 +12,6 @@ public sealed class SpecificRoundEndDefinitionSource : RoundEndDefinitionSource
             "FacilityTerminationNormalcyWin",
             CTeam.FoundationForces,
             "<b><size=80><color=red>正常性</color>の勝利</size></b>",
-            RoundEndScoreMode.EscapedScientists,
             specificReason: RoundEndReasons.NoHumanityAllowed,
             beforeEnd: ResetSpawnContext);
         
@@ -20,7 +19,6 @@ public sealed class SpecificRoundEndDefinitionSource : RoundEndDefinitionSource
             "FacilityTerminationHumanityWin",
             CTeam.GoC,
             "<b><size=80><color=#0000c8>人類</color>の勝利</size></b>",
-            RoundEndScoreMode.EscapedDClasses,
             specificReason: RoundEndReasons.SavedHumanity,
             beforeEnd: ResetSpawnContext);
 
@@ -28,14 +26,12 @@ public sealed class SpecificRoundEndDefinitionSource : RoundEndDefinitionSource
             "SnowWarriorWin",
             CTeam.Others,
             "<b><size=80><color=#ffffff>雪の戦士達</color>の勝利</size></b>",
-            RoundEndScoreMode.EscapedDClasses,
             specificReason: RoundEndReasons.SnowWarriorWin);
 
         yield return RoundEndDefinition.Custom(
             "CandyWarriorWin",
             CTeam.Others,
             "<b><size=80><color=#ff96de>お菓子の戦士達</color>の勝利</size></b>",
-            RoundEndScoreMode.EscapedDClasses,
             specificReason: RoundEndReasons.CandyWarriorWin);
     }
 

@@ -24,7 +24,6 @@ public sealed class ScpsTeamDefinitionSource : CTeamDefinitionSource
                 priority: 40),
             roundEndDefinition: RoundEndDefinition.Vanilla(
                 "ScpWin",
-                CTeam.SCPs,
-                RoundEndScoreMode.KillsByScp));
+                CTeam.SCPs));
     }
 }

@@ -17,7 +17,6 @@ public sealed class ClassDTeamDefinitionSource : CTeamDefinitionSource
             true,
             roundEndDefinition: RoundEndDefinition.Vanilla(
                 "ClassDWin",
-                CTeam.ClassD,
-                RoundEndScoreMode.EscapedDClasses));
+                CTeam.ClassD));
     }
 }

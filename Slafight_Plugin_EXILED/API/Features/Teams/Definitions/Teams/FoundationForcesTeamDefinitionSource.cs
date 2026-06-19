@@ -17,7 +17,6 @@ public sealed class FoundationForcesTeamDefinitionSource : CTeamDefinitionSource
             false,
             roundEndDefinition: RoundEndDefinition.Vanilla(
                 "FoundationWin",
-                CTeam.FoundationForces,
-                RoundEndScoreMode.EscapedScientists));
+                CTeam.FoundationForces));
     }
 }

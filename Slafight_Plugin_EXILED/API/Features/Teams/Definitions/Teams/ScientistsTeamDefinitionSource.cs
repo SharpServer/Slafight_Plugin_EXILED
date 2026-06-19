@@ -17,7 +17,6 @@ public sealed class ScientistsTeamDefinitionSource : CTeamDefinitionSource
             false,
             roundEndDefinition: RoundEndDefinition.Vanilla(
                 "ScientistsWin",
-                CTeam.Scientists,
-                RoundEndScoreMode.EscapedScientists));
+                CTeam.Scientists));
     }
 }
