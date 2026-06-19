@@ -56,8 +56,9 @@ public sealed class Scp079PingHints : IBootstrapHandler, IDisposable
             return;
 
         string message = BuildMessage(ev);
-        foreach (var scp in Player.List.Where(IsScpTeam))
-            ShowTransient(scp, message);
+        bool isAraOrun = ev.Player.GetCustomRole() == CRoleTypeId.AraOrun;
+        foreach (var recipient in Player.List.Where(isAraOrun ? IsHuman : IsScpTeam))
+            ShowTransient(recipient, message);
     }
 
     private void ShowTransient(Player player, string text)
@@ -124,5 +125,10 @@ public sealed class Scp079PingHints : IBootstrapHandler, IDisposable
     private static bool IsScpTeam(Player player)
     {
         return player.GetTeam() == CTeam.SCPs;
+    }
+
+    private static bool IsHuman(Player player)
+    {
+        return player.IsHuman;
     }
 }

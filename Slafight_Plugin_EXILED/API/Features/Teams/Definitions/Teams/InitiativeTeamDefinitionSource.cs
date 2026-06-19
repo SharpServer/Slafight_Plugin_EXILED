@@ -13,7 +13,7 @@ public sealed class InitiativeTeamDefinitionSource : CTeamDefinitionSource
         yield return Define(
             CTeam.Initiative,
             "境界線イニシアチブ",
-            "",
+            "X Power Forces",
             $"{ServerColors.BlueGreen}",
             true,
             victoryRule: RoundVictoryRule.ForPredicate(
