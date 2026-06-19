@@ -192,6 +192,8 @@
         <Compile Include="API\Features\CItemUsable.cs" />
         <Compile Include="API\Features\AudioClipApi.cs" />
         <Compile Include="API\Features\CassieHelper.cs" />
+        <Compile Include="API\Features\CustomEffectBase.cs" />
+        <Compile Include="API\Features\CustomTickingEffectBase.cs" />
         <Compile Include="API\Features\EffectedInfoTextProvider.cs" />
         <Compile Include="API\Features\EffectFakeSyncProvider.cs" />
         <Compile Include="API\Features\EventSubscriptionScope.cs" />
@@ -298,6 +300,8 @@
         <Compile Include="Commands\DevTools\SpawnUniversal.cs" />
         <Compile Include="Commands\DevTools\SpawnWave.cs" />
         <Compile Include="Commands\DevTools\StatusCommand.cs" />
+        <Compile Include="CustomEffects\CustomStatusEffectsRegistry.cs" />
+        <Compile Include="CustomEffects\NaturalHeal.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Bloodyknife.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CapybaraMissile.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ArmorInfantry.cs" />

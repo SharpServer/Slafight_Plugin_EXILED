@@ -1,9 +1,11 @@
 using System;
+using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.Events.EventArgs.Player;
 using InventorySystem.Items.Firearms.Attachments;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomEffects;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
@@ -12,8 +14,8 @@ namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 public class S41MedicalPistol : CItemWeapon
 {
     private const byte MedicalPistolMagazineSize = 6;
-    private const byte VitalityIntensity = 20;
-    private const float VitalityDuration = 2.5f;
+    private const byte HealIntensity = 1;
+    private const float HealDuration = 5f;
 
     public override string DisplayName => "S-41 MEDICAL PISTOL";
     public override string Description =>
@@ -54,7 +56,10 @@ public class S41MedicalPistol : CItemWeapon
         player.DisableEffect(EffectType.Hemorrhage);
         player.DisableEffect(EffectType.Asphyxiated);
         player.DisableEffect(EffectType.CardiacArrest);
-        player.EnableEffect(EffectType.Vitality, VitalityIntensity, VitalityDuration);
+        player.EnableEffect<NaturalHeal>(HealIntensity, HealDuration);
+        player.EnableEffect<Invigorated>(HealIntensity, HealDuration);
+        player.TryGetEffect(out NaturalHeal heal);
+        heal.TickRate = 0.1f;
 
         if (player.Health < player.MaxHealth)
             player.Health = Math.Min(player.MaxHealth, player.Health + 5f);

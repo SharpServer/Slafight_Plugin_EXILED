@@ -11,6 +11,7 @@ using System.Threading;
 using HarmonyLib;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Changes;
+using Slafight_Plugin_EXILED.CustomEffects;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Entities;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
@@ -56,6 +57,7 @@ public class Plugin : Plugin<Config>
         AbilityManager.RegisterEvents();
         CustomRole.RegisterRoles(false);
         CustomItemsManager.RegisterAllItems();
+        CustomStatusEffectsRegistry.AllRegister();
             
         Scp012_033.Register();
         CandyChanges.Register();
@@ -123,6 +125,7 @@ public class Plugin : Plugin<Config>
         AbilityManager.UnregisterEvents();
         CustomItem.UnregisterItems();
         CustomRole.UnregisterRoles();
+        CustomStatusEffectsRegistry.Unhook();
            
         Scp012_033.Unregister();
         CandyChanges.Unregister();

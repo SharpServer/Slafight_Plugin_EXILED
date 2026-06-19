@@ -7,7 +7,7 @@ namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
 public class Medicine : CItemUsable
 {
-    public override string DisplayName => "Medicine";
+    public override string DisplayName => "注射器型メディキット";
     public override string Description =>
         "セラムをベースに、医務室のニーズに合わせて開発された即時医療薬。\n" +
         "激務の財団職員をだいたい一発で治せる優れモノ。";
