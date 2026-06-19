@@ -21,7 +21,7 @@ public class CaseColourlessGreen : SpecialEvent
     public override string LocalizedName => "CASE COLOURLESS GREEN";
     public override string TriggerRequirement => "無し";
 
-    private CoroutineHandle handle;
+    private CoroutineHandle _handle;
 
     public override bool IsReadyToExecute()
     {
@@ -32,18 +32,18 @@ public class CaseColourlessGreen : SpecialEvent
     // ===== 実行本体 =====
     protected override void OnExecute(int eventPid)
     {
-        Timing.KillCoroutines(handle);
-        handle = Timing.RunCoroutine(Coroutine());
+        Timing.KillCoroutines(_handle);
+        _handle = Timing.RunCoroutine(Coroutine());
         SetupBomb();
         RoleAssign();
     }
 
-    private void SetupBomb()
+    private static void SetupBomb()
     {
         new AntiMemeBomb(){Position = StaticUtils.GetWorldFromRoomLocal(RoomType.LczClassDSpawn, new Vector3(-25.32238f, 0f, 0f), Vector3.zero).worldPosition}.Create();
     }
 
-    private void RoleAssign()
+    private static void RoleAssign()
     {
         Timing.CallDelayed(1.5f, () =>
         {
@@ -71,11 +71,11 @@ public class CaseColourlessGreen : SpecialEvent
         while (true)
         {
             if (CancelIfOutdated() || Player.List.Where(p => p.GetCustomRole() is CRoleTypeId.Scp3125).ToList().Count <= 0) yield break;
-            Player.List.Where(p => p is not null && p.Role.Type is RoleTypeId.Spectator && p.GetCustomRole() is CRoleTypeId.None).ToList().ForEach(p =>
+            Player.List.Where(p => p?.Role.Type is RoleTypeId.Spectator && p.GetCustomRole() is CRoleTypeId.None).ToList().ForEach(p =>
             {
                 p.SetRole(CRoleTypeId.FifthistMarionette);
             });
-            yield return Timing.WaitForSeconds(1f);
+            yield return Timing.WaitForSeconds(20f);
         }
     }
 }

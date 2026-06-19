@@ -31,7 +31,7 @@ public class Scp3125Role : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        player.Role.Set(RoleTypeId.Scp049, RoleSpawnFlags.AssignInventory);
+        player.Role.Set(RoleTypeId.Scp106, RoleSpawnFlags.AssignInventory);
         player.SetCustomInfo("<color=#FF0090>SCP-3125</color>");
         const int maxHealth = 55555;
         player.MaxHealth = maxHealth;
@@ -66,15 +66,11 @@ public class Scp3125Role : CRole
 
     protected override void OnRoleHurtingOthers(HurtingEventArgs ev)
     {
-        ev.Amount = 55555f;
-    }
-
-    protected override void OnRoleHurting(HurtingEventArgs ev)
-    {
+        if (ev.DamageHandler.Type is DamageType.Unknown) return;
         ev.IsAllowed = false;
     }
 
-    protected override void OnRoleSpawningRagdoll(SpawningRagdollEventArgs ev)
+    protected override void OnRoleHurting(HurtingEventArgs ev)
     {
         ev.IsAllowed = false;
     }
@@ -118,25 +114,11 @@ public class Scp3125Role : CRole
 
                 var distance = Vector3.Distance(player.Position, target.Position);
                 if (!(distance <= 2.75f)) continue;
-                target.Hurt(player, 25f, DamageType.Unknown,null,  "<color=#ff00fa>第五的</color>な力による影響");
+                target.Hurt(player, 1f, DamageType.Unknown,null,  "<color=#ff00fa>第五的</color>な力による影響");
                 player.ShowHitMarker();
             }
 
-            if (FacilityControlRoom.HasAntiMemeProtocolActivatedInPast)
-            {
-                player.DisableEffect(EffectType.Slowness);
-                player.EnableEffect(EffectType.MovementBoost, 25);
-            }
-            else
-            {
-                player.DisableEffect(EffectType.MovementBoost);
-                player.EnableEffect(EffectType.Slowness, 25);
-            }
-
-            if (FacilityControlRoom.IsAntiMemeProtocolActive)
-                player.Hurt(100f, "<color=#ff00fa>アンチミームプロトコロル</color>により終了された");
-
-            yield return Timing.WaitForSeconds(1.5f);
+            yield return Timing.WaitForSeconds(2f);
         }
     }
 }
