@@ -132,7 +132,7 @@ public static class CassieHelper
     {
         Exiled.API.Features.Cassie.MessageTranslated(
             $"Attention All personnel . Detected {count} X Power Forces in Gate B . Please Terminate Them",
-            $"全職員に通達。Gate Bに{count}人の<b><color={ServerColors.BlueGreen}>境界性イニシアチブ</color></b>部隊が検出されました。<split>見つけ次第終了してください。",
+            $"全職員に通達。Gate Bに{count}人の<b><color={ServerColors.BlueGreen}>境界線イニシアチブ</color></b>部隊が検出されました。<split>見つけ次第終了してください。",
             true);
     }
     
