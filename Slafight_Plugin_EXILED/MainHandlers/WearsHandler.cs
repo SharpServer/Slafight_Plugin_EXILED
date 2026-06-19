@@ -14,14 +14,19 @@ namespace Slafight_Plugin_EXILED.MainHandlers;
 
 /// <summary>
 /// プレイヤーに Schematic / AdminToy / GameObject を「着せる」ためのユーティリティ。
-/// - Wear / TryWear でスポーンまたは登録＋WearFollowerアタッチ＋ロール情報保存
+/// - 既存呼び出しは default slot として扱うため互換性あり
+/// - slot を指定すると、同一プレイヤーへ複数 Wear を同時装着できる
+/// - 同じ slot に Wear した場合のみ、その slot の既存 Wear を差し替える
+/// - ForceRemoveWear(player) / ForceRemoveWearById(id) でプレイヤー単位の全 Wear を破壊
+/// - ForceRemoveWear(player, slot) / ForceRemoveWearById(id, slot) で slot 単位の Wear を破壊
 /// - RegisterExternal で外部生成済みオブジェクトを登録
 /// - DestroyCoroutine でロール変化時に自動 Destroy
-/// - ForceRemoveWear で外部から強制破壊
 /// </summary>
 public static class WearsHandler
 {
-    private static readonly Dictionary<int, WearRegistration> PlayerWears = new();
+    public const string DefaultWearSlot = "default";
+
+    private static readonly Dictionary<int, Dictionary<string, WearRegistration>> PlayerWears = new();
 
     private static CoroutineHandle _cleanupCoroutine;
 
@@ -62,10 +67,10 @@ public static class WearsHandler
     }
 
     // ───────────────────────────────────────────
-    //  Public API
+    //  Public API - Remove / Query
     // ───────────────────────────────────────────
 
-    /// <summary>指定プレイヤーの Wear オブジェクトを強制破壊・クリーンアップ</summary>
+    /// <summary>指定プレイヤーの全 Wear オブジェクトを強制破壊・クリーンアップ。</summary>
     public static bool ForceRemoveWear(Player player)
     {
         if (player == null)
@@ -74,43 +79,142 @@ public static class WearsHandler
         return CleanupPlayer(player);
     }
 
-    /// <summary>全プレイヤーの Wear オブジェクトを一括破壊・クリーンアップ</summary>
-    public static void ForceRemoveAllWears() => CleanupAll();
-
-    /// <summary>プレイヤーオブジェクト不要時用 ID 指定破壊</summary>
-    public static bool ForceRemoveWearById(int playerId)
+    /// <summary>指定プレイヤーの指定 slot の Wear オブジェクトを強制破壊・クリーンアップ。</summary>
+    public static bool ForceRemoveWear(Player player, string slot)
     {
-        if (!PlayerWears.TryGetValue(playerId, out var wear))
+        if (player == null)
             return false;
 
-        DestroyWear(wear);
+        return ForceRemoveWearById(player.Id, slot);
+    }
+
+    /// <summary>指定プレイヤーの全 Wear オブジェクトを強制破壊・クリーンアップ。</summary>
+    public static bool ForceRemoveAllWears(Player player) => ForceRemoveWear(player);
+
+    /// <summary>全プレイヤーの Wear オブジェクトを一括破壊・クリーンアップ。</summary>
+    public static void ForceRemoveAllWears() => CleanupAll();
+
+    /// <summary>プレイヤーオブジェクト不要時用 ID 指定全破壊。</summary>
+    public static bool ForceRemoveWearById(int playerId)
+    {
+        if (!PlayerWears.TryGetValue(playerId, out var wears))
+            return false;
+
+        foreach (var wear in wears.Values.ToList())
+            DestroyWear(wear);
+
         PlayerWears.Remove(playerId);
         return true;
     }
 
-    /// <summary>現在登録されている Wear の GameObject を取得する。</summary>
+    /// <summary>プレイヤーオブジェクト不要時用 ID + slot 指定破壊。</summary>
+    public static bool ForceRemoveWearById(int playerId, string slot)
+    {
+        slot = NormalizeSlot(slot);
+
+        if (!PlayerWears.TryGetValue(playerId, out var wears))
+            return false;
+
+        if (!wears.TryGetValue(slot, out var wear))
+            return false;
+
+        DestroyWear(wear);
+        wears.Remove(slot);
+
+        if (wears.Count == 0)
+            PlayerWears.Remove(playerId);
+
+        return true;
+    }
+
+    /// <summary>
+    /// 現在登録されている Wear の GameObject を取得する。
+    /// default slot があればそれを返し、なければ最初の Wear を返す。
+    /// </summary>
     public static bool TryGetWornObject(Player player, out GameObject gameObject)
     {
         gameObject = null;
-        if (player == null || !PlayerWears.TryGetValue(player.Id, out var wear))
+        if (player == null || !PlayerWears.TryGetValue(player.Id, out var wears) || wears.Count == 0)
+            return false;
+
+        if (wears.TryGetValue(DefaultWearSlot, out var defaultWear) && defaultWear.GameObject != null)
+        {
+            gameObject = defaultWear.GameObject;
+            return true;
+        }
+
+        var first = wears.Values.FirstOrDefault(w => w.GameObject != null);
+        if (first == null)
+            return false;
+
+        gameObject = first.GameObject;
+        return true;
+    }
+
+    /// <summary>指定 slot に登録されている Wear の GameObject を取得する。</summary>
+    public static bool TryGetWornObject(Player player, string slot, out GameObject gameObject)
+    {
+        gameObject = null;
+        slot = NormalizeSlot(slot);
+
+        if (player == null || !PlayerWears.TryGetValue(player.Id, out var wears))
+            return false;
+
+        if (!wears.TryGetValue(slot, out var wear) || wear.GameObject == null)
             return false;
 
         gameObject = wear.GameObject;
-        return gameObject != null;
+        return true;
     }
 
-    /// <summary>指定プレイヤーに Wear が登録されているか。</summary>
+    /// <summary>指定プレイヤーに登録されている全 Wear の GameObject を slot 名付きで取得する。</summary>
+    public static bool TryGetWornObjects(Player player, out IReadOnlyDictionary<string, GameObject> gameObjects)
+    {
+        gameObjects = null;
+
+        if (player == null || !PlayerWears.TryGetValue(player.Id, out var wears) || wears.Count == 0)
+            return false;
+
+        var result = wears
+            .Where(kvp => kvp.Value.GameObject != null)
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value.GameObject, StringComparer.OrdinalIgnoreCase);
+
+        if (result.Count == 0)
+            return false;
+
+        gameObjects = result;
+        return true;
+    }
+
+    /// <summary>指定プレイヤーに Wear が1つ以上登録されているか。</summary>
     public static bool HasWear(Player player)
-        => player != null && PlayerWears.TryGetValue(player.Id, out var wear) && wear.GameObject != null;
+        => player != null &&
+           PlayerWears.TryGetValue(player.Id, out var wears) &&
+           wears.Values.Any(w => w.GameObject != null);
+
+    /// <summary>指定プレイヤーの指定 slot に Wear が登録されているか。</summary>
+    public static bool HasWear(Player player, string slot)
+    {
+        slot = NormalizeSlot(slot);
+
+        return player != null &&
+               PlayerWears.TryGetValue(player.Id, out var wears) &&
+               wears.TryGetValue(slot, out var wear) &&
+               wear.GameObject != null;
+    }
+
+    // ───────────────────────────────────────────
+    //  Public API - Register External
+    // ───────────────────────────────────────────
 
     /// <summary>
     /// 既にスポーン済みの Schematic を登録する（外部用）。
     /// WearFollower を自動アタッチする。
     /// </summary>
-    public static void RegisterExternal(Player player, SchematicObject schem, Vector3? offset = null)
+    public static void RegisterExternal(Player player, SchematicObject schem, Vector3? offset = null, string slot = DefaultWearSlot)
     {
         if (schem != null)
-            RegisterWear(player, schem.gameObject, player?.Transform, offset, () => schem.Destroy(), null, "RegisterExternal(SchematicObject)");
+            RegisterWear(player, schem.gameObject, player?.Transform, offset, () => schem.Destroy(), null, "RegisterExternal(SchematicObject)", true, slot);
     }
 
     /// <summary>
@@ -122,7 +226,8 @@ public static class WearsHandler
         Vector3? offset = null,
         Transform target = null,
         Action<GameObject> destroy = null,
-        Quaternion? rotationOffset = null)
+        Quaternion? rotationOffset = null,
+        string slot = DefaultWearSlot)
     {
         RegisterWear(
             player,
@@ -131,7 +236,9 @@ public static class WearsHandler
             offset,
             () => DestroyGameObject(gameObject, destroy),
             rotationOffset,
-            "RegisterExternal(GameObject)");
+            "RegisterExternal(GameObject)",
+            true,
+            slot);
     }
 
     /// <summary>
@@ -142,7 +249,8 @@ public static class WearsHandler
         Exiled.API.Features.Toys.AdminToy? toy,
         Vector3? offset = null,
         Transform target = null,
-        Quaternion? rotationOffset = null)
+        Quaternion? rotationOffset = null,
+        string slot = DefaultWearSlot)
     {
         if (toy == null)
             return;
@@ -154,7 +262,9 @@ public static class WearsHandler
             offset,
             () => toy.Destroy(),
             rotationOffset,
-            "RegisterExternal(AdminToy)");
+            "RegisterExternal(AdminToy)",
+            true,
+            slot);
     }
 
     /// <summary>
@@ -165,7 +275,8 @@ public static class WearsHandler
         AdminToys.AdminToyBase toy,
         Vector3? offset = null,
         Transform target = null,
-        Quaternion? rotationOffset = null)
+        Quaternion? rotationOffset = null,
+        string slot = DefaultWearSlot)
     {
         if (toy == null)
             return;
@@ -177,47 +288,47 @@ public static class WearsHandler
             offset,
             () => DestroyAdminToyBase(toy),
             rotationOffset,
-            "RegisterExternal(AdminToyBase)");
+            "RegisterExternal(AdminToyBase)",
+            true,
+            slot);
     }
+
+    // ───────────────────────────────────────────
+    //  Public API - Wear
+    // ───────────────────────────────────────────
 
     /// <summary>
     /// Schematic 名を指定してスポーン＆追従。失敗時は何も返さない簡易版。
+    /// 既存呼び出しは default slot に登録される。
     /// </summary>
-    public static void Wear(this Player player, string wearSchemName, Vector3? offset = null)
+    public static void Wear(this Player player, string wearSchemName, Vector3? offset = null, string slot = DefaultWearSlot)
     {
         if (player == null)
             return;
 
-        var id = player.Id;
         var offsetVector = offset ?? Vector3.zero;
-
-        RemoveExisting(id);
 
         SchematicObject schem;
 
         try
         {
             schem = ObjectSpawner.SpawnSchematic(wearSchemName, player.Position + offsetVector);
-            if (!RegisterWear(player, schem.gameObject, player.Transform, offsetVector, () => schem.Destroy(), null, "Wear(string)", false))
+            if (!RegisterWear(player, schem.gameObject, player.Transform, offsetVector, () => schem.Destroy(), null, "Wear(string)", true, slot))
                 schem.Destroy();
         }
         catch (Exception e)
         {
             Log.Error($"[WearsHandler] Wear failed for {player.Nickname}: {e}");
-            return;
         }
-
-        if (schem == null)
-            return;
     }
 
     /// <summary>
     /// スポーン済みの SchematicObject を Wear させる版。
     /// </summary>
-    public static void Wear(this Player player, SchematicObject schem, Vector3? offset = null)
+    public static void Wear(this Player player, SchematicObject schem, Vector3? offset = null, string slot = DefaultWearSlot)
     {
         if (schem != null)
-            RegisterWear(player, schem.gameObject, player?.Transform, offset, () => schem.Destroy(), null, "Wear(SchematicObject)");
+            RegisterWear(player, schem.gameObject, player?.Transform, offset, () => schem.Destroy(), null, "Wear(SchematicObject)", true, slot);
     }
 
     /// <summary>
@@ -229,7 +340,8 @@ public static class WearsHandler
         Vector3? offset = null,
         Transform target = null,
         Action<GameObject> destroy = null,
-        Quaternion? rotationOffset = null)
+        Quaternion? rotationOffset = null,
+        string slot = DefaultWearSlot)
     {
         RegisterWear(
             player,
@@ -238,7 +350,9 @@ public static class WearsHandler
             offset,
             () => DestroyGameObject(gameObject, destroy),
             rotationOffset,
-            "Wear(GameObject)");
+            "Wear(GameObject)",
+            true,
+            slot);
     }
 
     /// <summary>
@@ -249,10 +363,11 @@ public static class WearsHandler
         Exiled.API.Features.Toys.AdminToy? toy,
         Vector3? offset = null,
         Transform target = null,
-        Quaternion? rotationOffset = null)
+        Quaternion? rotationOffset = null,
+        string slot = DefaultWearSlot)
     {
         if (toy != null)
-            RegisterWear(player, toy.GameObject, target ?? player?.Transform, offset, () => toy.Destroy(), rotationOffset, "Wear(AdminToy)");
+            RegisterWear(player, toy.GameObject, target ?? player?.Transform, offset, () => toy.Destroy(), rotationOffset, "Wear(AdminToy)", true, slot);
     }
 
     /// <summary>
@@ -263,33 +378,36 @@ public static class WearsHandler
         AdminToys.AdminToyBase toy,
         Vector3? offset = null,
         Transform target = null,
-        Quaternion? rotationOffset = null)
+        Quaternion? rotationOffset = null,
+        string slot = DefaultWearSlot)
     {
         if (toy != null)
-            RegisterWear(player, toy.gameObject, target ?? player?.Transform, offset, () => DestroyAdminToyBase(toy), rotationOffset, "Wear(AdminToyBase)");
+            RegisterWear(player, toy.gameObject, target ?? player?.Transform, offset, () => DestroyAdminToyBase(toy), rotationOffset, "Wear(AdminToyBase)", true, slot);
     }
+
+    // ───────────────────────────────────────────
+    //  Public API - TryWear
+    // ───────────────────────────────────────────
 
     /// <summary>
     /// 成否＋SchematicObject を取得したい場合はこちら。
+    /// 既存呼び出しは default slot に登録される。
     /// </summary>
-    public static bool TryWear(this Player player, string wearSchemName, out SchematicObject schematicObject, Vector3? offset = null)
+    public static bool TryWear(this Player player, string wearSchemName, out SchematicObject schematicObject, Vector3? offset = null, string slot = DefaultWearSlot)
     {
         schematicObject = null;
 
         if (player == null)
             return false;
 
-        var id = player.Id;
         var offsetVector = offset ?? Vector3.zero;
-
-        RemoveExisting(id);
 
         SchematicObject schem;
 
         try
         {
             schem = ObjectSpawner.SpawnSchematic(wearSchemName, player.Position + offsetVector, player.Rotation);
-            if (!RegisterWear(player, schem.gameObject, player.Transform, offsetVector, () => schem.Destroy(), null, "TryWear(string)", false))
+            if (!RegisterWear(player, schem.gameObject, player.Transform, offsetVector, () => schem.Destroy(), null, "TryWear(string)", true, slot))
             {
                 schem.Destroy();
                 return false;
@@ -307,29 +425,26 @@ public static class WearsHandler
         schematicObject = schem;
         return true;
     }
-    
+
     /// <summary>
     /// 親Transform を明示指定できる TryWear。
     /// プレイヤー以外のオブジェクトに追従させたい場合に使用。
     /// </summary>
-    public static bool TryWear(this Player player, string wearSchemName, Transform parent, out SchematicObject schematicObject, Vector3? offset = null)
+    public static bool TryWear(this Player player, string wearSchemName, Transform parent, out SchematicObject schematicObject, Vector3? offset = null, string slot = DefaultWearSlot)
     {
         schematicObject = null;
 
         if (player == null || parent == null)
             return false;
 
-        var id = player.Id;
         var offsetVector = offset ?? Vector3.zero;
-
-        RemoveExisting(id);
 
         SchematicObject schem;
 
         try
         {
             schem = ObjectSpawner.SpawnSchematic(wearSchemName, parent.position + offsetVector, player.Rotation);
-            if (!RegisterWear(player, schem.gameObject, parent, offsetVector, () => schem.Destroy(), null, "TryWear(parent)", false))
+            if (!RegisterWear(player, schem.gameObject, parent, offsetVector, () => schem.Destroy(), null, "TryWear(parent)", true, slot))
             {
                 schem.Destroy();
                 return false;
@@ -358,7 +473,8 @@ public static class WearsHandler
         Vector3? offset = null,
         Transform target = null,
         Action<GameObject> destroy = null,
-        Quaternion? rotationOffset = null)
+        Quaternion? rotationOffset = null,
+        string slot = DefaultWearSlot)
     {
         wornObject = null;
         if (!RegisterWear(
@@ -368,7 +484,9 @@ public static class WearsHandler
                 offset,
                 () => DestroyGameObject(gameObject, destroy),
                 rotationOffset,
-                "TryWear(GameObject)"))
+                "TryWear(GameObject)",
+                true,
+                slot))
         {
             return false;
         }
@@ -386,7 +504,8 @@ public static class WearsHandler
         out TToy wornToy,
         Vector3? offset = null,
         Transform target = null,
-        Quaternion? rotationOffset = null)
+        Quaternion? rotationOffset = null,
+        string slot = DefaultWearSlot)
         where TToy : Exiled.API.Features.Toys.AdminToy
     {
         wornToy = null;
@@ -400,7 +519,9 @@ public static class WearsHandler
                 offset,
                 () => toy.Destroy(),
                 rotationOffset,
-                "TryWear(AdminToy)"))
+                "TryWear(AdminToy)",
+                true,
+                slot))
         {
             return false;
         }
@@ -418,7 +539,8 @@ public static class WearsHandler
         out AdminToys.AdminToyBase wornToy,
         Vector3? offset = null,
         Transform target = null,
-        Quaternion? rotationOffset = null)
+        Quaternion? rotationOffset = null,
+        string slot = DefaultWearSlot)
     {
         wornToy = null;
         if (toy == null)
@@ -431,7 +553,9 @@ public static class WearsHandler
                 offset,
                 () => DestroyAdminToyBase(toy),
                 rotationOffset,
-                "TryWear(AdminToyBase)"))
+                "TryWear(AdminToyBase)",
+                true,
+                slot))
         {
             return false;
         }
@@ -452,16 +576,16 @@ public static class WearsHandler
         Action? destroy,
         Quaternion? rotationOffset,
         string logContext,
-        bool removeExisting = true)
+        bool removeExisting = true,
+        string slot = DefaultWearSlot)
     {
         if (player == null || player.ReferenceHub == null || gameObject == null || target == null || destroy == null)
             return false;
 
+        slot = NormalizeSlot(slot);
+
         var id = player.Id;
         var offsetVector = offset ?? Vector3.zero;
-
-        if (removeExisting)
-            RemoveExisting(id);
 
         try
         {
@@ -473,7 +597,22 @@ public static class WearsHandler
             return false;
         }
 
-        PlayerWears[id] = new WearRegistration(gameObject, destroy, player.GetRoleInfo());
+        if (!PlayerWears.TryGetValue(id, out var wears))
+        {
+            wears = new Dictionary<string, WearRegistration>(StringComparer.OrdinalIgnoreCase);
+            PlayerWears[id] = wears;
+        }
+
+        if (removeExisting && wears.TryGetValue(slot, out var oldWear))
+        {
+            // 同一 GameObject の再登録時に自分自身を Destroy しないようにする。
+            if (oldWear.GameObject != gameObject)
+                DestroyWear(oldWear);
+
+            wears.Remove(slot);
+        }
+
+        wears[slot] = new WearRegistration(gameObject, destroy, player.GetRoleInfo());
         return true;
     }
 
@@ -491,15 +630,14 @@ public static class WearsHandler
         follower.Initialize(target, offset, rotationOffset);
     }
 
-    /// <summary>指定 ID にすでに Wear が登録されていれば破壊して辞書から除去</summary>
-    private static void RemoveExisting(int playerId)
+    /// <summary>指定 ID / slot にすでに Wear が登録されていれば破壊して辞書から除去。</summary>
+    private static void RemoveExisting(int playerId, string slot = DefaultWearSlot)
     {
-        if (!PlayerWears.TryGetValue(playerId, out var old))
-            return;
-
-        DestroyWear(old);
-        PlayerWears.Remove(playerId);
+        ForceRemoveWearById(playerId, slot);
     }
+
+    private static string NormalizeSlot(string slot)
+        => string.IsNullOrWhiteSpace(slot) ? DefaultWearSlot : slot.Trim();
 
     // ───────────────────────────────────────────
     //  Event handlers
@@ -527,7 +665,7 @@ public static class WearsHandler
     //  Coroutine
     // ───────────────────────────────────────────
 
-    /// <summary>ロール変更を監視し、変化したプレイヤーの Wear オブジェクトを自動 Destroy</summary>
+    /// <summary>ロール変更を監視し、変化したプレイヤーの Wear オブジェクトを自動 Destroy。</summary>
     private static IEnumerator<float> DestroyCoroutine()
     {
         while (true)
@@ -538,22 +676,31 @@ public static class WearsHandler
                 continue;
             }
 
-            foreach (var kvp in PlayerWears.ToList())
+            foreach (var playerKvp in PlayerWears.ToList())
             {
-                var player = Player.Get(kvp.Key);
+                var playerId = playerKvp.Key;
+                var wears = playerKvp.Value;
+
+                var player = Player.Get(playerId);
                 if (player == null || player.ReferenceHub == null)
                 {
-                    ForceRemoveWearById(kvp.Key);
+                    ForceRemoveWearById(playerId);
                     continue;
                 }
 
                 var current = player.GetRoleInfo();
 
-                if (kvp.Value.GameObject == null ||
-                    kvp.Value.RoleInfo.Vanilla != current.Vanilla ||
-                    kvp.Value.RoleInfo.Custom  != current.Custom)
+                foreach (var wearKvp in wears.ToList())
                 {
-                    CleanupPlayer(player);
+                    var slot = wearKvp.Key;
+                    var wear = wearKvp.Value;
+
+                    if (wear.GameObject == null ||
+                        wear.RoleInfo.Vanilla != current.Vanilla ||
+                        wear.RoleInfo.Custom != current.Custom)
+                    {
+                        ForceRemoveWearById(playerId, slot);
+                    }
                 }
             }
 
@@ -570,20 +717,16 @@ public static class WearsHandler
         if (player == null)
             return false;
 
-        var id = player.Id;
-
-        if (!PlayerWears.TryGetValue(id, out var wear))
-            return false;
-
-        DestroyWear(wear);
-        PlayerWears.Remove(id);
-        return true;
+        return ForceRemoveWearById(player.Id);
     }
 
     private static void CleanupAll()
     {
-        foreach (var wear in PlayerWears.Values.ToList())
-            DestroyWear(wear);
+        foreach (var wears in PlayerWears.Values.ToList())
+        {
+            foreach (var wear in wears.Values.ToList())
+                DestroyWear(wear);
+        }
 
         PlayerWears.Clear();
     }
