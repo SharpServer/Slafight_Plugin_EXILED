@@ -16,6 +16,7 @@ public class SerumD : CItemUsable
 
     protected override bool  PickupLightEnabled => true;
     protected override Color PickupLightColor   => Color.cyan;
+    protected override bool CancelDefaultUse => false;
 
     protected override void OnUsedEffect(UsingItemCompletedEventArgs ev)
     {

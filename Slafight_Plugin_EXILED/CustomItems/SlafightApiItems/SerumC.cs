@@ -14,6 +14,7 @@ public class SerumC : CItemUsable
     protected override ItemType BaseItem => ItemType.Adrenaline;
     protected override bool PickupLightEnabled => true;
     protected override Color PickupLightColor => Color.green;
+    protected override bool CancelDefaultUse => false;
 
     protected override void OnUsedEffect(UsingItemCompletedEventArgs ev)
     {
