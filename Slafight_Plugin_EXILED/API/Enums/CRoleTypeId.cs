@@ -88,6 +88,7 @@ public enum CRoleTypeId
     Surveillance,
     CandyResearcher,
     MarionWheeler,
+    AntiMemeDivisionScientist,
     
     // ==== Class-D ==== //
     Janitor,

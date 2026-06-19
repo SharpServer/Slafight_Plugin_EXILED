@@ -311,6 +311,7 @@
         <Compile Include="CustomItems\SlafightApiItems\GunAnomalyDetainer.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunRevolverX.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardA.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\KeycardHeadResearcherGeneric.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardHimself.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardSupplyManager.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Medicine.cs" />
@@ -473,6 +474,7 @@
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovRole.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeySharedContents.cs" />
         <Compile Include="CustomRoles\Others\SnowWarrior.cs" />
+        <Compile Include="CustomRoles\Scientist\AntiMemeDivisionScientist.cs" />
         <Compile Include="CustomRoles\Scientist\CandyResearcher.cs" />
         <Compile Include="CustomRoles\Scientist\SiteNavigator.cs" />
         <Compile Include="CustomRoles\Scientist\MarionWheeler.cs" />

@@ -49,18 +49,26 @@ public class CaseColourlessGreen : SpecialEvent
         {
             var candidates = Player.List.Where(p => p is not null).Shuffle().ToList();
 
-            var marion = candidates[0];
-            var scp3125 = candidates[1];
-            var ara = candidates[2];
+            var scp3125 = candidates[0];
+            var ara = candidates[1];
 
-            marion.SetRole(CRoleTypeId.MarionWheeler);
             scp3125.SetRole(CRoleTypeId.Scp3125);
             ara.SetRole(CRoleTypeId.AraOrun);
 
-            foreach (var p in candidates.Skip(3))
+            // 残りの候補から Marionette と AntiMemeDivisionScientist を 4:6 の割合で割り当て
+            var remaining = candidates.Skip(2).ToList();
+            var scientistRole = CRoleTypeId.AntiMemeDivisionScientist;
+            var marionetteRole = CRoleTypeId.FifthistMarionette;
+            var marionetteChance = 0.4f; // 40% で Marionette、60% で Scientist
+
+            for (int i = 0; i < remaining.Count; i++)
             {
-                p.SetRole(CRoleTypeId.FifthistMarionette, RoleSpawnFlags.AssignInventory);
-                Timing.CallDelayed(1.05f, () => p.Position = Room.Get(RoomType.HczIncineratorWayside).Doors.First().Position + Vector3.up * 1.15f);
+                var p = remaining[i];
+    
+                // ランダムで 40% の場合 Marionette、60% の場合 Scientist
+                var roleToAssign = UnityEngine.Random.value < marionetteChance ? marionetteRole : scientistRole;
+    
+                p.SetRole(roleToAssign);
             }
         });
     }

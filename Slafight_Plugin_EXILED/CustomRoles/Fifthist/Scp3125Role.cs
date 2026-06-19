@@ -3,6 +3,7 @@ using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
+using Exiled.API.Features.Roles;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
@@ -13,6 +14,7 @@ using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Camera = Exiled.API.Features.Camera;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.Fifthist;
 
@@ -66,7 +68,7 @@ public class Scp3125Role : CRole
 
     protected override void OnRoleHurtingOthers(HurtingEventArgs ev)
     {
-        if (ev.DamageHandler.Type is DamageType.Unknown) return;
+        if (ev.Amount <= 10f) return;
         ev.IsAllowed = false;
     }
 
@@ -117,6 +119,14 @@ public class Scp3125Role : CRole
                 target.Hurt(player, 1f, DamageType.Unknown,null,  "<color=#ff00fa>第五的</color>な力による影響");
                 player.ShowHitMarker();
             }
+            
+            Player.List.Where(p => p.Role is Scp079Role role && Vector3.Distance(role.CameraPosition, player.Position) < 8.75f).ToList().ForEach(p =>
+            {
+                if (p.Role is Scp079Role role && p.GetCustomRole() is CRoleTypeId.AraOrun)
+                {
+                    role.LoseSignal(5f);
+                }
+            });
 
             yield return Timing.WaitForSeconds(2f);
         }
