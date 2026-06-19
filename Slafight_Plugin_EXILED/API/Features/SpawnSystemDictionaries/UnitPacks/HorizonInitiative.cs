@@ -15,7 +15,7 @@ public static class HorizonInitiativeUnitPacks
                     SpawnTypeId.GoiHorizonInitiative,
                     new()
                     {
-                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.InitiativeUltimateJesus), (1f, true) },
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.InitiativeWolf), (1f, true) },
                     }
                 }
             }

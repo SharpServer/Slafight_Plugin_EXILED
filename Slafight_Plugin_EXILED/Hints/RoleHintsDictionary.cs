@@ -17,7 +17,7 @@ internal static class RoleHintsDictionary
     private const string FoundObj = "研究員を救出し、施設の秩序を守護せよ。";
     private const string ChaosObj = "Dクラス職員を救出し、施設を略奪せよ。";
     private const string GoCObj   = "人類第一に、財団に抵抗せよ。";
-    private const string InitObj  = "いにしあちぶてすと";
+    private const string InitObj  = "異なる神に属する奴らを一人残らず絶滅させろ";
     private const string AlphaObj = "<b>秩序のために、必要な犠牲を厭わず施設を掌握せよ。</b>";
     private const string OmegaObj = "<b>法のために、秩序の暴走を許さず施設を守護せよ。</b>";
 
@@ -111,7 +111,7 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.GoCHoundDog]       = ("<color=#0000c8>Hound Dog: White Suit</color>",        GoCTeam, GoCObj),
         
         // ── Initiative ────────────────────────────────────────────────────
-        [CRoleTypeId.InitiativeUltimateJesus] = ($"<color={ServerColors.BlueGreen}>Horizon Initiative Ultimate Jesus</color>", InitiativeTeam, InitObj),
+        [CRoleTypeId.InitiativeWolf] = ($"<color={ServerColors.BlueGreen}>Horizon Initiative Wolf</color>", InitiativeTeam, InitObj),
 
         // ── Others ────────────────────────────────────────────────────────
         [CRoleTypeId.SnowWarrior] = (

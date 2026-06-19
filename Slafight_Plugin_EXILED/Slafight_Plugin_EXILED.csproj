@@ -193,6 +193,7 @@
         <Compile Include="API\Features\AudioClipApi.cs" />
         <Compile Include="API\Features\CassieHelper.cs" />
         <Compile Include="API\Features\CustomEffectBase.cs" />
+        <Compile Include="API\Features\CustomInventoryManager.cs" />
         <Compile Include="API\Features\CustomTickingEffectBase.cs" />
         <Compile Include="API\Features\EffectedInfoTextProvider.cs" />
         <Compile Include="API\Features\EffectFakeSyncProvider.cs" />
@@ -326,6 +327,7 @@
         <Compile Include="CustomItems\SlafightApiItems\NvgRed.cs" />
         <Compile Include="CustomItems\SlafightApiItems\SchwarzschildRailbreaker.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ScpcbBatteries.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\TapeRecorder.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Veritas.cs" />
         <Compile Include="CustomItems\NvgManager.cs" />
         <Compile Include="CustomItems\CustomItemsManager.cs" />
@@ -459,7 +461,7 @@
         <Compile Include="CustomRoles\Guards\SecurityChief.cs" />
         <Compile Include="CustomRoles\Guards\SecurityTeamGuard.cs" />
         <Compile Include="CustomRoles\Guards\SupplyManager.cs" />
-        <Compile Include="CustomRoles\Initiative\UltimateJesus.cs" />
+        <Compile Include="CustomRoles\Initiative\InitiativeWolf.cs" />
         <Compile Include="CustomRoles\Moderators\HideAdmin.cs" />
         <Compile Include="CustomRoles\Moderators\HideWatch.cs" />
         <Compile Include="CustomRoles\Moderators\ModeratorRole.cs" />

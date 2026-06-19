@@ -103,7 +103,7 @@ public enum CRoleTypeId
     GoCHoundDog,
     
     // ==== Initiative ==== //
-    InitiativeUltimateJesus,
+    InitiativeWolf,
     
     // ==== Others ==== //
     SnowWarrior,
