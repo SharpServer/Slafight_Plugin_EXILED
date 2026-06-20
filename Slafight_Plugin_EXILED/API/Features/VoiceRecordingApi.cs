@@ -123,12 +123,14 @@ public static class VoiceRecordingApi
         IEnumerable<Player>? targets = null,
         bool destroyOnEnd = true,
         float startupDelay = 0.5f,
-        float destroyDelay = 0.75f)
+        float destroyDelay = 0.75f,
+        float volume = 1f,
+        Predicate<Player>? listeners = null)
     {
         if (!TryGetRecording(key, out var recording))
             return default;
 
-        return Play(recording, position, audioPlayerName, parent, isSpatial, maxDistance, minDistance, targets, destroyOnEnd, startupDelay, destroyDelay);
+        return Play(recording, position, audioPlayerName, parent, isSpatial, maxDistance, minDistance, targets, destroyOnEnd, startupDelay, destroyDelay, volume, listeners);
     }
 
     public static CoroutineHandle Play(
@@ -142,7 +144,9 @@ public static class VoiceRecordingApi
         IEnumerable<Player>? targets = null,
         bool destroyOnEnd = true,
         float startupDelay = 0.5f,
-        float destroyDelay = 0.75f)
+        float destroyDelay = 0.75f,
+        float volume = 1f,
+        Predicate<Player>? listeners = null)
     {
         if (recording == null || recording.FrameCount == 0)
             return default;
@@ -156,6 +160,8 @@ public static class VoiceRecordingApi
             isSpatial,
             maxDistance,
             minDistance,
+            volume,
+            listeners,
             targets,
             destroyOnEnd,
             startupDelay,
@@ -193,6 +199,8 @@ public static class VoiceRecordingApi
         bool isSpatial,
         float maxDistance,
         float minDistance,
+        float volume,
+        Predicate<Player>? listeners,
         IEnumerable<Player>? targets,
         bool destroyOnEnd,
         float startupDelay,
@@ -209,10 +217,11 @@ public static class VoiceRecordingApi
             isSpatial,
             maxDistance,
             minDistance,
-            volume: 1f,
+            volume,
             loop: false,
             targets,
-            destroyOnEnd);
+            destroyOnEnd,
+            listeners);
 
         if (destroyOnEnd)
             yield return Timing.WaitForSeconds(recording.DurationSeconds + destroyDelay);

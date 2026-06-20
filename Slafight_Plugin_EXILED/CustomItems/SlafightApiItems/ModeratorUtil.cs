@@ -50,6 +50,23 @@ public class ModeratorUtil : CItemWeapon
     }
 
     private static readonly ModUtilType[] OrderedTypes = Enum.GetValues(typeof(ModUtilType)).Cast<ModUtilType>().ToArray();
+    private static readonly string[] BanOptionNames =
+    [
+        "10分",
+        "1時間",
+        "6時間",
+        "12時間",
+        "1日",
+        "3日",
+        "7日（1週間）",
+        "14日（2週間）",
+        "28日（4週間）",
+        "90日",
+        "180日",
+        "1年",
+        "3年",
+        "無期限（IP BAN）",
+    ];
     private static readonly Dictionary<Player, ModUtilStats> StatsMap = [];
     private static readonly Dictionary<Player, CoroutineHandle> HintLoopHandles = [];
     private static readonly Dictionary<Player, float> NextActionTimes = [];
@@ -257,16 +274,54 @@ public class ModeratorUtil : CItemWeapon
 
     private static string BanTarget(Player actor, Player target, int option)
     {
-        var (duration, label) = option switch
+        var duration = option switch
         {
-            0 => (TimeSpan.FromMinutes(10), "10分"),
-            1 => (TimeSpan.FromHours(1), "1時間"),
-            2 => (TimeSpan.FromDays(1), "1日"),
-            _ => (TimeSpan.FromDays(7), "7日"),
+            0 => TimeSpan.FromMinutes(10),
+            1 => TimeSpan.FromHours(1),
+            2 => TimeSpan.FromHours(6),
+            3 => TimeSpan.FromHours(12),
+            4 => TimeSpan.FromDays(1),
+            5 => TimeSpan.FromDays(3),
+            6 => TimeSpan.FromDays(7),
+            7 => TimeSpan.FromDays(14),
+            8 => TimeSpan.FromDays(28),
+            9 => TimeSpan.FromDays(90),
+            10 => TimeSpan.FromDays(180),
+            11 => TimeSpan.FromDays(365),
+            12 => TimeSpan.FromDays(365 * 3),
+            _ => TimeSpan.Zero,
         };
 
-        target.Ban((int)duration.TotalSeconds, $"Moderator action ({label})", actor);
+        var label = Pick(option, BanOptionNames);
+        if (option == BanOptionNames.Length - 1)
+            return PermanentlyIpBanTarget(actor, target);
+
+        target.Ban(duration, $"Moderator action ({label})", actor);
         return $"{target.Nickname} を {label} Ban しました。";
+    }
+
+    private static string PermanentlyIpBanTarget(Player actor, Player target)
+    {
+        if (string.IsNullOrWhiteSpace(target.IPAddress) ||
+            target.IPAddress.Equals("localClient", StringComparison.OrdinalIgnoreCase))
+            return $"{target.Nickname} の有効なIPアドレスを取得できませんでした。";
+
+        const string reason = "Moderator action (Permanent IP BAN)";
+        var issued = BanHandler.IssueBan(new BanDetails
+        {
+            OriginalName = BanPlayer.ValidateNick(target.Nickname),
+            Id = target.IPAddress,
+            IssuanceTime = TimeBehaviour.CurrentTimestamp(),
+            Expires = DateTime.MaxValue.Ticks,
+            Reason = reason,
+            Issuer = actor.Sender.LogName,
+        }, BanHandler.BanType.IP);
+
+        if (!issued)
+            return $"{target.Nickname} の無期限IP BAN登録に失敗しました。";
+
+        target.Kick(reason, actor);
+        return $"{target.Nickname} を無期限IP BANしました。";
     }
 
     private static string KillTarget(Player actor, Player target)
@@ -438,7 +493,7 @@ public class ModeratorUtil : CItemWeapon
             ModUtilType.Inspect => 3,
             ModUtilType.Warn => 4,
             ModUtilType.Kick => 4,
-            ModUtilType.Ban => 4,
+            ModUtilType.Ban => BanOptionNames.Length,
             ModUtilType.Kill => 1,
             ModUtilType.Teleport => 3,
             ModUtilType.Inventory => 4,
@@ -474,7 +529,7 @@ public class ModeratorUtil : CItemWeapon
             ModUtilType.Inspect => Pick(option, "概要", "所持品", "位置/状態"),
             ModUtilType.Warn => Pick(option, "一般警告", "RDM警告", "VC警告", "指示警告"),
             ModUtilType.Kick => Pick(option, "一般", "ルール違反", "VC迷惑", "AFK"),
-            ModUtilType.Ban => Pick(option, "10分", "1時間", "1日", "7日"),
+            ModUtilType.Ban => Pick(option, BanOptionNames),
             ModUtilType.Kill => "管理者Kill",
             ModUtilType.Teleport => Pick(option, "Bring", "Goto", "Swap"),
             ModUtilType.Inventory => Pick(option, "全削除", "全ドロップ", "Medkit付与", "Radio付与"),
@@ -492,7 +547,9 @@ public class ModeratorUtil : CItemWeapon
             ModUtilType.Inspect => "対象を撃つと情報だけを表示する。",
             ModUtilType.Warn => "対象へ警告Broadcastを送る。",
             ModUtilType.Kick => "対象をサーバーから切断する。",
-            ModUtilType.Ban => "対象を指定時間Banする。",
+            ModUtilType.Ban => option == BanOptionNames.Length - 1
+                ? "対象のIPアドレスを無期限BANし、サーバーから切断する。"
+                : "対象を指定時間Banする。",
             ModUtilType.Kill => "対象を管理者処置で死亡させる。",
             ModUtilType.Teleport => "対象または自分の位置を操作する。",
             ModUtilType.Inventory => "対象の所持品を操作する。",

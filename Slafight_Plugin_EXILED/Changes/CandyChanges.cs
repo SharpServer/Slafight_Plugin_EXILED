@@ -48,8 +48,8 @@ public static class CandyChanges
         CandyChances.Add("Default", new CandyChanceStruct()
         {
             MostRareCandy = CandyKindID.Pink,
-            MostRareChance = 0.1f,
-            RareCandiesChance = 0.22f,
+            MostRareChance = 0.25f,
+            RareCandiesChance = 0.35f,
             RareCandies =
             [
                 CandyKindID.Black,
@@ -133,7 +133,7 @@ public static class CandyChanges
             ev.Player?.CustomHumeShieldStat.MaxValue = 10000f;
             ev.Player?.CustomHumeShieldStat.CurValue = 10000f;
             ev.Player?.CustomHumeShieldStat.ShieldRegenerationMultiplier = 0f;
-            ev.Player.ShowHint("<size=24>埃っぽく鉄臭い匂いが鼻を刺す...</size>");
+            ev.Player?.ShowHint("<size=24>埃っぽく鉄臭い匂いが鼻を刺す...</size>");
             Timing.CallDelayed(60f, () =>
             {
                 ev.Player?.CustomHumeShieldStat.MaxValue = 0f;
@@ -159,7 +159,7 @@ public static class CandyChanges
         {
             ev.Player?.EnableEffect(EffectType.Ghostly, 40f);
             ev.Player?.EnableEffect(EffectType.MovementBoost, 20, 40f);
-            ev.Player.ShowHint("<size=24>透き通るようなミルクの香りがする...</size>");
+            ev.Player?.ShowHint("<size=24>透き通るようなミルクの香りがする...</size>");
         }
         else if (ev.Candy.Kind == CandyKindID.Evil)
         {
@@ -180,7 +180,7 @@ public static class CandyChanges
                     Handler.ActivatedPlayers.Add(ev.Player);
                 }
 
-                ev.Player.ShowHint("<size=24>冒涜的な匂いに気が狂いそうになる...</size>");
+                ev.Player?.ShowHint("<size=24>冒涜的な匂いに気が狂いそうになる...</size>");
             });
         }
     }

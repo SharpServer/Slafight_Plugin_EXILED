@@ -27,15 +27,23 @@ public class AlphaWarheadOverride : AbilityBase
 
     public AlphaWarheadOverride(Player owner, float cooldownSeconds, int maxUses)
         : base(owner, cooldownSeconds, maxUses) { }
-    protected override void ExecuteAbility(Player player)
+
+    protected override bool CanActivate(Player player, out string failureReason)
     {
+        if (!base.CanActivate(player, out failureReason))
+            return false;
+
         if (!OmegaWarhead.CanBeStart() || Warhead.IsInProgress || MapFlags.IsOverrideActivated)
         {
-            player.RemoveAbility<AlphaWarheadOverride>();
-            player.AddAbility<AlphaWarheadOverride>();
-            player.ShowHint("※実行に失敗しました", 3f);
-            return;
+            failureReason = "現在はALPHA WARHEAD OVERRIDEを実行できません。";
+            return false;
         }
+
+        return true;
+    }
+
+    protected override void ExecuteAbility(Player player)
+    {
         FacilityLightHandler.OnWarhead(new StartingEventArgs(null, false, true));
         Exiled.API.Features.Cassie.MessageTranslated(
             "$PITCH_0.2 .g4 .g4 BY $PITCH_0.8 BY ORDER OF FACILITY SYSTEM CONTROL, ALPHA WARHEAD FORCE OPERATION ACTIVATED. DETONATE IN T MINUS 90 SECONDS.",

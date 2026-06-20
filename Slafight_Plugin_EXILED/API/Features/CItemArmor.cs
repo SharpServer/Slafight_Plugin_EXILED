@@ -1,11 +1,14 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
 using Exiled.API.Structs;
 using InventorySystem.Items.Armor;
+using PlayerStatsSystem;
 using UnityEngine;
 
 using PlayerEvents = Exiled.Events.EventArgs.Player;
@@ -13,12 +16,36 @@ using PlayerEvents = Exiled.Events.EventArgs.Player;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
+/// CItemArmor の防護計算方式。
+/// </summary>
+public enum ArmorProtectionMode
+{
+    /// <summary>
+    /// ゲーム標準の弾道防護のみを使用する。
+    /// 実際の軽減率は「Efficacy × (1 - 攻撃側の貫通率)」。
+    /// </summary>
+    VanillaBallistic,
+
+    /// <summary>
+    /// 貫通率に左右されない、設定値どおりの固定割合軽減を使用する。
+    /// このモードではゲーム標準の Efficacy は 0 にされる。
+    /// </summary>
+    FixedPercentage,
+
+    /// <summary>
+    /// ゲーム標準の弾道防護を適用した上で、固定割合軽減も適用する。
+    /// 強力になりやすいため、意図して併用する場合のみ使用する。
+    /// </summary>
+    Combined,
+}
+
+/// <summary>
 /// Armor 系 CItem の中間基底。
 ///
 /// <para>
 /// <b>CItem との差分：</b><br/>
-/// • <see cref="VestEfficacy"/> / <see cref="HelmetEfficacy"/> / <see cref="StaminaUseMultiplier"/>
-///   を Armor 固有プロパティとして定義し、<see cref="CustomizeItem"/> で焼き付ける。<br/>
+/// • 標準弾道防護と固定割合軽減を <see cref="ProtectionMode"/> で明示的に選択できる。<br/>
+/// • 重量・移動速度・スタミナ消耗・民間クラスのデメリット倍率を個別調整できる。<br/>
 /// • <see cref="AmmoLimits"/> / <see cref="CategoryLimits"/> を追加
 ///   （<see cref="Exiled.CustomItems.API.Features.CustomArmor"/> 互換）。<br/>
 /// • <see cref="Give"/> を override して <see cref="Armor"/> を直接 Create → カスタマイズ →
@@ -33,6 +60,12 @@ namespace Slafight_Plugin_EXILED.API.Features;
 /// <para>
 /// 派生クラスは <see cref="CItem.UniqueKey"/>・<see cref="CItem.BaseItem"/> と
 /// 必要なプロパティを override するだけで動く。
+/// 固定軽減率を使う場合は次のように指定する。
+/// <code>
+/// protected override ArmorProtectionMode ProtectionMode => ArmorProtectionMode.FixedPercentage;
+/// protected override float VestDamageReductionPercent => 35f;
+/// protected override float HelmetDamageReductionPercent => 50f;
+/// </code>
 /// </para>
 /// </summary>
 public abstract class CItemArmor : CItem
@@ -41,14 +74,75 @@ public abstract class CItemArmor : CItem
     // Armor カスタマイズ設定
     // ======================================================
 
-    /// <summary>ベスト防弾効率（0–100）。</summary>
+    /// <summary>
+    /// 防護計算方式。
+    /// 固定の分かりやすい軽減率を使う場合は <see cref="ArmorProtectionMode.FixedPercentage"/>。
+    /// </summary>
+    protected virtual ArmorProtectionMode ProtectionMode => ArmorProtectionMode.VanillaBallistic;
+
+    /// <summary>
+    /// ベストのゲーム標準弾道防護値（0–100）。
+    /// 実際の弾丸軽減率は「この値 × (1 - 弾丸の貫通率)」になる。
+    /// </summary>
+    protected virtual int VestBallisticEfficacy => VestEfficacy;
+
+    /// <summary>
+    /// ヘルメットのゲーム標準弾道防護値（0–100）。
+    /// 実際の弾丸軽減率は「この値 × (1 - 弾丸の貫通率)」になる。
+    /// </summary>
+    protected virtual int HelmetBallisticEfficacy => HelmetEfficacy;
+
+    /// <summary>
+    /// 互換用の旧ベスト防弾効率。新規実装では <see cref="VestBallisticEfficacy"/> を使用する。
+    /// </summary>
     protected virtual int VestEfficacy => 80;
 
-    /// <summary>ヘルメット防弾効率（0–100）。</summary>
+    /// <summary>
+    /// 互換用の旧ヘルメット防弾効率。新規実装では <see cref="HelmetBallisticEfficacy"/> を使用する。
+    /// </summary>
     protected virtual int HelmetEfficacy => 80;
 
-    /// <summary>スタミナ消耗倍率（1.0 ≦ 値 ≦ 2.0 推奨）。</summary>
+    /// <summary>胴体への固定ダメージ軽減率（0–100%）。</summary>
+    protected virtual float VestDamageReductionPercent => 0f;
+
+    /// <summary>頭部への固定ダメージ軽減率（0–100%）。</summary>
+    protected virtual float HelmetDamageReductionPercent => 0f;
+
+    /// <summary>手足への固定ダメージ軽減率（0–100%）。</summary>
+    protected virtual float LimbDamageReductionPercent => VestDamageReductionPercent;
+
+    /// <summary>
+    /// Hitbox を持たないダメージへの固定軽減率（0–100%）。
+    /// 爆発・落下・SCP 攻撃などを一括で軽減したい場合に使う。
+    /// </summary>
+    protected virtual float GeneralDamageReductionPercent => 0f;
+
+    /// <summary>
+    /// ダメージ種別ごとの固定軽減率上書き（0–100%）。
+    /// 指定された種別は Hitbox / General の設定より優先される。
+    /// </summary>
+    protected virtual IReadOnlyDictionary<DamageType, float> DamageReductionOverrides { get; }
+        = new Dictionary<DamageType, float>();
+
+    /// <summary>
+    /// スタミナ消耗倍率。1.0 が通常、1未満で消耗軽減、1より大きいと消耗増加。
+    /// </summary>
     protected virtual float StaminaUseMultiplier => 1.15f;
+
+    /// <summary>
+    /// 移動速度倍率。null ならベースアーマーの値を維持する。
+    /// 1.0 が通常、0.9 なら移動速度90%。
+    /// </summary>
+    protected virtual float? MovementSpeedMultiplier => null;
+
+    /// <summary>アーマー重量。null ならベースアーマーの値を維持する。</summary>
+    protected virtual float? ArmorWeight => null;
+
+    /// <summary>
+    /// Class-D / Scientist に適用される装備デメリット倍率。
+    /// null ならベースアーマーの値を維持する。
+    /// </summary>
+    protected virtual float? CivilianDownsidesMultiplier => null;
 
     /// <summary>
     /// 弾薬所持上限リスト。空なら変更しない。
@@ -62,6 +156,22 @@ public abstract class CItemArmor : CItem
     /// </summary>
     protected virtual IReadOnlyList<BodyArmor.ArmorCategoryLimitModifier> CategoryLimits { get; }
         = [];
+
+    /// <summary>読みやすい弾薬上限定義を生成する。</summary>
+    protected static ArmorAmmoLimit AmmoLimit(AmmoType ammoType, int limit)
+        => new()
+        {
+            AmmoType = ammoType,
+            Limit = (ushort)Mathf.Clamp(limit, 0, ushort.MaxValue),
+        };
+
+    /// <summary>読みやすいカテゴリ上限定義を生成する。</summary>
+    protected static BodyArmor.ArmorCategoryLimitModifier CategoryLimit(ItemCategory category, int limit)
+        => new()
+        {
+            Category = category,
+            Limit = (byte)Mathf.Clamp(limit, 0, byte.MaxValue),
+        };
 
     // ======================================================
     // CustomizeItem — Armor 値の焼き付け
@@ -78,9 +188,19 @@ public abstract class CItemArmor : CItem
 
         if (item is not Armor armor) return;
 
-        armor.VestEfficacy         = VestEfficacy;
-        armor.HelmetEfficacy       = HelmetEfficacy;
+        bool useVanillaProtection = ProtectionMode != ArmorProtectionMode.FixedPercentage;
+        armor.VestEfficacy         = useVanillaProtection ? ClampPercent(VestBallisticEfficacy) : 0;
+        armor.HelmetEfficacy       = useVanillaProtection ? ClampPercent(HelmetBallisticEfficacy) : 0;
         armor.StaminaUseMultiplier = StaminaUseMultiplier;
+
+        if (MovementSpeedMultiplier.HasValue)
+            armor.Base._movementSpeedMultiplier = Mathf.Max(0f, MovementSpeedMultiplier.Value);
+
+        if (ArmorWeight.HasValue)
+            armor.Weight = Mathf.Max(0f, ArmorWeight.Value);
+
+        if (CivilianDownsidesMultiplier.HasValue)
+            armor.Base.CivilianClassDownsidesMultiplier = Mathf.Max(0f, CivilianDownsidesMultiplier.Value);
 
         if (AmmoLimits.Count > 0)
             armor.AmmoLimits = AmmoLimits;
@@ -88,6 +208,94 @@ public abstract class CItemArmor : CItem
         if (CategoryLimits.Count > 0)
             armor.CategoryLimits = CategoryLimits;
     }
+
+    // ======================================================
+    // 固定割合ダメージ軽減
+    // ======================================================
+
+    /// <inheritdoc/>
+    public override void RegisterEvents()
+    {
+        Exiled.Events.Handlers.Player.Hurting += OnArmorOwnerHurting;
+        base.RegisterEvents();
+    }
+
+    /// <inheritdoc/>
+    public override void UnregisterEvents()
+    {
+        Exiled.Events.Handlers.Player.Hurting -= OnArmorOwnerHurting;
+        base.UnregisterEvents();
+    }
+
+    /// <summary>
+    /// この攻撃に適用する固定軽減率を返す。
+    /// 派生クラスで攻撃者・距離・武器などを使った独自判定に差し替えられる。
+    /// </summary>
+    protected virtual float GetDamageReductionPercent(PlayerEvents.HurtingEventArgs ev)
+    {
+        if (DamageReductionOverrides.TryGetValue(ev.DamageHandler.Type, out float overridden))
+            return overridden;
+
+        if (ev.DamageHandler.Base is not FirearmDamageHandler firearm)
+            return GeneralDamageReductionPercent;
+
+        return firearm.Hitbox switch
+        {
+            HitboxType.Headshot => HelmetDamageReductionPercent,
+            HitboxType.Limb     => LimbDamageReductionPercent,
+            _                   => VestDamageReductionPercent,
+        };
+    }
+
+    /// <summary>
+    /// この攻撃に固定軽減を適用するか。
+    /// 派生クラスで攻撃者・距離・役職などを条件にしたい場合に override する。
+    /// </summary>
+    protected virtual bool CanReduceDamage(PlayerEvents.HurtingEventArgs ev) => true;
+
+    /// <summary>
+    /// 固定軽減が適用された直後のフック。
+    /// </summary>
+    protected virtual void OnDamageReduced(
+        PlayerEvents.HurtingEventArgs ev,
+        float originalDamage,
+        float reducedDamage)
+    {
+    }
+
+    private void OnArmorOwnerHurting(PlayerEvents.HurtingEventArgs ev)
+    {
+        if (ProtectionMode == ArmorProtectionMode.VanillaBallistic)
+            return;
+
+        if (ev?.Player == null || !ev.IsAllowed)
+            return;
+
+        if (ev.IsInstantKill)
+            return;
+
+        if (ev.Amount <= 0f || !CanReduceDamage(ev))
+            return;
+
+        // ゲーム本体もインベントリ内の最初の BodyArmor を装備中アーマーとして扱う。
+        // 同じ順序で判定し、複数アーマーによる軽減の重複適用を防ぐ。
+        var wornArmor = ev.Player.Items.OfType<Armor>().FirstOrDefault();
+        if (!Check(wornArmor))
+            return;
+
+        float originalDamage = ev.Amount;
+        float reduction = ClampPercent(GetDamageReductionPercent(ev)) / 100f;
+        float reducedDamage = Mathf.Max(0f, originalDamage * (1f - reduction));
+
+        ev.Amount = reducedDamage;
+        OnDamageReduced(ev, originalDamage, reducedDamage);
+    }
+
+    private static int ClampPercent(int value)
+        => Mathf.Clamp(value, 0, 100);
+
+    private static float ClampPercent(float value)
+        => Mathf.Clamp(value, 0f, 100f);
 
     // ======================================================
     // Give — Armor を直接 Create してカスタマイズ後に AddItem

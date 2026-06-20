@@ -228,6 +228,14 @@ public abstract class AbilityBase
             return;
         }
 
+        if (!CanActivate(player, out var failureReason))
+        {
+            Log.Debug($"[Ability] CanActivate rejected {GetType().Name} for {player.Nickname}");
+            if (!string.IsNullOrWhiteSpace(failureReason))
+                player.ShowHint($"<color=yellow>{failureReason}</color>", 3f);
+            return;
+        }
+
         var canUse = TryUseAbility(player);
         Log.Debug($"[Ability] TryUseAbility result={canUse} for {player.Nickname}");
 
@@ -361,6 +369,21 @@ public abstract class AbilityBase
     }
 
     protected abstract void ExecuteAbility(Player player);
+
+    protected virtual bool CanActivate(Player player, out string failureReason)
+    {
+        failureReason = string.Empty;
+
+        if (player?.ReferenceHub == null ||
+            (!player.IsNPC && !player.IsConnected) ||
+            !player.IsAlive)
+        {
+            failureReason = "現在このアビリティは使用できません。";
+            return false;
+        }
+
+        return true;
+    }
 
     // ★ 現在選択中アビリティのみヒント表示
     protected virtual void OnCooldownEnd(Player player)

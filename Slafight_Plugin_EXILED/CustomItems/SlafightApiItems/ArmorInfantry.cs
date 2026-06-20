@@ -15,8 +15,9 @@ public class ArmorInfantry : CItemArmor
     protected override string   UniqueKey            => "ArmorInfantry";
     protected override ItemType BaseItem             => ItemType.ArmorCombat;
 
-    protected override int   VestEfficacy        => 80;
-    protected override int   HelmetEfficacy       => 85;
+    // 標準弾道防護: 実軽減率 = Efficacy × (1 - 弾丸の貫通率)
+    protected override int   VestBallisticEfficacy   => 80;
+    protected override int   HelmetBallisticEfficacy => 85;
     protected override float StaminaUseMultiplier => 0.15f;
 
     protected override bool  PickupLightEnabled => true;
@@ -24,15 +25,15 @@ public class ArmorInfantry : CItemArmor
 
     protected override IReadOnlyList<ArmorAmmoLimit> AmmoLimits =>
     [
-        new() { AmmoType = AmmoType.Nato9,   Limit = 220 },
-        new() { AmmoType = AmmoType.Nato556, Limit = 200 },
-        new() { AmmoType = AmmoType.Nato762, Limit = 130 },
-        new() { AmmoType = AmmoType.Ammo12Gauge, Limit = 80  },
+        AmmoLimit(AmmoType.Nato9, 220),
+        AmmoLimit(AmmoType.Nato556, 200),
+        AmmoLimit(AmmoType.Nato762, 130),
+        AmmoLimit(AmmoType.Ammo12Gauge, 80),
     ];
 
     protected override IReadOnlyList<BodyArmor.ArmorCategoryLimitModifier> CategoryLimits =>
     [
-        new() { Category = ItemCategory.Firearm, Limit = 3 },
-        new() { Category = ItemCategory.Grenade, Limit = 3 },
+        CategoryLimit(ItemCategory.Firearm, 3),
+        CategoryLimit(ItemCategory.Grenade, 3),
     ];
 }

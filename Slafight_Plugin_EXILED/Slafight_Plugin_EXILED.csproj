@@ -171,6 +171,7 @@
         <Compile Include="Abilities\MemeWaveAbility.cs" />
         <Compile Include="Abilities\PlaceTantrumAbility.cs" />
         <Compile Include="Abilities\Scp035TentacleAbility.cs" />
+        <Compile Include="Abilities\Scp106TargetTeleportAbility.cs" />
         <Compile Include="Abilities\SenseOfGreatDoctor.cs" />
         <Compile Include="Abilities\SoundOfFifthAbility.cs" />
         <Compile Include="Abilities\TeleprotRandomAbility.cs" />

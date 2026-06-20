@@ -19,6 +19,7 @@ public static class AbilityLocalization
         ["DropBiggerShitAbility"] = "爺街道",
         ["MemeWaveAbility"] = "ミーム波動",
         ["SenseOfGreatDoctor"] = "名医の感",
+        ["Scp106TargetTeleportAbility"] = "獲物への侵食",
     };
     private static readonly Dictionary<string, string> JaNamesSergey = new()
     {
@@ -32,8 +33,9 @@ public static class AbilityLocalization
         ["Scp966SleepWaveAbility"] = "不眠の呪詛",
         ["Scp966SpeedAbility"] = "背後からの一突き",
         ["DropBiggerShitAbility"] = "怨念大肛爆発",
-        ["MemeWaveAbility"] = "ミーム波動",
-        ["SenseOfGreatDoctor"] = "名医の感",
+        ["MemeWaveAbility"] = "怒り波動",
+        ["SenseOfGreatDoctor"] = "悪党の感",
+        ["Scp106TargetTeleportAbility"] = "宿敵への侵食",
     };
 
     public static string GetDisplayName(string key, Exiled.API.Features.Player player)

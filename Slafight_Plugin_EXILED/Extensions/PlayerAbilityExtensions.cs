@@ -64,6 +64,7 @@ public static class PlayerAbilityExtensions
         if (!removed)
             return;
 
+        AbilityBase.RevokeAbility(player.Id, typeof(TAbility));
         loadout.EnsureActiveSlot();
         AbilityManager.UpdateAbilityHint(player, loadout);
     }

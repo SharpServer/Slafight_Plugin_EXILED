@@ -21,25 +21,44 @@ public class SenseOfGreatDoctor : AbilityBase
 
     public SenseOfGreatDoctor(Player owner, float cooldownSeconds, int maxUses) : base(owner, cooldownSeconds, maxUses) { }
 
-    protected override void ExecuteAbility(Player player)
+    protected override bool CanActivate(Player player, out string failureReason)
     {
-        if (player == null || !player.IsAlive)
-            return;
+        if (!base.CanActivate(player, out failureReason))
+            return false;
 
         if (player.Role is not Scp049Role role)
-            return;
+        {
+            failureReason = "SCP-049でなければ使用できません。";
+            return false;
+        }
 
         if (role.RemainingGoodSenseDuration > 0f || role.GoodSenseCooldown > 0f)
-            return;
+        {
+            failureReason = "名医の感は現在使用できません。";
+            return false;
+        }
+
+        return true;
+    }
+
+    protected override void ExecuteAbility(Player player)
+    {
+        if (player.Role is not Scp049Role role) return;
 
         role.GoodSenseCooldown = 120f;
 
-        string clipId = $"Scp049Sense_{player.NetId}";
-        SpeakerApi.PlayLoop("megasense.ogg", clipId, player.Position, player.Transform, maxDistance: 1f, minDistance: 1f);
-        Timing.RunCoroutine(Coroutine(player, clipId));
+        const string purpose = "scp049_sense";
+        PlayerSpeakerManager.PlayLoop(
+            player,
+            "megasense.ogg",
+            purpose,
+            maxDistance: 1f,
+            minDistance: 0.1f,
+            listeners: listener => listener.Id == player.Id);
+        Timing.RunCoroutine(Coroutine(player, purpose));
     }
 
-    private static IEnumerator<float> Coroutine(Player player, string clipId)
+    private static IEnumerator<float> Coroutine(Player player, string purpose)
     {
         float elapsedTime = 0f;
         const float duration = 60f;
@@ -73,6 +92,6 @@ public class SenseOfGreatDoctor : AbilityBase
             yield return Timing.WaitForSeconds(interval);
         }
 
-        SpeakerApi.StopClip(clipId, "megasense.ogg");
+        PlayerSpeakerManager.Stop(player, purpose);
     }
 }

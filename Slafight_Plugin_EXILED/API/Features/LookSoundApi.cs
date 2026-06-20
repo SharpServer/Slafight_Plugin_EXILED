@@ -71,7 +71,9 @@ public static class LookSoundApi
         Player target,
         string stingerFile,
         string chaseFile,
-        bool loopChase = true)
+        bool loopChase = true,
+        float stingerVolume = 1f,
+        float chaseVolume = 1f)
     {
         if (!_enabled || owner == null || target == null)
             return;
@@ -94,7 +96,7 @@ public static class LookSoundApi
         };
 
         session.Coroutine = Timing.RunCoroutine(
-            LookCoroutine(session, stingerFile, chaseFile, loopChase));
+            LookCoroutine(session, stingerFile, chaseFile, loopChase, stingerVolume, chaseVolume));
 
         Sessions[owner.Id] = session;
 
@@ -146,7 +148,9 @@ public static class LookSoundApi
         LookSession session,
         string stingerFile,
         string chaseFile,
-        bool loopChase)
+        bool loopChase,
+        float stingerVolume,
+        float chaseVolume)
     {
         var owner = session.Owner;
         var target = session.Target;
@@ -174,13 +178,13 @@ public static class LookSoundApi
             {
                 if (!session.StingerPlayed)
                 {
-                    PlayStinger(owner, stingerFile);
+                    PlayStinger(owner, stingerFile, stingerVolume);
                     session.StingerPlayed = true;
                 }
 
                 if (!session.ChasePlaying)
                 {
-                    StartChase(session, chaseFile, loopChase);
+                    StartChase(session, chaseFile, loopChase, chaseVolume);
                     session.ChasePlaying = true;
                 }
             }
@@ -239,7 +243,7 @@ public static class LookSoundApi
 
     // ======== 再生制御 (SpeakerApi 利用) ========
 
-    private static void PlayStinger(Player owner, string oggFileName)
+    private static void PlayStinger(Player owner, string oggFileName, float volume)
     {
         try
         {
@@ -256,7 +260,9 @@ public static class LookSoundApi
                 isSpatial: false, // 全員同じ音量にしたいなら false
                 maxDistance: 50f,
                 minDistance: 0f,
-                loadClip: true);
+                loadClip: true,
+                volume: volume,
+                listeners: listener => listener.Id == owner.Id);
 
             Log.Debug($"[LookSoundApi] PlayStinger: {owner.Nickname} -> {oggFileName}");
         }
@@ -266,7 +272,7 @@ public static class LookSoundApi
         }
     }
 
-    private static void StartChase(LookSession session, string oggFileName, bool loop)
+    private static void StartChase(LookSession session, string oggFileName, bool loop, float volume)
     {
         var owner = session.Owner;
         try
@@ -285,7 +291,9 @@ public static class LookSoundApi
                 loadClip: true,
                 speakerName: "LookChaseTheme",
                 clipName: null,
-                restartIfAlreadyPlaying: true);
+                restartIfAlreadyPlaying: true,
+                volume: volume,
+                listeners: listener => listener.Id == owner.Id);
 
             session.CurrentChasePlayback = playback;
 

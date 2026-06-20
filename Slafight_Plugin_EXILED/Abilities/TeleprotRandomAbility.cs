@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -12,6 +13,30 @@ namespace Slafight_Plugin_EXILED.Abilities;
 
 public class TeleportRandomAbility : AbilityBase
 {
+    private static readonly HashSet<RoomType> ExcludedRoomTypes =
+    [
+        RoomType.Lcz173,
+        RoomType.LczClassDSpawn,
+        RoomType.Surface,
+        RoomType.EzCollapsedTunnel,
+        RoomType.Lcz330,
+        RoomType.LczArmory,
+        RoomType.HczArmory,
+        RoomType.LczCheckpointA,
+        RoomType.LczCheckpointB,
+        RoomType.LczToilets,
+        RoomType.Hcz049,
+        RoomType.Hcz939,
+        RoomType.HczCrossRoomWater,
+        RoomType.HczEzCheckpointA,
+        RoomType.HczEzCheckpointB,
+        RoomType.Hcz096,
+        RoomType.Hcz106,
+        RoomType.HczTestRoom
+    ];
+
+    private Vector3? _preparedDestination;
+
     // AbilityBase の抽象プロパティを実装
     protected override float DefaultCooldown => 180f;
     protected override int DefaultMaxUses => -1;
@@ -27,68 +52,54 @@ public class TeleportRandomAbility : AbilityBase
     public TeleportRandomAbility(Player owner, float cooldownSeconds, int maxUses)
         : base(owner, cooldownSeconds, maxUses) { }
 
-    protected override void ExecuteAbility(Player player)
+    protected override bool CanActivate(Player player, out string failureReason)
     {
-        var excludeTypes = new HashSet<RoomType>
-        {
-            RoomType.Lcz173,
-            RoomType.LczClassDSpawn,
-            RoomType.Surface,
-            RoomType.EzCollapsedTunnel,
-            RoomType.Lcz330,
-            RoomType.LczArmory,
-            RoomType.HczArmory,
-            RoomType.LczCheckpointA,
-            RoomType.LczCheckpointB,
-            RoomType.LczToilets,
-            RoomType.Hcz049,
-            RoomType.Hcz939,
-            RoomType.HczCrossRoomWater,
-            RoomType.HczEzCheckpointA,
-            RoomType.HczEzCheckpointB,
-            RoomType.Hcz096,
-            RoomType.Hcz106,
-            RoomType.HczTestRoom
-        };
+        _preparedDestination = null;
+        if (!base.CanActivate(player, out failureReason))
+            return false;
 
-        var candidates = new List<Vector3>(2);
-        var randomRoom = Room.Random(player.Zone);
-        if (randomRoom != null)
-            candidates.Add(randomRoom.WorldPosition(Vector3.zero));
-
-        var randomPlayer = Player.Get(Random.Range(0, Player.List.Count));
-        if (randomPlayer != null)
-            candidates.Add(randomPlayer.Position);
+        var candidates = Room.List
+            .Where(room =>
+                room != null &&
+                room.Zone == player.Zone &&
+                IsValidTeleportTarget(room.WorldPosition(Vector3.zero)))
+            .Select(room => room.WorldPosition(Vector3.zero))
+            .Concat(Player.List
+                .Where(target =>
+                    target != null &&
+                    target != player &&
+                    target.IsAlive &&
+                    IsValidTeleportTarget(target.Position))
+                .Select(target => target.Position))
+            .ToList();
 
         if (candidates.Count == 0)
         {
-            player.ShowHint("有効な位置が見つかりませんでした", 3f);
-            return;
+            failureReason = "安全なテレポート位置が見つかりませんでした。";
+            return false;
         }
 
-        Vector3 targetPos;
-        int attempts = 0;
-        do
-        {
-            int randomIndex = Random.Range(0, candidates.Count);
-            targetPos = candidates[randomIndex];
-        }
-        while (!IsValidTeleportTarget(targetPos, excludeTypes) && attempts++ < candidates.Count * 2);
-
-        if (attempts < candidates.Count * 2)
-        {
-            player.CurrentRoom.TurnOffLights(2.5f);
-            player.Position = targetPos + new Vector3(0f, 1.05f, 0f);
-            player.CurrentRoom.TurnOffLights(2.5f);
-        }
-        else
-            player.ShowHint("安全なテレポート位置が見つかりませんでした", 5f);
+        _preparedDestination = candidates[Random.Range(0, candidates.Count)];
+        failureReason = string.Empty;
+        return true;
     }
 
-    private static bool IsValidTeleportTarget(Vector3 pos, HashSet<RoomType> excludeTypes)
+    protected override void ExecuteAbility(Player player)
+    {
+        if (!_preparedDestination.HasValue)
+            return;
+
+        var targetPos = _preparedDestination.Value;
+        _preparedDestination = null;
+        player.CurrentRoom?.TurnOffLights(2.5f);
+        player.Position = targetPos + new Vector3(0f, 1.05f, 0f);
+        player.CurrentRoom?.TurnOffLights(2.5f);
+    }
+
+    private static bool IsValidTeleportTarget(Vector3 pos)
     {
         var room = Room.Get(pos);
-        if (room == null || excludeTypes.Contains(room.Type)) return false;
+        if (room == null || ExcludedRoomTypes.Contains(room.Type)) return false;
 
         foreach (var occupant in room.Players)
         {

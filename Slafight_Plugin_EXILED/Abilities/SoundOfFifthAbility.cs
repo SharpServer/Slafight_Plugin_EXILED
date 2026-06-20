@@ -1,3 +1,4 @@
+using System.Linq;
 using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
@@ -24,6 +25,25 @@ public class SoundOfFifthAbility : AbilityBase
 
     public SoundOfFifthAbility(Player owner, float cooldownSeconds, int maxUses)
         : base(owner, cooldownSeconds, maxUses) { }
+
+    protected override bool CanActivate(Player player, out string failureReason)
+    {
+        if (!base.CanActivate(player, out failureReason))
+            return false;
+
+        if (!Player.List.Any(target =>
+                target != null &&
+                target != player &&
+                target.IsAlive &&
+                !target.HasFlag(SpecificFlagType.AntiMemeEffectDisabled) &&
+                Vector3.Distance(target.Position, player.Position) <= 5f))
+        {
+            failureReason = "効果範囲内に対象が存在しません。";
+            return false;
+        }
+
+        return true;
+    }
 
     protected override void ExecuteAbility(Player player)
     {

@@ -14,6 +14,10 @@ public static class PlayerSpeakerManager
     private static readonly Dictionary<int, Dictionary<string, SpeakerApi.LivePlayback>> Speakers
         = new();
 
+    // playerId -> purposeKey -> file playback
+    private static readonly Dictionary<int, Dictionary<string, SpeakerApi.Playback>> Playbacks
+        = new();
+
     // playerId -> purposeKey -> coroutine
     private static readonly Dictionary<int, Dictionary<string, CoroutineHandle>> FollowCoroutines
         = new();
@@ -33,6 +37,7 @@ public static class PlayerSpeakerManager
 
         Log.Debug("[PlayerSpeakerManager] Registering events.");
         Exiled.Events.Handlers.Player.Spawned += OnPlayerSpawned;
+        Exiled.Events.Handlers.Player.ChangingRole += OnPlayerChangingRole;
         Exiled.Events.Handlers.Player.Died += OnPlayerDied;
         Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
         Exiled.Events.Handlers.Server.RestartingRound += OnRoundRestarted;
@@ -46,6 +51,7 @@ public static class PlayerSpeakerManager
 
         Log.Debug("[PlayerSpeakerManager] Unregistering events.");
         Exiled.Events.Handlers.Player.Spawned -= OnPlayerSpawned;
+        Exiled.Events.Handlers.Player.ChangingRole -= OnPlayerChangingRole;
         Exiled.Events.Handlers.Player.Died -= OnPlayerDied;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
         Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarted;
@@ -87,7 +93,8 @@ public static class PlayerSpeakerManager
         float maxDistance,
         float minDistance,
         float volume = 1f,
-        string speakerName = null)
+        string speakerName = null,
+        Predicate<Player> listeners = null)
     {
         if (!ShouldManageSpeaker(player) || string.IsNullOrWhiteSpace(purpose))
             return default;
@@ -101,6 +108,7 @@ public static class PlayerSpeakerManager
 
         if (dict.TryGetValue(purpose, out var speaker) && speaker.IsValid)
         {
+            speaker.SetListeners(listeners);
             Log.Debug($"[PlayerSpeakerManager] GetOrCreateSpeaker[{purpose}]: existing for {player.Nickname} (ID: {playerId}, ControllerId: {speaker.ControllerId})");
             return speaker;
         }
@@ -125,7 +133,8 @@ public static class PlayerSpeakerManager
             isSpatial: isSpatial,
             maxDistance: maxDistance,
             minDistance: minDistance,
-            volume: volume);
+            volume: volume,
+            listeners: listeners);
 
         dict[purpose] = speaker;
 
@@ -149,6 +158,132 @@ public static class PlayerSpeakerManager
         Log.Debug($"[PlayerSpeakerManager] GetOrCreateSpeaker[{purpose}]: started follow coroutine for {player.Nickname}");
 
         return speaker;
+    }
+
+    /// <summary>
+    /// プレイヤーに追従する音声を1回再生する。
+    /// 同じ用途キーの音声がある場合は置き換える。
+    /// </summary>
+    public static SpeakerApi.Playback Play(
+        Player player,
+        string fileName,
+        string purpose = null,
+        bool isSpatial = true,
+        float maxDistance = 5f,
+        float minDistance = 1f,
+        float volume = 1f,
+        Predicate<Player> listeners = null)
+        => PlayManaged(
+            player,
+            fileName,
+            purpose,
+            loop: false,
+            isSpatial,
+            maxDistance,
+            minDistance,
+            volume,
+            listeners);
+
+    /// <summary>
+    /// プレイヤーに追従する音声をループ再生する。
+    /// 同じ用途キーの音声がある場合は置き換える。
+    /// </summary>
+    public static SpeakerApi.Playback PlayLoop(
+        Player player,
+        string fileName,
+        string purpose = null,
+        bool isSpatial = true,
+        float maxDistance = 1f,
+        float minDistance = 0.1f,
+        float volume = 1f,
+        Predicate<Player> listeners = null)
+        => PlayManaged(
+            player,
+            fileName,
+            purpose,
+            loop: true,
+            isSpatial,
+            maxDistance,
+            minDistance,
+            volume,
+            listeners);
+
+    public static bool TryGetPlayback(Player player, string purpose, out SpeakerApi.Playback playback)
+    {
+        playback = default;
+        if (!ShouldManageSpeaker(player) || string.IsNullOrWhiteSpace(purpose))
+            return false;
+
+        if (!Playbacks.TryGetValue(player.Id, out var dict) ||
+            !dict.TryGetValue(purpose, out var current))
+            return false;
+
+        if (!current.IsValid)
+        {
+            RemovePlaybackEntry(player.Id, purpose);
+            return false;
+        }
+
+        playback = current;
+        return true;
+    }
+
+    public static bool Stop(Player player, string purpose)
+        => player != null && Stop(player.Id, purpose);
+
+    public static bool SetVolume(Player player, string purpose, float volume)
+    {
+        if (player == null || string.IsNullOrWhiteSpace(purpose))
+            return false;
+
+        if (TryGetPlayback(player, purpose, out var playback))
+        {
+            playback.SetVolume(volume);
+            return true;
+        }
+
+        if (TryGetSpeaker(player, purpose, out var speaker))
+        {
+            speaker.SetVolume(volume);
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool SetListeners(
+        Player player,
+        string purpose,
+        Predicate<Player>? listeners)
+    {
+        if (player == null || string.IsNullOrWhiteSpace(purpose))
+            return false;
+
+        if (TryGetPlayback(player, purpose, out var playback))
+        {
+            playback.SetListeners(listeners);
+            return true;
+        }
+
+        if (TryGetSpeaker(player, purpose, out var speaker))
+        {
+            speaker.SetListeners(listeners);
+            return true;
+        }
+
+        return false;
+    }
+
+    public static bool Stop(int playerId, string purpose)
+    {
+        if (playerId <= 0 || string.IsNullOrWhiteSpace(purpose) ||
+            !Playbacks.TryGetValue(playerId, out var dict) ||
+            !dict.TryGetValue(purpose, out var playback))
+            return false;
+
+        var stopped = playback.Stop();
+        RemovePlaybackEntry(playerId, purpose);
+        return stopped;
     }
 
     /// <summary>
@@ -234,6 +369,14 @@ public static class PlayerSpeakerManager
             }
             Speakers.Remove(playerId);
         }
+
+        if (Playbacks.TryGetValue(playerId, out var playbackDict))
+        {
+            foreach (var playback in playbackDict.Values)
+                playback.Stop();
+
+            Playbacks.Remove(playerId);
+        }
     }
 
     public static void DestroyAll()
@@ -255,6 +398,13 @@ public static class PlayerSpeakerManager
             }
         }
         Speakers.Clear();
+
+        foreach (var dict in Playbacks.Values)
+        {
+            foreach (var playback in dict.Values)
+                playback.Stop();
+        }
+        Playbacks.Clear();
         PlayerVersions.Clear();
     }
 
@@ -266,6 +416,7 @@ public static class PlayerSpeakerManager
 
         Log.Debug($"[PlayerSpeakerManager] OnPlayerSpawned: {ev.Player.Nickname} as {ev.Player.Role} (IsAlive: {ev.Player.IsAlive})");
         var playerId = ev.Player.Id;
+        DestroyAllForPlayer(playerId);
         var version = NextPlayerVersion(playerId);
 
         if (!ShouldManageSpeaker(ev.Player))
@@ -309,6 +460,12 @@ public static class PlayerSpeakerManager
         {
             DestroyAllForPlayer(playerId);
         }
+    }
+
+    private static void OnPlayerChangingRole(ChangingRoleEventArgs ev)
+    {
+        if (ev.Player != null)
+            DestroyAllForPlayer(ev.Player.Id);
     }
 
     private static void OnPlayerDied(DiedEventArgs ev)
@@ -382,6 +539,69 @@ public static class PlayerSpeakerManager
         {
             return false;
         }
+    }
+
+    private static SpeakerApi.Playback PlayManaged(
+        Player player,
+        string fileName,
+        string purpose,
+        bool loop,
+        bool isSpatial,
+        float maxDistance,
+        float minDistance,
+        float volume,
+        Predicate<Player> listeners)
+    {
+        if (!ShouldManageSpeaker(player))
+            return default;
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new ArgumentException("Audio file name cannot be empty.", nameof(fileName));
+
+        purpose = string.IsNullOrWhiteSpace(purpose) ? fileName : purpose.Trim();
+        Stop(player.Id, purpose);
+
+        var audioPlayerName = $"PlayerAudio_{player.Id}_{purpose}";
+        var playback = loop
+            ? SpeakerApi.PlayLoop(
+                fileName,
+                audioPlayerName,
+                player.Position,
+                player.Transform,
+                isSpatial,
+                maxDistance,
+                minDistance,
+                volume: volume,
+                listeners: listeners)
+            : SpeakerApi.Play(
+                fileName,
+                audioPlayerName,
+                player.Position,
+                destroyOnEnd: true,
+                parent: player.Transform,
+                isSpatial,
+                maxDistance,
+                minDistance,
+                volume: volume,
+                listeners: listeners);
+
+        if (!Playbacks.TryGetValue(player.Id, out var dict))
+        {
+            dict = new Dictionary<string, SpeakerApi.Playback>(StringComparer.OrdinalIgnoreCase);
+            Playbacks[player.Id] = dict;
+        }
+
+        dict[purpose] = playback;
+        return playback;
+    }
+
+    private static void RemovePlaybackEntry(int playerId, string purpose)
+    {
+        if (!Playbacks.TryGetValue(playerId, out var dict))
+            return;
+
+        dict.Remove(purpose);
+        if (dict.Count == 0)
+            Playbacks.Remove(playerId);
     }
 
     private static void CleanupStoppedFollow(int playerId, string purpose, SpeakerApi.LivePlayback liveSpeaker)

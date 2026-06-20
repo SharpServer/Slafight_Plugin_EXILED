@@ -44,4 +44,5 @@ public class Config : IConfig
 
     [Description("Delta Warhead が爆発するまでの時間（秒）")]
     public float DwBoomTime { get; set; } = 100f;
+
 }

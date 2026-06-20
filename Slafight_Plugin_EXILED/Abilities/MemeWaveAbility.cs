@@ -1,3 +1,4 @@
+using System.Linq;
 using Exiled.API.Features;
 using Exiled.API.Features.Roles;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -22,6 +23,25 @@ public class MemeWaveAbility : AbilityBase
 
     public MemeWaveAbility(Player owner, float cooldownSeconds, int maxUses)
         : base(owner, cooldownSeconds, maxUses) { }
+
+    protected override bool CanActivate(Player player, out string failureReason)
+    {
+        if (!base.CanActivate(player, out failureReason))
+            return false;
+
+        if (!Player.List.Any(target =>
+                target != null &&
+                target != player &&
+                target.IsAlive &&
+                target.GetCustomRole() == CRoleTypeId.AraOrun &&
+                target.Role is Scp079Role))
+        {
+            failureReason = "干渉可能な対象が存在しません。";
+            return false;
+        }
+
+        return true;
+    }
 
     protected override void ExecuteAbility(Player player)
     {

@@ -9,6 +9,7 @@ namespace Slafight_Plugin_EXILED.Extensions;
 
 public static class MeowExtensions
 {
+    [Obsolete("何かバグが発生したとき以外使わないでください。")]
     public static void ShowHsmHint(
         this Player? player,
         string text,

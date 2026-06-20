@@ -55,6 +55,9 @@ public class NetworkShowState
     /// <summary>強制的に非表示にするプレイヤーIDのセット。最高優先。</summary>
     public HashSet<int> ExplicitHide { get; } = [];
 
+    /// <summary>null でなければ、この条件を満たすプレイヤーだけに表示する。</summary>
+    public Predicate<Player>? VisibilityPredicate { get; set; }
+
     // ---- 優先順位に従って表示すべきか判定 ----
 
     /// <summary>
@@ -80,10 +83,24 @@ public class NetworkShowState
         // 2. ExplicitShow
         if (ExplicitShow.Contains(player.Id)) return true;
 
-        // 3. 所有者本人
+        // 3. 任意条件
+        if (VisibilityPredicate != null)
+        {
+            try
+            {
+                return VisibilityPredicate(player);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"[NetworkVisibility] VisibilityPredicate 失敗: {ex.Message}");
+                return false;
+            }
+        }
+
+        // 4. 所有者本人
         if (OwnerId.HasValue && player.Id == OwnerId.Value) return ShowToOwner;
 
-        // 4. 観戦者
+        // 5. 観戦者
         if (OwnerId.HasValue)
         {
             bool isSpectatingOwner = overrideIsSpectatingOwner ??
@@ -94,7 +111,7 @@ public class NetworkShowState
                 return SpectatorVisibility == SpectatorVisibility.Show;
         }
 
-        // 5. デフォルト Hide
+        // 6. デフォルト Hide
         return false;
     }
 }
@@ -425,6 +442,11 @@ public static class NetworkVisibilityManager
             s.ExplicitHide.Clear();
         });
 
+    public static void SetVisibilityPredicate(
+        this NetworkIdentity? identity,
+        Predicate<Player>? predicate)
+        => identity?.UpdateShowState(s => s.VisibilityPredicate = predicate);
+
     // =========================================================
     // Player 拡張（糖衣構文）
     // =========================================================
@@ -619,6 +641,11 @@ public static class NetworkVisibilityManager
 
     public static void ApplyShowState(this AdminToys.AdminToyBase? toy)
         => toy?.netIdentity?.ApplyShowState();
+
+    public static void SetVisibilityPredicate(
+        this AdminToys.AdminToyBase? toy,
+        Predicate<Player>? predicate)
+        => toy?.netIdentity?.SetVisibilityPredicate(predicate);
 
     // =========================================================
     // IEnumerable<NetworkIdentity> 向け一括操作

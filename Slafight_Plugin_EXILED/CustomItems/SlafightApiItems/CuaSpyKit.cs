@@ -38,7 +38,10 @@ public class CuaSpyKit : CItemKeycard
         public readonly RoleTypeId RoleTypeId = RoleTypeId;
         public readonly string RoleName = RoleName;
     }
+    private const float AppearanceSyncInterval = 5f;
     private readonly Dictionary<Player, SpyInfo> _selectedRoles = [];
+    private readonly Dictionary<Player, SpyInfo> _activeMorphs = [];
+    private CoroutineHandle _appearanceSyncCoroutine;
     private readonly List<SpyInfo> _infos = 
     [
         new (RoleTypeId.ChaosMarauder, $"<color={CTeam.ChaosInsurgency.GetTeamColor()}>変装を解除</color>"),
@@ -51,6 +54,7 @@ public class CuaSpyKit : CItemKeycard
         Exiled.Events.Handlers.Item.InspectingItem += OnInspecting;
         Exiled.Events.Handlers.Player.Handcuffing += OnHandcuff;
         Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
+        _appearanceSyncCoroutine = Timing.RunCoroutine(AppearanceSyncCoroutine());
         base.RegisterEvents();
     }
 
@@ -59,13 +63,18 @@ public class CuaSpyKit : CItemKeycard
         Exiled.Events.Handlers.Item.InspectingItem -= OnInspecting;
         Exiled.Events.Handlers.Player.Handcuffing -= OnHandcuff;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
+        if (_appearanceSyncCoroutine.IsRunning)
+            Timing.KillCoroutines(_appearanceSyncCoroutine);
+        _appearanceSyncCoroutine = default;
         _selectedRoles.Clear();
+        _activeMorphs.Clear();
         base.UnregisterEvents();
     }
 
     protected override void OnWaitingForPlayers()
     {
         _selectedRoles.Clear();
+        _activeMorphs.Clear();
         base.OnWaitingForPlayers();
     }
 
@@ -110,10 +119,11 @@ public class CuaSpyKit : CItemKeycard
         }
     }
 
-    private static void Morph(Player? player, SpyInfo spyInfo)
+    private void Morph(Player? player, SpyInfo spyInfo)
     {
         if (player is null) return;
         player.ChangeAppearance(spyInfo.RoleTypeId, Player.List.Where(p => p != null).ToList());
+        _activeMorphs[player] = spyInfo;
         player.SetCustomInfo(spyInfo.RoleTypeId.GetFullName().RemoveRichText());
         if (!spyInfo.RoleTypeId.IsChaos())
         {
@@ -123,6 +133,31 @@ public class CuaSpyKit : CItemKeycard
         {
             player.SetCustomInfo(CRole.Get<ChaosUndercoverAgent>().CustomInfo);
             player.ShowHint($"<size=24>{spyInfo.RoleName}しました", 2.5f);
+        }
+    }
+
+    private static List<Player> GetOtherPlayers(Player player) =>
+        Player.List.Where(p => p?.ReferenceHub != null && p != player).ToList();
+
+    private IEnumerator<float> AppearanceSyncCoroutine()
+    {
+        while (true)
+        {
+            yield return Timing.WaitForSeconds(AppearanceSyncInterval);
+
+            foreach (var (player, spyInfo) in _activeMorphs.ToList())
+            {
+                if (player?.ReferenceHub == null ||
+                    player.GetCustomRole() != CRoleTypeId.ChaosUndercoverAgent)
+                {
+                    _activeMorphs.Remove(player);
+                    continue;
+                }
+
+                var observers = GetOtherPlayers(player);
+                if (observers.Count > 0)
+                    player.ChangeAppearance(spyInfo.RoleTypeId, observers);
+            }
         }
     }
 
@@ -136,7 +171,10 @@ public class CuaSpyKit : CItemKeycard
     private void OnPlayerLeft(LeftEventArgs ev)
     {
         if (ev.Player != null)
+        {
             _selectedRoles.Remove(ev.Player);
+            _activeMorphs.Remove(ev.Player);
+        }
     }
 
     private IEnumerator<float> Coroutine(Player? player)
