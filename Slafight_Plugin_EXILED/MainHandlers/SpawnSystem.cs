@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Server;
 using MEC;
@@ -202,30 +203,86 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
     private CoroutineHandle _defaultWaveResetHandle;
     public static bool Disable = false;
 
-    private static NextWaveOverride? _pendingOverride;
+    private static readonly List<RegisteredNextWaveOverride> PendingOverrides = new();
+    private static long _overrideSequence;
 
-    public static SpawnOverrideMode OverrideMode => _pendingOverride.HasValue
+    public static SpawnOverrideMode OverrideMode => PendingOverrides.Count > 0
         ? SpawnOverrideMode.NextWave
         : SpawnOverrideMode.None;
 
-    public static SpawnTypeId? PendingOverrideType => _pendingOverride?.SpawnType;
-    public static bool PendingMiniWave => _pendingOverride?.MiniWave ?? false;
+    public static SpawnTypeId? PendingOverrideType => PendingOverrides.FirstOrDefault()?.Rule.SpawnType;
+    public static bool PendingMiniWave => PendingOverrides.FirstOrDefault()?.Rule.OverrideMiniWave ?? false;
+    public static int PendingOverrideCount => PendingOverrides.Count;
 
     public static SpawnSystem Instance { get; private set; }
     private bool _disposed;
 
-    private readonly struct NextWaveOverride
+    /// <summary>
+    /// 次に発生する Wave を置換するための条件付きルール。
+    /// 指定した条件はすべて AND 条件として評価される。
+    /// </summary>
+    public sealed class NextSpawnOverride
     {
-        public NextWaveOverride(SpawnTypeId spawnType, bool? miniWave, string source)
+        public NextSpawnOverride(SpawnTypeId spawnType)
         {
             SpawnType = spawnType;
-            MiniWave = miniWave;
-            Source = string.IsNullOrWhiteSpace(source) ? "unknown" : source;
         }
 
         public SpawnTypeId SpawnType { get; }
-        public bool? MiniWave { get; }
+        public SpawnableFaction? SourceSpawnableFaction { get; set; }
+        public Faction? SourceFaction { get; set; }
+        public bool? SourceIsMiniWave { get; set; }
+        public bool? OverrideMiniWave { get; set; }
+        public Func<RespawningTeamEventArgs, bool> Predicate { get; set; }
+        public int Priority { get; set; }
+
+        internal bool Matches(RespawningTeamEventArgs ev)
+        {
+            if (SourceSpawnableFaction.HasValue &&
+                ev.Wave.SpawnableFaction != SourceSpawnableFaction.Value)
+                return false;
+
+            if (SourceFaction.HasValue && ev.NextKnownTeam != SourceFaction.Value)
+                return false;
+
+            if (SourceIsMiniWave.HasValue && ev.Wave.IsMiniWave != SourceIsMiniWave.Value)
+                return false;
+
+            return Predicate == null || Predicate(ev);
+        }
+
+        internal NextSpawnOverride Snapshot()
+        {
+            return new NextSpawnOverride(SpawnType)
+            {
+                SourceSpawnableFaction = SourceSpawnableFaction,
+                SourceFaction = SourceFaction,
+                SourceIsMiniWave = SourceIsMiniWave,
+                OverrideMiniWave = OverrideMiniWave,
+                Predicate = Predicate,
+                Priority = Priority,
+            };
+        }
+    }
+
+    private sealed class RegisteredNextWaveOverride
+    {
+        public RegisteredNextWaveOverride(
+            Guid registrationId,
+            NextSpawnOverride rule,
+            string source,
+            long sequence)
+        {
+            RegistrationId = registrationId;
+            Rule = rule;
+            Source = source;
+            Sequence = sequence;
+        }
+
+        public Guid RegistrationId { get; }
+        public NextSpawnOverride Rule { get; }
         public string Source { get; }
+        public long Sequence { get; }
     }
 
     // =====================
@@ -262,8 +319,109 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
 
     public static void ReplaceNextSpawn(SpawnTypeId spawnType, bool? isMiniWave = null, string source = null)
     {
-        _pendingOverride = new NextWaveOverride(spawnType, isMiniWave, source ?? "external");
-        Log.Info($"SpawnSystem: Next spawn override queued. Type={spawnType}, Mini={isMiniWave?.ToString() ?? "source"}, Source={_pendingOverride.Value.Source}");
+        ClearNextSpawnOverrides("replaced");
+        AddNextSpawnOverride(new NextSpawnOverride(spawnType)
+        {
+            OverrideMiniWave = isMiniWave,
+        }, source);
+    }
+
+    public static Guid AddNextSpawnOverride(NextSpawnOverride rule, string source = null)
+    {
+        if (rule == null)
+            throw new ArgumentNullException(nameof(rule));
+
+        return AddNextSpawnOverrides(new[] { rule }, source);
+    }
+
+    public static Guid AddNextSpawnOverride(
+        SpawnableFaction sourceFaction,
+        SpawnTypeId spawnType,
+        bool? overrideMiniWave = null,
+        string source = null,
+        int priority = 0)
+    {
+        return AddNextSpawnOverride(new NextSpawnOverride(spawnType)
+        {
+            SourceSpawnableFaction = sourceFaction,
+            OverrideMiniWave = overrideMiniWave,
+            Priority = priority,
+        }, source);
+    }
+
+    public static Guid AddNextSpawnOverride(
+        Faction sourceFaction,
+        SpawnTypeId spawnType,
+        bool? sourceIsMiniWave = null,
+        bool? overrideMiniWave = null,
+        string source = null,
+        int priority = 0)
+    {
+        return AddNextSpawnOverride(new NextSpawnOverride(spawnType)
+        {
+            SourceFaction = sourceFaction,
+            SourceIsMiniWave = sourceIsMiniWave,
+            OverrideMiniWave = overrideMiniWave,
+            Priority = priority,
+        }, source);
+    }
+
+    /// <summary>
+    /// 複数の候補を1つの one-shot グループとして登録する。
+    /// いずれか1ルールが一致すると、同じグループの全ルールが消費される。
+    /// </summary>
+    public static Guid AddNextSpawnOverrides(
+        IEnumerable<NextSpawnOverride> rules,
+        string source = null)
+    {
+        if (rules == null)
+            throw new ArgumentNullException(nameof(rules));
+
+        var ruleList = rules.ToList();
+        if (ruleList.Count == 0)
+            throw new ArgumentException("At least one override rule is required.", nameof(rules));
+        if (ruleList.Any(rule => rule == null))
+            throw new ArgumentException("Override rules cannot contain null.", nameof(rules));
+
+        var registrationId = Guid.NewGuid();
+        var normalizedSource = string.IsNullOrWhiteSpace(source) ? "external" : source;
+
+        foreach (var rule in ruleList)
+        {
+            PendingOverrides.Add(new RegisteredNextWaveOverride(
+                registrationId,
+                rule.Snapshot(),
+                normalizedSource,
+                _overrideSequence++));
+        }
+
+        Log.Info(
+            $"SpawnSystem: Queued next-wave override group {registrationId} with {ruleList.Count} rule(s). Source={normalizedSource}");
+        return registrationId;
+    }
+
+    public static bool RemoveNextSpawnOverride(Guid registrationId, string reason = "manual")
+    {
+        int removed = PendingOverrides.RemoveAll(entry => entry.RegistrationId == registrationId);
+        if (removed > 0)
+        {
+            Log.Debug(
+                $"SpawnSystem: Removed next-wave override group {registrationId} ({removed} rule(s)) because {reason}.");
+        }
+
+        return removed > 0;
+    }
+
+    public static void ClearNextSpawnOverrides(string reason = "manual")
+    {
+        if (PendingOverrides.Count > 0)
+        {
+            Log.Debug(
+                $"SpawnSystem: Cleared {PendingOverrides.Count} pending next-wave override rule(s) because {reason}.");
+        }
+
+        PendingOverrides.Clear();
+        _overrideSequence = 0;
     }
 
     public static void ForceSpawnNow(SpawnTypeId spawnType, bool isMiniWave = false)
@@ -275,13 +433,7 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
 
     private static void ResetOverride(string reason = "manual")
     {
-        if (_pendingOverride.HasValue)
-        {
-            var pending = _pendingOverride.Value;
-            Log.Debug($"SpawnSystem: Cleared pending override {pending.SpawnType} (Mini={pending.MiniWave?.ToString() ?? "source"}, Source={pending.Source}) because {reason}.");
-        }
-
-        _pendingOverride = null;
+        ClearNextSpawnOverrides(reason);
     }
 
     private static void ResetRuntimeState(string reason)
@@ -326,24 +478,37 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
             return;
         }
 
-        // 即時オーバーライド（NextWave）
-        if (_pendingOverride.HasValue)
+        // 条件に一致する one-shot オーバーライドを優先度順で適用する。
+        RegisteredNextWaveOverride pending = null;
+        foreach (var candidate in PendingOverrides
+                     .OrderByDescending(entry => entry.Rule.Priority)
+                     .ThenBy(entry => entry.Sequence)
+                     .ToArray())
         {
-            var pending = _pendingOverride.Value;
-            var overrideType = pending.SpawnType;
-            var isMiniWave = pending.MiniWave ?? ev.Wave.IsMiniWave;
-
             try
             {
-                Log.Info(
-                    $"SpawnSystem: Applying next-wave override. SourceTeam={ev.NextKnownTeam}, SourceMini={ev.Wave.IsMiniWave}, Override={overrideType}, Mini={isMiniWave}, QueuedBy={pending.Source}");
-                SummonForces(overrideType, isMiniWave);
+                if (candidate.Rule.Matches(ev))
+                {
+                    pending = candidate;
+                    break;
+                }
             }
-            finally
+            catch (Exception ex)
             {
-                ResetOverride("override consumed");
+                Log.Error(
+                    $"SpawnSystem: Override predicate failed. Registration={candidate.RegistrationId}, Source={candidate.Source}, Error={ex}");
             }
+        }
 
+        if (pending != null)
+        {
+            var overrideType = pending.Rule.SpawnType;
+            var isMiniWave = pending.Rule.OverrideMiniWave ?? ev.Wave.IsMiniWave;
+            RemoveNextSpawnOverride(pending.RegistrationId, "override consumed");
+
+            Log.Info(
+                $"SpawnSystem: Applying next-wave override. SourceSpawnableFaction={ev.Wave.SpawnableFaction}, SourceTeam={ev.NextKnownTeam}, SourceMini={ev.Wave.IsMiniWave}, Override={overrideType}, Mini={isMiniWave}, QueuedBy={pending.Source}");
+            SummonForces(overrideType, isMiniWave);
             return;
         }
 

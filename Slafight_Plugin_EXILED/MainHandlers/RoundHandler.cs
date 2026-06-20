@@ -98,17 +98,23 @@ public class RoundHandler : IBootstrapHandler
             ElapsedTime += 0.1f;
             if (ElapsedTime >= WaitForSpawnTime)
             {
-                SpawnableFaction faction;
-                if (IsSecurityTeamExpected())
-                {
-                    faction = SpawnableFaction.NtfMiniWave;
-                    SpawnSystem.ReplaceNextSpawn(SpawnTypeId.SecurityTeam, source: nameof(RoundHandler));
-                }
-                else
-                {
-                    faction = SpawnableFaction.ChaosMiniWave;
-                    SpawnSystem.ReplaceNextSpawn(SpawnTypeId.ChaosAgents, source: nameof(RoundHandler));
-                }
+                SpawnSystem.AddNextSpawnOverrides(
+                    new[]
+                    {
+                        new SpawnSystem.NextSpawnOverride(SpawnTypeId.SecurityTeam)
+                        {
+                            SourceSpawnableFaction = SpawnableFaction.NtfMiniWave,
+                        },
+                        new SpawnSystem.NextSpawnOverride(SpawnTypeId.ChaosAgents)
+                        {
+                            SourceSpawnableFaction = SpawnableFaction.ChaosMiniWave,
+                        },
+                    },
+                    nameof(RoundHandler));
+
+                SpawnableFaction faction = IsSecurityTeamExpected()
+                    ? SpawnableFaction.NtfMiniWave
+                    : SpawnableFaction.ChaosMiniWave;
 
                 Respawn.AdvanceTimer(faction, 999);
                 IsAlreadySpawned = true;
