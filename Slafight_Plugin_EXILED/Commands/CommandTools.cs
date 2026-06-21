@@ -168,7 +168,7 @@ internal static class CommandTools
             "help" or "list" or "status" or "restart" => 0,
             "player" or "spawn" or "giveitem" or "giveability" => 1,
             "queue" or "getqueue" or "addqueue" or "setqueue" or "rerollqueue" or "rerollspecial" or "run" => 2,
-            "debugstart" or "debugmode" or "objprefab" or "hitbox" or "prefab" or "spawnwave" => 3,
+            "debugstart" or "debugmode" or "objprefab" or "hitbox" or "prefab" or "spawnwave" or "waypointstream" => 3,
             "proximity" or "voicerec" or "playsurfaceattack" or "surfacebombinginstant" or "playhere" or "playomega" or "activategenerator" => 4,
             _ => 5
         };

@@ -262,6 +262,7 @@ public class PlayerCommand : ICommand
             return false;
         }
 
+        WaypointChunkStreamer.EnsureCoverage(destination.Position);
         target.Position = destination.Position;
         response = $"Teleported {target.Nickname} to {destination.Nickname}.";
         return true;

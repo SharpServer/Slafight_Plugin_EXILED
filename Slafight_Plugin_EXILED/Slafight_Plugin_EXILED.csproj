@@ -267,6 +267,7 @@
         <Compile Include="API\Features\SpawnSystemBootstrap.cs" />
         <Compile Include="API\Features\UnitPackRegistry.cs" />
         <Compile Include="API\Features\WearFollower.cs" />
+        <Compile Include="API\Features\WaypointChunkStreamer.cs" />
         <Compile Include="API\Interface\IBootstrapHandler.cs" />
         <Compile Include="API\Interface\IControllableObject.cs" />
         <Compile Include="API\Interface\IObjectPrefab.cs" />
@@ -301,6 +302,7 @@
         <Compile Include="Commands\DevTools\SpawnBuiltInPrefab.cs" />
         <Compile Include="Commands\DevTools\SpawnUniversal.cs" />
         <Compile Include="Commands\DevTools\SpawnWave.cs" />
+        <Compile Include="Commands\DevTools\WaypointStreamCommand.cs" />
         <Compile Include="Commands\DevTools\StatusCommand.cs" />
         <Compile Include="CustomEffects\CustomStatusEffectsRegistry.cs" />
         <Compile Include="CustomEffects\NaturalHeal.cs" />

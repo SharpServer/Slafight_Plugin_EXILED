@@ -45,6 +45,7 @@ public class Plugin : Plugin<Config>
         PlayerSpeakerManager.RegisterEvents();
         ProximityChat.Handler.RegisterEvents();
         VoiceRecordingApi.RegisterEvents();
+        WaypointChunkStreamer.RegisterEvents();
 
         NetworkVisibilityManager.Register();
         NvgManager.Register();
@@ -113,6 +114,7 @@ public class Plugin : Plugin<Config>
         PlayerSpeakerManager.UnregisterEvents();
         ProximityChat.Handler.UnregisterEvents();
         VoiceRecordingApi.UnregisterEvents();
+        WaypointChunkStreamer.UnregisterEvents();
 
         NvgManager.Unregister();
         NetworkVisibilityManager.Unregister();
