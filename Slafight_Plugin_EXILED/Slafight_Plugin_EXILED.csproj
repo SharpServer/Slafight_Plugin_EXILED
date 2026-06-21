@@ -80,9 +80,6 @@
         <Reference Include="ProjectMER">
             <HintPath>$(SL_References)\ProjectMER.dll</HintPath>
         </Reference>
-        <Reference Include="ZAMERT">
-            <HintPath>$(SL_References)\ZAMERT.dll</HintPath>
-        </Reference>
         <Reference Include="HintServiceMeow-Exiled">
             <HintPath>$(SL_References)\HintServiceMeow-Exiled.dll</HintPath>
             <Private>False</Private>
