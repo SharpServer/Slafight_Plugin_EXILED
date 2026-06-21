@@ -25,7 +25,7 @@ public class CreateSinkholeAbility : AbilityBase
             const float downDistance = 10f;
             const float spawnOffset = 0.01f;
 
-            var position = player.Position + player.CameraTransform.forward * 3f;
+            var position = player.Position + player.CameraTransform.forward * 3.5f;
 
             if (player.TryGetRaycast(forwardDistance, LayerMasks.OnlyWorldCollision, out var hit))
             {

@@ -5,7 +5,7 @@ using Slafight_Plugin_EXILED.MainHandlers;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Core.DoorAccess;
 
-internal sealed class SpecialDoorAccessRule
+public sealed class SpecialDoorAccessRule
 {
     private const string ItemOnlyHintMessage = "<size=24>専用のアクセス用アイテムが必要そうだ・・・</size>";
     private const string CodeOnlyHintMessage = "<size=24>コードが正しくないようだ・・・</size>";

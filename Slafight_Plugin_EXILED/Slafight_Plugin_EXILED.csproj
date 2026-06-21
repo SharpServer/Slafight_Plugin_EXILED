@@ -77,12 +77,18 @@
         <Reference Include="YamlDotNet, Version=11.0.0.0, Culture=neutral, PublicKeyToken=ec19458f3c15af5e, processorArchitecture=MSIL">
           <HintPath>..\packages\ExMod.Exiled.9.14.2\lib\net48\YamlDotNet.dll</HintPath>
         </Reference>
+        <Reference Include="ProjectMER">
+            <HintPath>$(SL_References)\ProjectMER.dll</HintPath>
+        </Reference>
         <Reference Include="ZAMERT">
             <HintPath>$(SL_References)\ZAMERT.dll</HintPath>
         </Reference>
         <Reference Include="HintServiceMeow-Exiled">
             <HintPath>$(SL_References)\HintServiceMeow-Exiled.dll</HintPath>
             <Private>False</Private>
+        </Reference>
+        <Reference Include="SNAPI">
+            <HintPath>$(SL_References)\SNAPI-HSM.dll</HintPath>
         </Reference>
         <Reference Include="Assembly-CSharp-firstpass">
             <HintPath>$(SL_References)\Assembly-CSharp-firstpass.dll</HintPath>
@@ -105,9 +111,6 @@
         <Reference Include="Pooling">
             <HintPath>$(SL_References)\Pooling.dll</HintPath>
         </Reference>
-        <Reference Include="ProjectMER">
-            <HintPath>$(SL_References)\ProjectMER.dll</HintPath>
-        </Reference>
         <Reference Include="Unity.TextMeshPro">
             <HintPath>$(SL_References)\Unity.TextMeshPro.dll</HintPath>
         </Reference>
@@ -123,9 +126,6 @@
         <Reference Include="UnityEngine.AnimationModule">
             <HintPath>$(SL_References)\UnityEngine.AnimationModule.dll</HintPath>
         </Reference>
-<!--        <Reference Include="UnityEngine.AudioModule">-->
-<!--            <HintPath>$(SL_References)\UnityEngine.AudioModule.dll</HintPath>-->
-<!--        </Reference>-->
         <Reference Include="Microsoft.Bcl.AsyncInterfaces, Version=10.0.0.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
             <HintPath>..\packages\Microsoft.Bcl.AsyncInterfaces.10.0.1\lib\net462\Microsoft.Bcl.AsyncInterfaces.dll</HintPath>
         </Reference>
@@ -304,6 +304,9 @@
         <Compile Include="Commands\DevTools\StatusCommand.cs" />
         <Compile Include="CustomEffects\CustomStatusEffectsRegistry.cs" />
         <Compile Include="CustomEffects\NaturalHeal.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv1.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv2.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv3.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Bloodyknife.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CapybaraMissile.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ArmorInfantry.cs" />
@@ -311,6 +314,8 @@
         <Compile Include="CustomItems\SlafightApiItems\GunDisarmerRifle.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunAnomalyDetainer.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunRevolverX.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\IntermediateBases\AccessTunerBase.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\IntermediateBases\SnavCommon.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardA.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardHeadResearcherGeneric.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardHimself.cs" />
@@ -379,7 +384,6 @@
         <Compile Include="CustomItems\SlafightApiItems\SNAV300.cs" />
         <Compile Include="CustomItems\SlafightApiItems\SNAV310.cs" />
         <Compile Include="CustomItems\SlafightApiItems\SNAVUltimate.cs" />
-        <Compile Include="CustomItems\SlafightApiItems\SnavCommon.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Scp513Item.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ThrowableScp244.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Toolbox.cs" />

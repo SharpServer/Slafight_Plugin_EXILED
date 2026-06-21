@@ -289,6 +289,7 @@ public abstract class CItem
     protected virtual Vector3 PickupSchematicOffset => Vector3.zero;
     protected virtual Vector3 PickupSchematicRotationOffset => Vector3.zero;
     protected virtual Vector3 PickupSchematicScale => Vector3.one;
+    protected virtual string? ResolvePickupSchematicName(Pickup pickup) => PickupSchematicName;
 
     // ======================================================
     // Goggles (Scp1344) 設定
@@ -620,9 +621,10 @@ public virtual Pickup? Spawn(Vector3 position)
         string schematicName,
         Vector3 offset,
         Vector3 rotationOffset,
-        Vector3 scale)
+        Vector3 scale,
+        int attempt = 0)
     {
-        if (PickupSchematics.ContainsKey(pickup.Serial)) return;
+        if (pickup?.Base?.gameObject == null || PickupSchematics.ContainsKey(pickup.Serial)) return;
 
         try
         {
@@ -632,7 +634,11 @@ public virtual Pickup? Spawn(Vector3 position)
                 pickup.Position + pickup.Rotation * offset,
                 rotation,
                 scale);
-            if (schem == null) return;
+            if (schem == null)
+            {
+                RetryAttachPickupSchematic(pickup, schematicName, offset, rotationOffset, scale, attempt);
+                return;
+            }
 
             PickupSchematics[pickup.Serial]          = schem;
             PickupSchematicCoroutines[pickup.Serial] = Timing.RunCoroutine(
@@ -640,8 +646,29 @@ public virtual Pickup? Spawn(Vector3 position)
         }
         catch (Exception ex)
         {
-            Log.Error($"CItem.AttachPickupSchematic({schematicName}) failed: {ex}");
+            if (attempt >= 2)
+                Log.Error($"CItem.AttachPickupSchematic({schematicName}) failed after {attempt + 1} attempts: {ex}");
+            else
+                RetryAttachPickupSchematic(pickup, schematicName, offset, rotationOffset, scale, attempt);
         }
+    }
+
+    private static void RetryAttachPickupSchematic(
+        Pickup pickup,
+        string schematicName,
+        Vector3 offset,
+        Vector3 rotationOffset,
+        Vector3 scale,
+        int attempt)
+    {
+        if (attempt >= 2)
+        {
+            Log.Warn($"CItem.AttachPickupSchematic({schematicName}) returned null after {attempt + 1} attempts.");
+            return;
+        }
+
+        Timing.CallDelayed(0.25f, () =>
+            AttachPickupSchematic(pickup, schematicName, offset, rotationOffset, scale, attempt + 1));
     }
 
     private static IEnumerator<float> TrackPickupSchematic(
@@ -1001,11 +1028,12 @@ public virtual Pickup? Spawn(Vector3 position)
         if (ci.PickupLightEnabled)
             ci.AddPickupLight(pickup);
 
-        if (!string.IsNullOrEmpty(ci.PickupSchematicName))
+        string? schematicName = ci.ResolvePickupSchematicName(pickup);
+        if (!string.IsNullOrEmpty(schematicName))
         {
             AttachPickupSchematic(
                 pickup,
-                ci.PickupSchematicName!,
+                schematicName!,
                 ci.PickupSchematicOffset,
                 ci.PickupSchematicRotationOffset,
                 ci.PickupSchematicScale);

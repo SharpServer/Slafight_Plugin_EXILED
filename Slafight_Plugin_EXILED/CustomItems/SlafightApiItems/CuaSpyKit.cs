@@ -156,7 +156,7 @@ public class CuaSpyKit : CItemKeycard
 
                 var observers = GetOtherPlayers(player);
                 if (observers.Count > 0)
-                    player.ChangeAppearance(spyInfo.RoleTypeId, observers);
+                    player.ChangeAppearance(spyInfo.RoleTypeId, observers, true);
             }
         }
     }
@@ -184,7 +184,7 @@ public class CuaSpyKit : CItemKeycard
             if (Round.IsLobby || player?.ReferenceHub == null || !CheckHeld(player)) yield break;
             if (_selectedRoles.TryGetValue(player, out var info))
             {
-                player.ShowHint($"<size=24>[変身メニュー]\n現在選択中： {info.RoleName}\nTキーで切り替えられ、Iで実行します。", 2.5f);
+                player.ShowHint($"<size=24>[変装メニュー]\n現在選択中： {info.RoleName}\nTキーで切り替えられ、Iで実行します。", 2.5f);
             }
             yield return Timing.WaitForSeconds(1f);
         }

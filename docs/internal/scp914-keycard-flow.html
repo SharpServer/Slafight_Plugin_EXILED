@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8">
-  <title>SCP-914 Keycard Flow</title>
+  <title>SCP-914 Workflow / Keycard Flow</title>
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
     :root {
@@ -136,6 +136,30 @@
       color:var(--muted);
       font-size:12px;
     }
+    .workflow{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+      gap:10px;
+      margin-top:10px;
+    }
+    .workflow-step{
+      position:relative;
+      background:var(--panel2);
+      border:1px solid var(--line);
+      border-radius:8px;
+      padding:10px 11px;
+      font-size:12px;
+    }
+    .workflow-step strong{
+      display:block;
+      margin-bottom:3px;
+      color:var(--cyan);
+      font-size:13px;
+    }
+    code{
+      color:var(--purple);
+      font-family:Consolas,"Cascadia Code",monospace;
+    }
 
     .table-wrap{
       margin-top:6px;
@@ -194,17 +218,73 @@
 </head>
 <body>
 <header>
-  <h1>SCP-914 Keycard Flow</h1>
-  <p>Scp914Changes.cs / Scp914Registry の現在実装を読んでまとめた概要表。O5 は SCPCB の OMNI 的な最終ギャンブル枠で、低位カードからも極低確率で到達可能だが、基本は壁を越えて MasterCard / Site Director まで進めてから狙う。</p>
+  <h1>SCP-914 Workflow / Keycard Flow</h1>
+  <p>Scp914Changes.cs / Scp914Registry / Scp914Dispatcher / Scp914ProcessorFix の現在実装を読んでまとめた処理経路と変換表。O5 は SCPCB の OMNI 的な最終ギャンブル枠。</p>
 </header>
 
 <main>
+  <section>
+    <h2>実行ワークフロー</h2>
+    <div class="workflow">
+      <div class="workflow-step">
+        <strong>0. Processor 補完</strong>
+        <code>Scp914ProcessorFix</code> が WaitingForPlayers 時とプラグイン登録時に全 Vanilla prefab を走査する。<code>Scp914ItemProcessor</code> を持たない ItemType には、全設定で同じ ItemType を返す pass-through processor を追加し、EXILED の 914 イベント経路へ入れる。
+      </div>
+      <div class="workflow-step">
+        <strong>1. EXILED イベント受信</strong>
+        床は <code>UpgradingPickup</code>、所持品は <code>UpgradingInventoryItem</code>、プレイヤー本体は <code>UpgradingPlayer</code> で処理する。ルール登録はプラグイン有効化時、解除と Registry の clear は無効化時に行う。
+      </div>
+      <div class="workflow-step">
+        <strong>2. O5 共通ロール</strong>
+        床・所持品の両方で最初に 0.2%（1/500）の O5 変換を試す。当選時は入力を O5 に置換して以降の処理を打ち切る。外れた場合のみ次へ進む。
+      </div>
+      <div class="workflow-step">
+        <strong>3. 床専用ワイルドカード</strong>
+        床 Pickup のみ 1/42 で通常 wildcard が当選する。当選後の内訳は Scp513 10% / CapybaraMissile 90%。インベントリアイテムにはこの wildcard を適用しない。
+      </div>
+      <div class="workflow-step">
+        <strong>4. 入力種別を解決</strong>
+        <code>CustomItem → CItem → Vanilla</code> の順で判定する。判定された種別に Registry の RuleSet があり、現在の knob setting に Rule がある場合だけ Dispatcher を呼ぶ。
+      </div>
+      <div class="workflow-step">
+        <strong>5. Rule を実行</strong>
+        <code>Destroy / Keep / Passthrough / ToVanilla / ToCustomItem / ToCItem / Weighted / Custom</code> を実行する。変換数は <code>Times</code>、入口確率は <code>WithChance</code> で指定する。
+      </div>
+      <div class="workflow-step">
+        <strong>6. 出力先</strong>
+        床入力は出力室座標へ spawn または移動する。所持品入力は元アイテムを削除して所持者へ追加し、インベントリ満杯または追加失敗時はプレイヤー位置へ drop する。
+      </div>
+      <div class="workflow-step">
+        <strong>7. 未登録・未指定</strong>
+        Registry 未登録、または RuleSet の対象 setting が <code>null</code> の場合はイベントを変更せず、Vanilla 914 / 各アイテム側の既定処理へフォールスルーする。
+      </div>
+    </div>
+    <div class="grid" style="margin-top:12px">
+      <div class="note">
+        <strong>Chance の外れ</strong>
+        <code>WithChance</code> の抽選に外れた場合は <code>IsAllowed = true</code> に戻し、Vanilla 側へフォールスルーする。
+      </div>
+      <div class="note">
+        <strong>Weighted の重み</strong>
+        合計が 1 を超える場合は相対重みとして正規化される。合計が 1 以下なら 0〜1 の確率空間を使う。現在のキーカード用 Weighted はすべて合計 1 で定義されている。
+      </div>
+      <div class="note">
+        <strong>プレイヤー本体</strong>
+        Very Fine のとき 25% で SCP-049-2 に変更し、1秒後に SCP-207 強度4、専用表示、各軸 0.01〜1.08 のランダムスケールを設定する。
+      </div>
+    </div>
+  </section>
+
   <section>
     <h2>メモ・前提</h2>
     <div class="grid">
       <div class="note">
         <strong>共通 O5 ロール</strong>
-        全ての入力に対して、処理の最初に 0.2% で O5 に変換される超低確率ロールが走る（床ピックアップ/インベントリ共通）。これは「どのカードにも一応夢はある」ための最低保証で、通常の育成ルートとは別枠。
+        全てのアイテム入力に対して、処理の最初に 0.2% で O5 に変換される超低確率ロールが走る（床ピックアップ/インベントリ共通）。これは通常の育成ルートとは別枠。
+      </div>
+      <div class="note">
+        <strong>通常 wildcard の適用範囲</strong>
+        Scp513 / CapybaraMissile の 1/42 wildcard は床 Pickup 専用。インベントリアイテムは O5 共通ロールの後、直接 CustomItem → CItem → Vanilla の解決へ進む。
       </div>
       <div class="note">
         <strong>研究・管理系階層</strong>
@@ -763,7 +843,7 @@
   </section>
 
   <footer>
-    この HTML は、プラグイン内 C# 実装（Scp914Changes.cs / Scp914Registry）を読んでまとめたものです。個別 O5 抽選の確率を調整した場合は O5ProbabilityScale 反映後の値が実際の挙動になり、共通 O5 ワイルドカードは O5WildcardChance の値がそのまま使われます。
+    この HTML は、プラグイン内 C# 実装（Scp914Changes.cs / Scp914Registry / Scp914Dispatcher / Scp914Rule / Scp914RuleSet / Scp914ProcessorFix）を読んでまとめたものです。個別 O5 抽選の確率を調整した場合は O5ProbabilityScale 反映後の値が実際の挙動になり、共通 O5 ワイルドカードは O5WildcardChance の値がそのまま使われます。
   </footer>
 </main>
 </body>

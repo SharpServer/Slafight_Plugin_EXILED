@@ -747,12 +747,14 @@ public static class Scp914Changes
     // =====================================================================
 
     /// <summary>
-    /// 優先順位:
-    /// 1. Wildcard (1/12) — 当選で Scp513 / CapybaraMissile に置き換え、他の処理打ち切り
-    /// 2. CustomItem (Registry ヒット) — Registry 経由で変換
-    /// 3. CItem (Registry ヒット) — Registry 経由で変換
-    /// 4. Vanilla (Registry ヒット) — Registry 経由で変換
+    /// 床 Pickup の優先順位:
+    /// 1. O5 wildcard (0.2%)
+    /// 2. Scp513 / CapybaraMissile wildcard (1/42)
+    /// 3. CustomItem (Registry ヒット)
+    /// 4. CItem (Registry ヒット)
+    /// 5. Vanilla (Registry ヒット)
     /// どれにも当たらない場合は何もしない (vanilla 914 / CItem デフォルト挙動に任せる)
+    /// インベントリアイテムには 2 の通常 wildcard を適用しない。
     /// </summary>
     private static void OnUpgradingPickup(UpgradingPickupEventArgs? ev)
     {

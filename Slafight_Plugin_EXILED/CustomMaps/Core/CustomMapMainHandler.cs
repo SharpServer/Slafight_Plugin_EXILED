@@ -17,6 +17,7 @@ namespace Slafight_Plugin_EXILED.CustomMaps.Core;
 public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDisposable
 {
     public static CustomMapMainHandler Instance { get; private set; }
+    public static SpecialDoorAccessController? DoorAccess => Instance?._doorAccess;
 
     private const float PositionToleranceSq = 1.65f * 1.65f;
     private const float FemurJoinRadiusSq = 1.005f * 1.005f;

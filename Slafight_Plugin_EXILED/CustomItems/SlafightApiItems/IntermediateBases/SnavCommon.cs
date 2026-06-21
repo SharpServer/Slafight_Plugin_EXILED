@@ -5,7 +5,7 @@ using Exiled.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
-namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
+namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems.IntermediateBases;
 
 /// <summary>
 /// SNAV 系 (300/310/Ultimate) で共有する範囲計算とヒント文字列。

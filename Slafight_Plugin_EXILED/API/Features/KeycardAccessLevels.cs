@@ -87,7 +87,7 @@ public readonly struct KeycardAccessLevels
     {
         if (Has(permissions, KeycardPermissions.AlphaWarhead)) return 3;
         if (Has(permissions, KeycardPermissions.ExitGates)) return 2;
-        if (Has(permissions, KeycardPermissions.Checkpoints) && Has(permissions, KeycardPermissions.Intercom)) return 1;
+        if (Has(permissions, KeycardPermissions.Checkpoints) || Has(permissions, KeycardPermissions.Intercom)) return 1;
         return 0;
     }
 
