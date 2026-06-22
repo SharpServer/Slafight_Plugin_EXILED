@@ -37,8 +37,8 @@ public abstract class ServerSpecifics
             new SSTwoButtonsSetting(
                 AccessibilityModeSettingId,
                 "アクセシビリティモード",
-                "ON",
                 "OFF",
+                "ON",
                 false,
                 hint:"一部のモデルを見やすい表示へ切り替えます。"),
             new SSTwoButtonsSetting(DebugModeSettingId, "[ADMIN]デバッグモード", "ON", "OFF", true)

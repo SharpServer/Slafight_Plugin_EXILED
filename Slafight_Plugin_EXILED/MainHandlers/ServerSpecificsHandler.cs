@@ -13,7 +13,7 @@ namespace Slafight_Plugin_EXILED.MainHandlers;
 public static class ServerSpecificsHandler
 {
     private static readonly Dictionary<int, float> DocumentHintDurations = new();
-    private static readonly HashSet<int> AccessibilityModePlayers = new();
+    private static readonly HashSet<int> NotAccessibilityModePlayers = new();
 
     public static void Register()
     {
@@ -37,7 +37,7 @@ public static class ServerSpecificsHandler
     }
 
     public static bool IsAccessibilityModeEnabled(Player? player)
-        => player != null && AccessibilityModePlayers.Contains(player.Id);
+        => player != null && !NotAccessibilityModePlayers.Contains(player.Id);
 
     public static void RemovePlayer(Player? player)
     {
@@ -45,13 +45,13 @@ public static class ServerSpecificsHandler
             return;
 
         DocumentHintDurations.Remove(player.Id);
-        AccessibilityModePlayers.Remove(player.Id);
+        NotAccessibilityModePlayers.Remove(player.Id);
     }
 
     public static void ClearAll()
     {
         DocumentHintDurations.Clear();
-        AccessibilityModePlayers.Clear();
+        NotAccessibilityModePlayers.Clear();
     }
 
     private static void OnSettingValueReceived(ReferenceHub hub, ServerSpecificSettingBase @base)
@@ -205,9 +205,9 @@ public static class ServerSpecificsHandler
     private static void HandleAccessibilityMode(Player player, bool isOn)
     {
         if (isOn)
-            AccessibilityModePlayers.Add(player.Id);
+            NotAccessibilityModePlayers.Add(player.Id);
         else
-            AccessibilityModePlayers.Remove(player.Id);
+            NotAccessibilityModePlayers.Remove(player.Id);
 
         NetworkVisibilityManager.RefreshPlayer(player);
         Log.Debug($"[AccessibilityMode] {player.Nickname} => {(isOn ? "ON" : "OFF")}");
