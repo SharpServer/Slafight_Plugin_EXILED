@@ -1,3 +1,4 @@
+using Exiled.API.Enums;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
@@ -161,10 +162,20 @@ public static class CassieHelper
         }
         else
         {
-            Exiled.API.Features.Cassie.MessageTranslated(
-                $"{targetCassie} successfully terminated. Termination cause unspecified.", 
-                $"{targetTranslated} は、不明な原因によって終了されました。",
-                true);
+            if (ev.DamageHandler?.Type is DamageType.MicroHid && ev.Player?.Zone is ZoneType.Surface)
+            {
+                Exiled.API.Features.Cassie.MessageTranslated(
+                    $"{targetCassie} successfully terminated by H I D System .", 
+                    $"{targetTranslated} は、<color=yellow>H.I.D Turret</color>によって終了されました。",
+                    true);
+            }
+            else
+            {
+                Exiled.API.Features.Cassie.MessageTranslated(
+                    $"{targetCassie} successfully terminated. Termination cause unspecified.", 
+                    $"{targetTranslated} は、不明な原因によって終了されました。",
+                    true);
+            }
         }
     }
 }

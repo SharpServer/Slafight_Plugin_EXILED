@@ -15,6 +15,7 @@ using Slafight_Plugin_EXILED.CustomEffects;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Entities;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
+using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.Patches;
 using UserSettings.ServerSpecific;
@@ -33,7 +34,7 @@ public class Plugin : Plugin<Config>
     public override string Name => "Slafight_Plugin_EXILED";
     public override string Author => "org.sharp-server.jp.scpsl";
     public override string Prefix => "Slafight_Plugin_EXILED";
-    public override Version Version => new(1, 8, 1, 2);
+    public override Version Version => new(1, 8, 1, 3);
         
     public override Version RequiredExiledVersion { get; } = new(9, 14, 2);
 
@@ -51,6 +52,7 @@ public class Plugin : Plugin<Config>
         NvgManager.Register();
             
         WearsHandler.Register();
+        HIDTurretObject.RegisterEvents();
         CRole.RegisterAllEvents();
         CItem.RegisterAllItems();
         Scp914ProcessorFix.Register();
@@ -120,6 +122,7 @@ public class Plugin : Plugin<Config>
         NetworkVisibilityManager.Unregister();
             
         WearsHandler.Unregister();
+        HIDTurretObject.UnregisterEvents();
         CRole.UnregisterAllEvents();
         CItem.UnregisterAllItems();
         Scp914ProcessorFix.Unregister();

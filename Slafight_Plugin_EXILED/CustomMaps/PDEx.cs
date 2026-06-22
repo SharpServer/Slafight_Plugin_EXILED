@@ -18,6 +18,8 @@ namespace Slafight_Plugin_EXILED.CustomMaps;
 
 public class PDEx : IBootstrapHandler, System.IDisposable
 {
+    private static readonly HashSet<int> PendingPocketCorrodingDeaths = [];
+
     public static PDEx Instance { get; private set; }
     public static void Register()
     {
@@ -37,6 +39,9 @@ public class PDEx : IBootstrapHandler, System.IDisposable
     {
         Exiled.Events.Handlers.Server.RoundStarted += Setup;
         Exiled.Events.Handlers.Player.FailingEscapePocketDimension += JoinPDEx;
+        Exiled.Events.Handlers.Player.Dying += OnDying;
+        Exiled.Events.Handlers.Player.Died += OnDied;
+        Exiled.Events.Handlers.Player.ChangingRole += OnChangingRole;
         Exiled.Events.Handlers.Player.Left += OnLeft;
     }
 
@@ -48,9 +53,13 @@ public class PDEx : IBootstrapHandler, System.IDisposable
         _disposed = true;
         Exiled.Events.Handlers.Server.RoundStarted -= Setup;
         Exiled.Events.Handlers.Player.FailingEscapePocketDimension -= JoinPDEx;
+        Exiled.Events.Handlers.Player.Dying -= OnDying;
+        Exiled.Events.Handlers.Player.Died -= OnDied;
+        Exiled.Events.Handlers.Player.ChangingRole -= OnChangingRole;
         Exiled.Events.Handlers.Player.Left -= OnLeft;
         Timing.KillCoroutines(handle);
         PDExPlayers.Clear();
+        PendingPocketCorrodingDeaths.Clear();
         System.GC.SuppressFinalize(this);
     }
 
@@ -60,8 +69,38 @@ public class PDEx : IBootstrapHandler, System.IDisposable
     private void Setup()
     {
         PDExPlayers.Clear();
+        PendingPocketCorrodingDeaths.Clear();
         Timing.KillCoroutines(handle);
         handle = Timing.RunCoroutine(Coroutine());
+    }
+
+    private static void OnDying(DyingEventArgs ev)
+    {
+        if (ev?.Player == null)
+            return;
+
+        if (IsScp106(ev.Player))
+            Handler.SetProximityChatForced(ev.Player, false);
+
+        if (ev.IsAllowed && ev.Player.IsEffectActive<PocketCorroding>())
+            PendingPocketCorrodingDeaths.Add(ev.Player.Id);
+        else
+            PendingPocketCorrodingDeaths.Remove(ev.Player.Id);
+    }
+
+    private static void OnDied(DiedEventArgs ev)
+    {
+        if (ev?.Player == null || !PendingPocketCorrodingDeaths.Remove(ev.Player.Id))
+            return;
+
+        foreach (var scp106 in Player.List.Where(IsLivingScp106))
+            scp106.ShowHitMarker();
+    }
+
+    private static void OnChangingRole(ChangingRoleEventArgs ev)
+    {
+        if (ev?.Player != null && IsScp106(ev.Player))
+            Handler.SetProximityChatForced(ev.Player, false);
     }
 
     private static void OnLeft(LeftEventArgs ev)
@@ -70,6 +109,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
             return;
 
         PDExPlayers.RemoveAll(player => player?.ReferenceHub == null || player.Id == ev.Player.Id);
+        PendingPocketCorrodingDeaths.Remove(ev.Player.Id);
     }
 
     private static IEnumerator<float> Coroutine()
@@ -135,9 +175,17 @@ public class PDEx : IBootstrapHandler, System.IDisposable
                     player.AddAbility(new AllowEscapeAbility(player));
                     if (player.IsConnected && !player.IsNPC)
                         player.ShowHint("アビリティ「腐蝕からの解放」が付与されました。\n人間を釈放したくなったら使ってください\nまた、近接チャットも一時的に利用可能です！");
-                    Handler.CanUsePlayers.Add(player);
+                    Handler.SetProximityChatForced(player, true);
                 }
             }
         }
     }
+
+    private static bool IsScp106(Player player)
+        => player?.ReferenceHub != null &&
+           (player.GetCustomRole() == CRoleTypeId.Scp106 ||
+            player.GetCustomRole() == CRoleTypeId.None && player.Role.Type == RoleTypeId.Scp106);
+
+    private static bool IsLivingScp106(Player player)
+        => IsScp106(player) && player.IsAlive;
 }

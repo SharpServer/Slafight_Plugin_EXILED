@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
 using MEC;
@@ -9,6 +10,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Mirror;
 using Light = LabApi.Features.Wrappers.LightSourceToy;
 using Player = LabApi.Features.Wrappers.Player;
 using Slafight_Plugin_EXILED.API.Interface;
@@ -73,11 +75,31 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
     /// SCP-3005 用 schematic 生成（見た目は昔のまま、ロール監視は WearsHandler に任せる）
     /// </summary>
     public static void Schem3005(Player labPlayer)
-        => WearRoleSchematic(
+    {
+        WearScp3005Schematic(
             labPlayer,
             "SCP3005",
+            accessibilityModel: false,
+            slot: "scp3005-default");
+
+        WearScp3005Schematic(
+            labPlayer,
+            "SCP3005_A",
+            accessibilityModel: true,
+            slot: "scp3005-accessibility");
+    }
+
+    private static void WearScp3005Schematic(
+        Player labPlayer,
+        string schematicName,
+        bool accessibilityModel,
+        string slot)
+        => WearRoleSchematic(
+            labPlayer,
+            schematicName,
             nameof(Schem3005),
             playerScale: new Vector3(0.01f, 1f, 0.01f),
+            slot: slot,
             afterAttach: (player, schem) =>
             {
                 if (schem.transform.childCount > 0)
@@ -86,6 +108,7 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
                     schem.transform.position = player.GameObject.transform.position;
 
                 AttachRoleSchematicLight(schem, Color.magenta);
+                ConfigureScp3005Visibility(schem, accessibilityModel);
             });
 
     public static void Schem999(Player labPlayer)
@@ -134,7 +157,8 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
         string logName,
         Vector3? playerScale = null,
         Vector3? offset = null,
-        Action<Player, SchematicObject> afterAttach = null)
+        Action<Player, SchematicObject> afterAttach = null,
+        string slot = WearsHandler.DefaultWearSlot)
     {
         if (labPlayer == null)
             return;
@@ -164,7 +188,7 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
             if (playerScale.HasValue)
                 exiledPlayer.Scale = playerScale.Value;
 
-            WearsHandler.RegisterExternal(exiledPlayer, schem, offset);
+            WearsHandler.RegisterExternal(exiledPlayer, schem, offset, slot);
 
             Timing.CallDelayed(0.5f, () =>
             {
@@ -185,6 +209,28 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
                 afterAttach?.Invoke(currentLabPlayer, schem);
             });
         });
+    }
+
+    private static void ConfigureScp3005Visibility(
+        SchematicObject schem,
+        bool accessibilityModel)
+    {
+        if (schem?.gameObject == null)
+            return;
+
+        var identities = schem.gameObject
+            .GetComponentsInChildren<NetworkIdentity>(true)
+            .Where(identity => identity != null)
+            .ToArray();
+
+        foreach (var identity in identities)
+        {
+            identity.InitShowState(new NetworkShowState
+            {
+                VisibilityPredicate = receiver =>
+                    ServerSpecificsHandler.IsAccessibilityModeEnabled(receiver) == accessibilityModel,
+            });
+        }
     }
 
     private static void AttachRoleSchematicLight(SchematicObject schem, Color color)

@@ -266,6 +266,9 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
 
     private static void SyncPrefabTransform(ObjectPrefab prefab, Transform markerTransform)
     {
+        if (!prefab.FollowMarkerTransform)
+            return;
+
         prefab.Position = markerTransform.position;
         prefab.Rotation = markerTransform.rotation;
         prefab.Scale = markerTransform.lossyScale;

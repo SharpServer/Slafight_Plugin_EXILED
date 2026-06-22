@@ -1,330 +1,515 @@
 using System.Collections.Generic;
+using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
+using Exiled.Events.EventArgs.Scp096;
+using InventorySystem.Items.MicroHID.Modules;
 using MEC;
-using NetworkManagerUtils.Dummies;
 using PlayerRoles;
-using ProjectMER.Features;
+using PlayerRoles.FirstPersonControl;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
+using Slafight_Plugin_EXILED.Patches;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
 public class HIDTurretObject : ObjectPrefab
 {
-    // 合計射程（Turret基準）
+    private static readonly HashSet<int> TurretNpcIds = [];
+    private static bool _eventsRegistered;
+    private static CoroutineHandle _powerTimeoutHandle;
+    private static float _powerEnabledUntil;
+    private static float _powerRestartReadyAt;
+
+    private const float UpdateInterval = 1f / 30f;
+    private const float TargetRetentionMargin = 0.25f;
+    private const float HidPrimaryRange = 6f;
+    private const float MinimumNpcSpacing = 0.1f;
+    private const float MaximumSafeNpcSpacing = HidPrimaryRange - 0.5f;
+    private const float CoverageMargin = 0.25f;
+    private const float NpcCountRetentionMargin = 0.5f;
+    private const float IdleAimDistance = 25f;
+    private const float ReserveNpcDepth = 100f;
+
+    /// <summary>
+    /// Turret中心からターゲットを捕捉する最大距離。
+    /// </summary>
     [Header("Turret Settings")]
-    public float TotalRange { get; set; } = 8f;
-    
-    // main と forward の間隔
-    public float NpcOffsetDistance { get; set; } = 3f;
+    public float TotalRange { get; set; } = 30f;
 
-    public override Vector3 Position
+    /// <summary>
+    /// 中心NPCのTurret基準ローカル座標。NPCの足元位置として扱う。
+    /// </summary>
+    public Vector3 CenterNpcLocalOffset { get; set; } = new(0f, 1.5f, 0.5f);
+
+    /// <summary>
+    /// NPC間隔の上限。実際の間隔は対象との距離と必要NPC数から動的に決まる。
+    /// HIDの実射程に隙間ができない範囲へ実行時に補正される。
+    /// </summary>
+    public float NpcOffsetDistance { get; set; } = MaximumSafeNpcSpacing;
+
+    /// <summary>
+    /// 生成時に確保してラウンド中使い回すNPC数。
+    /// </summary>
+    public int NpcPoolSize { get; set; } = 8;
+
+    public override bool FollowMarkerTransform => false;
+
+    private SchematicObject? _schematicObject;
+    private CoroutineHandle _updateHandle;
+    private readonly List<TurretNpcState> _npcs = [];
+    private Player? _currentTarget;
+    private int _activeNpcCount = 1;
+
+    public static bool IsPowerEnabled { get; private set; }
+    public static float PowerRemainingSeconds =>
+        IsPowerEnabled ? Mathf.Max(0f, _powerEnabledUntil - Time.time) : 0f;
+    public static float PowerRestartCooldownRemaining =>
+        IsPowerEnabled ? 0f : Mathf.Max(0f, _powerRestartReadyAt - Time.time);
+    public static int InstanceCount => InstanceManager.GetAll().OfType<HIDTurretObject>().Count();
+
+    public static void RegisterEvents()
     {
-        get => _schematicObject != null ? _schematicObject.Position : base.Position;
-        set
-        {
-            if (_schematicObject != null)
-                _schematicObject.Position = value;
-            else
-                base.Position = value;
+        if (_eventsRegistered)
+            return;
 
-            // Schematic 実位置を基準に同期
-            var schemPos = _schematicObject != null ? _schematicObject.Position : base.Position;
-            SyncNpcPositions(schemPos);
-        }
+        Exiled.Events.Handlers.Scp096.AddingTarget += OnScp096AddingTarget;
+        _eventsRegistered = true;
     }
 
-    public override Quaternion Rotation
+    public static void UnregisterEvents()
     {
-        get => _schematicObject != null ? _schematicObject.Rotation : base.Rotation;
-        set
-        {
-            if (_schematicObject != null)
-                _schematicObject.Rotation = value;
-            else
-                base.Rotation = value;
-        }
+        if (!_eventsRegistered)
+            return;
+
+        Exiled.Events.Handlers.Scp096.AddingTarget -= OnScp096AddingTarget;
+        ResetPowerState();
+        TurretNpcIds.Clear();
+        _eventsRegistered = false;
     }
 
-    public override Vector3 Scale
+    public static bool EnablePower(float durationSeconds)
     {
-        get => _schematicObject != null ? _schematicObject.Scale : base.Scale;
-        set
-        {
-            if (_schematicObject != null)
-                _schematicObject.Scale = value;
-            else
-                base.Scale = value;
-        }
+        if (InstanceCount <= 0 || PowerRestartCooldownRemaining > 0f)
+            return false;
+
+        if (_powerTimeoutHandle.IsRunning)
+            Timing.KillCoroutines(_powerTimeoutHandle);
+
+        float duration = Mathf.Max(1f, durationSeconds);
+        IsPowerEnabled = true;
+        _powerEnabledUntil = Time.time + duration;
+        _powerTimeoutHandle = Timing.CallDelayed(duration, () => DisablePower());
+        return true;
     }
 
-    private SchematicObject _schematicObject;
-    private CoroutineHandle _coroutineHandle;
-    private CoroutineHandle _hidRefreshHandle;
-    
-    private Npc _dummyMain;    // 本体（ビーム始点寄り）
-    private Npc _dummyRange;   // ビーム延長用
-    private bool _isFiring;
-    private Player _currentTarget;
+    public static void DisablePower(float restartCooldownSeconds = 60f)
+    {
+        bool wasEnabled = IsPowerEnabled;
 
-    private Vector3 SchemCenter => _schematicObject != null ? _schematicObject.Position : base.Position;
+        if (_powerTimeoutHandle.IsRunning)
+            Timing.KillCoroutines(_powerTimeoutHandle);
+
+        _powerTimeoutHandle = default;
+        _powerEnabledUntil = 0f;
+        IsPowerEnabled = false;
+
+        if (wasEnabled && restartCooldownSeconds > 0f)
+            _powerRestartReadyAt = Time.time + restartCooldownSeconds;
+
+        foreach (HIDTurretObject turret in InstanceManager.GetAll().OfType<HIDTurretObject>().ToList())
+            turret.EnterStandby();
+    }
+
+    public static void ResetPowerState()
+    {
+        DisablePower(0f);
+        _powerRestartReadyAt = 0f;
+    }
 
     protected override void OnCreate()
     {
-        // Schematic を湧かせて、その実座標を基準にする
-        _schematicObject = ObjectSpawner.SpawnSchematic("HIDTurretSchem", base.Position, base.Rotation);
+        _schematicObject = SpawnManagedSchematic("HIDTurretSchem");
+        if (_schematicObject == null)
+        {
+            Log.Error("[HIDTurretObject] Failed to spawn schematic 'HIDTurretSchem'.");
+            Destroy();
+            return;
+        }
 
-        var schemPos = _schematicObject.Position;
-        var schemRot = _schematicObject.Rotation;
+        SpawnNpcPool();
+        if (_npcs.Count == 0)
+        {
+            Log.Error("[HIDTurretObject] Failed to create the turret NPC pool.");
+            Destroy();
+            return;
+        }
 
-        // Npc1: 本体（Schematic の近く）
-        _dummyMain = Npc.Spawn("HIDTurret_Main", RoleTypeId.Tutorial, true);
-        SetupNpc(_dummyMain, schemPos, schemRot);
-        
-        // Npc2: とりあえず同じ位置でスポーン（後で線上に並べ直す）
-        _dummyRange = Npc.Spawn("HIDTurret_Range", RoleTypeId.Tutorial, true);
-        SetupNpc(_dummyRange, schemPos, schemRot);
-        
-        _coroutineHandle = Timing.RunCoroutine(TurretCoroutine());
-        _hidRefreshHandle = Timing.RunCoroutine(HidRefreshCoroutine());
-        
+        ScheduleDelayed(Npc.SpawnSetRoleDelay + 0.1f, StartUpdating);
         base.OnCreate();
     }
 
     protected override void OnDestroy()
     {
-        Timing.KillCoroutines(_coroutineHandle, _hidRefreshHandle);
-        
-        if (_isFiring)
+        if (_updateHandle.IsRunning)
+            Timing.KillCoroutines(_updateHandle);
+
+        foreach (TurretNpcState state in _npcs)
         {
-            TryInvokeDummy(_dummyMain, "Shoot->Release");
-            TryInvokeDummy(_dummyRange, "Shoot->Release");
-            _isFiring = false;
+            SetNpcFiring(state, false);
+            int npcId = state.Npc.Id;
+            state.Npc.Destroy();
+            Timing.CallDelayed(NpcEffectCleanupState.DestroyDelay + 0.1f, () => TurretNpcIds.Remove(npcId));
         }
-        
-        _schematicObject?.Destroy();
+
+        _npcs.Clear();
+        _currentTarget = null;
         _schematicObject = null;
-        
-        _dummyMain?.Destroy();
-        _dummyRange?.Destroy();
-        _dummyMain = null;
-        _dummyRange = null;
-        
+
         base.OnDestroy();
     }
 
-    // Npc共通セットアップ
-    private void SetupNpc(Npc npc, Vector3 pos, Quaternion rot)
+    private void StartUpdating()
     {
-        // 仮置き
-        npc.Position = pos;
-        npc.Rotation = rot;
-    
-        // Npc.Spawn 内部の Role.Set 完了後に最終セットアップ
-        Timing.CallDelayed(0.6f, () =>
+        bool anyInitialized = false;
+        foreach (TurretNpcState state in _npcs)
         {
-            if (npc?.ReferenceHub == null) return;
-        
-            npc.IsNoclipPermitted = true;
-            npc.IsNoclipEnabled = true;
-            
-            npc.Position = pos;
-            npc.Rotation = rot;
+            if (state.IsInitialized || TryInitializeNpc(state))
+                anyInitialized = true;
+        }
 
-            npc.IsGodModeEnabled = true;
-            npc.IsSpectatable = false;
-
-            // Fade 255
-            npc.EnableEffect(EffectType.Fade, 255);
-        
-            // 元の InfoArea 設定を維持する形でマスク
-            npc.InfoArea &= PlayerInfoArea.Badge;
-            npc.InfoArea &= PlayerInfoArea.CustomInfo;
-            npc.InfoArea &= PlayerInfoArea.Nickname;
-            npc.InfoArea &= PlayerInfoArea.Role;
-            npc.InfoArea &= PlayerInfoArea.UnitName;
-            npc.InfoArea &= PlayerInfoArea.PowerStatus;
-        
-            npc.CurrentItem = Item.Create(ItemType.MicroHID);
-        });
-    }
-    
-    // 視線を滑らかにターゲット方向（直線ビーム方向）へ寄せる
-    private void AimDummyWithActions(Npc npc, Vector3 targetWorldPos)
-    {
-        if (npc == null) return;
-
-        var eyePos = npc.Position + Vector3.up * 1.6f;
-        var dir = (targetWorldPos - eyePos).normalized;
-        if (dir.sqrMagnitude < 0.0001f) return;
-
-        // Yaw / Pitch を算出
-        float targetYaw = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
-        float targetPitch = -Mathf.Asin(dir.y) * Mathf.Rad2Deg;
-
-        var curEuler = npc.CameraTransform.rotation.eulerAngles;
-        float currentYaw = curEuler.y;
-        float currentPitch = curEuler.x;
-
-        float deltaYaw = Mathf.DeltaAngle(currentYaw, targetYaw);
-        float deltaPitch = Mathf.DeltaAngle(currentPitch, targetPitch);
-
-        const float deadZone = 0.5f;
-        if (Mathf.Abs(deltaYaw) < deadZone && Mathf.Abs(deltaPitch) < deadZone)
+        if (!anyInitialized)
+        {
+            Log.Error("[HIDTurretObject] Failed to initialize turret NPCs.");
+            Destroy();
             return;
+        }
 
-        string yawAction = null;
-        if (deltaYaw > 45f) yawAction = "CurrentHorizontal+45";
-        else if (deltaYaw > 10f) yawAction = "CurrentHorizontal+10";
-        else if (deltaYaw > 1f) yawAction = "CurrentHorizontal+1";
-        else if (deltaYaw < -45f) yawAction = "CurrentHorizontal-45";
-        else if (deltaYaw < -10f) yawAction = "CurrentHorizontal-10";
-        else if (deltaYaw < -1f) yawAction = "CurrentHorizontal-1";
-
-        string pitchAction = null;
-        if (deltaPitch > 45f) pitchAction = "CurrentVertical+45";
-        else if (deltaPitch > 10f) pitchAction = "CurrentVertical+10";
-        else if (deltaPitch > 1f) pitchAction = "CurrentVertical+1";
-        else if (deltaPitch < -45f) pitchAction = "CurrentVertical-45";
-        else if (deltaPitch < -10f) pitchAction = "CurrentVertical-10";
-        else if (deltaPitch < -1f) pitchAction = "CurrentVertical-1";
-
-        if (yawAction != null)
-            TryInvokeDummy(npc, yawAction);
-        if (pitchAction != null)
-            TryInvokeDummy(npc, pitchAction);
+        AimAtIdleDirection();
+        _updateHandle = Timing.RunCoroutine(UpdateCoroutine());
     }
 
-    // Schematic を中心とした直線上に Npc を並べる
-    private void SyncNpcAlongBeam(Vector3 dir)
+    private static bool TryInitializeNpc(TurretNpcState state)
     {
-        var center = SchemCenter;
+        Npc npc = state.Npc;
+        if (npc?.ReferenceHub == null)
+            return false;
 
-        float mainOffset = 0.5f;                     // 本体のちょい前
-        float forwardOffset = mainOffset + NpcOffsetDistance;
+        npc.HideNpcFromClientPlayerList($"HIDTurret:{state.Index}:post-spawn");
+        npc.IsNoclipPermitted = true;
+        npc.IsNoclipEnabled = true;
+        npc.IsGodModeEnabled = true;
+        npc.IsSpectatable = false;
+        npc.EnableEffect(EffectType.Fade, 255);
+        npc.InfoArea = 0;
 
-        if (_dummyMain != null)
-            _dummyMain.Position = center + dir * mainOffset;
+        npc.ClearInventory();
+        npc.CurrentItem = Item.Create(ItemType.MicroHID);
+        if (npc.CurrentItem is not MicroHid microHid)
+            return false;
 
-        if (_dummyRange != null)
-            _dummyRange.Position = center + dir * forwardOffset;
+        microHid.Energy = 1f;
+        microHid.IsBroken = false;
+        microHid.LastReceived = InputSyncModule.SyncData.None;
+        state.IsInitialized = true;
+        return true;
     }
 
-    // 位置だけ変わったときの同期（向きは後で決める）
-    private void SyncNpcPositions(Vector3 basePos)
+    private IEnumerator<float> UpdateCoroutine()
     {
-        // デフォは「Turret の forward = Rotation * forward」を使う
-        var dir = (Rotation * Vector3.forward).normalized;
-        if (dir.sqrMagnitude < 0.0001f)
-            dir = Vector3.forward;
-
-        SyncNpcAlongBeam(dir);
-    }
-
-    private IEnumerator<float> TurretCoroutine()
-    {
-        var animator = _schematicObject.AnimationController;
-        
-        while (true)
+        while (_schematicObject != null && _npcs.Count > 0)
         {
-            _currentTarget = null;
-            foreach (var player in Player.List)
+            if (!IsPowerEnabled)
             {
-                if (player == null || player.GetTeam() != CTeam.SCPs || !player.IsAlive) continue;
-                
-                if (Vector3.Distance(player.Position, SchemCenter) <= TotalRange)
-                {
-                    _currentTarget = player;
-                    break;
-                }
-            }
-            
-            if (_currentTarget == null)
-            {
-                if (_isFiring)
-                {
-                    TryInvokeDummy(_dummyMain, "Shoot->Release");
-                    TryInvokeDummy(_dummyRange, "Shoot->Release");
-                    _isFiring = false;
-                }
-                yield return Timing.WaitForSeconds(0.1f);
+                EnterStandby();
+                yield return Timing.WaitForSeconds(UpdateInterval);
                 continue;
             }
 
-            var center = SchemCenter;
-            var toTarget = _currentTarget.Position - center;
-            var flatDir = new Vector3(toTarget.x, 0f, toTarget.z).normalized;
-
-            if (flatDir.sqrMagnitude < 0.0001f)
-                flatDir = Vector3.forward;
-
-            // Turret 本体もその方向を向かせる
-            Rotation = Quaternion.LookRotation(flatDir, Vector3.up);
-
-            // main / forward を「Schematic中心→ターゲット方向」の線上に並べる
-            SyncNpcAlongBeam(flatDir);
-
-            // 視線も同じ線の先を見るようにする
-            var farPoint = center + flatDir * 100f;
-            if (_dummyMain != null)
-                AimDummyWithActions(_dummyMain, farPoint);
-            if (_dummyRange != null)
-                AimDummyWithActions(_dummyRange, farPoint);
-            
-            // HID発射（両Npc）
-            float dist = Vector3.Distance(_currentTarget.Position, center);
-            if (dist <= TotalRange && _currentTarget.IsAlive)
+            _currentTarget = SelectTarget(_currentTarget);
+            if (_currentTarget == null)
             {
-                if (!_isFiring)
-                {
-                    TryInvokeDummy(_dummyMain, "Shoot->Hold");
-                    TryInvokeDummy(_dummyRange, "Shoot->Hold");
-                    _isFiring = true;
-                }
+                SetActiveNpcCount(1);
+                StopFiring();
+                AimAtIdleDirection();
+                yield return Timing.WaitForSeconds(UpdateInterval);
+                continue;
             }
-            else if (_isFiring)
+
+            Vector3 targetPoint = GetTargetPoint(_currentTarget);
+            RotateTurretTowards(targetPoint);
+            float targetDistance = Vector3.Distance(GetCenterNpcPosition(), targetPoint);
+            SetActiveNpcCount(GetRequiredNpcCount(targetDistance, _activeNpcCount));
+            AlignNpcsOnBeam(targetPoint, targetDistance);
+
+            for (int i = 0; i < _npcs.Count; i++)
             {
-                TryInvokeDummy(_dummyMain, "Shoot->Release");
-                TryInvokeDummy(_dummyRange, "Shoot->Release");
-                _isFiring = false;
+                TurretNpcState state = _npcs[i];
+                SetNpcFiring(state, i < _activeNpcCount && state.IsInitialized);
+                RechargeNpc(state.Npc);
             }
-            
-            yield return Timing.WaitForSeconds(1f / 30f);
+
+            yield return Timing.WaitForSeconds(UpdateInterval);
         }
     }
 
-    private IEnumerator<float> HidRefreshCoroutine()
+    private Player? SelectTarget(Player? currentTarget)
     {
-        while (true)
+        float configuredRange = Mathf.Max(0f, TotalRange);
+        if (IsValidTarget(currentTarget, configuredRange + TargetRetentionMargin))
+            return currentTarget;
+
+        Player? nearestTarget = null;
+        float nearestSqrDistance = configuredRange * configuredRange;
+
+        foreach (Player player in Player.List)
         {
-            yield return Timing.WaitForSeconds(120f);
-            
-            if (_dummyMain == null || _dummyRange == null) continue;
-            
-            TryInvokeDummy(_dummyMain, "Shoot->Release");
-            TryInvokeDummy(_dummyRange, "Shoot->Release");
-            _isFiring = false;
-            
-            _dummyMain.ClearInventory();
-            _dummyRange.ClearInventory();
-            yield return Timing.WaitForSeconds(0.5f);
-            
-            _dummyMain.CurrentItem = Item.Create(ItemType.MicroHID);
-            _dummyRange.CurrentItem = Item.Create(ItemType.MicroHID);
+            if (!IsTargetCandidate(player))
+                continue;
+
+            float sqrDistance = (player.Position - Position).sqrMagnitude;
+            if (sqrDistance > nearestSqrDistance)
+                continue;
+
+            nearestSqrDistance = sqrDistance;
+            nearestTarget = player;
+        }
+
+        return nearestTarget;
+    }
+
+    private bool IsValidTarget(Player? player, float range)
+        => IsTargetCandidate(player) &&
+           (player!.Position - Position).sqrMagnitude <= range * range;
+
+    private static bool IsTargetCandidate(Player? player)
+        => player != null &&
+           player is not Npc &&
+           player.IsAlive &&
+           player.GetTeam() == CTeam.SCPs;
+
+    private void RotateTurretTowards(Vector3 targetPoint)
+    {
+        Vector3 horizontalDirection = targetPoint - Position;
+        horizontalDirection.y = 0f;
+        if (horizontalDirection.sqrMagnitude <= 0.0001f)
+            return;
+
+        Rotation = Quaternion.LookRotation(horizontalDirection.normalized, Vector3.up);
+    }
+
+    private void AlignNpcsOnBeam(Vector3 targetPoint, float targetDistance)
+    {
+        if (_npcs.Count == 0)
+            return;
+
+        Vector3 centerPosition = GetCenterNpcPosition();
+        Vector3 beamDirection = targetPoint - centerPosition;
+        if (beamDirection.sqrMagnitude <= 0.0001f)
+            beamDirection = Rotation * Vector3.forward;
+        else
+            beamDirection.Normalize();
+
+        float spacing = GetDynamicNpcSpacing(targetDistance, _activeNpcCount);
+        for (int i = 0; i < _activeNpcCount; i++)
+        {
+            Npc npc = _npcs[i].Npc;
+            npc.Position = centerPosition + beamDirection * (spacing * i);
+            AimNpc(npc, targetPoint);
+        }
+
+        ParkReserveNpcs(centerPosition);
+    }
+
+    private int GetRequiredNpcCount(float targetDistance, int currentCount)
+    {
+        float maxSpacing = GetMaximumNpcSpacing();
+        float uncoveredDistance = Mathf.Max(0f, targetDistance - (HidPrimaryRange - CoverageMargin));
+        int requiredCount = 1 + Mathf.CeilToInt(uncoveredDistance / maxSpacing);
+
+        if (requiredCount < currentCount)
+        {
+            float previousCountCapacity =
+                HidPrimaryRange - CoverageMargin + Mathf.Max(0, currentCount - 2) * maxSpacing;
+            if (targetDistance > previousCountCapacity - NpcCountRetentionMargin)
+                return currentCount;
+        }
+
+        return Mathf.Clamp(requiredCount, 1, _npcs.Count);
+    }
+
+    private float GetDynamicNpcSpacing(float targetDistance, int npcCount)
+    {
+        if (npcCount <= 1)
+            return 0f;
+
+        float requiredReach = Mathf.Max(0f, targetDistance - (HidPrimaryRange - CoverageMargin));
+        return Mathf.Clamp(requiredReach / (npcCount - 1), MinimumNpcSpacing, GetMaximumNpcSpacing());
+    }
+
+    private void AimAtIdleDirection()
+    {
+        if (_npcs.Count == 0)
+            return;
+
+        Vector3 centerPosition = GetCenterNpcPosition();
+        Vector3 forward = Rotation * Vector3.forward;
+        Vector3 targetPoint = centerPosition + Vector3.up * 1.6f + forward * IdleAimDistance;
+
+        _npcs[0].Npc.Position = centerPosition;
+        AimNpc(_npcs[0].Npc, targetPoint);
+        ParkReserveNpcs(centerPosition);
+    }
+
+    private Vector3 GetCenterNpcPosition()
+        => Position + Rotation * CenterNpcLocalOffset;
+
+    private static Vector3 GetTargetPoint(Player target)
+        => target.CameraTransform != null
+            ? target.CameraTransform.position
+            : target.Position + Vector3.up;
+
+    private static void AimNpc(Npc npc, Vector3 targetPoint)
+    {
+        if (npc.ReferenceHub.roleManager.CurrentRole is not IFpcRole fpcRole)
+            return;
+
+        Vector3 direction = targetPoint - npc.CameraTransform.position;
+        if (direction.sqrMagnitude <= 0.0001f)
+            return;
+
+        Quaternion rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
+        Vector3 euler = rotation.eulerAngles;
+        float horizontal = euler.y;
+        float vertical = -Mathf.DeltaAngle(0f, euler.x);
+        FpcMouseLook mouseLook = fpcRole.FpcModule.MouseLook;
+
+        // Dedicated mode is not treated as a dummy by FpcMouseLook.UpdateRotation,
+        // so update both current and received sync angles before applying rotation.
+        mouseLook.CurrentHorizontal = horizontal;
+        mouseLook.CurrentVertical = vertical;
+        mouseLook._syncHorizontal = horizontal;
+        mouseLook._syncVertical = vertical;
+        mouseLook.UpdateRotation();
+    }
+
+    private void StopFiring()
+    {
+        foreach (TurretNpcState state in _npcs)
+            SetNpcFiring(state, false);
+    }
+
+    private void EnterStandby()
+    {
+        _currentTarget = null;
+        SetActiveNpcCount(1);
+        StopFiring();
+        AimAtIdleDirection();
+    }
+
+    private static void SetNpcFiring(TurretNpcState state, bool shouldFire)
+    {
+        if (state.IsFiring == shouldFire)
+            return;
+
+        if (state.Npc.CurrentItem is not MicroHid microHid)
+        {
+            state.IsFiring = false;
+            return;
+        }
+
+        microHid.LastReceived = shouldFire
+            ? InputSyncModule.SyncData.Primary
+            : InputSyncModule.SyncData.None;
+        state.IsFiring = shouldFire;
+    }
+
+    private static void RechargeNpc(Npc? npc)
+    {
+        if (npc?.CurrentItem is not MicroHid microHid)
+            return;
+
+        if (microHid.IsBroken)
+            microHid.IsBroken = false;
+
+        microHid.Energy = 1f;
+    }
+
+    private float GetMaximumNpcSpacing()
+        => Mathf.Clamp(NpcOffsetDistance, MinimumNpcSpacing, MaximumSafeNpcSpacing);
+
+    private void SetActiveNpcCount(int requiredCount)
+    {
+        int newCount = Mathf.Clamp(requiredCount, 1, _npcs.Count);
+        if (newCount < _activeNpcCount)
+        {
+            for (int i = newCount; i < _activeNpcCount; i++)
+                SetNpcFiring(_npcs[i], false);
+        }
+
+        _activeNpcCount = newCount;
+    }
+
+    private void SpawnNpcPool()
+    {
+        int poolSize = Mathf.Max(1, NpcPoolSize);
+        for (int index = 0; index < poolSize; index++)
+        {
+            Npc? npc = Npc.Spawn($"H.I.D Turret", RoleTypeId.Tutorial, true, GetCenterNpcPosition());
+            if (npc == null)
+            {
+                Log.Error($"[HIDTurretObject] Failed to spawn turret NPC {index}.");
+                continue;
+            }
+
+            var state = new TurretNpcState(npc, index);
+            int capturedIndex = index;
+            _npcs.Add(state);
+            TurretNpcIds.Add(npc.Id);
+            npc.HideNpcFromClientPlayerList($"HIDTurret:{index}:spawn");
+            ScheduleDelayed(Npc.SpawnSetRoleDelay + 0.1f, () =>
+            {
+                if (_npcs.Contains(state) && !state.IsInitialized && !TryInitializeNpc(state))
+                    Log.Error($"[HIDTurretObject] Failed to initialize turret NPC {capturedIndex}.");
+            });
         }
     }
 
-    private void TryInvokeDummy(Npc npc, string action)
+    private static void OnScp096AddingTarget(AddingTargetEventArgs ev)
     {
-        var hub = npc.ReferenceHub;
-        foreach (var a in DummyActionCollector.ServerGetActions(hub))
+        if (ev?.Target == null)
+            return;
+
+        if (TurretNpcIds.Contains(ev.Target.Id))
+            ev.IsAllowed = false;
+    }
+
+    private void ParkReserveNpcs(Vector3 centerPosition)
+    {
+        Vector3 reservePosition = centerPosition + Vector3.down * ReserveNpcDepth;
+        for (int i = _activeNpcCount; i < _npcs.Count; i++)
         {
-            if (a.Name.EndsWith(action)) { a.Action(); break; }
+            TurretNpcState state = _npcs[i];
+            SetNpcFiring(state, false);
+            state.Npc.Position = reservePosition + Vector3.down * (i * MinimumNpcSpacing);
         }
+    }
+
+    private sealed class TurretNpcState
+    {
+        public TurretNpcState(Npc npc, int index)
+        {
+            Npc = npc;
+            Index = index;
+        }
+
+        public Npc Npc { get; }
+        public int Index { get; }
+        public bool IsInitialized { get; set; }
+        public bool IsFiring { get; set; }
     }
 }

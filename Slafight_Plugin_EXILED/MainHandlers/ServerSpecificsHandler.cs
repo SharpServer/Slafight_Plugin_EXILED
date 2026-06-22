@@ -13,6 +13,7 @@ namespace Slafight_Plugin_EXILED.MainHandlers;
 public static class ServerSpecificsHandler
 {
     private static readonly Dictionary<int, float> DocumentHintDurations = new();
+    private static readonly HashSet<int> AccessibilityModePlayers = new();
 
     public static void Register()
     {
@@ -35,17 +36,22 @@ public static class ServerSpecificsHandler
             : ServerSpecifics.DefaultDocumentHintDuration;
     }
 
+    public static bool IsAccessibilityModeEnabled(Player? player)
+        => player != null && AccessibilityModePlayers.Contains(player.Id);
+
     public static void RemovePlayer(Player? player)
     {
         if (player == null)
             return;
 
         DocumentHintDurations.Remove(player.Id);
+        AccessibilityModePlayers.Remove(player.Id);
     }
 
     public static void ClearAll()
     {
         DocumentHintDurations.Clear();
+        AccessibilityModePlayers.Clear();
     }
 
     private static void OnSettingValueReceived(ReferenceHub hub, ServerSpecificSettingBase @base)
@@ -71,7 +77,13 @@ public static class ServerSpecificsHandler
                 HandleSlider(player, slider.SettingId, slider.SyncFloatValue);
                 break;
 
-            case SSTwoButtonsSetting { SettingId: 7 } twoButton:
+            case SSTwoButtonsSetting twoButton when
+                twoButton.SettingId == ServerSpecifics.AccessibilityModeSettingId:
+                HandleAccessibilityMode(player, twoButton.SyncIsA);
+                break;
+
+            case SSTwoButtonsSetting twoButton when
+                twoButton.SettingId == ServerSpecifics.DebugModeSettingId:
                 HandleDebugMode(player, twoButton.SyncIsA);
                 break;
         }
@@ -162,7 +174,7 @@ public static class ServerSpecificsHandler
     }
 
     // =====================
-    //  スライダー (ID: 8=Document表示時間)
+    //  スライダー (ID: 7=Document表示時間)
     // =====================
 
     private static void HandleSlider(Player player, int settingId, float value)
@@ -187,7 +199,22 @@ public static class ServerSpecificsHandler
     }
 
     // =====================
-    //  デバッグモード (ID: 7)
+    //  アクセシビリティモード (ID: 8)
+    // =====================
+
+    private static void HandleAccessibilityMode(Player player, bool isOn)
+    {
+        if (isOn)
+            AccessibilityModePlayers.Add(player.Id);
+        else
+            AccessibilityModePlayers.Remove(player.Id);
+
+        NetworkVisibilityManager.RefreshPlayer(player);
+        Log.Debug($"[AccessibilityMode] {player.Nickname} => {(isOn ? "ON" : "OFF")}");
+    }
+
+    // =====================
+    //  デバッグモード (ID: 9)
     // =====================
 
     private static void HandleDebugMode(Player player, bool isOn)

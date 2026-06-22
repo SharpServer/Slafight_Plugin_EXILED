@@ -61,8 +61,7 @@ public class AllowEscapeAbility : AbilityBase
             if (kings.GetCustomRole() == CRoleTypeId.Scp106 || (kings.GetCustomRole() == CRoleTypeId.None && kings.Role.Type == RoleTypeId.Scp106))
             {
                 kings.RemoveAbility<AllowEscapeAbility>();
-                Handler.CanUsePlayers.Remove(kings);
-                Handler.ActivatedPlayers.Remove(kings);
+                Handler.SetProximityChatForced(kings, false);
                 kings.Position = Room.Get(RoomType.Hcz106).WorldPosition(new Vector3(0f,0.25f,0f));
             }
         }

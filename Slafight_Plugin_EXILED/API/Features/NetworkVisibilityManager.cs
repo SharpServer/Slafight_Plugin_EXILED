@@ -254,6 +254,19 @@ public static class NetworkVisibilityManager
         else      player.HideNetworkIdentity(identity);
     }
 
+    /// <summary>管理中の全オブジェクトを指定プレイヤー向けに再評価する。</summary>
+    public static void RefreshPlayer(Player? player)
+    {
+        if (player == null || !player.IsConnected) return;
+
+        foreach (var (netId, identity) in _identityCache)
+        {
+            if (identity == null) continue;
+            if (!_states.TryGetValue(netId, out var state)) continue;
+            SendVisibility(identity, player, state.ShouldShow(player, Player.List));
+        }
+    }
+
     // =========================================================
     // 内部 Refresh
     // =========================================================
