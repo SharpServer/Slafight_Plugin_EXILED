@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using MEC;
 using Exiled.API.Features;
 using UnityEngine;
-using Slafight_Plugin_EXILED.API.Features;
-using PlayerRoles;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 

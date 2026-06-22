@@ -11,7 +11,6 @@ using MEC;
 using PlayerRoles;
 using Respawning;
 using Respawning.Waves;
-using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
 

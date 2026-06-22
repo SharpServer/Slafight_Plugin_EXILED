@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using CustomPlayerEffects;
 using Exiled.API.Enums;
-using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Warhead;

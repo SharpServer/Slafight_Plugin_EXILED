@@ -1,4 +1,3 @@
-using Exiled.API.Features.Pickups;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;

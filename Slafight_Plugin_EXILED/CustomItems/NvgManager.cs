@@ -8,7 +8,6 @@ using InventorySystem.Items.Usables.Scp1344;
 using MEC;
 using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers.Wearables;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using ExiledScp1344 = Exiled.API.Features.Items.Scp1344;
 using Light = Exiled.API.Features.Toys.Light;

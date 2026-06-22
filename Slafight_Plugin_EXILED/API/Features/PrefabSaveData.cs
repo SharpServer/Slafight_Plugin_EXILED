@@ -10,6 +10,7 @@ namespace Slafight_Plugin_EXILED.API.Features;
 public class PrefabSaveData
 {
     public string PrefabType;
+    public string Tag = string.Empty;
 
     // JSON 上は文字列
     public string RoomTypeName;

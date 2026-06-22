@@ -165,10 +165,10 @@ public class SpawnObjectPrefab : ICommand
 
     private string GetUsage() =>
         "Usage:\n" +
-        "  .sl objprefab create <PrefabClass> [x y z] [AutoDestroySeconds] [grab|grabpos] [Option=Value]\n" +
-        "  .sl objprefab select [InstanceID|look|near|none]\n" +
+        "  .sl objprefab create <PrefabClass> [x y z] [AutoDestroySeconds] [grab|grabpos] [Tag=Value] [Option=Value]\n" +
+        "  .sl objprefab select [InstanceID|tag <Tag>|look|near|none]\n" +
         "  .sl objprefab delete [InstanceID]\n" +
-        "  .sl objprefab modify <info|position|rotation|scale|max|autodestroy|bring>\n" +
+        "  .sl objprefab modify <info|tag|position|rotation|scale|max|autodestroy|bring>\n" +
         "  .sl objprefab save <MapName> / load <MapName> / saveall <MapName> [BaseMapName]\n" +
         "  .sl objprefab list / types [filter] / maps\n" +
         "  .sl objprefab clear\n" +
@@ -258,7 +258,9 @@ public class SpawnObjectPrefab : ICommand
         => $"{value.x:F2}, {value.y:F2}, {value.z:F2}";
 
     private static string FormatPrefab(ObjectPrefab prefab)
-        => $"[{prefab.ObjectInstanceID}] {prefab.GetType().Name}";
+        => string.IsNullOrWhiteSpace(prefab.Tag)
+            ? $"[{prefab.ObjectInstanceID}] {prefab.GetType().Name}"
+            : $"[{prefab.ObjectInstanceID}] {prefab.GetType().Name} Tag:{prefab.Tag}";
 
     private bool TryResolveTarget(
         ArraySegment<string> args,
@@ -400,6 +402,7 @@ public class SpawnObjectPrefab : ICommand
         var position = GetLookPosition(player);
         int index = 2;
         float autoDestroyTime = -1f;
+        string tag = string.Empty;
         bool startGrab = false;
         bool startGrabPos = false;
         var options = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
@@ -441,6 +444,12 @@ public class SpawnObjectPrefab : ICommand
                     continue;
                 }
 
+                if (key.Equals("tag", StringComparison.OrdinalIgnoreCase))
+                {
+                    tag = value;
+                    continue;
+                }
+
                 options[key] = value;
                 continue;
             }
@@ -460,6 +469,7 @@ public class SpawnObjectPrefab : ICommand
         prefab.AutoDestroyEnabled = autoDestroyTime > 0f;
         prefab.AutoDestroyTime = autoDestroyTime;
         prefab.MaxRooms = 1;
+        prefab.Tag = tag;
 
         if (options.Count > 0)
             prefab.ApplyOptions(options);
@@ -520,6 +530,7 @@ public class SpawnObjectPrefab : ICommand
             cfg.Prefabs.Add(new PrefabSaveData
             {
                 PrefabType = p.GetType().FullName,
+                Tag = p.Tag,
                 RoomType = roomType,
                 LocalPosition = localPos,
                 LocalRotationEuler = localRot.eulerAngles,
@@ -578,6 +589,7 @@ public class SpawnObjectPrefab : ICommand
             currentSaveDataList.Add(new PrefabSaveData
             {
                 PrefabType = p.GetType().FullName,
+                Tag = p.Tag,
                 RoomType = room.Type,
                 LocalPosition = localPos,
                 LocalRotationEuler = localRot.eulerAngles,
@@ -655,8 +667,9 @@ public class SpawnObjectPrefab : ICommand
                 var roomName = closestRoom?.Name ?? "Unknown";
                 var op = p as ObjectPrefab;
                 var marker = selected != null && selected.ObjectInstanceID == p.ObjectInstanceID ? "* " : "  ";
+                var tag = string.IsNullOrWhiteSpace(p.Tag) ? string.Empty : $" Tag:{p.Tag}";
                 return $"{marker}[{p.ObjectInstanceID}] {p.GetType().Name} @ {roomName} " +
-                       $"Pos({p.Position.x:F1},{p.Position.y:F1},{p.Position.z:F1}) MaxRooms:{op?.MaxRooms ?? 1}";
+                       $"Pos({p.Position.x:F1},{p.Position.y:F1},{p.Position.z:F1}) MaxRooms:{op?.MaxRooms ?? 1}{tag}";
             })
             .ToList();
 
@@ -1107,6 +1120,34 @@ public class SpawnObjectPrefab : ICommand
             return true;
         }
 
+        if (selector.Equals("tag", StringComparison.OrdinalIgnoreCase))
+        {
+            if (args.Count < 3)
+            {
+                response = "Usage: .sl objprefab select tag <Tag>";
+                return false;
+            }
+
+            string tag = string.Join(" ", args.Skip(2));
+            var matches = InstanceManager.GetByTag(tag).ToList();
+            if (matches.Count == 0)
+            {
+                response = $"No ObjectPrefab found with tag '{tag}'.";
+                return false;
+            }
+
+            if (matches.Count > 1)
+            {
+                response = $"Tag '{tag}' matched multiple prefabs: " +
+                           string.Join(", ", matches.Select(FormatPrefab));
+                return false;
+            }
+
+            Selected[player] = matches[0];
+            response = $"Selected {FormatPrefab(matches[0])}.";
+            return true;
+        }
+
         var prefab = InstanceManager.Get(selector) as ObjectPrefab;
         if (prefab is null)
         {
@@ -1143,6 +1184,7 @@ public class SpawnObjectPrefab : ICommand
                     $" Pos: {prefab.Position}\n" +
                     $" Rot: {prefab.Rotation.eulerAngles}\n" +
                     $" Scale: {prefab.Scale}\n" +
+                    $" Tag: {(string.IsNullOrWhiteSpace(prefab.Tag) ? "(none)" : prefab.Tag)}\n" +
                     $" MaxRooms: {prefab.MaxRooms}\n" +
                     $" ManagedSchematic: {(prefab.ManagedSchematic != null ? "yes" : "no")}\n" +
                     $" ManagedInteractables: {prefab.ManagedInteractables.Count}\n" +
@@ -1180,6 +1222,9 @@ public class SpawnObjectPrefab : ICommand
             case "autodestroy":
                 return ModSetAutoDestroy(args, prefab, out response);
 
+            case "tag":
+                return ModSetTag(args, prefab, out response);
+
             case "option":
             case "opt":
                 return ModApplyOption(args, prefab, out response);
@@ -1191,7 +1236,7 @@ public class SpawnObjectPrefab : ICommand
                 // サブクラス固有のmodサブコマンドを試行
                 if (prefab.HandleModCommand(args, out response))
                     return true;
-                response = "Unknown subcommand. Use: info / position / rotation / scale / max / autodestroy / option / bring";
+                response = "Unknown subcommand. Use: info / tag / position / rotation / scale / max / autodestroy / option / bring";
                 return false;
         }
     }
@@ -1416,6 +1461,27 @@ public class SpawnObjectPrefab : ICommand
         return true;
     }
 
+    private bool ModSetTag(ArraySegment<string> args, ObjectPrefab prefab, out string response)
+    {
+        if (args.Count < 3)
+        {
+            response = $"Current tag: {(string.IsNullOrWhiteSpace(prefab.Tag) ? "(none)" : prefab.Tag)}\n" +
+                       "Usage: .sl objprefab modify tag <Tag|none>";
+            return false;
+        }
+
+        string tag = string.Join(" ", args.Skip(2));
+        prefab.Tag = tag.Equals("none", StringComparison.OrdinalIgnoreCase) ||
+                     tag.Equals("clear", StringComparison.OrdinalIgnoreCase)
+            ? string.Empty
+            : tag;
+
+        response = string.IsNullOrWhiteSpace(prefab.Tag)
+            ? $"Cleared tag for {FormatPrefab(prefab)}."
+            : $"Set tag to '{prefab.Tag}' for {FormatPrefab(prefab)}.";
+        return true;
+    }
+
     private bool ModApplyOption(ArraySegment<string> args, ObjectPrefab prefab, out string response)
     {
         if (args.Count < 4)
@@ -1509,6 +1575,14 @@ public static class ObjectPrefabLoader
                 prefab.AutoDestroyEnabled = data.AutoDestroyEnabled;
                 prefab.AutoDestroyTime = data.AutoDestroyTime;
                 prefab.MaxRooms = data.MaxRooms <= 0 ? 1 : data.MaxRooms;
+                prefab.Tag = data.Tag ?? string.Empty;
+
+                if (string.IsNullOrWhiteSpace(prefab.Tag) &&
+                    data.Options != null &&
+                    data.Options.TryGetValue("Tag", out string legacyTag))
+                {
+                    prefab.Tag = legacyTag;
+                }
 
                 if (data.Options != null && data.Options.Count > 0)
                     prefab.ApplyOptions(data.Options);

@@ -1,7 +1,6 @@
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using ExiledScp106Role = Exiled.API.Features.Roles.Scp106Role;
 using HuntRole = Slafight_Plugin_EXILED.CustomRoles.SCPs.Scp106Role;

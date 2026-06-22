@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using Slafight_Plugin_EXILED.API.Features;

@@ -132,6 +132,7 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
             prefab.MaxRooms = Math.Max(1, data.MaxRooms);
             prefab.AutoDestroyEnabled = data.AutoDestroyEnabled;
             prefab.AutoDestroyTime = data.AutoDestroyTime;
+            prefab.Tag = data.Tag;
             prefab.IsSaveable = false;
 
             if (data.Options.Count > 0)
@@ -169,6 +170,7 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
         }
 
         SyncPrefabTransform(prefab, data.Transform);
+        prefab.Tag = data.Tag;
         SyncPrefabOptions(markerId, prefab, binding, data.Options);
         return true;
     }
@@ -312,11 +314,18 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
         {
             Transform = component.transform,
             PrefabType = ReadField<string>(type, marker, "PrefabType") ?? string.Empty,
+            Tag = ReadField<string>(type, marker, "Tag") ?? string.Empty,
             MaxRooms = ReadField<int>(type, marker, "MaxRooms"),
             AutoDestroyEnabled = ReadField<bool>(type, marker, "AutoDestroyEnabled"),
             AutoDestroyTime = ReadField<float>(type, marker, "AutoDestroyTime"),
             Options = ReadField<Dictionary<string, string>>(type, marker, "Options") ?? new Dictionary<string, string>(),
         };
+
+        if (string.IsNullOrWhiteSpace(data.Tag) &&
+            data.Options.TryGetValue("Tag", out string legacyTag))
+        {
+            data.Tag = legacyTag;
+        }
 
         return true;
     }
@@ -335,6 +344,7 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
     {
         public Transform Transform;
         public string PrefabType;
+        public string Tag;
         public int MaxRooms;
         public bool AutoDestroyEnabled;
         public float AutoDestroyTime;

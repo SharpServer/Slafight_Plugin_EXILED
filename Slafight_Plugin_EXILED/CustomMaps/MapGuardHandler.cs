@@ -6,7 +6,6 @@ using Exiled.Events.EventArgs.Warhead;
 using Interactables.Interobjects.DoorUtils;
 using MapGeneration;
 using MEC;
-using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;

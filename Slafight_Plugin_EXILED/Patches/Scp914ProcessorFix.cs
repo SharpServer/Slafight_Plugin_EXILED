@@ -2,7 +2,6 @@ using System;
 using Exiled.API.Features;
 using InventorySystem;
 using InventorySystem.Items;
-using Scp914;
 using Scp914.Processors;
 using Server = Exiled.Events.Handlers.Server;
 

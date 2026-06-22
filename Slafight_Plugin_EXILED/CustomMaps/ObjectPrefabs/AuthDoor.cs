@@ -1,10 +1,8 @@
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using AdminToys;
 using Exiled.API.Enums;
 using LabApi.Events.Arguments.PlayerEvents;
-using MEC;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
@@ -38,7 +36,8 @@ public class AuthDoor : ObjectPrefab
         set
         {
             _isOpen = value;
-            SwitchDoor(value);
+            if (!string.IsNullOrEmpty(ObjectInstanceID))
+                SwitchDoor(value);
         }
     }
     private bool _isOpen = false;
@@ -113,48 +112,6 @@ public class AuthDoor : ObjectPrefab
         // 開く: CloseToOpen(door1) → Animator側でOpenIdle(door2)に遷移
         // 閉じる: OpenToClose(door3) → Animator側でCloseIdle(door0)に遷移
         _schematicObject?.AnimationController.Play(isOpen ? "door1" : "door3");
-    }
-
-    // ===== Options (Save/Load) =====
-
-    public override Dictionary<string, string> CollectOptions()
-    {
-        return new Dictionary<string, string>
-        {
-            ["KeycardPermissions"]    = KeycardPermissions.ToString(),
-            ["RequireAllPermissions"] = RequireAllPermissions.ToString(),
-            ["CanClose"]              = CanClose.ToString(),
-            ["IsOpen"]                = IsOpen.ToString()
-        };
-    }
-
-    public override void ApplyOptions(Dictionary<string, string> options)
-    {
-        if (options.TryGetValue("KeycardPermissions", out var kp)
-            && Enum.TryParse<KeycardPermissions>(kp, true, out var perm))
-        {
-            KeycardPermissions = perm;
-        }
-
-        if (options.TryGetValue("RequireAllPermissions", out var rap)
-            && bool.TryParse(rap, out var requireAll))
-        {
-            RequireAllPermissions = requireAll;
-        }
-
-        if (options.TryGetValue("CanClose", out var cc)
-            && bool.TryParse(cc, out var canClose))
-        {
-            CanClose = canClose;
-        }
-
-        // IsOpenはOnCreate後のCallDelayed内でアニメーションが再生されるため、
-        // バッキングフィールドを直接セットしてアニメーションはOnCreate側に任せる
-        if (options.TryGetValue("IsOpen", out var io)
-            && bool.TryParse(io, out var isOpen))
-        {
-            _isOpen = isOpen;
-        }
     }
 
     // ===== Mod Command =====

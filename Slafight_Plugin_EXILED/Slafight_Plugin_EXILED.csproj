@@ -413,6 +413,7 @@
         <Compile Include="CustomMaps\ObjectPrefabs\HIDTurretObject.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Document.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\AuthDoor.cs" />
+        <Compile Include="CustomMaps\ObjectPrefabs\InteractableLever.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\PhysicsSchematicObject.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Tentacle.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Trashbox.cs" />

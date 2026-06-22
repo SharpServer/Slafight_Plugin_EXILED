@@ -1,5 +1,3 @@
-using ProjectMER.Features.Extensions;
-using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems.IntermediateBases;
 using UnityEngine;
 

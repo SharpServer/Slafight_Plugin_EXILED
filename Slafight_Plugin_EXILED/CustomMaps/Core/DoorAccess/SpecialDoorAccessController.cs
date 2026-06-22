@@ -7,7 +7,6 @@ using Interactables.Interobjects.DoorUtils;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems.IntermediateBases;
-using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Core.DoorAccess;

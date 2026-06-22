@@ -1,11 +1,7 @@
 using System;
-using CustomPlayerEffects;
-using Exiled.API.Features;
 using Mirror;
-using PlayerStatsSystem;
 using RemoteAdmin.Interfaces;
 using Slafight_Plugin_EXILED.API.Features;
-using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomEffects;
 

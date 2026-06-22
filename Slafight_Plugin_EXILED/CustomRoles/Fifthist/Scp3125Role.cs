@@ -14,7 +14,6 @@ using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
-using Camera = Exiled.API.Features.Camera;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.Fifthist;
 

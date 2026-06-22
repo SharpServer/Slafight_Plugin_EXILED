@@ -1,14 +1,11 @@
 using System;
-using System.Collections.Generic;
 using AdminToys;
 using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Features.Wrappers;
-using MEC;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
-using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;
@@ -27,8 +24,29 @@ public class Document : ObjectPrefab
     /// <summary>
     /// モデル(Schematic)を表示するかどうか。falseの場合、インタラクタブルのみスポーンする。
     /// </summary>
-    public bool ShowModel { get; set; } = true;
+    public bool ShowModel
+    {
+        get => _showModel;
+        set
+        {
+            _showModel = value;
+            if (string.IsNullOrEmpty(ObjectInstanceID))
+                return;
 
+            if (value && _schematicObject == null)
+            {
+                _schematicObject = SpawnManagedSchematic("Document");
+            }
+            else if (!value && _schematicObject != null)
+            {
+                DestroyManagedSchematic();
+                _schematicObject = null;
+                SyncManagedObjects();
+            }
+        }
+    }
+
+    private bool _showModel = true;
     private SchematicObject? _schematicObject;
     private InteractableToy? _interactableToy;
     private static readonly Vector3 InteractableLocalOffset = Vector3.zero;
@@ -76,32 +94,6 @@ public class Document : ObjectPrefab
         player.ShowHint(DocumentDictionary.Get(DocumentType), ServerSpecificsHandler.GetDocumentHintDuration(player));
     }
 
-    // ===== Options (Save/Load) =====
-
-    public override Dictionary<string, string> CollectOptions()
-    {
-        return new Dictionary<string, string>
-        {
-            ["DocumentType"] = DocumentType.ToString(),
-            ["ShowModel"] = ShowModel.ToString()
-        };
-    }
-
-    public override void ApplyOptions(Dictionary<string, string> options)
-    {
-        if (options.TryGetValue("DocumentType", out var val)
-            && Enum.TryParse<DocumentType>(val, true, out var dt))
-        {
-            DocumentType = dt;
-        }
-
-        if (options.TryGetValue("ShowModel", out var sm)
-            && bool.TryParse(sm, out var show))
-        {
-            SetShowModel(show);
-        }
-    }
-
     // ===== Mod Command =====
 
     public override bool HandleModCommand(ArraySegment<string> args, out string response)
@@ -118,7 +110,7 @@ public class Document : ObjectPrefab
                 response = $"Invalid value '{args.At(2)}'. Use true or false.";
                 return true;
             }
-            SetShowModel(val);
+            ShowModel = val;
             response = $"Set ShowModel to {val}.";
             return true;
         }
@@ -142,21 +134,4 @@ public class Document : ObjectPrefab
         return base.HandleModCommand(args, out response);
     }
 
-    private void SetShowModel(bool showModel)
-    {
-        ShowModel = showModel;
-        if (string.IsNullOrEmpty(ObjectInstanceID))
-            return;
-
-        if (showModel && _schematicObject == null)
-        {
-            _schematicObject = SpawnManagedSchematic("Document");
-        }
-        else if (!showModel && _schematicObject != null)
-        {
-            DestroyManagedSchematic();
-            _schematicObject = null;
-            SyncManagedObjects();
-        }
-    }
 }
