@@ -35,6 +35,8 @@ public class HIDTurretObject : ObjectPrefab
     private const float IdleAimDistance = 25f;
     private const float ReserveNpcDepth = 100f;
 
+    public static HashSet<int> PublicTurretNpcIds => TurretNpcIds;
+
     /// <summary>
     /// Turret中心からターゲットを捕捉する最大距離。
     /// </summary>

@@ -1130,7 +1130,7 @@ public abstract class CRole
     {
         if (TeamNpcRoleTypeId == null) return;
         if (player == null || player.ReferenceHub == null) return;
-        if (player.IsHost || player.ReferenceHub.IsHost || IsTeamNpc(player)) return;
+        if (!player.IsNotHost() || IsTeamNpc(player)) return;
         if (!Check(player)) return;
 
         CleanupTeamNpc(player);

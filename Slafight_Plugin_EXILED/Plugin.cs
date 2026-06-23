@@ -16,6 +16,7 @@ using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Entities;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
+using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.Patches;
 using UserSettings.ServerSpecific;
@@ -167,7 +168,7 @@ public class Plugin : Plugin<Config>
         {
             try
             {
-                await SendPlayerCountAsync(Player.List.Where(p => !p.IsNPC && !p.IsHost).ToList().Count);
+                await SendPlayerCountAsync(Player.List.Where(p => !p.IsNPC && p.IsNotHost()).ToList().Count);
             }
             catch (Exception ex)
             {

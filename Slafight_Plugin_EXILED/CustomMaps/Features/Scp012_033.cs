@@ -4,6 +4,7 @@ using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using Slafight_Plugin_EXILED.CustomMaps.Core;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
@@ -140,7 +141,7 @@ public static class Scp012_033
             var scp012Pos = scp012Obj.Position;
 
             var alivePlayers = Player.List
-                .Where(p => p.ReferenceHub != null && !p.IsHost && !p.ReferenceHub.IsHost && p.IsAlive)
+                .Where(p => p.ReferenceHub != null && p.IsNotHost() && !p.ReferenceHub.IsHost && p.IsAlive)
                 .ToList();
 
             foreach (var player in alivePlayers)

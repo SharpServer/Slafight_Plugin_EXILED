@@ -4,6 +4,7 @@ using System.Linq;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
+using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -531,8 +532,7 @@ public static class PlayerSpeakerManager
         {
             return player != null
                    && player.ReferenceHub != null
-                   && !player.IsHost
-                   && !player.ReferenceHub.IsHost;
+                   && player.IsNotHost();
         }
         catch
         {

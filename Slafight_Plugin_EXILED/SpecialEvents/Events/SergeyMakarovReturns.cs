@@ -50,7 +50,7 @@ public class SergeyMakarovReturns : SpecialEvent
             }
             else
             {
-                var alivePlayer = Player.List.FirstOrDefault(p => p?.Role != null && !p.IsHost && p.Role != RoleTypeId.Spectator);
+                var alivePlayer = Player.List.FirstOrDefault(p => p?.Role != null && p.IsNotHost() && p.Role != RoleTypeId.Spectator);
                 alivePlayer?.SetRole(CRoleTypeId.SergeyMakarov);
             }
 

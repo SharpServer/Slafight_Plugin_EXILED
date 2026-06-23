@@ -9,6 +9,7 @@ using PlayerRoles;
 using PlayerRoles.Spectating;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using VoiceChat;
 using VoiceChat.Networking;
@@ -287,8 +288,7 @@ public static class Handler
         {
             return player != null
                    && player.ReferenceHub != null
-                   && !player.IsHost
-                   && !player.ReferenceHub.IsHost;
+                   && player.IsNotHost();
         }
         catch
         {

@@ -5,6 +5,7 @@ using Exiled.API.Features.Toys;
 using MEC;
 using PlayerRoles.FirstPersonControl;
 using RelativePositioning;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using ServerHandlers = Exiled.Events.Handlers.Server;
 
@@ -322,7 +323,7 @@ public static class WaypointChunkStreamer
     {
         return player != null &&
                player.IsConnected &&
-               !player.IsHost &&
+               player.IsNotHost() &&
                player.ReferenceHub?.roleManager?.CurrentRole is IFpcRole &&
                IsFinite(player.Position);
     }

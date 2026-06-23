@@ -1,6 +1,7 @@
 using CentralAuth;
 using Exiled.API.Features;
 using Mirror;
+using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
 namespace Slafight_Plugin_EXILED.Extensions;
 
@@ -19,5 +20,16 @@ public static class NpcExtensions
         auth.syncMode = (SyncMode)ClientInstanceMode.DedicatedServer;
 
         Log.Debug($"[Npc] Hidden from client player list ({source}): {npc.Nickname} Id={npc.Id} NetId={hub.netId} ServerMode={auth.InstanceMode}");
+    }
+
+    /// <summary>
+    /// PlayerがIsHost級ではないかどうかを判定します。
+    /// </summary>
+    /// <param name="player"></param>
+    /// <returns>Player, ReferenceHubのIsHost及びその他の特殊NPCでないかどうかを返します。</returns>
+    public static bool IsNotHost(this Player player)
+    {
+        if (player is null) return false;
+        return !player.IsHost && !player.ReferenceHub.IsHost &&!HIDTurretObject.PublicTurretNpcIds.Contains(player.Id);
     }
 }
