@@ -490,6 +490,31 @@ public virtual Pickup? Spawn(Vector3 position)
     /// </summary>
     protected virtual void OnSerialUntracked(ushort serial) { }
 
+    // ======================================================
+    // 状態キャプチャ / 復元プロトコル
+    // ======================================================
+
+    /// <summary>
+    /// このアイテムの per-item 状態をスナップショットとして取り出す。
+    /// CItemHybrid のモード切替で、破棄される旧アイテムの状態（弾数など）を
+    /// 保存しておくために使う。武器以外の Hybrid でも任意の状態を保存できる。
+    /// デフォルトは状態無し（null）。
+    /// </summary>
+    protected virtual object? OnCaptureState(Item item) => null;
+
+    /// <summary>
+    /// <see cref="OnCaptureState"/> で取り出した状態をアイテムへ書き戻す。
+    /// state が null や型違いの場合は何もしない。
+    /// </summary>
+    protected virtual void OnRestoreState(Item item, object? state) { }
+
+    /// <summary>
+    /// CItemHybrid のモード切替でこのアイテムがアクティブ（手持ち）になった直後に呼ばれる。
+    /// 強制持ち替え後のレディ化（銃の cock など）に使う。
+    /// 通常の Give（プレイヤーが自然に持ち替える）経路では呼ばれない。
+    /// </summary>
+    protected virtual void OnModeActivated(Item item) { }
+
     private static void UntrackSerial(ushort serial)
     {
         if (SerialToItem.TryGetValue(serial, out var ci) && ci != null)
@@ -1267,6 +1292,9 @@ public virtual Pickup? Spawn(Vector3 position)
     internal void CallOnUpgradingInventoryItem(Scp914Events.UpgradingInventoryItemEventArgs ev) => OnUpgradingInventoryItem(ev);
     internal void CallCustomizeItem(Item item)                                            => CustomizeItem(item);
     internal void CallCustomizePickup(Pickup pickup)                                      => CustomizePickup(pickup);
+    internal object? CallOnCaptureState(Item item)                                         => OnCaptureState(item);
+    internal void CallOnRestoreState(Item item, object? state)                            => OnRestoreState(item, state);
+    internal void CallOnModeActivated(Item item)                                          => OnModeActivated(item);
 
     // Give() ペンディング状態を CItemHybrid から制御するための内部 API
     internal static void SetPendingGive(CItem ci, bool displayMessage)
