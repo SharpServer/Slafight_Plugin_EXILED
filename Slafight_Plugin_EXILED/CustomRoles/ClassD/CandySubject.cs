@@ -13,7 +13,7 @@ namespace Slafight_Plugin_EXILED.CustomRoles.ClassD;
 
 public class CandySubject : CRole
 {
-    protected override string RoleName { get; set; } = "<color=#ee7600>菓子被験者</color>";
+    protected override string RoleName { get; set; } = "菓子被験者";
     protected override string Description { get; set; } = "お菓子が大好きな変な博士の実験に巻き込まれた可愛そうなDクラス職員。\n" +
                                                           "いっぱいキャンディーを持たされている。";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.CandySubject;

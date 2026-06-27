@@ -43,6 +43,7 @@ public enum CRoleTypeId
     NtfSpecialist,
     NtfDetainer,
     NtfFieldMedic,
+    NtfGunslinger,
     
     // ==== NU-7 HAMMER DOWN ==== //
     HdInfantry,
@@ -93,6 +94,7 @@ public enum CRoleTypeId
     // ==== Class-D ==== //
     Janitor,
     CandySubject,
+    Bloodfiend,
     
     // ==== GoC ==== //
     GoCSquadLeader,

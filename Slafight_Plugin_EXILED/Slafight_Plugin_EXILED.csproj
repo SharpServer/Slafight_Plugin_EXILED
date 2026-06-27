@@ -303,6 +303,7 @@
         <Compile Include="Commands\DevTools\WaypointStreamCommand.cs" />
         <Compile Include="Commands\DevTools\StatusCommand.cs" />
         <Compile Include="CustomEffects\CustomStatusEffectsRegistry.cs" />
+        <Compile Include="CustomEffects\DamageBoost.cs" />
         <Compile Include="CustomEffects\NaturalHeal.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv1.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv2.cs" />
@@ -430,6 +431,7 @@
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosSniper.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosTacticalUnit.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosUndercoverAgent.cs" />
+        <Compile Include="CustomRoles\ClassD\Bloodfiend.cs" />
         <Compile Include="CustomRoles\ClassD\CandySubject.cs" />
         <Compile Include="CustomRoles\ClassD\Janitor.cs" />
         <Compile Include="CustomRoles\Fifthist\FifthistConvert.cs" />
@@ -443,6 +445,7 @@
         <Compile Include="CustomRoles\FoundationForces\NtfGeneral.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfDetainer.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfFieldMedic.cs" />
+        <Compile Include="CustomRoles\FoundationForces\NtfGunslinger.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfSpecialist.cs" />
         <Compile Include="CustomRoles\FoundationForces\Sculpture.cs" />
         <Compile Include="CustomRoles\FoundationForces\SneGears.cs" />
@@ -504,6 +507,7 @@
         <Compile Include="Extensions\CustomBooleans.cs" />
         <Compile Include="Extensions\CustomTeamUtils.cs" />
         <Compile Include="Extensions\CustomItemExtensions.cs" />
+        <Compile Include="Extensions\EventExtensions.cs" />
         <Compile Include="Extensions\NpcExtensions.cs" />
         <Compile Include="Extensions\OnlyChecker.cs" />
         <Compile Include="Extensions\PlayerAbilityExtensions.cs" />
