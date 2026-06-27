@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
@@ -7,16 +6,14 @@ namespace Slafight_Plugin_EXILED.MainHandlers;
 
 public static class RPNameSetter
 {
-    public static Dictionary<Player, string> PlayerInputNames = new();
-    public static Dictionary<Player, string> Passcodes = new();
-
     public static void SetInputName(Player player, string? input)
     {
         if (player == null)
             return;
 
+        ServerSpecificUserSettings.TrySetText(player, ServerSpecifics.RpNameSettingId, input);
+
         string customName = BuildCustomName(player, input);
-        PlayerInputNames[player] = customName;
 
         if (player.HasFlag(SpecificFlagType.RPNameDisabled))
             return;
@@ -29,10 +26,7 @@ public static class RPNameSetter
         if (player == null)
             return;
 
-        if (!PlayerInputNames.TryGetValue(player, out string customName))
-            customName = BuildCustomName(player, null);
-
-        ApplyCustomName(player, customName);
+        ApplyCustomName(player, BuildCustomName(player, ServerSpecificUserSettings.GetRpNameInput(player)));
     }
 
     public static void SetForcedCustomName(Player player, string? customName)
@@ -48,25 +42,25 @@ public static class RPNameSetter
         if (player == null)
             return;
 
-        Passcodes[player] = passcode;
+        ServerSpecificUserSettings.TrySetText(player, ServerSpecifics.SecretPasscodeSettingId, passcode);
     }
 
     public static bool TryGetPasscode(Player player, out string passcode)
-        => Passcodes.TryGetValue(player, out passcode);
+        => ServerSpecificUserSettings.TryGetPasscode(player, out passcode);
 
     public static void Clear(Player player)
     {
         if (player == null)
             return;
 
-        PlayerInputNames.Remove(player);
-        Passcodes.Remove(player);
+        ServerSpecificUserSettings.ClearSetting(player, ServerSpecifics.RpNameSettingId);
+        ServerSpecificUserSettings.ClearSetting(player, ServerSpecifics.SecretPasscodeSettingId);
     }
 
     public static void ClearAll()
     {
-        PlayerInputNames.Clear();
-        Passcodes.Clear();
+        ServerSpecificUserSettings.ClearSettingFromAll(ServerSpecifics.RpNameSettingId);
+        ServerSpecificUserSettings.ClearSettingFromAll(ServerSpecifics.SecretPasscodeSettingId);
     }
 
     private static void ApplyCustomName(Player player, string customName)

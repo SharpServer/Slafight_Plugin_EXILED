@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using Exiled.API.Features;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -12,9 +11,6 @@ namespace Slafight_Plugin_EXILED.MainHandlers;
 
 public static class ServerSpecificsHandler
 {
-    private static readonly Dictionary<int, float> DocumentHintDurations = new();
-    private static readonly HashSet<int> NotAccessibilityModePlayers = new();
-
     public static void Register()
     {
         ServerSpecificSettingsSync.ServerOnSettingValueReceived += OnSettingValueReceived;
@@ -27,31 +23,17 @@ public static class ServerSpecificsHandler
     }
 
     public static float GetDocumentHintDuration(Player? player)
-    {
-        if (player == null)
-            return ServerSpecifics.DefaultDocumentHintDuration;
-
-        return DocumentHintDurations.TryGetValue(player.Id, out var duration)
-            ? ClampDocumentHintDuration(duration)
-            : ServerSpecifics.DefaultDocumentHintDuration;
-    }
+        => ServerSpecificUserSettings.GetDocumentHintDuration(player);
 
     public static bool IsAccessibilityModeEnabled(Player? player)
-        => player != null && !NotAccessibilityModePlayers.Contains(player.Id);
+        => ServerSpecificUserSettings.IsAccessibilityModeEnabled(player);
 
     public static void RemovePlayer(Player? player)
-    {
-        if (player == null)
-            return;
-
-        DocumentHintDurations.Remove(player.Id);
-        NotAccessibilityModePlayers.Remove(player.Id);
-    }
+        => ServerSpecificUserSettings.RemovePlayer(player);
 
     public static void ClearAll()
     {
-        DocumentHintDurations.Clear();
-        NotAccessibilityModePlayers.Clear();
+        ServerSpecificUserSettings.ClearAll();
     }
 
     private static void OnSettingValueReceived(ReferenceHub hub, ServerSpecificSettingBase @base)
@@ -73,13 +55,9 @@ public static class ServerSpecificsHandler
                 HandleText(player, text.SettingId, text.SyncInputText);
                 break;
 
-            case SSSliderSetting slider:
-                HandleSlider(player, slider.SettingId, slider.SyncFloatValue);
-                break;
-
             case SSTwoButtonsSetting twoButton when
                 twoButton.SettingId == ServerSpecifics.AccessibilityModeSettingId:
-                HandleAccessibilityMode(player, twoButton.SyncIsA);
+                HandleAccessibilityMode(player);
                 break;
 
             case SSTwoButtonsSetting twoButton when
@@ -96,7 +74,7 @@ public static class ServerSpecificsHandler
     private static void HandleKeybind(Player player, int settingId)
     {
         // VCトグルは常に許可
-        if (settingId == 1)
+        if (settingId == ServerSpecifics.ProximityChatKeybindSettingId)
         {
             ActivateHandler.ToggleProximityChat(player);
             return;
@@ -108,7 +86,7 @@ public static class ServerSpecificsHandler
             player.Role.Team == Team.Dead)
             return;
 
-        if (settingId == 5)
+        if (settingId == ServerSpecifics.ItemModeSwitchKeybindSettingId)
         {
             var item = player.CurrentItem;
             if (item == null)
@@ -142,9 +120,9 @@ public static class ServerSpecificsHandler
 
         try
         {
-            if (settingId == 3)
+            if (settingId == ServerSpecifics.AbilityUseKeybindSettingId)
                 loadout.ActiveAbility?.TryActivateFromInput(player);
-            else if (settingId == 4)
+            else if (settingId == ServerSpecifics.AbilitySwitchKeybindSettingId)
             {
                 AbilityManager.NextSlot(player);
             }
@@ -161,12 +139,12 @@ public static class ServerSpecificsHandler
 
     private static void HandleText(Player player, int settingId, string text)
     {
-        if (settingId == 2)
+        if (settingId == ServerSpecifics.RpNameSettingId)
         {
             Log.Debug("nickname updated");
             RPNameSetter.SetInputName(player, text);
         }
-        else if (settingId == 6)
+        else if (settingId == ServerSpecifics.SecretPasscodeSettingId)
         {
             Log.Debug("passcode updated");
             RPNameSetter.SetPasscode(player, text);
@@ -174,43 +152,15 @@ public static class ServerSpecificsHandler
     }
 
     // =====================
-    //  スライダー (ID: 7=Document表示時間)
-    // =====================
-
-    private static void HandleSlider(Player player, int settingId, float value)
-    {
-        if (player == null)
-            return;
-
-        if (settingId == ServerSpecifics.DocumentHintDurationSettingId)
-        {
-            DocumentHintDurations[player.Id] = ClampDocumentHintDuration(value);
-        }
-    }
-
-    private static float ClampDocumentHintDuration(float value)
-    {
-        if (float.IsNaN(value) || float.IsInfinity(value))
-            return ServerSpecifics.DefaultDocumentHintDuration;
-
-        return Math.Max(
-            ServerSpecifics.MinDocumentHintDuration,
-            Math.Min(ServerSpecifics.MaxDocumentHintDuration, value));
-    }
-
-    // =====================
     //  アクセシビリティモード (ID: 8)
     // =====================
 
-    private static void HandleAccessibilityMode(Player player, bool isOn)
+    private static void HandleAccessibilityMode(Player player)
     {
-        if (isOn)
-            NotAccessibilityModePlayers.Add(player.Id);
-        else
-            NotAccessibilityModePlayers.Remove(player.Id);
+        bool enabled = ServerSpecificUserSettings.IsAccessibilityModeEnabled(player);
 
         NetworkVisibilityManager.RefreshPlayer(player);
-        Log.Debug($"[AccessibilityMode] {player.Nickname} => {(isOn ? "ON" : "OFF")}");
+        Log.Debug($"[AccessibilityMode] {player.Nickname} => {(enabled ? "ON" : "OFF")}");
     }
 
     // =====================

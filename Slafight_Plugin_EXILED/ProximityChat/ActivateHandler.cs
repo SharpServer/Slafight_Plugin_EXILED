@@ -1,4 +1,5 @@
 using Exiled.API.Features;
+using Slafight_Plugin_EXILED.API.Features;
 
 namespace Slafight_Plugin_EXILED.ProximityChat;
 
@@ -14,13 +15,20 @@ public class ActivateHandler
             if (Handler.ActivatedPlayers.Contains(player))
             {
                 Handler.ActivatedPlayers.Remove(player);
-                player.ShowHint("近接チャットが<color=red>無効化</color>されました", 5f);
+                player.ShowHint(BuildToggleHint(player, "<color=red>無効化</color>"), 5f);
             }
             else
             {
                 Handler.ActivatedPlayers.Add(player);
-                player.ShowHint("近接チャットが<color=green>有効化</color>されました", 5f);
+                player.ShowHint(BuildToggleHint(player, "<color=green>有効化</color>"), 5f);
             }
         }
     }
+
+    private static string BuildToggleHint(Player player, string stateText)
+        => $"近接チャットが{stateText}されました\n" +
+           ServerSpecificUserSettings.BuildKeybindUsageHint(
+               player,
+               ServerSpecifics.ProximityChatKeybindSettingId,
+               "近接チャットをON/OFFできます");
 }

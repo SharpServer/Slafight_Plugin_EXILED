@@ -240,6 +240,7 @@
         <Compile Include="API\Features\RoundVictory\Sources\*.cs" />
         <Compile Include="API\Features\RoleSpecificTextProvider.cs" />
         <Compile Include="API\Features\ServerSpecifics.cs" />
+        <Compile Include="API\Features\ServerSpecificUserSettings.cs" />
         <Compile Include="API\Features\SpawnContext.cs" />
         <Compile Include="API\Features\SpawnContextRegistry.cs" />
         <Compile Include="API\Features\SlafightLabApiHandler.cs" />
@@ -313,6 +314,7 @@
         <Compile Include="CustomItems\SlafightApiItems\GunDisarmerRifle.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunAnomalyDetainer.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunRevolverX.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\GunXE11KMR.cs" />
         <Compile Include="CustomItems\SlafightApiItems\IntermediateBases\AccessTunerBase.cs" />
         <Compile Include="CustomItems\SlafightApiItems\IntermediateBases\SnavCommon.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardA.cs" />

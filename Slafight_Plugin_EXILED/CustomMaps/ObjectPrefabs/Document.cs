@@ -6,7 +6,6 @@ using LabApi.Features.Wrappers;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
-using Slafight_Plugin_EXILED.MainHandlers;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;
 
@@ -91,7 +90,7 @@ public class Document : ObjectPrefab
         var pos = _schematicObject?.Position ?? Position;
         SpeakerApi.Play("PickItem0.ogg", "Vent", pos, true, null, false, 2.5f, 0f);
 
-        player.ShowHint(DocumentDictionary.Get(DocumentType), ServerSpecificsHandler.GetDocumentHintDuration(player));
+        player.ShowHint(DocumentDictionary.Get(DocumentType), ServerSpecificUserSettings.GetDocumentHintDuration(player));
     }
 
     // ===== Mod Command =====

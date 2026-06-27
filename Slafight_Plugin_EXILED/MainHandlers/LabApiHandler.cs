@@ -228,7 +228,7 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
             identity.InitShowState(new NetworkShowState
             {
                 VisibilityPredicate = receiver =>
-                    ServerSpecificsHandler.IsAccessibilityModeEnabled(receiver) == accessibilityModel,
+                    ServerSpecificUserSettings.IsAccessibilityModeEnabled(receiver) == accessibilityModel,
             });
         }
     }

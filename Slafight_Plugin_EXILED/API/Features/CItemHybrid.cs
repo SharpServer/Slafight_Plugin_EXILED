@@ -5,6 +5,7 @@ using System.Linq;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
+using MEC;
 using Slafight_Plugin_EXILED.Extensions;
 using PlayerEvents = Exiled.Events.EventArgs.Player;
 using MapEvents = Exiled.Events.EventArgs.Map;
@@ -36,6 +37,8 @@ namespace Slafight_Plugin_EXILED.API.Features;
 /// </summary>
 public abstract class CItemHybrid : CItem
 {
+    private const float HybridSelectedHintDuration = 5f;
+
     // serial → 現在のモードインデックス
     // ラウンド内でシリアルが生きている間は保持する。
     // WaitingForPlayers でのみ一括クリア。
@@ -419,7 +422,29 @@ public abstract class CItemHybrid : CItem
     {
         // SwitchMode 実行中はモード切替 Hint を優先するので Selected Hint を抑制
         if (_isSwitching) return;
-        base.ShowSelectedMessage(player);
+
+        if (player == null) return;
+
+        player.ShowHint(BuildHybridSelectedMessage(player), HybridSelectedHintDuration);
+        var captured = player;
+        Timing.CallDelayed(HybridSelectedHintDuration, () =>
+        {
+            try { OnSelectedHintFinished(captured); }
+            catch (Exception e) { Log.Error($"CItemHybrid.OnSelectedHintFinished error in {GetType().Name}: {e}"); }
+        });
+    }
+
+    private string BuildHybridSelectedMessage(Player player)
+    {
+        string message = BuildSelectedMessage();
+
+        if (!EnableKeyModeSwitch || SubModes.Count <= 1)
+            return message;
+
+        return message + "\n" + ServerSpecificUserSettings.BuildKeybindUsageHint(
+            player,
+            ServerSpecifics.ItemModeSwitchKeybindSettingId,
+            "モードを切り替えられます");
     }
 
     // ShowPickedUpMessage は基底に任せる（override 不要）

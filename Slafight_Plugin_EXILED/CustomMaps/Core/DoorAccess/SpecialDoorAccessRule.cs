@@ -1,7 +1,6 @@
 using System;
 using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.MainHandlers;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Core.DoorAccess;
 
@@ -58,7 +57,7 @@ public sealed class SpecialDoorAccessRule
     private bool CheckCode(Player player)
     {
         return RequiredCode != null &&
-               RPNameSetter.TryGetPasscode(player, out var code) &&
+               ServerSpecificUserSettings.TryGetPasscode(player, out var code) &&
                code == RequiredCode;
     }
 

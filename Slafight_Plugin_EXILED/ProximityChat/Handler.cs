@@ -112,7 +112,7 @@ public static class Handler
                 Alignment = HintAlignment.Center,
                 XCoordinate = 0,
                 YCoordinate = 865,
-                Text = "<color=yellow><size=24>近接チャット機能が利用可能です！</size></color>",
+                Text = BuildAvailableHintText(player),
                 Id = HudConstId.ProximityChat
             };
 
@@ -298,4 +298,11 @@ public static class Handler
 
     private static bool CanReceiveHint(Player player)
         => player != null && player.IsConnected && !player.IsNPC;
+
+    private static string BuildAvailableHintText(Player player)
+        => "<color=yellow><size=24>近接チャット機能が利用可能です！</size></color>\n" +
+           ServerSpecificUserSettings.BuildKeybindUsageHint(
+               player,
+               ServerSpecifics.ProximityChatKeybindSettingId,
+               "近接チャットをON/OFFできます");
 }
