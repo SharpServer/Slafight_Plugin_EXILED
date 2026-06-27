@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Exiled.API.Features;
+using Hints;
 using UnityEngine;
 using UserSettings.ServerSpecific;
 
@@ -8,6 +9,18 @@ namespace Slafight_Plugin_EXILED.API.Features;
 
 public static class ServerSpecificUserSettings
 {
+    private const string KeybindUsageHintFormat = "<size=22>{0}で{1}。</size>\n<size=20>{2}</size>";
+    private const string AssignedKeyTextFormat = "<color=#aaffaa>{0}</color>（{1}）";
+    private const string KeybindSettingsTextFormat = "未設定・変更は 設定 > Server Specifics > {0} からできます。";
+    private const string KeybindSettingsTextWithSuggestedFormat = "未設定・変更は 設定 > Server Specifics > {0} からできます（推奨: {1}）。";
+    private const string KeybindParameterPlaceholder = "{0}";
+
+    public sealed class KeybindHintContent(string text, HintParameter[] parameters)
+    {
+        public string Text { get; } = text;
+        public HintParameter[] Parameters { get; } = parameters;
+    }
+
     public static bool TryGetSetting<T>(Player? player, int settingId, out T setting)
         where T : ServerSpecificSettingBase
     {
@@ -53,16 +66,27 @@ public static class ServerSpecificUserSettings
         return true;
     }
 
-    public static string BuildKeybindUsageHint(Player? player, int settingId, string actionText)
+    public static KeybindHintContent BuildKeybindUsageHint(Player? player, int settingId, string actionText)
     {
         string label = GetSettingLabel<SSKeybindSetting>(settingId, "Server Specificsキー");
         string suggested = GetSuggestedKeyText(settingId);
-        string keyText = string.IsNullOrEmpty(suggested)
-            ? $"<color=#aaffaa>{label}</color>"
-            : $"<color=#aaffaa>{label}</color>（推奨: {suggested}）";
-        string settingsText = $"未設定・変更は 設定 > Server Specifics > {label} からできます。";
 
-        return $"<size=22>{keyText}で{actionText}。</size>\n<size=20>{settingsText}</size>";
+        string keyText = string.Format(AssignedKeyTextFormat, KeybindParameterPlaceholder, label);
+        string settingsText = string.IsNullOrEmpty(suggested)
+            ? string.Format(KeybindSettingsTextFormat, label)
+            : string.Format(KeybindSettingsTextWithSuggestedFormat, label, suggested);
+
+        return new KeybindHintContent(
+            string.Format(KeybindUsageHintFormat, keyText, actionText, settingsText),
+            [(HintParameter)new SSKeybindHintParameter(settingId)]);
+    }
+
+    public static string GetSuggestedKeyText(int settingId)
+    {
+        if (!TryGetDefinition<SSKeybindSetting>(settingId, out var setting))
+            return string.Empty;
+
+        return FormatKeyCode(setting.SuggestedKey);
     }
 
     public static bool TryGetText(Player? player, int settingId, out string text)
@@ -264,12 +288,8 @@ public static class ServerSpecificUserSettings
             ? setting.Label
             : fallback;
 
-    private static string GetSuggestedKeyText(int settingId)
-    {
-        if (!TryGetDefinition<SSKeybindSetting>(settingId, out var setting))
-            return string.Empty;
-
-        return setting.SuggestedKey switch
+    private static string FormatKeyCode(KeyCode keyCode)
+        => keyCode switch
         {
             KeyCode.None => string.Empty,
             KeyCode.Mouse0 => "左クリック",
@@ -282,7 +302,6 @@ public static class ServerSpecificUserSettings
             KeyCode.LeftShift => "左Shift",
             KeyCode.RightShift => "右Shift",
             KeyCode.Space => "Space",
-            _ => setting.SuggestedKey.ToString(),
+            _ => keyCode.ToString(),
         };
-    }
 }

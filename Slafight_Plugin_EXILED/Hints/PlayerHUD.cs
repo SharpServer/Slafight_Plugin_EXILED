@@ -17,6 +17,8 @@ using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
+using HintParameter = global::Hints.HintParameter;
+using SSKeybindHintParameter = global::Hints.SSKeybindHintParameter;
 
 using Slafight_Plugin_EXILED.API.Interface;
 
@@ -483,7 +485,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
             if (abilityHint == null) return;
         }
 
-        abilityHint.Text = BuildAbilityHud(player);
+        ApplyAbilityHud(abilityHint, player);
     }
 
     // =========================================================
@@ -543,7 +545,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         {
             try
             {
-                abilityHint.Text = BuildAbilityHud(target);
+                ApplyAbilityHud(abilityHint, target);
             }
             catch (Exception e)
             {
@@ -618,17 +620,29 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     // Ability HUD
     // =========================================================
 
-    private string BuildAbilityHud(Player target)
+    private static void ApplyAbilityHud(
+        HintServiceMeow.Core.Models.Hints.AbstractHint abilityHint,
+        Player target)
     {
-        if (!IsPlayerValid(target)) return string.Empty; // FIX: nullガード
-        if (!target.IsAlive) return string.Empty;
+        var content = BuildAbilityHud(target);
+        abilityHint.Text = content.Text;
+        abilityHint.Parameters = content.Parameters;
+    }
+
+    private static ServerSpecificUserSettings.KeybindHintContent BuildAbilityHud(Player target)
+    {
+        if (!IsPlayerValid(target))
+            return new ServerSpecificUserSettings.KeybindHintContent(string.Empty, []); // FIX: nullガード
+
+        if (!target.IsAlive)
+            return new ServerSpecificUserSettings.KeybindHintContent(string.Empty, []);
 
         if (!AbilityManager.TryGetLoadout(target, out var loadout))
-            return string.Empty;
+            return new ServerSpecificUserSettings.KeybindHintContent(string.Empty, []);
 
         var entries = GetAbilityEntries(loadout);
         if (entries.Count == 0)
-            return string.Empty;
+            return new ServerSpecificUserSettings.KeybindHintContent(string.Empty, []);
 
         var activeEntryIndex = entries.FindIndex(e => e.SlotIndex == loadout.ActiveIndex);
         if (activeEntryIndex < 0)
@@ -641,13 +655,27 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         var abilityName = AbilityLocalization.GetDisplayName(active.GetType().Name, target);
         var statusText = FormatAbilityState(target, active, out var usesText);
         var countText = $"{activeEntryIndex + 1}/{entries.Count}";
-        var controlText = entries.Count > 1
-            ? "使用:アビリティ使用 / 切替:アビリティ切替"
-            : "使用:アビリティ使用 / 所持:1";
+        var parameters = new List<HintParameter>
+        {
+            new SSKeybindHintParameter(ServerSpecifics.AbilityUseKeybindSettingId)
+        };
+        var controlText = "<color=#aaffaa>{0}</color>:使用";
+        if (entries.Count > 1)
+        {
+            parameters.Add(new SSKeybindHintParameter(ServerSpecifics.AbilitySwitchKeybindSettingId));
+            controlText += " / <color=#aaffaa>{1}</color>:切替";
+        }
+        else
+        {
+            controlText += " / 所持:1";
+        }
+
         var slotSummary = BuildAbilitySlotSummary(target, entries, activeEntryIndex);
 
-        return $"<size=22><color=#ffcc00>Ability {countText}</color> {abilityName} {statusText} Uses:{usesText}</size>\n" +
-               $"<size=18>{controlText} | {slotSummary}</size>";
+        return new ServerSpecificUserSettings.KeybindHintContent(
+            $"<size=22><color=#ffcc00>Ability {countText}</color> {abilityName} {statusText} Uses:{usesText}</size>\n" +
+            $"<size=18>{controlText} | {slotSummary}</size>",
+            parameters.ToArray());
     }
 
     private static List<(int SlotIndex, AbilityBase Ability)> GetAbilityEntries(AbilityLoadout loadout)
@@ -805,7 +833,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
 
                 try
                 {
-                    abilityHint.Text = BuildAbilityHud(hudTarget);
+                    ApplyAbilityHud(abilityHint, hudTarget);
                 }
                 catch (Exception e)
                 {

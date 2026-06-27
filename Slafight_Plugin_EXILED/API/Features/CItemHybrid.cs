@@ -425,7 +425,8 @@ public abstract class CItemHybrid : CItem
 
         if (player == null) return;
 
-        player.ShowHint(BuildHybridSelectedMessage(player), HybridSelectedHintDuration);
+        var hint = BuildHybridSelectedMessage(player);
+        player.ShowHint(hint.Text, hint.Parameters, null, HybridSelectedHintDuration);
         var captured = player;
         Timing.CallDelayed(HybridSelectedHintDuration, () =>
         {
@@ -434,17 +435,21 @@ public abstract class CItemHybrid : CItem
         });
     }
 
-    private string BuildHybridSelectedMessage(Player player)
+    private ServerSpecificUserSettings.KeybindHintContent BuildHybridSelectedMessage(Player player)
     {
         string message = BuildSelectedMessage();
 
         if (!EnableKeyModeSwitch || SubModes.Count <= 1)
-            return message;
+            return new ServerSpecificUserSettings.KeybindHintContent(message, []);
 
-        return message + "\n" + ServerSpecificUserSettings.BuildKeybindUsageHint(
+        var keybindHint = ServerSpecificUserSettings.BuildKeybindUsageHint(
             player,
             ServerSpecifics.ItemModeSwitchKeybindSettingId,
             "モードを切り替えられます");
+
+        return new ServerSpecificUserSettings.KeybindHintContent(
+            message + "\n" + keybindHint.Text,
+            keybindHint.Parameters);
     }
 
     // ShowPickedUpMessage は基底に任せる（override 不要）

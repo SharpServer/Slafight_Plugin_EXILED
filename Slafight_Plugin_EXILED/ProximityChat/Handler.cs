@@ -107,12 +107,14 @@ public static class Handler
             if (!CanReceiveHint(player))
                 return;
 
+            var keybindHint = BuildAvailableHintContent(player);
             var hint = new Hint
             {
                 Alignment = HintAlignment.Center,
                 XCoordinate = 0,
                 YCoordinate = 865,
-                Text = BuildAvailableHintText(player),
+                Text = keybindHint.Text,
+                Parameters = keybindHint.Parameters,
                 Id = HudConstId.ProximityChat
             };
 
@@ -299,10 +301,15 @@ public static class Handler
     private static bool CanReceiveHint(Player player)
         => player != null && player.IsConnected && !player.IsNPC;
 
-    private static string BuildAvailableHintText(Player player)
-        => "<color=yellow><size=24>近接チャット機能が利用可能です！</size></color>\n" +
-           ServerSpecificUserSettings.BuildKeybindUsageHint(
-               player,
-               ServerSpecifics.ProximityChatKeybindSettingId,
-               "近接チャットをON/OFFできます");
+    private static ServerSpecificUserSettings.KeybindHintContent BuildAvailableHintContent(Player player)
+    {
+        var keybindHint = ServerSpecificUserSettings.BuildKeybindUsageHint(
+            player,
+            ServerSpecifics.ProximityChatKeybindSettingId,
+            "近接チャットをON/OFFできます");
+
+        return new ServerSpecificUserSettings.KeybindHintContent(
+            "<color=yellow><size=24>近接チャット機能が利用可能です！</size></color>\n" + keybindHint.Text,
+            keybindHint.Parameters);
+    }
 }
