@@ -343,8 +343,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
 
             var custom = sourcePlayer.GetCustomRole();
 
-            if (custom != CRoleTypeId.None &&
-                RoleHintsDictionary.Table.TryGetValue(custom, out var data))
+            if (RoleHintsDictionary.TryResolve(custom, out var data))
             {
                 roleText      = data.Role;
                 teamText      = data.Team;
@@ -372,8 +371,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         var cteam = player.GetTeam();
         var name = player.Role?.Name ?? "";
 
-        var roleText = custom != CRoleTypeId.None &&
-                       RoleHintsDictionary.Table.TryGetValue(custom, out var data)
+        var roleText = RoleHintsDictionary.TryResolve(custom, out var data)
             ? data.Role
             : $"<color={(player.IsHumanitist() ? "#0000c8" : "red")}>{name}</color>";
 

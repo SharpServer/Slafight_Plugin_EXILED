@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.Hints;
 
@@ -152,4 +154,44 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.SecurityTeamGuard] = ("<color=#00b7eb>Security Team Guard</color>", FoundTeam, FoundObj),
         [CRoleTypeId.ChaosIntruder] = ("<color=#228b22>Chaos Insurgency Intruder</color>",ChaosTeam, ChaosObj),
     };
+
+    // Table に手書き定義が無い CRole を、CRole 自身のメタ情報から解決した結果のキャッシュ。
+    // 正の解決のみ memoize する（CRole のメタ情報は実行中に変化しないため安全。
+    // ミスはキャッシュしない: OverrideRoleInstance で後から登録され得るため）。
+    private static readonly Dictionary<CRoleTypeId, (string Role, string Team, string Objective)> ResolvedFromRole = new();
+
+    /// <summary>
+    /// 指定 CRole の HUD 表示情報を解決する。
+    /// まず手書きの <see cref="Table"/> を参照し、定義が無ければ <see cref="CRole"/> から
+    /// 表示名・陣営・説明を引っ張って組み立てる（テスト中など未定義ロールの違和感を無くすため）。
+    /// </summary>
+    internal static bool TryResolve(CRoleTypeId roleTypeId, out (string Role, string Team, string Objective) data)
+    {
+        if (Table.TryGetValue(roleTypeId, out data))
+            return true;
+
+        if (roleTypeId == CRoleTypeId.None)
+        {
+            data = default;
+            return false;
+        }
+
+        if (ResolvedFromRole.TryGetValue(roleTypeId, out data))
+            return true;
+
+        if (CRole.TryGet(roleTypeId, out var role) && role != null)
+        {
+            var color = role.TeamId.GetTeamColor();
+            data = (
+                $"<color={color}>{role.RoleDisplayName}</color>",
+                $"<color={color}>{role.TeamId.GetTeamName()}</color>",
+                role.RoleDescription ?? string.Empty);
+
+            ResolvedFromRole[roleTypeId] = data;
+            return true;
+        }
+
+        data = default;
+        return false;
+    }
 }
