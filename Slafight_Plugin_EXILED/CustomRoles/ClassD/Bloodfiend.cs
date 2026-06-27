@@ -29,7 +29,7 @@ public class Bloodfiend : CRole
     [
         typeof(Bloodyknife),
     ];
-    protected override Vector3? SpawnPosition => Room.Get(RoomType.EzSmallrooms).WorldPosition(Vector3.zero);
+    protected override Vector3? SpawnPosition => Room.Get(RoomType.EzSmallrooms).WorldPosition(Vector3.up * 0.8f);
     protected override string SpawnCustomInfo => "Bloodfiend";
 
     protected override void OnRoleHurting(HurtingEventArgs ev)

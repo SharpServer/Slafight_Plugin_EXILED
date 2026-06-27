@@ -76,6 +76,7 @@ public abstract class RoleTableContext
         [
             W(RoleTypeId.ClassD),
             W(CRoleTypeId.Janitor),
+            W(CRoleTypeId.Bloodfiend, 0.85f),
             W(CRoleTypeId.ChaosUndercoverAgent)
         ];
 
@@ -83,6 +84,7 @@ public abstract class RoleTableContext
         =>
         [
             L(CRoleTypeId.Janitor, 3),
+            L(CRoleTypeId.Bloodfiend, 1),
             L(CRoleTypeId.ChaosUndercoverAgent, 1),
 
             L(CRoleTypeId.ZoneManager, 2),
