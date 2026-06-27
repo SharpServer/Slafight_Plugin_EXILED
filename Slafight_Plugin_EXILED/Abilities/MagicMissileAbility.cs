@@ -6,8 +6,10 @@ using Exiled.API.Features;
 using MEC;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
+using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomRoles.Others.SergeyMakarov;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.Abilities;
@@ -88,7 +90,7 @@ public class MagicMissileAbility : AbilityBase
             // 当たり判定
             foreach (var player in Player.List)
             {
-                if (player == null || !player.IsConnected || !player.IsAlive)
+                if (player == null || !player.IsConnected || !player.IsAlive || player.GetTeam() is CTeam.Fifthists)
                     continue;
 
                 if (!(Vector3.Distance(schem.transform.position, player.Transform.position) <= 1f)) continue;
