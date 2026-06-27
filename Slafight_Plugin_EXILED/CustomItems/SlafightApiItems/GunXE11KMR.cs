@@ -19,7 +19,7 @@ public class GunXE11KMR : CItemHybrid
     protected override string UniqueKey => "GunXE11KMR";
 
     protected override List<CItemHybridMode> BuildSubModes()
-        => [new(new GunXE11KMR_Normal(), "通常ライフル"), new(new GunGoCRailgunFull(), "グレネードランチャー")];
+        => [new(new GunXE11KMR_Normal(), "通常ライフル"), new(new GunXE11KMR_GL(), "グレネードランチャー")];
 }
 
 public class GunXE11KMR_Normal : CItemWeapon
