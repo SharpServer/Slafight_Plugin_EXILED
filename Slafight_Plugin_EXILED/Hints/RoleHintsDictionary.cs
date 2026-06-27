@@ -63,6 +63,7 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.NtfSpecialist]  = ("<color=#00b7eb>MTF E-11: Specialist</color>",     FoundTeam, FoundObj),
         [CRoleTypeId.NtfDetainer]    = ("<color=#00b7eb>MTF E-11: Detainer</color>",       FoundTeam, FoundObj),
         [CRoleTypeId.NtfFieldMedic]  = ("<color=#00b7eb>MTF E-11: Field Medic</color>",    FoundTeam, FoundObj),
+        [CRoleTypeId.NtfGunslinger]  = ("<color=#00b7eb>MTF E-11: Gunslinger</color>",     FoundTeam, FoundObj),
         [CRoleTypeId.HdInfantry]     = ("<color=#353535>MTF Nu-7: Infantry</color>",       FoundTeam, FoundObj),
         [CRoleTypeId.HdShotgunner]   = ("<color=#353535>MTF Nu-7: Shotgunner</color>",     FoundTeam, FoundObj),
         [CRoleTypeId.HdDisarmer]     = ("<color=#353535>MTF Nu-7: Disarmer</color>",       FoundTeam, FoundObj),
