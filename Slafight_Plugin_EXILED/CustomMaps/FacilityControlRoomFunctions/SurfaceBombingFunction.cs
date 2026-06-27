@@ -16,8 +16,11 @@ public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
     private static readonly Vector3 BombingStartPoint = new(138f, 299f, -41f);
     private static readonly Vector3 BombingEndPoint = new(-20f, 305f, -41f);
 
-    private const float BombDurationSeconds = 3f;  // 爆撃総時間（秒）
-    private const int BombCount = 200;               // 爆弾の総数
+    private const float StartupDelaySeconds = 6.5f;
+    private const int BombingWaveCount = 3;
+    private const float BombingWaveIntervalSeconds = 0f; // Interval for Next Wave.
+    private const float BombDurationSeconds = 3f;        // 爆撃総時間（秒）
+    private const int BombCount = 555;                   // 爆弾の総数
     private const float BombScatterRadius = 10f;
     private const float BombFuseSeconds = 1.25f;
     private const float DownwardVelocity = 18f;
@@ -33,12 +36,14 @@ public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
     public override bool UseCooldown => true;
     public override float CooldownSeconds => 300f;
 
-    private static SpeakerApi.Playback AlertPlayback;
+    private static SpeakerApi.Playback _alertPlayback;
 
     public override void ResetState()
     {
         if (_bombingHandle.IsRunning)
             Timing.KillCoroutines(_bombingHandle);
+
+        StopAlertPlayback();
     }
 
     public override FacilityControlRoomFunctionResult Execute(FacilityControlRoomFunctionContext context)
@@ -83,7 +88,7 @@ public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
             "[防衛部隊から管制室へ]地上爆撃を承認しました。これより攻撃を開始します・・・",
             true, false));
 
-        AlertPlayback = SpeakerApi.PlayLoop("sbialert.ogg", "SurfaceBombing",
+        _alertPlayback = SpeakerApi.PlayLoop("sbialert.ogg", "SurfaceBombing",
             Player.List.GetRandomValue(p => p.Zone is ZoneType.Surface).Position, 
             maxDistance: 250f,
             minDistance: 0f);
@@ -93,11 +98,32 @@ public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
     private static IEnumerator<float> SurfaceBombingCoroutine(bool skipStartupDelay)
     {
         if (!skipStartupDelay)
-            yield return Timing.WaitForSeconds(6.5f);
+            yield return Timing.WaitForSeconds(StartupDelaySeconds);
 
+        for (int waveIndex = 0; waveIndex < BombingWaveCount; waveIndex++)
+        {
+            if (!CanContinueBombing())
+                break;
+
+            foreach (float wait in BombingWaveCoroutine())
+                yield return wait;
+
+            if (!CanContinueBombing() || waveIndex + 1 >= BombingWaveCount)
+                break;
+
+            float waitSeconds = BombingWaveIntervalSeconds - BombDurationSeconds;
+            if (waitSeconds > 0f)
+                yield return Timing.WaitForSeconds(waitSeconds);
+        }
+
+        StopAlertPlayback();
+    }
+
+    private static IEnumerable<float> BombingWaveCoroutine()
+    {
         for (int i = 0; i < BombCount; i++)
         {
-            if (Round.IsLobby || Round.IsEnded)
+            if (!CanContinueBombing())
                 yield break;
 
             float progress = BombCount <= 1 ? 1f : i / (BombCount - 1f);
@@ -111,8 +137,19 @@ public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
 
             yield return Timing.WaitForSeconds(BombInterval);
         }
+    }
 
-        AlertPlayback.Stop();
+    private static bool CanContinueBombing()
+    {
+        return !Round.IsLobby && !Round.IsEnded;
+    }
+
+    private static void StopAlertPlayback()
+    {
+        if (_alertPlayback.IsValid)
+            _alertPlayback.Stop();
+
+        _alertPlayback = default;
     }
 
     private static void SpawnTimeGrenade(Vector3 position)

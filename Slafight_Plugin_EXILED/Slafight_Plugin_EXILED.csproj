@@ -314,6 +314,7 @@
         <Compile Include="CustomItems\SlafightApiItems\ArmorVip.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunDisarmerRifle.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunAnomalyDetainer.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\GunRecoilRampRevolver.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunRevolverX.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunXE11KMR.cs" />
         <Compile Include="CustomItems\SlafightApiItems\IntermediateBases\AccessTunerBase.cs" />

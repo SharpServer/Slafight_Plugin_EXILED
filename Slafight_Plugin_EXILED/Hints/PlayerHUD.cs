@@ -1092,6 +1092,14 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
                     $"<color=#aaaaaa>Inaccuracy:</color> {firearm.Inaccuracy:F3}  " +
                     $"<color=#aaaaaa>Falloff:</color> {firearm.DamageFalloffDistance:F1}"
                 );
+                var recoil = firearm.Recoil;
+                sb.AppendLine(
+                    $"  <color=#aaaaaa>Recoil:</color> Time={recoil.AnimationTime:F3}  " +
+                    $"Z={recoil.ZAxis:F2}  " +
+                    $"Fov={recoil.FovKick:F2}  " +
+                    $"Up={recoil.UpKick:F2}  " +
+                    $"Side={recoil.SideKick:F2}"
+                );
                 sb.AppendLine(
                     $"  <color=#aaaaaa>Auto:</color> {Bool(firearm.IsAutomatic)}  " +
                     $"<color=#aaaaaa>Aiming:</color> {Bool(firearm.Aiming)}  " +

@@ -1,3 +1,5 @@
+using CameraShaking;
+using Exiled.API.Features.Items;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
@@ -16,4 +18,12 @@ public class GunRevolverX : CItemWeapon
     protected override bool PickupLightEnabled => true;
     protected override Color PickupLightColor => ColorExtensions.ParseHtmlToColor("#5fd647");
     protected override string? PickupSchematicName => "Alienisolation_Revolver";
+    protected override void CustomizeItem(Item item)
+    {
+        if (item is Firearm firearm)
+        {
+            firearm.Recoil = new RecoilSettings(0.01f, 1856f, 2000f, 1507f, 296.5f);
+        }
+        base.CustomizeItem(item);
+    }
 }
