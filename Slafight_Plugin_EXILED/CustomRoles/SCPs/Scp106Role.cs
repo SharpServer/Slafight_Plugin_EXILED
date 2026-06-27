@@ -238,20 +238,24 @@ public class Scp106Role : CRole
                 hunt.OwnerAudioPurpose,
                 maxDistance: maxDistance,
                 minDistance: minDistance,
-                listeners: listener => listener.Id == owner.Id);
+                listeners: listener => IsChaseAudioListener(listener, owner.Id));
             PlayerSpeakerManager.PlayLoop(
                 target,
                 settings.ChaseAudioFile,
                 hunt.TargetAudioPurpose,
                 maxDistance: maxDistance,
                 minDistance: minDistance,
-                listeners: listener => listener.Id == target.Id);
+                listeners: listener => IsChaseAudioListener(listener, target.Id));
         }
         catch (Exception ex)
         {
             Log.Warn($"[Scp106Hunt] Chase audio could not be started: {ex.Message}");
         }
     }
+
+    private static bool IsChaseAudioListener(Player listener, int playerId)
+        => listener?.ReferenceHub != null &&
+           (listener.Id == playerId || listener.IsDead);
 
     private static void EndHunt(int ownerId, string reason, bool showHints = true)
     {

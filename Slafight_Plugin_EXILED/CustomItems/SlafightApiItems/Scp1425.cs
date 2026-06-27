@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using CustomPlayerEffects;
 using Exiled.Events.EventArgs.Player;
 using MEC;
@@ -19,14 +20,26 @@ public class Scp1425 : CItemUsable
     protected override Color PickupLightColor   => Color.magenta;
     protected override string PickupSchematicName => "Scp1425Model";
 
-    protected override int MaxUseCount => 5;
-    protected override bool DestroyItemWhenUsesDepleted => false;
+    protected override int MaxUseCount => 0;
+
+    private readonly Dictionary<int, byte> _readCount = [];
+
+    protected override void OnWaitingForPlayers()
+    {
+        _readCount.Clear();
+    }
+
+    protected override void OnOwnerDying(DyingEventArgs ev)
+    {
+        if (ev.Player == null) return;
+        _readCount[ev.Player.Id] = 0;
+    }
 
     protected override void OnUsedEffect(UsingItemCompletedEventArgs ev)
     {
         if (ev.Player == null) return;
 
-        var count = MaxUseCount - GetRemainingUses(ev.Item);
+        var count = _readCount.GetValueOrDefault(ev.Player.Id, (byte)0);
 
         switch (count)
         {
@@ -52,13 +65,13 @@ public class Scp1425 : CItemUsable
                     () => ev.Player?.SetRole(CRoleTypeId.FifthistMarionette, RoleSpawnFlags.AssignInventory));
                 break;
             default:
-                SetRemainingUses(ev.Item, MaxUseCount);
+                _readCount[ev.Player.Id] = 0;
                 return;
         }
-    }
 
-    protected override void OnUsesDepleted(UsingItemCompletedEventArgs ev)
-    {
-        SetRemainingUses(ev.Item, MaxUseCount);
+        if (count >= 4)
+            _readCount[ev.Player.Id] = 0;
+        else
+            _readCount[ev.Player.Id] = (byte)(count + 1);
     }
 }

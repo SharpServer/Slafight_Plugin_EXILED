@@ -30,6 +30,7 @@ public sealed class HidTurretControlFunction : FacilityControlRoomFunction
         if (HIDTurretObject.IsPowerEnabled)
         {
             HIDTurretObject.DisablePower(RestartCooldownSeconds);
+            Exiled.API.Features.Cassie.MessageTranslated("Stopped H I D System. . . . .", $"HIDタレットシステムを停止しました。<split>再起動には{RestartCooldownSeconds:F0}秒必要です。");
             return Success(
                 $"<size=24>HIDタレットシステムを停止しました。\n再起動には{RestartCooldownSeconds:F0}秒必要です。</size>");
         }
@@ -47,6 +48,7 @@ public sealed class HidTurretControlFunction : FacilityControlRoomFunction
                 "<size=24>HIDタレットシステムを起動できません。\n稼働可能なタレットが存在しません。</size>");
         }
 
+        Exiled.API.Features.Cassie.MessageTranslated("Started H I D System. . . . .", $"HIDタレットシステムを起動しました。<split>{ActiveDurationSeconds:F0}秒後に自動停止します。");
         return Success(
             $"<size=24>HIDタレットシステムを起動しました。\n{ActiveDurationSeconds:F0}秒後に自動停止します。</size>");
     }

@@ -592,11 +592,16 @@ public static class Scp914Changes
         {
             Rough = Scp914Rule.Destroy,
             Coarse = Scp914Rule.ToCItem<KeycardConscripts>(),
-            OneToOne = Scp914Rule.Keep,
+            OneToOne = Scp914Rule.ToCItem<AccessTunerLv1>(),
             Fine = Scp914Rule.ToVanilla(ItemType.KeycardChaosInsurgency),
             VeryFine = Scp914Rule.Weighted(
                 (0.90f, Scp914Rule.ToCItem<KeycardArmoryLevel3>()),
                 (0.10f, Scp914Rule.ToCItem<MasterCard>())),
+        });
+        
+        Scp914Registry.RegisterCItem<AccessTunerLv1>(new()
+        {
+            OneToOne = Scp914Rule.ToCItem<KeycardChaosIntruder>()
         });
 
         // --- Conscripts（Chaos 下位） ---
