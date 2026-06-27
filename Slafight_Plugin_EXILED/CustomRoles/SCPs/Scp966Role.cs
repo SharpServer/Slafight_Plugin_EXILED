@@ -135,6 +135,7 @@ public class Scp966Role : CRole
 
                 // 966 が見えるプレイヤーは暗く、見えないプレイヤーは明るく
                 bool isVisible = result.Contains(target);
+                if (target.GetTeam() is CTeam.SCPs) continue;
                 target.CurrentRoom?.SetRoomLightsForTargetOnly(target, !isVisible);
             }
             _invisibleEffectivePlayers[player] = result;
