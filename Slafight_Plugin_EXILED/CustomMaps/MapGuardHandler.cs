@@ -33,6 +33,7 @@ public static class MapGuardHandler
             if (!(Vector3.SqrMagnitude(ev.Door.Position - MapFlags.OmegaWarheadJoinPoint) > 0.75 * 0.75))
             {
                 ev.IsAllowed = false;
+                if (ev.Player is null) return;
                 Message(ev.Player);
             }
 
@@ -41,6 +42,7 @@ public static class MapGuardHandler
                 var _ = ev.Door.Position.TryGetRoom(out var room);
                 if (room.Name != RoomName.EzGateB) return;
                 ev.IsAllowed = false;
+                if (ev.Player is null) return;
                 Message(ev.Player);
             }
         }
@@ -83,7 +85,7 @@ public static class MapGuardHandler
 
     private static void Message(Player? player)
     {
-        player.ShowHint("この扉は特殊な素材で守られているようだ・・・");
+        player?.ShowHint("この扉は特殊な素材で守られているようだ・・・");
     }
 }
 

@@ -34,6 +34,11 @@ public static class RoundEndReasons
     /// FacilityTermination で正常性側が勝利した場合。
     /// </summary>
     public const string NoHumanityAllowed = "NoHumanityAllowed";
+
+    /// <summary>
+    /// DanteBattle でボス DANTE 側（討伐側が全滅）が勝利した場合。
+    /// </summary>
+    public const string DanteWin = "DANTE_WIN";
 }
 
 /// <summary>

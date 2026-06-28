@@ -57,4 +57,7 @@ public enum SpecialEventType
     
     /// <summary>CASE COLOURLESS GREEN</summary>
     CaseColourlessGreen,
+    
+    /// <summary>WTF</summary>
+    DanteBattle,
 }

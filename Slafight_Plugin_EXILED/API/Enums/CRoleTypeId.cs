@@ -117,6 +117,8 @@ public enum CRoleTypeId
     SergeyMakarov,
     SergeyMakarovAwaken,
     Capybara,
+    Dante,
+    DanteSlayer,
     
     // ==== MODERATORS ==== //
     HideAdmin,

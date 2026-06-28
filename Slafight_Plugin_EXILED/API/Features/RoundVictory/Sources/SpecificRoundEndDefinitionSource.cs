@@ -33,6 +33,12 @@ public sealed class SpecificRoundEndDefinitionSource : RoundEndDefinitionSource
             CTeam.Others,
             "<b><size=80><color=#ff96de>お菓子の戦士達</color>の勝利</size></b>",
             specificReason: RoundEndReasons.CandyWarriorWin);
+
+        yield return RoundEndDefinition.Custom(
+            "DanteWin",
+            CTeam.Others,
+            "<b><size=80><color=#ff1a1a>DANTE</color>の勝利</size></b>",
+            specificReason: RoundEndReasons.DanteWin);
     }
 
     private static void ResetSpawnContext()

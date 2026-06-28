@@ -191,6 +191,7 @@
         <Compile Include="API\Features\AudioClipApi.cs" />
         <Compile Include="API\Features\CassieHelper.cs" />
         <Compile Include="API\Features\CustomEffectBase.cs" />
+        <Compile Include="API\Features\BossBar.cs" />
         <Compile Include="API\Features\CustomInventoryManager.cs" />
         <Compile Include="API\Features\CustomTickingEffectBase.cs" />
         <Compile Include="API\Features\EffectedInfoTextProvider.cs" />
@@ -435,6 +436,7 @@
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosSniper.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosTacticalUnit.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosUndercoverAgent.cs" />
+        <Compile Include="CustomRoles\ChaosInsurgency\DanteSlayer.cs" />
         <Compile Include="CustomRoles\ClassD\Bloodfiend.cs" />
         <Compile Include="CustomRoles\ClassD\CandySubject.cs" />
         <Compile Include="CustomRoles\ClassD\Janitor.cs" />
@@ -484,6 +486,7 @@
         <Compile Include="CustomRoles\Others\CandyWarriorApril.cs" />
         <Compile Include="CustomRoles\Others\CandyWarriorHalloween.cs" />
         <Compile Include="CustomRoles\Others\CapybaraRole.cs" />
+        <Compile Include="CustomRoles\Others\DanteBoss.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovAwakenRole.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovExtensionAndUtils.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovRole.cs" />
@@ -601,6 +604,7 @@
         <Compile Include="SpecialEvents\Events\ChaosInsurgencyRaid.cs" />
         <Compile Include="SpecialEvents\Events\ClassicEvent.cs" />
         <Compile Include="SpecialEvents\Events\DailyFoundation.cs" />
+        <Compile Include="SpecialEvents\Events\DanteEvent.cs" />
         <Compile Include="SpecialEvents\Events\FacilityTermination.cs" />
         <Compile Include="SpecialEvents\Events\Old_DeltaWarhead.cs" />
         <Compile Include="SpecialEvents\Events\FifthistsRaid.cs" />

@@ -287,6 +287,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
                 SpecialEventType.Scp1509BattleField,
                 SpecialEventType.FacilityTermination,
                 SpecialEventType.SergeyMakarovReturns,
+                SpecialEventType.DanteBattle
             ];
             if (!notallowed.Contains(SpecialEventsHandler.Instance.NowEvent))
             {

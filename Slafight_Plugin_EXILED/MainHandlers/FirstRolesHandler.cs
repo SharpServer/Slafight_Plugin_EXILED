@@ -139,13 +139,11 @@ public class FirstRolesHandler : IBootstrapHandler
             };
             AssignRole(pl, table, RoleSpawnFlags.All);
         }
-
-        Round.IsLocked = false;
     }
 
     private static void RoundUnlocker()
     {
-        Timing.CallDelayed(5f, () =>
+        Timing.CallDelayed(10f, () =>
         {
             Round.IsLocked = false;
         });
