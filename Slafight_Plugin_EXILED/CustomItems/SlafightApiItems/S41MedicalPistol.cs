@@ -58,8 +58,8 @@ public class S41MedicalPistol : CItemWeapon
         player.DisableEffect(EffectType.CardiacArrest);
         player.EnableEffect<NaturalHeal>(HealIntensity, HealDuration);
         player.EnableEffect<Invigorated>(HealIntensity, HealDuration);
-        player.TryGetEffect(out NaturalHeal heal);
-        heal.TickRate = 0.1f;
+        if (player.TryGetEffect(out NaturalHeal heal))
+            heal.TickRate = 0.1f;
 
         if (player.Health < player.MaxHealth)
             player.Health = Math.Min(player.MaxHealth, player.Health + 5f);

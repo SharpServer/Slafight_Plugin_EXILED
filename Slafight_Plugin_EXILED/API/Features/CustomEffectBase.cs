@@ -5,7 +5,7 @@ using Exiled.API.Features;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
-public class CustomEffectBase : StatusEffectBase
+public abstract class CustomEffectBase : StatusEffectBase
 {
     /// <summary>
     /// このエフェクトインスタンスを所持しているプレイヤー。
@@ -29,6 +29,7 @@ public class CustomEffectBase : StatusEffectBase
     {
         base.Disabled();
         RunEventCleanup();
+        Player = null;
     }
 
     /// <summary>

@@ -10,14 +10,15 @@ public class NaturalHeal : CustomTickingEffectBase, ICustomDisplayName
     public bool CanBeDisplayed => true;
     public string DisplayName => "Natural Heal";
     public override EffectClassification Classification => EffectClassification.Positive;
-    public override float TickRate => 0.01f;
+    public override float TickRate => 0.1f;
 
     public override void OnTick()
     {
         if (!NetworkServer.active)
             return;
-        if (Player == null || Player.IsDead) return;
+        if (Player == null || Player.IsDead || Intensity == 0)
+            return;
         
-        Player.Health = Math.Min(Player.MaxHealth, Player.Health + _intensity);
+        Player.Health = Math.Min(Player.MaxHealth, Player.Health + Intensity);
     }
 }

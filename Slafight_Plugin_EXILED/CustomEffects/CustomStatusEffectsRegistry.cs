@@ -261,6 +261,26 @@ public static class CustomStatusEffectsRegistry
             // EXILED / Assembly-CSharp の publicize 状態差分対策。
         }
 
+        try
+        {
+            StatusEffectBase[] allEffects = controller.AllEffects ?? Array.Empty<StatusEffectBase>();
+
+            if (!allEffects.Any(e => e != null && e.GetType() == effectType))
+            {
+                controller.AllEffects = allEffects.Concat(new[] { effect }).ToArray();
+                allEffects = controller.AllEffects;
+            }
+
+            controller.EffectsLength = allEffects.Length;
+
+            while (controller._syncEffectsIntensity.Count < controller.EffectsLength)
+                controller._syncEffectsIntensity.Add(0);
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"[CustomStatusEffectRegistry] Failed to patch controller cache for {effectType.FullName}: {ex}");
+        }
+
         Type controllerType = controller.GetType();
 
         foreach (FieldInfo field in controllerType.GetFields(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic))
