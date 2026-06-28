@@ -387,7 +387,7 @@ public class DanteEvent : SpecialEvent
                 PerformAttack();
             }
 
-            UpdateBossBar(); // バー本体は自前ループでブロードキャスト。ここでは値だけ更新（軽量）。
+            UpdateBossBar(); // バー本体は共有マネージャーが再描画する。ここでは値だけ更新（軽量）。
 
             hpBarTimer += dt;
             if (hpBarTimer >= 1f)
@@ -1220,7 +1220,7 @@ public class DanteEvent : SpecialEvent
     }
 
     // ───────────────────────────────────────────────────────────
-    //  HP 表示（汎用 BossBar に値を流すだけ。描画/再送はバーが自前で行う）
+    //  HP 表示（汎用 BossBar に値を流すだけ。描画/再送は BossBar 管理側で行う）
     // ───────────────────────────────────────────────────────────
     private void UpdateBossBar()
     {
