@@ -134,6 +134,8 @@ public static class DocumentDictionary
             case DocumentType.AboutSQ:
                 return "<size=24>If you want to over the beyond, try this.</size>\n" +
                        "<size=30><b>0 7 2 7</b></size>\n\n\n\n<size=8><color=black><b>BE CURIOUS</b></color></size>";
+            case DocumentType.Kai:
+                return "<size=23>Kai was fucked up by Tentacle :trollface:</size>";
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }
@@ -158,4 +160,5 @@ public enum DocumentType
     AprilWtf,
     Overbeyond,
     AboutSQ,
+    Kai
 }

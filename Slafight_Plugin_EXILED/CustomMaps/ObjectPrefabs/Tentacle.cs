@@ -1,9 +1,12 @@
+using System;
 using System.Collections.Generic;
+using AdminToys;
 using Exiled.API.Enums;
 using Exiled.API.Features;
-using Exiled.API.Features.Toys;
 using MEC;
 using PlayerRoles;
+using ProjectMER.Features;
+using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
@@ -12,8 +15,7 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
 /// <summary>
-/// SCP-035 の触手。HIDTurret と同じく Fade で不可視化した縦長の NPC を当たり判定の核とし、
-/// 見た目は球体プリミティブを縦に積んだ太い触手で表現する。
+/// SCP-035 の触手。見た目は以前の Tentacle schematic を使い、衝突は不可視 NPC 側で受ける。
 /// NPC の体力を削り切ると破壊できる（無敵ではない）。NPC の CustomInfo に体力を表示する。
 /// </summary>
 public class Tentacle : ObjectPrefab
@@ -21,25 +23,26 @@ public class Tentacle : ObjectPrefab
     private static readonly HashSet<int> TentacleNpcIds = [];
     private static bool _eventsRegistered;
 
+    private const string SchematicName = "Tentacle";
+    private const float SpawnAnimationDuration = 1f;
+    private const float DestroyAnimationDuration = 1.05f;
+    private const float IdleAnimationRefreshInterval = 5f;
+    private const float UpdateInterval = 1f / 30f;
+    private const float FpcCapsuleHeight = 1.8f; // FPC ロールの素のカプセル高さ目安
+
     // ===== 調整パラメータ（マップから Option としても上書き可能）=====
 
     /// <summary>触手の最大体力。これを削り切ると破壊される。</summary>
-    public float MaxHealth { get; set; } = 150f;
+    public float MaxHealth { get; set; } = 1000f;
 
-    /// <summary>触手の見た目・当たり判定の高さ（m）。</summary>
-    public float ColumnHeight { get; set; } = 2.6f;
+    /// <summary>NPC 側の当たり判定の高さ（m）。</summary>
+    public float ColumnHeight { get; set; } = 2f;
 
-    /// <summary>根本の太さ（半径 m）。</summary>
-    public float BaseThickness { get; set; } = 0.32f;
-
-    /// <summary>先端の太さ（半径 m）。</summary>
-    public float TipThickness { get; set; } = 0.08f;
-
-    /// <summary>球体の節数。多いほど滑らかで太く見える。</summary>
-    public int SphereCount { get; set; } = 9;
+    /// <summary>NPC 側の当たり判定の太さ（半径 m）。</summary>
+    public float BaseThickness { get; set; } = 0.12f;
 
     /// <summary>攻撃判定の半径（m）。</summary>
-    public float AttackRange { get; set; } = 3.5f;
+    public float AttackRange { get; set; } = 1.85f;
 
     /// <summary>1 回の攻撃ダメージ。</summary>
     public float AttackDamage { get; set; } = 35f;
@@ -47,38 +50,55 @@ public class Tentacle : ObjectPrefab
     /// <summary>攻撃の間隔（秒）。</summary>
     public float AttackInterval { get; set; } = 2.5f;
 
-    /// <summary>対象を捕捉している間の最大しなり距離（m）。</summary>
-    public float TargetLeanDistance { get; set; } = 1.15f;
-
-    /// <summary>攻撃時に先端が対象方向へ伸びる距離（m）。</summary>
-    public float StrikeForwardDistance { get; set; } = 1.45f;
-
-    /// <summary>攻撃後に一瞬引き戻る距離（m）。</summary>
-    public float StrikeRecoilDistance { get; set; } = 0.45f;
-
-    /// <summary>攻撃時の横振れ距離（m）。</summary>
-    public float StrikeSideWhipDistance { get; set; } = 0.35f;
-
-    /// <summary>攻撃モーションが続く時間（秒）。</summary>
-    public float StrikeDuration { get; set; } = 0.55f;
+    /// <summary>攻撃アニメーションから idle へ戻すまでの時間（秒）。</summary>
+    public float StrikeDuration { get; set; } = 0.83f;
 
     public override bool FollowMarkerTransform => false;
 
-    private static readonly Color TentacleColor = new(0.22f, 0.02f, 0.05f, 1f);
-    private const float UpdateInterval = 1f / 30f;
-    private const float FpcCapsuleHeight = 1.8f; // FPC ロールの素のカプセル高さ目安
+    public override Vector3 Position
+    {
+        get => _schematicObject != null ? _schematicObject.Position : base.Position;
+        set
+        {
+            base.Position = value;
+            if (_schematicObject != null)
+                _schematicObject.Position = value;
+            if (_npc != null)
+                _npc.Position = value;
+        }
+    }
 
+    public override Quaternion Rotation
+    {
+        get => _schematicObject != null ? _schematicObject.Rotation : base.Rotation;
+        set
+        {
+            base.Rotation = value;
+            if (_schematicObject != null)
+                _schematicObject.Rotation = value;
+        }
+    }
+
+    public override Vector3 Scale
+    {
+        get => _schematicObject != null ? _schematicObject.Scale : base.Scale;
+        set
+        {
+            base.Scale = value;
+            if (_schematicObject != null)
+                _schematicObject.Scale = value;
+        }
+    }
+
+    private SchematicObject? _schematicObject;
+    private ProjectMER.Features.AnimationController? _animationController;
     private Npc? _npc;
-    private readonly List<Primitive> _spheres = [];
     private CoroutineHandle _updateHandle;
     private bool _isDestroying;
 
     private float _lastShownHealth = -1f;
     private float _nextAttackTime;
-    private float _leanAmount;       // 攻撃時に対象へしなる量（0..1）
-    private Vector3 _leanDirection;  // しなる方向（水平）
-    private float _strikeStartedAt = -100f;
-    private Vector3 _strikeDirection = Vector3.forward;
+    private float _nextIdleAnimationTime;
 
     public static void RegisterEvents()
     {
@@ -101,8 +121,21 @@ public class Tentacle : ObjectPrefab
 
     protected override void OnCreate()
     {
+        _schematicObject = ObjectSpawner.SpawnSchematic(SchematicName, base.Position, base.Rotation);
+        if (_schematicObject == null)
+        {
+            Log.Error($"[Tentacle] Failed to spawn schematic '{SchematicName}'.");
+            Destroy();
+            return;
+        }
+
+        _schematicObject.Scale = base.Scale;
+        DisableSchematicCollision(_schematicObject);
+        PlaySchematicAnimation("spawning");
+        _nextIdleAnimationTime = Time.time + SpawnAnimationDuration;
+
         // NPC の Position は「足元」基準（HIDTurret 参照）。触手の根本＝足元に合わせる。
-        _npc = Npc.Spawn("Tentacle", RoleTypeId.Scp0492, true, Position);
+        _npc = Npc.Spawn("Tentacle", RoleTypeId.Tutorial, true, Position);
         if (_npc == null)
         {
             Log.Error("[Tentacle] Failed to spawn NPC.");
@@ -112,8 +145,6 @@ public class Tentacle : ObjectPrefab
 
         TentacleNpcIds.Add(_npc.Id);
         _npc.HideNpcFromClientPlayerList("Tentacle:spawn");
-
-        BuildSpheres();
 
         // ロール適用が遅延するため、完了を待ってから NPC を設定する。
         ScheduleDelayed(Npc.SpawnSetRoleDelay + 0.1f, ConfigureNpc);
@@ -128,7 +159,7 @@ public class Tentacle : ObjectPrefab
             return;
         }
 
-        // 縦長の当たり判定。Fade で見た目だけ消す（カプセルは残るので球体を撃てば当たる）。
+        // Schematic 側の衝突は切り、縦長の不可視 NPC だけを撃破可能な当たり判定にする。
         float verticalScale = Mathf.Max(1f, ColumnHeight / FpcCapsuleHeight);
         float horizontalScale = Mathf.Clamp(BaseThickness * 1.6f, 0.35f, 0.8f);
         _npc.Scale = new Vector3(horizontalScale, verticalScale, horizontalScale);
@@ -149,19 +180,6 @@ public class Tentacle : ObjectPrefab
         _updateHandle = Timing.RunCoroutine(UpdateCoroutine());
     }
 
-    private void BuildSpheres()
-    {
-        DestroySpheres();
-        int count = Mathf.Max(2, SphereCount);
-        for (int i = 0; i < count; i++)
-        {
-            Primitive sphere = Primitive.Create(
-                PrimitiveType.Sphere, Vector3.zero, Vector3.zero, Vector3.one * 0.1f, true, TentacleColor);
-            sphere.Collidable = false; // 弾やプレイヤーの移動を邪魔しない
-            _spheres.Add(sphere);
-        }
-    }
-
     private IEnumerator<float> UpdateCoroutine()
     {
         while (!_isDestroying)
@@ -178,7 +196,7 @@ public class Tentacle : ObjectPrefab
 
             UpdateHealthInfo();
             UpdateAttack();
-            AnimateSpheres();
+            UpdateIdleAnimation();
 
             yield return Timing.WaitForSeconds(UpdateInterval);
         }
@@ -215,28 +233,23 @@ public class Tentacle : ObjectPrefab
 
         Player? target = FindTarget();
         if (target == null)
-        {
-            _leanAmount = Mathf.MoveTowards(_leanAmount, 0f, UpdateInterval * 2f);
             return;
-        }
 
-        // 対象方向へしならせる。
         Vector3 toTarget = target.Position - Position;
         toTarget.y = 0f;
         if (toTarget.sqrMagnitude > 0.0001f)
-            _leanDirection = toTarget.normalized;
-        _leanAmount = Mathf.MoveTowards(_leanAmount, 1f, UpdateInterval * 3f);
+            Rotation = Quaternion.LookRotation(toTarget.normalized, Vector3.up);
 
-        if (Time.time >= _nextAttackTime)
-        {
-            _nextAttackTime = Time.time + AttackInterval;
-            if (target.IsAlive && Vector3.Distance(target.Position, Position) <= AttackRange)
-            {
-                _strikeDirection = _leanDirection.sqrMagnitude > 0.0001f ? _leanDirection : toTarget.normalized;
-                _strikeStartedAt = Time.time;
-                target.Hurt(AttackDamage, "SCP-035の触手に襲われた");
-            }
-        }
+        if (Time.time < _nextAttackTime)
+            return;
+
+        _nextAttackTime = Time.time + AttackInterval;
+        if (!target.IsAlive || Vector3.Distance(target.Position, Position) > AttackRange)
+            return;
+
+        PlaySchematicAnimation("attacking");
+        _nextIdleAnimationTime = Time.time + Mathf.Max(0.1f, StrikeDuration);
+        target.Hurt(AttackDamage, "SCP-035の触手に襲われた");
     }
 
     private Player? FindTarget()
@@ -261,69 +274,41 @@ public class Tentacle : ObjectPrefab
         return nearest;
     }
 
-    private void AnimateSpheres()
+    private void UpdateIdleAnimation()
     {
-        int count = _spheres.Count;
-        if (count == 0)
+        if (_schematicObject == null || Time.time < _nextIdleAnimationTime)
             return;
 
-        Vector3 basePos = Position;
-        float time = Time.time;
-        // 攻撃時はしなりを横方向の変位として上部ほど強く効かせる。
-        Vector3 lean = _leanDirection * (_leanAmount * TargetLeanDistance);
-        float strikeDuration = Mathf.Max(0.1f, StrikeDuration);
-        float strikePhase = Mathf.Clamp01((time - _strikeStartedAt) / strikeDuration);
-        bool isStriking = strikePhase < 1f;
-        float strikeForwardPulse = isStriking ? Mathf.Sin(strikePhase * Mathf.PI) : 0f;
-        float strikeRecoilPhase = isStriking ? Mathf.Clamp01((strikePhase - 0.55f) / 0.45f) : 1f;
-        float strikeRecoilPulse = isStriking ? Mathf.Sin(strikeRecoilPhase * Mathf.PI) : 0f;
-        float strikeSidePulse = isStriking ? Mathf.Sin(strikePhase * Mathf.PI * 2f) * (1f - strikePhase) : 0f;
-        Vector3 strikeSideDirection = new(-_strikeDirection.z, 0f, _strikeDirection.x);
+        PlaySchematicAnimation("idle");
+        _nextIdleAnimationTime = Time.time + IdleAnimationRefreshInterval;
+    }
 
-        for (int i = 0; i < count; i++)
+    private void PlaySchematicAnimation(string stateName)
+    {
+        if (_schematicObject == null)
+            return;
+
+        try
         {
-            Primitive sphere = _spheres[i];
-            if (sphere?.Base == null)
-                continue;
+            _animationController ??= _schematicObject.AnimationController;
+            if (_animationController.Animators.Count == 0)
+                return;
 
-            float t = i / (float)(count - 1); // 0=根本, 1=先端
-            float height = t * ColumnHeight;
-
-            // 軽い「うねり」と攻撃時のしなり（先端ほど大きく）。
-            float sway = Mathf.Sin(time * 3.1f + t * 5.5f) * 0.16f * t;
-            float tipWeight = t * t;
-            Vector3 strikeForward =
-                _strikeDirection *
-                ((strikeForwardPulse * StrikeForwardDistance - strikeRecoilPulse * StrikeRecoilDistance) * tipWeight);
-            Vector3 strikeSide = strikeSideDirection * (strikeSidePulse * StrikeSideWhipDistance * t);
-            float strikeWave = isStriking
-                ? Mathf.Sin((t * 3.2f - strikePhase * 4.4f) * Mathf.PI) * (1f - strikePhase) * 0.16f * t
-                : 0f;
-            Vector3 sideOffset = lean * tipWeight + strikeForward + strikeSide + new Vector3(sway, 0f, sway * 0.5f);
-
-            sphere.Position = basePos + Vector3.up * (height + strikeWave) + sideOffset;
-            float radius = Mathf.Lerp(BaseThickness, TipThickness, t);
-            float strikeScale = 1f + strikeForwardPulse * Mathf.Lerp(0.08f, 0.38f, t);
-            sphere.Scale = Vector3.one * (radius * 2f * strikeScale);
+            _animationController.Play(stateName);
+        }
+        catch (Exception e)
+        {
+            Log.Debug($"[Tentacle] Failed to play schematic animation '{stateName}': {e.Message}");
         }
     }
 
-    private void DestroySpheres()
+    private static void DisableSchematicCollision(SchematicObject schematic)
     {
-        foreach (Primitive sphere in _spheres)
-        {
-            try
-            {
-                sphere?.RemoveShowState();
-                sphere?.Destroy();
-            }
-            catch
-            {
-                // ignore
-            }
-        }
+        foreach (PrimitiveObjectToy primitive in schematic.GetComponentsInChildren<PrimitiveObjectToy>(true))
+            primitive.NetworkPrimitiveFlags &= ~PrimitiveFlags.Collidable;
 
-        _spheres.Clear();
+        foreach (Collider collider in schematic.GetComponentsInChildren<Collider>(true))
+            collider.enabled = false;
     }
 
     protected override void OnDestroy()
@@ -335,8 +320,6 @@ public class Tentacle : ObjectPrefab
 
         if (_updateHandle.IsRunning)
             Timing.KillCoroutines(_updateHandle);
-
-        DestroySpheres();
 
         if (_npc != null)
         {
@@ -354,7 +337,54 @@ public class Tentacle : ObjectPrefab
             TentacleNpcIds.Remove(npcId);
         }
 
+        SchematicObject? schematic = _schematicObject;
+        _schematicObject = null;
+        _animationController = null;
+
+        if (schematic != null)
+        {
+            PlayDestroyingAnimation(schematic);
+            Timing.CallDelayed(DestroyAnimationDuration, () => DestroySchematic(schematic));
+        }
+
         base.OnDestroy();
+    }
+
+    private static void PlayDestroyingAnimation(SchematicObject schematic)
+    {
+        try
+        {
+            ProjectMER.Features.AnimationController animator = schematic.AnimationController;
+            if (animator.Animators.Count > 0)
+                animator.Play("destroying");
+        }
+        catch (Exception e)
+        {
+            Log.Debug($"[Tentacle] Failed to play schematic animation 'destroying': {e.Message}");
+        }
+    }
+
+    private static void DestroySchematic(SchematicObject schematic)
+    {
+        try
+        {
+            ProjectMER.Features.AnimationController animator = schematic.AnimationController;
+            if (animator.Animators.Count > 0)
+                animator.Stop();
+        }
+        catch
+        {
+            // ignore
+        }
+
+        try
+        {
+            schematic.Destroy();
+        }
+        catch
+        {
+            // ignore
+        }
     }
 
     private static void OnSpawningRagdoll(Exiled.Events.EventArgs.Player.SpawningRagdollEventArgs ev)

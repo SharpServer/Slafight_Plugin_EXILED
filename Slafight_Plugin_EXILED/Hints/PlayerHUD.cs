@@ -1173,7 +1173,8 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         var expectedTeam = RoundHandler.GetExpectedTeam();
         float elapsed = RoundHandler.ElapsedTime;
         float waitFor = RoundHandler.WaitForSpawnTime;
-        float remaining = waitFor - elapsed;
+        float rawRemaining = waitFor - elapsed;
+        float remaining = Math.Max(0f, rawRemaining);
 
         if (RoundHandler.IsAlreadySpawned)
         {
@@ -1185,10 +1186,13 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         {
             string teamColor = RoundHandler.IsSecurityTeamExpected() ? "#00b7eb" : "#228b22";
             string urgency = remaining <= 30f ? "<color=#ff4444>" : "<color=#ffcc00>";
+            string status = rawRemaining <= 0f
+                ? $"spawn requested {urgency}{remaining:F1}s</color>"
+                : $"spawns in {urgency}{remaining:F1}s</color>";
+
             sb.AppendLine(
                 $"{urgency}FirstTeam:</color> " +
-                $"<color={teamColor}>{expectedTeam}</color> spawns in " +
-                $"{urgency}{remaining:F1}s</color> " +
+                $"<color={teamColor}>{expectedTeam}</color> {status} " +
                 $"<color=#666666>({elapsed:F1} / {waitFor:F0})</color>"
             );
         }
