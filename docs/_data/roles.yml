@@ -23,12 +23,31 @@
     - scp
     - scp035
     - tentacle
+- id: scp-049-custom
+  name: SCP-049
+  side: SCP
+  team: SCP
+  base: SCP-049
+  hp: 2200
+  hume: 1200
+  summary: 悪疫を根絶する使命を抱いたペスト医師。近接チャットと専用感知能力を持つSCP-049。
+  abilities:
+    - アビリティ「名医の感」で患者を探知できる。
+    - 近接チャットで人間と会話できる。
+  tags:
+    - scp
+    - scp049
+    - proximity-chat
 - id: scp-079-custom
   name: SCP-079
   side: SCP
   team: SCP
   base: SCP-079
   summary: 施設制御システムを操るSCP。ドアや施設機能を利用し、収容違反を有利に進める。
+  abilities:
+    - 初期レベル5、最大エネルギー1000で開始する。
+    - 全発電機起動後、条件を満たすとALPHA WARHEAD OVERRIDEを使用できる。
+    - Remote Door ControlがONになると20秒間シグナルを失う。
   tags:
     - scp
     - facility-control
@@ -166,6 +185,22 @@
   tags:
     - classd
     - candy
+- id: bloodfiend
+  name: Bloodfiend
+  side: Facility Personnels
+  team: D-Class
+  base: Dクラス
+  hp: 100
+  summary: 代謝と自然治癒能力を強化されたDクラス。出血中の相手を攻撃すると回復し、自身が追い詰められると攻撃力が上がる。
+  items:
+    - Bloodyknife
+  abilities:
+    - HP35以下になるとDamageBoostを20秒得る。
+    - 出血中の相手を攻撃すると5HP回復し、撃破時は30HP回復する。
+  tags:
+    - classd
+    - bloodfiend
+    - bleeding
 - id: facility-manager
   name: Facility Manager
   side: Facility Personnels
@@ -253,6 +288,22 @@
   tags:
     - scientist
     - candy
+- id: anti-meme-division-scientist
+  name: 反ミーム部門職員
+  side: Facility Personnels
+  team: Scientists
+  base: 科学者
+  hp: 100
+  condition: CASE COLOURLESS GREENで出現
+  summary: 壊滅状態の反ミーム部門職員。反ミーム爆弾を起動してアウトブレイクのリセットを目指す。
+  items:
+    - COM-15
+    - 主席研究員キーカード
+    - Class-Z 記憶補強剤
+  tags:
+    - scientist
+    - antimeme
+    - case-colourless-green
 - id: chamber-guard
   name: Chamber Guard
   side: The Foundation
@@ -396,10 +447,30 @@
     - foundation
     - mtf
     - medic
+- id: ntf-gunslinger
+  name: 'MTF Epsilon-11: Nine-Tailed Fox Gunslinger'
+  side: The Foundation
+  team: MTF Epsilon-11
+  base: MTF軍曹
+  hp: 100
+  summary: 複合小銃XE-11K MRを運用するライフルマン。通常ライフルとグレネードランチャーを切り替えて戦う。
+  items:
+    - XE-11K MR
+    - MTF工作員カード
+    - 歩兵用アーマー
+    - 医療キット
+    - 無線機
+    - 懐中電灯
+  tags:
+    - foundation
+    - mtf
+    - ntf
+    - hybrid-weapon
 - id: hd-marshal
   name: 'MTF Nu-7: Hammer Down Marshal'
   side: The Foundation
   team: MTF Nu-7
+  hp: 180
   summary: Nu-7の重鎮。Weltkrieg級軽機関銃を所持し、部隊を指揮する。
   items:
     - Weltkrieg級軽機関銃
@@ -416,6 +487,8 @@
   name: 'MTF Nu-7: Hammer Down Commander'
   side: The Foundation
   team: MTF Nu-7
+  base: MTF軍曹
+  hp: 125
   summary: Nu-7歩兵を指揮し、制圧を進める指揮官。
   items:
     - MTF-N7-CR
@@ -434,6 +507,7 @@
   side: The Foundation
   team: MTF Nu-7
   base: MTF二等兵
+  hp: 110
   summary: Nu-7の最下級兵。グレネードなど装備が豊富。
   items:
     - CROSSVEC
@@ -795,6 +869,27 @@
   tags:
     - chaos
     - spy
+- id: dante-slayer
+  name: ダンテ討伐部隊
+  side: GoI - Chaos Insurgency
+  team: Dante Battle
+  base: カオスライフル兵
+  hp: 6500
+  condition: DANTEイベントで出現
+  summary: DANTEを討つために編成される専用部隊。対物ライフルと制圧火器で巨大ボスの仮想HPを削る。
+  items:
+    - MTF-E11-AR
+    - LOGICER SUPER
+    - 要人用アーマー
+    - Advanced 医療キット
+    - 医療キット
+    - SCP-500 x2
+    - アドレナリン
+    - 高性能手榴弾 x2
+  tags:
+    - chaos
+    - dante
+    - boss-raid
 - id: fifthist-rescue
   name: Fifthists Church Rescue（第五教会 救出師）
   side: GoI - Fifthists Church
@@ -993,6 +1088,20 @@
     - goc
     - hound-dog
     - power-suit
+- id: initiative-wolf
+  name: Horizon Initiative Wolf
+  side: GoI - Horizon Initiative
+  team: Horizon Initiative
+  base: SCP-049
+  hp: 110
+  summary: Horizon Initiative所属の特殊ロール。近接チャット、常時移動速度上昇、SCP-049型の感知を使う。
+  abilities:
+    - MovementBoost 23を維持する。
+    - SCP-049の感知能力でInitiative用ターゲットを探せる。
+  tags:
+    - initiative
+    - goi
+    - proximity-chat
 - id: snow-warrier
   name: Snow Warrior
   side: GoI - Snow Warrior's Division
@@ -1076,6 +1185,20 @@
   tags:
     - special
     - april
+- id: dante-boss
+  name: DANTE ─ 業火の指揮者
+  side: Others / Specials
+  team: Dante
+  base: MTF隊長
+  condition: DANTEイベントでNPCとして出現
+  summary: 地獄の業火を指揮する巨大ボス。実HPではなくイベント側の仮想HPで管理され、フェーズごとに攻撃が激化する。
+  abilities:
+    - 酸沼、跳躍、爆発、閃光、触手雨などで討伐部隊を妨害する。
+    - 第二幕と第三幕では中央触手が残っている間、コアが無敵になる。
+  tags:
+    - special
+    - dante
+    - boss
 - id: capybara-role
   name: Xx_CAPYBARA_xX
   side: Others / Specials

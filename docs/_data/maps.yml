@@ -40,6 +40,16 @@
   summary: 施設管理者が日常業務を行う場所。管理者の秘蔵ファイルが眠っているという噂がある。
   tags: [entrance, office]
 
+- id: ez-remote-door-control
+  name: Remote Door Control
+  zone: 上層
+  kind: SCP-079妨害ギミック
+  summary: 対応レバーをONにすると、SCP-079へ20秒間のシグナル喪失を与える対電脳SCP用の遠隔ドア制御。
+  notes:
+    - レバーは使用後20秒間操作不能になり、自動でOFFへ戻る。
+    - SCP-079側にはRemote Door ControlがONになったことがHintで通知される。
+  tags: [entrance, scp079, lever, remote-door-control]
+
 - id: hcz-incinerator-control
   name: 焼却炉管制室
   zone: 中層

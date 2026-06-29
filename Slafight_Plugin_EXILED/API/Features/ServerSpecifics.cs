@@ -12,10 +12,11 @@ public abstract class ServerSpecifics
     public const int AbilityUseKeybindSettingId = 3;
     public const int AbilitySwitchKeybindSettingId = 4;
     public const int ItemModeSwitchKeybindSettingId = 5;
-    public const int SecretPasscodeSettingId = 6;
-    public const int DocumentHintDurationSettingId = 7;
-    public const int AccessibilityModeSettingId = 8;
-    public const int DebugModeSettingId = 9;
+    public const int SuicideButtonKeybindSettingId = 6;
+    public const int SecretPasscodeSettingId = 7;
+    public const int DocumentHintDurationSettingId = 8;
+    public const int AccessibilityModeSettingId = 9;
+    public const int DebugModeSettingId = 10;
     public const float DefaultDocumentHintDuration = 10f;
     public const float MinDocumentHintDuration = 1f;
     public const float MaxDocumentHintDuration = 60f;
@@ -30,6 +31,7 @@ public abstract class ServerSpecifics
             new SSKeybindSetting(AbilityUseKeybindSettingId,"アビリティ使用",KeyCode.LeftAlt,true,false,hint:"HUDの Ability に表示されている選択中アビリティを発動します。左Altを推奨します。"),
             new SSKeybindSetting(AbilitySwitchKeybindSettingId,"アビリティ切り替え",KeyCode.Mouse2,true,false,hint:"HUDに Ability 1/2 のように表示されている場合、次のアビリティへ切り替えます。中マウスボタンを推奨します。"),
             new SSKeybindSetting(ItemModeSwitchKeybindSettingId,"アイテムモード切り替え",KeyCode.G,true,false,hint:"Hybridアイテムのモードを切り替えます。Gを推奨します"),
+            new SSKeybindSetting(SuicideButtonKeybindSettingId,"自害ボタン",KeyCode.K,true,false,hint:"銃器や近接武器を所持しているときに自分に向けて攻撃します。Kを推奨します"),
             new SSPlaintextSetting(SecretPasscodeSettingId, "シークレットパスコード","00000", 5, hint:"特別な場面で必要となるかもしれません・・・"),
             new SSSliderSetting(
                 DocumentHintDurationSettingId,

@@ -53,6 +53,22 @@
   summary: SCP-5000世界をモチーフにしたサイト攻防戦。
   tags: [scp5000, termination, warhead]
 
+- id: dante-battle
+  name: "-=[ DANTE ─ 業火の指揮者 ]=-"
+  status: 手動実行
+  requirement: Manual Trigger
+  min_players: 1
+  summary: 地上に出現する巨大ボスDANTEを、専用の討伐部隊で削り切る多段階ボスレイド。
+  win_condition: DANTEの仮想HPを0にし、中央触手による無敵状態を解除しながら撃破する。
+  flow:
+    - 生存プレイヤーがダンテ討伐部隊へ変換され、DANTE NPCがアリーナ中央に出現する。
+    - HPに応じて第一幕、第二幕、第三幕へ移行し、酸沼、跳躍、爆発、触手攻撃が増える。
+    - 第二幕と第三幕では中央触手を破壊するまでコアが無敵になる。
+  notes:
+    - 通常抽選には乗らない管理者トリガー専用イベント。
+    - BGMを使う場合は `dante.ogg` が必要。
+  tags: [dante, boss, manual, raid]
+
 
 # 季節限定
 

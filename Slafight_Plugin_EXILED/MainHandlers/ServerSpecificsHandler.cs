@@ -1,5 +1,7 @@
 using System;
+using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.API.Features.Items;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
@@ -113,6 +115,18 @@ public static class ServerSpecificsHandler
             }
 
             return;
+        }
+
+        if (settingId == ServerSpecifics.SuicideButtonKeybindSettingId)
+        {
+            var item = player.CurrentItem;
+            if (item is null) return;
+            if (item is Firearm firearm)
+            {
+                player.PlayGunSound(firearm.FirearmType);
+                player.ExplodeEffect(ProjectileType.FragGrenade);
+                player.Kill("自害した");
+            }
         }
 
         if (!AbilityManager.Loadouts.TryGetValue(player.Id, out var loadout) || loadout == null)

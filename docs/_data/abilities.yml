@@ -55,9 +55,12 @@
 - id: scp035-tentacle
   name: 触手
   category: SCP系
-  summary: 向いている先にSCP-035の触手を設置する。近づいた人間はダメージを受ける。
+  summary: 向いている先にSCP-035の触手を設置する。近づいた人間を自動で攻撃し、銃撃で破壊できる。
   users:
     - SCP-035
+  notes:
+    - 触手はHPを持ち、CustomInfoに残りHPが表示される。
+    - 射程内の非SCPを約2.5秒ごとに攻撃し、35ダメージを与える。
   tags: [scp035, tentacle]
 
 - id: old-man-road

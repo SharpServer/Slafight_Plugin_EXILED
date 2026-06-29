@@ -51,6 +51,16 @@
   summary: 最高位の武器アクセスを持つ戦術カード。
   tags: [keycard, armory]
 
+- id: access-tuner
+  name: Access Tuner
+  category: キーカード / アクセスデバイス
+  base: カオスアクセスデバイス
+  summary: ミニゲームでポイントを貯め、扉の要求レベルに応じてポイントを消費してアクセスを通すハッキング用デバイス。
+  effect: Lv1 / Lv2 / Lv3があり、Lvが高いほど高権限扉に対応する。Lv3は特殊扉にも対応できる。
+  notes:
+    - 保持中はポイント、使用回数、直近のハック結果が表示される。
+  tags: [keycard, hack, access-tuner]
+
 - id: scp-1425
   name: SCP-1425
   category: 医療 / ユーティリティ
@@ -66,6 +76,14 @@
   summary: 重篤な負傷も治療可能な大容量医療キット。
   effect: HPを全回復し、AHPを15付与する。
   tags: [medical]
+
+- id: medicine
+  name: 注射器型メディキット
+  category: 医療 / ユーティリティ
+  base: アドレナリン
+  summary: セラムをベースにした即時医療薬。
+  effect: 使用すると75HP回復し、AHPを60付与する。
+  tags: [medical, ahp]
 
 - id: serum-d
   name: SERUM-D
@@ -92,6 +110,17 @@
   notes:
     - S-Nav 300 / 310 / Ultimateなどの派生がある。
   tags: [snav, navigation]
+
+- id: scpcb-batteries
+  name: SCP:CB Batteries
+  category: 医療 / ユーティリティ
+  base: 医療キット
+  summary: NVG、S-Nav、Radioなどを充電できるSCP:CB風バッテリー群。
+  effect: 9V Batteryはドロップで対象を切り替え、使用すると対象を満充電にする。18V Batteryは電圧不一致で充電不可、Strange Batteryは危険。
+  notes:
+    - FlashlightをSCP-914のVery Fineに通すと9V Batteryが出ることがある。
+    - 9VをSCP-914で強化すると18VやStrange Batteryへ変化する。
+  tags: [battery, snav, nvg, scp914]
 
 - id: class-x-memory
   name: Class-X 記憶補強剤
@@ -137,6 +166,14 @@
   version: v1.7.5.6
   summary: 鳴らすと視線を感じるようになる異常なカウベル。使用後、別の重収容区画に再出現する。
   tags: [scp, anomaly]
+
+- id: bloodyknife
+  name: Bloodyknife
+  category: アノマリー / 特殊
+  base: SCP-1509
+  summary: Bloodfiendが持つ血塗られたナイフ。SCP-1509として扱われるが、復活効果は無効。
+  effect: 攻撃ダメージは20。命中した相手に15秒の出血を付与する。
+  tags: [weapon, bloodfiend, bleeding]
 
 - id: throwable-scp244
   name: SCP-244 (投擲)
@@ -271,6 +308,14 @@
   effect: コンクリート製の物などに当てると威力が倍増する。
   tags: [weapon, mtf]
 
+- id: xe11k-mr
+  name: XE-11K MR
+  category: 武器
+  base: E-11-SR / FRMG-0
+  summary: E-11をベースに通常ライフルと弾倉式グレネードランチャーを組み合わせた複合小銃。
+  effect: モード切替で通常ライフルとGL Modeを切り替える。GL Modeは命中時に小爆発を発生させ、発射後に短いクールダウンが入る。
+  tags: [weapon, mtf, hybrid]
+
 - id: sl-8g
   name: SL-8G
   category: 武器
@@ -375,6 +420,14 @@
   summary: ある博士の特注品とされる強化リボルバー。
   tags: [weapon, revolver]
 
+- id: recoil-ramp-revolver
+  name: Recoil Ramp Revolver
+  category: 管理者 / デバッグ
+  base: リボルバー
+  summary: 発射するたびにリコイル値を増減させるテスト用リボルバー。
+  effect: モード切替でAll、AnimationTime、ZAxis、FovKick、UpKick、SideKickの増減方向を選べる。
+  tags: [weapon, revolver, debug]
+
 - id: scp-7381
   name: SCP-7381
   category: 武器
@@ -425,6 +478,14 @@
   permission: 収容3 / 武器3 / 管理3
   summary: 施設管理長用の管理カード。ほぼ全てのエリアにアクセスできる。
   tags: [keycard, management]
+
+- id: head-researcher-keycard
+  name: 主席研究員キーカード
+  category: キーカード / アクセスデバイス
+  base: カスタムキーカード
+  permission: 収容3 / 武器1 / チェックポイント / インターコム
+  summary: サイト-02の高位研究員に配布されるキーカード。反ミーム部門職員などが所持する。
+  tags: [keycard, scientist, antimeme]
 
 - id: site-navigator-keycard
   name: 施設ナビゲーターキーカード

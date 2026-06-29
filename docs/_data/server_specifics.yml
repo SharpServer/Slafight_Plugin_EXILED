@@ -35,6 +35,14 @@
   summary: 選択中のアビリティを使用する。
   tags: [ability, control]
 
+- id: item-mode-switch
+  name: アイテムモード切り替え
+  input_type: Key
+  recommended: G
+  usage: キーを押す
+  summary: XE-11K MR、Schwarzschild Railbreaker、Recoil Ramp RevolverなどのHybridアイテムのモードを切り替える。
+  tags: [item, hybrid, control]
+
 - id: secret-code
   name: シークレットコード
   input_type: Text
