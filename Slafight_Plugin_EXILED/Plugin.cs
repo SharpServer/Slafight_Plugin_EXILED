@@ -54,6 +54,7 @@ public class Plugin : Plugin<Config>
             
         WearsHandler.Register();
         HIDTurretObject.RegisterEvents();
+        Tentacle.RegisterEvents();
         CRole.RegisterAllEvents();
         CItem.RegisterAllItems();
         Scp914ProcessorFix.Register();
@@ -124,6 +125,7 @@ public class Plugin : Plugin<Config>
             
         WearsHandler.Unregister();
         HIDTurretObject.UnregisterEvents();
+        Tentacle.UnregisterEvents();
         CRole.UnregisterAllEvents();
         CItem.UnregisterAllItems();
         Scp914ProcessorFix.Unregister();

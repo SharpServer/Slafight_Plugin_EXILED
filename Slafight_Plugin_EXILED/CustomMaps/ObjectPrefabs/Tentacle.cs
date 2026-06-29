@@ -18,22 +18,25 @@ namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 /// </summary>
 public class Tentacle : ObjectPrefab
 {
+    private static readonly HashSet<int> TentacleNpcIds = [];
+    private static bool _eventsRegistered;
+
     // ===== 調整パラメータ（マップから Option としても上書き可能）=====
 
     /// <summary>触手の最大体力。これを削り切ると破壊される。</summary>
     public float MaxHealth { get; set; } = 150f;
 
     /// <summary>触手の見た目・当たり判定の高さ（m）。</summary>
-    public float ColumnHeight { get; set; } = 4f;
+    public float ColumnHeight { get; set; } = 2.6f;
 
     /// <summary>根本の太さ（半径 m）。</summary>
-    public float BaseThickness { get; set; } = 0.55f;
+    public float BaseThickness { get; set; } = 0.32f;
 
     /// <summary>先端の太さ（半径 m）。</summary>
-    public float TipThickness { get; set; } = 0.13f;
+    public float TipThickness { get; set; } = 0.08f;
 
     /// <summary>球体の節数。多いほど滑らかで太く見える。</summary>
-    public int SphereCount { get; set; } = 12;
+    public int SphereCount { get; set; } = 9;
 
     /// <summary>攻撃判定の半径（m）。</summary>
     public float AttackRange { get; set; } = 3.5f;
@@ -43,6 +46,21 @@ public class Tentacle : ObjectPrefab
 
     /// <summary>攻撃の間隔（秒）。</summary>
     public float AttackInterval { get; set; } = 2.5f;
+
+    /// <summary>対象を捕捉している間の最大しなり距離（m）。</summary>
+    public float TargetLeanDistance { get; set; } = 1.15f;
+
+    /// <summary>攻撃時に先端が対象方向へ伸びる距離（m）。</summary>
+    public float StrikeForwardDistance { get; set; } = 1.45f;
+
+    /// <summary>攻撃後に一瞬引き戻る距離（m）。</summary>
+    public float StrikeRecoilDistance { get; set; } = 0.45f;
+
+    /// <summary>攻撃時の横振れ距離（m）。</summary>
+    public float StrikeSideWhipDistance { get; set; } = 0.35f;
+
+    /// <summary>攻撃モーションが続く時間（秒）。</summary>
+    public float StrikeDuration { get; set; } = 0.55f;
 
     public override bool FollowMarkerTransform => false;
 
@@ -59,6 +77,27 @@ public class Tentacle : ObjectPrefab
     private float _nextAttackTime;
     private float _leanAmount;       // 攻撃時に対象へしなる量（0..1）
     private Vector3 _leanDirection;  // しなる方向（水平）
+    private float _strikeStartedAt = -100f;
+    private Vector3 _strikeDirection = Vector3.forward;
+
+    public static void RegisterEvents()
+    {
+        if (_eventsRegistered)
+            return;
+
+        Exiled.Events.Handlers.Player.SpawningRagdoll += OnSpawningRagdoll;
+        _eventsRegistered = true;
+    }
+
+    public static void UnregisterEvents()
+    {
+        if (!_eventsRegistered)
+            return;
+
+        Exiled.Events.Handlers.Player.SpawningRagdoll -= OnSpawningRagdoll;
+        TentacleNpcIds.Clear();
+        _eventsRegistered = false;
+    }
 
     protected override void OnCreate()
     {
@@ -70,6 +109,9 @@ public class Tentacle : ObjectPrefab
             Destroy();
             return;
         }
+
+        TentacleNpcIds.Add(_npc.Id);
+        _npc.HideNpcFromClientPlayerList("Tentacle:spawn");
 
         BuildSpheres();
 
@@ -88,8 +130,10 @@ public class Tentacle : ObjectPrefab
 
         // 縦長の当たり判定。Fade で見た目だけ消す（カプセルは残るので球体を撃てば当たる）。
         float verticalScale = Mathf.Max(1f, ColumnHeight / FpcCapsuleHeight);
-        _npc.Scale = new Vector3(0.8f, verticalScale, 0.8f);
+        float horizontalScale = Mathf.Clamp(BaseThickness * 1.6f, 0.35f, 0.8f);
+        _npc.Scale = new Vector3(horizontalScale, verticalScale, horizontalScale);
 
+        _npc.HideNpcFromClientPlayerList("Tentacle:post-spawn");
         _npc.IsNoclipPermitted = true;
         _npc.IsNoclipEnabled = true;   // 重力で落ちず、配置位置に固定
         _npc.IsGodModeEnabled = false; // ダメージを受けて破壊できるようにする
@@ -152,8 +196,16 @@ public class Tentacle : ObjectPrefab
         _lastShownHealth = health;
         int cur = Mathf.CeilToInt(health);
         int max = Mathf.CeilToInt(MaxHealth);
-        string color = health > MaxHealth * 0.5f ? "#7CFC00" : health > MaxHealth * 0.25f ? "#FFD700" : "#FF3030";
-        _npc.SetCustomInfo($"<b>Tentacle</b>\n<color={color}>HP {cur}/{max}</color>");
+        SetHealthCustomInfo(_npc, $"Tentacle HP {cur} of {max}");
+    }
+
+    private static void SetHealthCustomInfo(Player npc, string info)
+    {
+        npc.CustomInfo = info;
+        npc.InfoArea |= PlayerInfoArea.CustomInfo;
+        npc.InfoArea &= ~PlayerInfoArea.Nickname;
+        npc.InfoArea &= ~PlayerInfoArea.Role;
+        npc.InfoArea &= ~PlayerInfoArea.UnitName;
     }
 
     private void UpdateAttack()
@@ -179,7 +231,11 @@ public class Tentacle : ObjectPrefab
         {
             _nextAttackTime = Time.time + AttackInterval;
             if (target.IsAlive && Vector3.Distance(target.Position, Position) <= AttackRange)
+            {
+                _strikeDirection = _leanDirection.sqrMagnitude > 0.0001f ? _leanDirection : toTarget.normalized;
+                _strikeStartedAt = Time.time;
                 target.Hurt(AttackDamage, "SCP-035の触手に襲われた");
+            }
         }
     }
 
@@ -214,7 +270,15 @@ public class Tentacle : ObjectPrefab
         Vector3 basePos = Position;
         float time = Time.time;
         // 攻撃時はしなりを横方向の変位として上部ほど強く効かせる。
-        Vector3 lean = _leanDirection * (_leanAmount * 0.9f);
+        Vector3 lean = _leanDirection * (_leanAmount * TargetLeanDistance);
+        float strikeDuration = Mathf.Max(0.1f, StrikeDuration);
+        float strikePhase = Mathf.Clamp01((time - _strikeStartedAt) / strikeDuration);
+        bool isStriking = strikePhase < 1f;
+        float strikeForwardPulse = isStriking ? Mathf.Sin(strikePhase * Mathf.PI) : 0f;
+        float strikeRecoilPhase = isStriking ? Mathf.Clamp01((strikePhase - 0.55f) / 0.45f) : 1f;
+        float strikeRecoilPulse = isStriking ? Mathf.Sin(strikeRecoilPhase * Mathf.PI) : 0f;
+        float strikeSidePulse = isStriking ? Mathf.Sin(strikePhase * Mathf.PI * 2f) * (1f - strikePhase) : 0f;
+        Vector3 strikeSideDirection = new(-_strikeDirection.z, 0f, _strikeDirection.x);
 
         for (int i = 0; i < count; i++)
         {
@@ -226,12 +290,21 @@ public class Tentacle : ObjectPrefab
             float height = t * ColumnHeight;
 
             // 軽い「うねり」と攻撃時のしなり（先端ほど大きく）。
-            float sway = Mathf.Sin(time * 2.2f + t * 4f) * 0.12f * t;
-            Vector3 sideOffset = lean * (t * t) + new Vector3(sway, 0f, sway * 0.5f);
+            float sway = Mathf.Sin(time * 3.1f + t * 5.5f) * 0.16f * t;
+            float tipWeight = t * t;
+            Vector3 strikeForward =
+                _strikeDirection *
+                ((strikeForwardPulse * StrikeForwardDistance - strikeRecoilPulse * StrikeRecoilDistance) * tipWeight);
+            Vector3 strikeSide = strikeSideDirection * (strikeSidePulse * StrikeSideWhipDistance * t);
+            float strikeWave = isStriking
+                ? Mathf.Sin((t * 3.2f - strikePhase * 4.4f) * Mathf.PI) * (1f - strikePhase) * 0.16f * t
+                : 0f;
+            Vector3 sideOffset = lean * tipWeight + strikeForward + strikeSide + new Vector3(sway, 0f, sway * 0.5f);
 
-            sphere.Position = basePos + Vector3.up * height + sideOffset;
+            sphere.Position = basePos + Vector3.up * (height + strikeWave) + sideOffset;
             float radius = Mathf.Lerp(BaseThickness, TipThickness, t);
-            sphere.Scale = Vector3.one * (radius * 2f);
+            float strikeScale = 1f + strikeForwardPulse * Mathf.Lerp(0.08f, 0.38f, t);
+            sphere.Scale = Vector3.one * (radius * 2f * strikeScale);
         }
     }
 
@@ -267,6 +340,7 @@ public class Tentacle : ObjectPrefab
 
         if (_npc != null)
         {
+            int npcId = _npc.Id;
             try
             {
                 _npc.Destroy();
@@ -277,8 +351,15 @@ public class Tentacle : ObjectPrefab
             }
 
             _npc = null;
+            TentacleNpcIds.Remove(npcId);
         }
 
         base.OnDestroy();
+    }
+
+    private static void OnSpawningRagdoll(Exiled.Events.EventArgs.Player.SpawningRagdollEventArgs ev)
+    {
+        if (ev?.Player != null && TentacleNpcIds.Contains(ev.Player.Id))
+            ev.IsAllowed = false;
     }
 }

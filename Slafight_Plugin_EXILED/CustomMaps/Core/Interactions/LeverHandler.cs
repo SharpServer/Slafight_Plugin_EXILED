@@ -59,9 +59,9 @@ public class LeverHandler : IBootstrapHandler, IDisposable
         {
             if (ev.TurnedOff) return;
             ev.Lever.CanInteract = false;
-            foreach (var player in Player.List.Where(p => p.GetCustomRole() is CRoleTypeId.Scp079).ToList())
+            foreach (var player in Player.List.Where(p => p?.GetCustomRole() is CRoleTypeId.Scp079).ToList())
             {
-                if (player.Role is Scp079Role role)
+                if (player?.Role is Scp079Role role)
                 {
                     player.ShowHint("<color=red>Remote Door ControlがONにされた！</color>\n※20秒後に復帰します", 20f);
                     role.LoseSignal(20f);
