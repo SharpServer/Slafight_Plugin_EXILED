@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
@@ -17,6 +18,7 @@ public class RoundHandler : IBootstrapHandler
         Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
         Exiled.Events.Handlers.Server.RestartingRound += OnRoundRestarting;
         Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
+        SpawnSystem.Spawned += OnSpawnSystemSpawned;
     }
 
     public static void Unregister()
@@ -24,12 +26,14 @@ public class RoundHandler : IBootstrapHandler
         Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
         Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarting;
         Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
+        SpawnSystem.Spawned -= OnSpawnSystemSpawned;
         ResetState(nameof(Unregister));
     }
 
     private static void OnRoundStarted()
     {
         ResetState(nameof(OnRoundStarted));
+        EnsureFirstTeamOverridesRegistered();
         _guardsCoroutine = Timing.RunCoroutine(GuardsCoroutine());
     }
 
@@ -46,6 +50,8 @@ public class RoundHandler : IBootstrapHandler
     public static bool IsAlreadySpawned { get; private set; }
 
     private static CoroutineHandle _guardsCoroutine;
+    private static Guid _firstTeamOverrideRegistrationId = Guid.Empty;
+    private static bool _firstTeamSpawnRequested;
 
     public static bool IsSecurityTeamExpected()
     {
@@ -91,36 +97,106 @@ public class RoundHandler : IBootstrapHandler
         ElapsedTime = 0f;
         while (true)
         {
-            if (Round.IsLobby || SpecialEventsHandler.Instance.NowEvent is SpecialEventType.FacilityTermination)
+            if (IsRoundHandlerSuppressed())
+            {
+                CancelFirstTeamOverrides("round handler suppressed");
+                yield break;
+            }
+
+            if (IsAlreadySpawned)
                 yield break;
 
             ElapsedTime += 0.1f;
-            if (ElapsedTime >= WaitForSpawnTime)
+            if (!_firstTeamSpawnRequested && ElapsedTime >= WaitForSpawnTime)
             {
-                SpawnSystem.AddNextSpawnOverrides(
-                    new[]
-                    {
-                        new SpawnSystem.NextSpawnOverride(SpawnTypeId.SecurityTeam)
-                        {
-                            SourceSpawnableFaction = SpawnableFaction.NtfMiniWave,
-                        },
-                        new SpawnSystem.NextSpawnOverride(SpawnTypeId.ChaosAgents)
-                        {
-                            SourceSpawnableFaction = SpawnableFaction.ChaosMiniWave,
-                        },
-                    },
-                    nameof(RoundHandler));
+                RefreshFirstTeamOverrides();
 
                 SpawnableFaction faction = IsSecurityTeamExpected()
                     ? SpawnableFaction.NtfMiniWave
                     : SpawnableFaction.ChaosMiniWave;
 
                 Respawn.AdvanceTimer(faction, 999);
-                IsAlreadySpawned = true;
-                yield break;
+                _firstTeamSpawnRequested = true;
+                Log.Debug($"RoundHandler: requested first-team spawn via {faction}.");
             }
             yield return Timing.WaitForSeconds(0.1f);
         }
+    }
+
+    private static void EnsureFirstTeamOverridesRegistered()
+    {
+        if (_firstTeamOverrideRegistrationId != Guid.Empty || IsAlreadySpawned || IsRoundHandlerSuppressed())
+            return;
+
+        _firstTeamOverrideRegistrationId = SpawnSystem.AddNextSpawnOverrides(
+            new[]
+            {
+                new SpawnSystem.NextSpawnOverride(SpawnTypeId.SecurityTeam)
+                {
+                    SourceSpawnableFaction = SpawnableFaction.NtfMiniWave,
+                    Priority = 1000,
+                },
+                new SpawnSystem.NextSpawnOverride(SpawnTypeId.ChaosAgents)
+                {
+                    SourceSpawnableFaction = SpawnableFaction.ChaosMiniWave,
+                    Priority = 1000,
+                },
+            },
+            nameof(RoundHandler));
+    }
+
+    private static void RefreshFirstTeamOverrides()
+    {
+        CancelFirstTeamOverrides("refresh before first-team spawn request");
+        EnsureFirstTeamOverridesRegistered();
+    }
+
+    private static void OnSpawnSystemSpawned(object sender, SpawnSystem.CustomSpawningEventArgs ev)
+    {
+        if (IsAlreadySpawned || !ev.SpawnType.HasValue || !IsFirstTeamSchedulerActive())
+            return;
+
+        CompleteFirstTeamSpawn(ev.SpawnType.Value);
+    }
+
+    private static bool IsFirstTeamSchedulerActive()
+    {
+        return _firstTeamOverrideRegistrationId != Guid.Empty || _firstTeamSpawnRequested;
+    }
+
+    private static void CompleteFirstTeamSpawn(SpawnTypeId spawnType)
+    {
+        IsAlreadySpawned = true;
+        _firstTeamSpawnRequested = false;
+        CancelFirstTeamOverrides("first team spawned");
+
+        if (_guardsCoroutine.IsRunning)
+            Timing.KillCoroutines(_guardsCoroutine);
+
+        Log.Debug($"RoundHandler: first-team scheduler completed by spawn {spawnType}.");
+    }
+
+    private static void CancelFirstTeamOverrides(string reason)
+    {
+        if (_firstTeamOverrideRegistrationId == Guid.Empty)
+            return;
+
+        SpawnSystem.RemoveNextSpawnOverride(_firstTeamOverrideRegistrationId, reason);
+        _firstTeamOverrideRegistrationId = Guid.Empty;
+    }
+
+    private static bool IsRoundHandlerSuppressed()
+    {
+        if (Round.IsLobby)
+            return true;
+
+        var specialEventsHandler = SpecialEventsHandler.Instance;
+        if (specialEventsHandler == null)
+            return false;
+
+        return specialEventsHandler.NowEvent is SpecialEventType.FacilityTermination ||
+               specialEventsHandler.EventQueue.Count > 0 &&
+               specialEventsHandler.EventQueue[0] is SpecialEventType.FacilityTermination;
     }
 
     private static bool ShouldCountForExpectedTeam(Player player)
@@ -139,6 +215,8 @@ public class RoundHandler : IBootstrapHandler
         WaitForSpawnTime = DefaultWaitForSpawnTime;
         ElapsedTime = 0f;
         IsAlreadySpawned = false;
+        _firstTeamSpawnRequested = false;
+        CancelFirstTeamOverrides(reason);
         Log.Debug($"RoundHandler: reset state ({reason}).");
     }
 }

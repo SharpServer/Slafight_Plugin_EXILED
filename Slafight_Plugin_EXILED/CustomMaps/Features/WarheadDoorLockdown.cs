@@ -12,6 +12,12 @@ public static class WarheadDoorLockdown
             if (door == null)
                 continue;
 
+            if (door.IsElevator)
+            {
+                door.Lock(lockType);
+                continue;
+            }
+
             door.IsOpen = false;
             door.Lock(lockType);
         }

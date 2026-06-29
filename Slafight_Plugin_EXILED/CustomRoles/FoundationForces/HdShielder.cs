@@ -14,7 +14,6 @@ namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces;
 public class HdShielder : CRole
 {
     private const float ShieldMaxValue = 100f;
-    private const float BulletReduction = 0.75f;
     private const float Scp049ShieldDamage = 50f;
 
     protected override string RoleName { get; set; } = "<color=#353535>ハンマーダウン シールド兵</color>";
@@ -78,15 +77,7 @@ public class HdShielder : CRole
             return;
         }
 
-        if (ev.HurtingEvent.DamageHandler.Type != DamageType.Firearm)
-        {
-            ev.ShieldDamage = 0f;
-            ev.HealthDamage = ev.OriginalAmount;
-            return;
-        }
-
-        float requestedShieldDamage = ev.OriginalAmount * BulletReduction;
-        float actualShieldDamage = Math.Min(ev.State.Value, requestedShieldDamage);
+        float actualShieldDamage = Math.Min(ev.State.Value, ev.OriginalAmount);
 
         ev.ShieldDamage = actualShieldDamage;
         ev.HealthDamage = ev.OriginalAmount - actualShieldDamage;

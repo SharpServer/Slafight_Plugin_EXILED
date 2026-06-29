@@ -97,6 +97,7 @@ public abstract class RoleTableContext
             L(CRoleTypeId.ChamberGuard, 1),
             L(CRoleTypeId.SupplyManager, 2),
 
+            L(CRoleTypeId.Scp035, 1),
             L(CRoleTypeId.Scp682, 1)
         ];
 }

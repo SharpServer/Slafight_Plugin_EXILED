@@ -395,6 +395,7 @@
         <Compile Include="CustomItems\SlafightApiItems\ThrowableScp244.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Toolbox.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ModeratorUtil.cs" />
+        <Compile Include="CustomMaps\Core\Interactions\LeverHandler.cs" />
         <Compile Include="CustomMaps\FacilityControlRoom.cs" />
         <Compile Include="CustomMaps\FacilityControlRoomFunction.cs" />
         <Compile Include="CustomMaps\FacilityControlRoomFunctions\AntiMemeProtocolFunction.cs" />

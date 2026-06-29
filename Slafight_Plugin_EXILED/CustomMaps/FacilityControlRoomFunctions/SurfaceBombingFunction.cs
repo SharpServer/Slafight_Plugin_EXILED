@@ -19,8 +19,8 @@ public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
     private const float StartupDelaySeconds = 6.5f;
     private const int BombingWaveCount = 3;
     private const float BombingWaveIntervalSeconds = 0f; // Interval for Next Wave.
-    private const float BombDurationSeconds = 3f;        // 爆撃総時間（秒）
-    private const int BombCount = 555;                   // 爆弾の総数
+    private const float BombDurationSeconds = 1.5f;        // 爆撃総時間（秒）
+    private const int BombCount = 155;                   // 爆弾の総数
     private const float BombScatterRadius = 10f;
     private const float BombFuseSeconds = 1.25f;
     private const float DownwardVelocity = 18f;
