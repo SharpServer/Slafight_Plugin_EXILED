@@ -21,6 +21,7 @@ public enum CRoleTypeId
     Scp3125,
     Scp610,
     Scp049,
+    Scp076,
     
     // ==== Fifthists ==== //
     FifthistRescure,
