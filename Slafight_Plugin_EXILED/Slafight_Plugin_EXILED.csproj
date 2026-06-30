@@ -497,15 +497,12 @@
         <Compile Include="CustomRoles\Moderators\HideAdmin.cs" />
         <Compile Include="CustomRoles\Moderators\HideWatch.cs" />
         <Compile Include="CustomRoles\Moderators\ModeratorRole.cs" />
-        <Compile Include="CustomRoles\Others\CandyWarriorApril.cs" />
-        <Compile Include="CustomRoles\Others\CandyWarriorHalloween.cs" />
         <Compile Include="CustomRoles\Others\CapybaraRole.cs" />
         <Compile Include="CustomRoles\Others\DanteBoss.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovAwakenRole.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovExtensionAndUtils.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeyMakarovRole.cs" />
         <Compile Include="CustomRoles\Others\SergeyMakarov\SergeySharedContents.cs" />
-        <Compile Include="CustomRoles\Others\SnowWarrior.cs" />
         <Compile Include="CustomRoles\Scientist\AntiMemeDivisionScientist.cs" />
         <Compile Include="CustomRoles\Scientist\CandyResearcher.cs" />
         <Compile Include="CustomRoles\Scientist\SiteNavigator.cs" />
@@ -524,6 +521,9 @@
         <Compile Include="CustomRoles\SCPs\Scp610Role.cs" />
         <Compile Include="CustomRoles\SCPs\Scp999Role.cs" />
         <Compile Include="CustomRoles\SCPs\ZombifiedRole.cs" />
+        <Compile Include="CustomRoles\Warriors\CandyWarriorApril.cs" />
+        <Compile Include="CustomRoles\Warriors\CandyWarriorHalloween.cs" />
+        <Compile Include="CustomRoles\Warriors\SnowWarrior.cs" />
         <Compile Include="Extensions\AbilityResetUtil.cs" />
         <Compile Include="Extensions\BreakableDoorExtensions.cs" />
         <Compile Include="Extensions\ColorExtensions.cs" />

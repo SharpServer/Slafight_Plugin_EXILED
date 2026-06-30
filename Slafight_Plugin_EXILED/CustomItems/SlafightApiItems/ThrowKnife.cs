@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
-using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp1509;
 using MEC;
 using ProjectMER.Features;

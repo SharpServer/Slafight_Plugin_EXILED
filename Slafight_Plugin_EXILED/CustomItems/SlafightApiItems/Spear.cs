@@ -1,10 +1,4 @@
-using System.Collections.Generic;
-using CustomPlayerEffects;
-using Exiled.API.Enums;
-using Exiled.API.Features.Items;
-using Exiled.Events.EventArgs.Item;
 using Exiled.Events.EventArgs.Player;
-using InventorySystem.Items.Jailbird;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 

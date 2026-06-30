@@ -9,15 +9,15 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 
-namespace Slafight_Plugin_EXILED.CustomRoles.Others;
+namespace Slafight_Plugin_EXILED.CustomRoles.Warriors;
 
-public class CandyWarriorHalloween : CRole
+public class CandyWarriorApril : CRole
 {
-    protected override string RoleName { get; set; } = "<color=#EE7600>CANDY WARRIOR</color>";
-    protected override string Description { get; set; } = "非常に<color=#EE7600>お菓子的</color>である。そうは思わんかね？";
-    protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.CandyWarriorHalloween;
+    protected override string RoleName { get; set; } = "<color=#FF96DE>CANDY WARRIOR</color>";
+    protected override string Description { get; set; } = "非常に<color=#FF96DE>お菓子的</color>である。そうは思わんかね？";
+    protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.CandyWarriorApril;
     protected override CTeam Team { get; set; } = CTeam.Warriors;
-    protected override string UniqueRoleKey { get; set; } = "CandyWarriorHalloween";
+    protected override string UniqueRoleKey { get; set; } = "CandyWarriorApril";
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosRifleman;
     protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
     [
@@ -42,7 +42,7 @@ public class CandyWarriorHalloween : CRole
             if (!Check(current) || !IsSafeRolePlayer(current))
                 return;
 
-            current.SetCustomInfo("<color=#EE7600>CANDY WARRIOR</color>");
+            current.SetCustomInfo("<color=#FF96DE>CANDY WARRIOR</color>");
             current.MaxHealth = maxHealth;
             current.Health = maxHealth;
 
@@ -64,16 +64,8 @@ public class CandyWarriorHalloween : CRole
                 if (Scp330Bag.TryGetBag(next.ReferenceHub, out var bag))
                 {
                     bag.Candies.Clear();
-                    var rareCandies = new List<CandyKindID>
-                    {
-                        CandyKindID.Black,
-                        CandyKindID.Brown,
-                        CandyKindID.Gray,
-                        CandyKindID.Orange,
-                        CandyKindID.White,
-                    };
                     for (int i = 0; i < 6; i++)
-                        bag.TryAddSpecific(rareCandies.RandomItem());
+                        bag.TryAddSpecific(CandyKindID.Pink);
                     bag.ServerRefreshBag();
                 }
             });
