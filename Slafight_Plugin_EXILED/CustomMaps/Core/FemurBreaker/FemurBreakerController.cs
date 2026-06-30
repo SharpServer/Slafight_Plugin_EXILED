@@ -14,9 +14,12 @@ namespace Slafight_Plugin_EXILED.CustomMaps.Core.FemurBreaker;
 
 internal sealed class FemurBreakerController
 {
+    private const float ExecutionDelaySeconds = 28f;
+
     private readonly float _joinRadiusSq;
     private readonly float _buttonToleranceSq;
     private readonly List<Player> _capturedPlayers = [];
+    private readonly HashSet<int> _intercomOverridePlayerIds = [];
     private readonly List<CoroutineHandle> _scheduledHandles = [];
     private CoroutineHandle _monitoringCoroutine;
     private SchematicObject _door;
@@ -74,6 +77,7 @@ internal sealed class FemurBreakerController
     public void ResetState()
     {
         KillScheduledCallbacks();
+        DisableAllIntercomOverrides();
         HasCapturedVictim = false;
         IsActivated = false;
         _capturedPlayers.Clear();
@@ -92,6 +96,19 @@ internal sealed class FemurBreakerController
         if (player == null)
             return;
 
+        DisableIntercomOverride(player.Id);
+        _capturedPlayers.RemoveAll(p => p == null || p.Id == player.Id || p.ReferenceHub == null);
+
+        if (_capturedPlayers.Count == 0 && !IsActivated)
+            HasCapturedVictim = false;
+    }
+
+    public void HandlePlayerDied(Player player)
+    {
+        if (player == null)
+            return;
+
+        DisableIntercomOverride(player.Id);
         _capturedPlayers.RemoveAll(p => p == null || p.Id == player.Id || p.ReferenceHub == null);
 
         if (_capturedPlayers.Count == 0 && !IsActivated)
@@ -111,20 +128,39 @@ internal sealed class FemurBreakerController
         }
 
         IsActivated = true;
-        KillCapturedPlayers();
+        ScheduleCapturedPlayerDeaths();
         ScheduleScp106Recontainment();
         SpeakerApi.Play("FemurBreaker.ogg", "FemurBreaker", Vector3.zero, true, null, false, 999999999, 0);
-        _scheduledHandles.Add(Timing.CallDelayed(28f, AnnounceResult));
+        _scheduledHandles.Add(Timing.CallDelayed(ExecutionDelaySeconds, AnnounceResult));
     }
 
-    private void KillCapturedPlayers()
+    private void ScheduleCapturedPlayerDeaths()
     {
         foreach (var player in _capturedPlayers.ToList())
         {
-            if (player?.ReferenceHub != null)
-                player.Kill("Femur Breakerの犠牲となった");
-            else
+            if (player?.ReferenceHub == null)
+            {
                 _capturedPlayers.Remove(player);
+                continue;
+            }
+
+            int playerId = player.Id;
+            EnableIntercomOverride(player);
+            _scheduledHandles.Add(Timing.CallDelayed(ExecutionDelaySeconds, () => KillCapturedPlayer(playerId)));
+        }
+    }
+
+    private void KillCapturedPlayer(int playerId)
+    {
+        try
+        {
+            var player = Player.List.FirstOrDefault(p => p?.Id == playerId);
+            if (player?.ReferenceHub != null && HasCapturedVictim && IsActivated && player.IsAlive)
+                player.Kill("Femur Breakerの犠牲となった");
+        }
+        finally
+        {
+            DisableIntercomOverride(playerId);
         }
     }
 
@@ -133,7 +169,7 @@ internal sealed class FemurBreakerController
         foreach (var scp106 in GetScp106Players())
         {
             int playerId = scp106.Id;
-            _scheduledHandles.Add(Timing.CallDelayed(28f, () =>
+            _scheduledHandles.Add(Timing.CallDelayed(ExecutionDelaySeconds, () =>
             {
                 var captured = Player.List.FirstOrDefault(p => p?.Id == playerId);
                 if (captured?.ReferenceHub != null && HasCapturedVictim && IsActivated && IsScp106(captured))
@@ -174,11 +210,36 @@ internal sealed class FemurBreakerController
                player.GetCustomRole() == CRoleTypeId.None && player.Role.Type == RoleTypeId.Scp106;
     }
 
+    private void EnableIntercomOverride(Player player)
+    {
+        if (player?.ReferenceHub == null)
+            return;
+
+        if (Intercom.TrySetOverride(player, true))
+            _intercomOverridePlayerIds.Add(player.Id);
+    }
+
+    private void DisableIntercomOverride(int playerId)
+    {
+        if (!_intercomOverridePlayerIds.Remove(playerId))
+            return;
+
+        var player = Player.List.FirstOrDefault(p => p?.Id == playerId);
+        if (player?.ReferenceHub != null)
+            Intercom.TrySetOverride(player, false);
+    }
+
+    private void DisableAllIntercomOverrides()
+    {
+        foreach (var playerId in _intercomOverridePlayerIds.ToList())
+            DisableIntercomOverride(playerId);
+    }
+
     private IEnumerator<float> MonitorJoinPoint()
     {
         while (true)
         {
-            if (!Round.InProgress)
+            if (Round.IsLobby)
             {
                 ResetState();
                 yield break;

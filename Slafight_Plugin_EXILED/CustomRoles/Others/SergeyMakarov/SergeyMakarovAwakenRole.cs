@@ -1,5 +1,6 @@
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.API.Features.DamageHandlers;
 using Exiled.API.Features.Doors;
 using Exiled.Events.EventArgs.Player;
 using MEC;
@@ -31,7 +32,8 @@ public class SergeyMakarovAwakenRole : CRole
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
         player.DisableAllEffects();
-        var pos = Door.Get(DoorType.Scp106Primary).Position + Vector3.up * 0.15f;
+        player.Scale = Vector3.one;
+        var pos = Door.Get(DoorType.Scp106Primary).Position + Vector3.up * 0.25f;
         TrySetPlayerPosition(player, pos, nameof(SergeyMakarovAwakenRole));
 
         player.AddAbility(new CreateSinkholeAbility(player));
@@ -46,6 +48,14 @@ public class SergeyMakarovAwakenRole : CRole
                 return;
 
             RPNameSetter.SetForcedCustomName(current, $"セルゲイ・マカロフ ({current.Nickname})");
+            var bossbar = new BossBar()
+            {
+                Title = "呪詛 セルゲイ・マカロフ",
+                TitleColor = "#c50000",
+                Subtitle = "SITE-02に巣食う怨霊",
+                BarColor = Color.red.ToHex(),
+                MaxValue = SpawnMaxHealth ?? current.MaxHealth,
+            }.TrackPlayer(current, show: true);
         });
     }
 

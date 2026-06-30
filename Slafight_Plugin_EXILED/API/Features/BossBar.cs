@@ -20,6 +20,8 @@ namespace Slafight_Plugin_EXILED.API.Features;
 /// bar.Value = currentHp;
 /// bar.Subtitle = "第二幕";
 /// bar.StateText = invulnerable ? "★ 無敵 ★" : null; // 設定するとバー行の代わりに表示
+/// // プレイヤーのHPをそのまま表示したい場合
+/// new BossBar { Title = "SERGEY" }.TrackPlayer(player, show: true);
 /// // 終了時
 /// bar.Hide();
 /// </code>
@@ -49,6 +51,20 @@ public sealed class BossBar
 
     /// <summary>現在値。</summary>
     public float Value { get; set; } = 1f;
+
+    /// <summary>
+    /// 自動追跡対象。<see cref="AutoTrackPlayer"/> が true のとき、描画前に Health/MaxHealth を同期する。
+    /// </summary>
+    public Player? TrackedPlayer { get; set; }
+
+    /// <summary><see cref="TrackedPlayer"/> の Health/MaxHealth を自動でバーへ反映するか。</summary>
+    public bool AutoTrackPlayer { get; set; }
+
+    /// <summary>追跡対象が切断・消滅・死亡で無効になったとき、自動でバーを非表示にするか。</summary>
+    public bool HideWhenTrackedPlayerUnavailable { get; set; } = true;
+
+    /// <summary>追跡対象の死亡を無効扱いにするか。false なら死亡後も最後に読める値で表示を続ける。</summary>
+    public bool TreatTrackedPlayerDeathAsUnavailable { get; set; } = true;
 
     /// <summary>バーの色（rich text の color 値）。</summary>
     public string BarColor { get; set; } = "#ff3333";
@@ -81,6 +97,28 @@ public sealed class BossBar
     /// <summary>表示中か。</summary>
     public bool IsShown => _isShown;
 
+    /// <summary>対象プレイヤーの Health/MaxHealth を自動追跡する。</summary>
+    public BossBar TrackPlayer(Player player, bool show = false, bool hideWhenUnavailable = true)
+    {
+        TrackedPlayer = player;
+        AutoTrackPlayer = true;
+        HideWhenTrackedPlayerUnavailable = hideWhenUnavailable;
+        TryUpdateTrackedPlayer();
+
+        if (show)
+            Show();
+
+        return this;
+    }
+
+    /// <summary>プレイヤー自動追跡を解除する。現在の Value/MaxValue は維持される。</summary>
+    public BossBar StopTrackingPlayer()
+    {
+        AutoTrackPlayer = false;
+        TrackedPlayer = null;
+        return this;
+    }
+
     /// <summary>表示を開始する。複数の BossBar は共有マネージャーで 1 つの Broadcast に統合される。</summary>
     public BossBar Show()
     {
@@ -106,6 +144,9 @@ public sealed class BossBar
     /// ときだけ対象プレイヤーのブロードキャストを即時クリアする。
     /// </summary>
     public void Hide(bool clearBroadcasts = false)
+        => HideInternal(clearBroadcasts, refreshRemainingBars: true);
+
+    private void HideInternal(bool clearBroadcasts, bool refreshRemainingBars)
     {
         bool hasRemainingBars;
         lock (SyncRoot)
@@ -132,7 +173,7 @@ public sealed class BossBar
             }
         }
 
-        if (hasRemainingBars)
+        if (refreshRemainingBars && hasRemainingBars)
             RefreshAll();
     }
 
@@ -163,6 +204,8 @@ public sealed class BossBar
     /// <summary>現在の状態からバー文字列を生成する（文字列だけ欲しい場合にも使える）。</summary>
     public string Render()
     {
+        TryUpdateTrackedPlayer();
+
         string header = $"<size=24><b><color={TitleColor}>{Title}</color></b>";
         if (!string.IsNullOrEmpty(Subtitle))
             header += $"  <color=#bbbbbb>─ {Subtitle} ─</color>";
@@ -223,9 +266,13 @@ public sealed class BossBar
         if (bars.Count == 0)
             return;
 
+        List<BossBar> activeBars = bars.Where(bar => bar.TryUpdateTrackedPlayer()).ToList();
+        if (activeBars.Count == 0)
+            return;
+
         foreach (Player player in Player.List.Where(p => p is not null && p.IsNotHost()))
         {
-            List<BossBar> visibleBars = bars.Where(bar => bar.CanView(player)).ToList();
+            List<BossBar> visibleBars = activeBars.Where(bar => bar.CanView(player)).ToList();
             if (visibleBars.Count == 0)
                 continue;
 
@@ -251,6 +298,40 @@ public sealed class BossBar
 
     private static float GetRefreshInterval(IEnumerable<BossBar> bars)
         => Mathf.Max(0.1f, bars.Min(bar => bar.RefreshInterval));
+
+    private bool TryUpdateTrackedPlayer()
+    {
+        if (!AutoTrackPlayer)
+            return true;
+
+        Player? player = TrackedPlayer;
+        if (!IsTrackedPlayerAvailable(player))
+        {
+            if (HideWhenTrackedPlayerUnavailable)
+                HideInternal(clearBroadcasts: false, refreshRemainingBars: false);
+
+            return !HideWhenTrackedPlayerUnavailable;
+        }
+
+        MaxValue = Mathf.Max(1f, player!.MaxHealth);
+        Value = Mathf.Clamp(player.Health, 0f, MaxValue);
+        return true;
+    }
+
+    private bool IsTrackedPlayerAvailable(Player? player)
+    {
+        try
+        {
+            if (player is null || player.ReferenceHub is null || !player.IsConnected)
+                return false;
+
+            return !TreatTrackedPlayerDeathAsUnavailable || player.IsAlive;
+        }
+        catch
+        {
+            return false;
+        }
+    }
 
     private bool CanView(Player player)
     {

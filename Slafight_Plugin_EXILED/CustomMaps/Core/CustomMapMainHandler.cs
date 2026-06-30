@@ -65,6 +65,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
         LabApi.Events.Handlers.PlayerEvents.SearchedToy += _toyInteractions.HandleSearchedToy;
         PlayerHandler.InteractingDoor += _doorAccess.HandleInteraction;
         PlayerHandler.Left += HandlePlayerLeft;
+        PlayerHandler.Died += HandlePlayerDied;
     }
 
     public void Dispose()
@@ -80,6 +81,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
         LabApi.Events.Handlers.PlayerEvents.SearchedToy -= _toyInteractions.HandleSearchedToy;
         PlayerHandler.InteractingDoor -= _doorAccess.HandleInteraction;
         PlayerHandler.Left -= HandlePlayerLeft;
+        PlayerHandler.Died -= HandlePlayerDied;
 
         _roundStartup.Dispose();
         GC.SuppressFinalize(this);
@@ -88,5 +90,10 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
     private void HandlePlayerLeft(LeftEventArgs ev)
     {
         _femurBreaker.HandlePlayerLeft(ev.Player);
+    }
+
+    private void HandlePlayerDied(DiedEventArgs ev)
+    {
+        _femurBreaker.HandlePlayerDied(ev.Player);
     }
 }
