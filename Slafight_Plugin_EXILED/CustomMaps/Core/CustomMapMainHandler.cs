@@ -63,6 +63,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
         ServerHandler.RestartingRound += _roundStartup.StopRound;
         MapHandler.SpawningTeamVehicle += _surfaceGateBarrier.HandleTeamVehicleSpawn;
         LabApi.Events.Handlers.PlayerEvents.SearchedToy += _toyInteractions.HandleSearchedToy;
+        LabApi.Events.Handlers.ServerEvents.DoorDamaging += _doorAccess.HandleDoorDamaging;
         PlayerHandler.InteractingDoor += _doorAccess.HandleInteraction;
         PlayerHandler.Left += HandlePlayerLeft;
         PlayerHandler.Died += HandlePlayerDied;
@@ -79,6 +80,7 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
         ServerHandler.RestartingRound -= _roundStartup.StopRound;
         MapHandler.SpawningTeamVehicle -= _surfaceGateBarrier.HandleTeamVehicleSpawn;
         LabApi.Events.Handlers.PlayerEvents.SearchedToy -= _toyInteractions.HandleSearchedToy;
+        LabApi.Events.Handlers.ServerEvents.DoorDamaging -= _doorAccess.HandleDoorDamaging;
         PlayerHandler.InteractingDoor -= _doorAccess.HandleInteraction;
         PlayerHandler.Left -= HandlePlayerLeft;
         PlayerHandler.Died -= HandlePlayerDied;

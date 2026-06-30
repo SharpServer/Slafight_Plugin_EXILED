@@ -160,6 +160,7 @@
         <Reference Include="System.Xml" />
     </ItemGroup>
     <ItemGroup>
+        <Compile Include="Abilities\AbsolutePowerAbility.cs" />
         <Compile Include="Abilities\AllowEscapeAbility.cs" />
         <Compile Include="Abilities\AlphaWarheadOverride.cs" />
         <Compile Include="Abilities\CreateSinkholeAbility.cs" />
@@ -226,6 +227,7 @@
         <Compile Include="API\Features\SpeakerApi.cs" />
         <Compile Include="API\Features\VoiceRecordingApi.cs" />
         <Compile Include="API\Features\CRole.cs" />
+        <Compile Include="API\Features\CRoleRuntime.cs" />
         <Compile Include="API\Features\CRoom.cs" />
         <Compile Include="API\Features\Common\DefinitionSourceLoader.cs" />
         <Compile Include="API\Features\GlobalVentManager.cs" />
@@ -512,6 +514,7 @@
         <Compile Include="CustomRoles\SCPs\Scp999Role.cs" />
         <Compile Include="CustomRoles\SCPs\ZombifiedRole.cs" />
         <Compile Include="Extensions\AbilityResetUtil.cs" />
+        <Compile Include="Extensions\BreakableDoorExtensions.cs" />
         <Compile Include="Extensions\ColorExtensions.cs" />
         <Compile Include="Extensions\CustomBooleans.cs" />
         <Compile Include="Extensions\CustomTeamUtils.cs" />
@@ -531,6 +534,7 @@
         <Compile Include="Extensions\SchematicHelpers.cs" />
         <Compile Include="Extensions\StaticUtils.cs" />
         <Compile Include="Extensions\StringExtensions.cs" />
+        <Compile Include="Extensions\TimingUtils.cs" />
         <Compile Include="MainHandlers\AutoHandlerBootstrapRegister.cs" />
         <Compile Include="MainHandlers\BadgeHandler.cs" />
         <Compile Include="MainHandlers\DebugModeHandler.cs" />

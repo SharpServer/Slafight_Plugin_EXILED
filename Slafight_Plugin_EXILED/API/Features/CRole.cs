@@ -81,6 +81,7 @@ public abstract class CRole
     private static readonly Dictionary<Type, CRole> TypeToRole = new();
     private static readonly Dictionary<int, TeamNpcInfo> TeamNpcs = new();
     private static readonly Dictionary<int, CoroutineHandle> RoleEffectCoroutines = new();
+    private static readonly Dictionary<int, CRoleRuntime> RoleRuntimes = new();
 
     private static readonly IReadOnlyList<object> EmptyItems = [];
     private static readonly IReadOnlyDictionary<AmmoType, ushort> EmptyAmmo = new Dictionary<AmmoType, ushort>();
@@ -211,6 +212,7 @@ public abstract class CRole
         TypeToRole.Clear();
         CleanupAllTeamNpcs();
         CleanupAllRoleEffectCoroutines();
+        CleanupAllRoleRuntimes();
 
         if (_eventsSubscribed)
         {
@@ -289,7 +291,6 @@ public abstract class CRole
             return;
         }
 
-        // ★ 死亡時に必ずロール効果コルーチンを停止
         StopRoleEffectCoroutine(ev.Player);
 
         string uniqueRole = ev.Player.UniqueRole;
@@ -297,11 +298,15 @@ public abstract class CRole
         if (string.IsNullOrEmpty(uniqueRole))
         {
             Log.Debug($"OnAnyPlayerDying: UniqueRole is null/empty for {ev.Player.Nickname}, skipping");
+            CleanupRoleRuntime(ev.Player);
             return;
         }
 
         if (!UniqueRoleToRole.TryGetValue(uniqueRole, out var role))
+        {
+            CleanupRoleRuntime(ev.Player);
             return;
+        }
 
         try
         {
@@ -310,6 +315,10 @@ public abstract class CRole
         catch (Exception ex)
         {
             Log.Error($"CRole.OnDying error in {role.GetType().Name}: {ex}");
+        }
+        finally
+        {
+            CleanupRoleRuntime(ev.Player);
         }
     }
 
@@ -321,6 +330,7 @@ public abstract class CRole
         if (!ev.IsAllowed) return;
 
         StopRoleEffectCoroutine(ev.Player);
+        CleanupRoleRuntime(ev.Player);
 
         if (!TeamNpcs.TryGetValue(ev.Player.Id, out var oldInfo)) return;
 
@@ -346,6 +356,7 @@ public abstract class CRole
 
         Dispatch(ev.Player, role => role.OnRoleLeft(ev), nameof(OnRoleLeft));
         StopRoleEffectCoroutine(ev.Player);
+        CleanupRoleRuntime(ev.Player);
         CleanupTeamNpc(ev.Player);
     }
 
@@ -498,6 +509,7 @@ public abstract class CRole
 
             UnregisterEvents();
             CleanupTeamNpcs(UniqueRoleKey);
+            CleanupRoleRuntimes(UniqueRoleKey);
             Log.Debug($"CRole unregistered: {GetType().Name}");
         }
         else
@@ -598,6 +610,97 @@ public abstract class CRole
     }
 
     public bool Is(Player? player) => Check(player);
+
+    protected CRoleRuntime Runtime(Player? player)
+    {
+        if (player == null)
+            throw new ArgumentNullException(nameof(player));
+
+        if (RoleRuntimes.TryGetValue(player.Id, out var existing))
+        {
+            if (existing.Matches(UniqueRoleKey))
+                return existing;
+
+            existing.Dispose();
+        }
+
+        var runtime = new CRoleRuntime(
+            player.Id,
+            UniqueRoleKey,
+            DisplayName,
+            p => IsSafeRolePlayer(p) && p.IsAlive && Check(p));
+
+        RoleRuntimes[player.Id] = runtime;
+        return runtime;
+    }
+
+    protected bool TryGetRuntime(Player? player, out CRoleRuntime? runtime)
+    {
+        runtime = null;
+        return player != null &&
+               RoleRuntimes.TryGetValue(player.Id, out runtime) &&
+               runtime.Matches(UniqueRoleKey);
+    }
+
+    protected void ClearRuntime(Player? player)
+        => CleanupRoleRuntime(player);
+
+    protected CoroutineHandle RunLoop(
+        Player? player,
+        string key,
+        float interval,
+        Action<Player, CRoleRuntime> tick,
+        bool runImmediately = true,
+        bool restart = true,
+        Action<Player?>? cleanup = null)
+    {
+        return player == null
+            ? default
+            : Runtime(player).RunLoop(key, interval, tick, runImmediately, restart, cleanup);
+    }
+
+    protected CoroutineHandle Delay(
+        Player? player,
+        string key,
+        float delay,
+        Action<Player, CRoleRuntime> action,
+        bool restart = true,
+        Action<Player?>? cleanup = null)
+    {
+        return player == null
+            ? default
+            : Runtime(player).Delay(key, delay, action, restart, cleanup);
+    }
+
+    protected CoroutineHandle SyncEffect(
+        Player? player,
+        string key,
+        EffectType effectType,
+        Func<Player, byte> intensity,
+        float interval = 0.25f,
+        float duration = 0f,
+        bool disableWhenZero = true,
+        bool restart = true)
+    {
+        return player == null
+            ? default
+            : Runtime(player).SyncEffect(key, effectType, intensity, interval, duration, disableWhenZero, restart);
+    }
+
+    protected CoroutineHandle SyncEffect<T>(
+        Player? player,
+        string key,
+        Func<Player, byte> intensity,
+        float interval = 0.25f,
+        float duration = 0f,
+        bool disableWhenZero = true,
+        bool restart = true)
+        where T : StatusEffectBase
+    {
+        return player == null
+            ? default
+            : Runtime(player).SyncEffect<T>(key, intensity, interval, duration, disableWhenZero, restart);
+    }
 
     public static IReadOnlyCollection<CRole> GetAllInstances()
         => RegisteredInstances;
@@ -773,6 +876,7 @@ public abstract class CRole
     {
         if (player == null) return;
 
+        CleanupRoleRuntime(player);
         StopRoleEffectCoroutine(player);
         player.ShowHint(string.Empty);
         player.DisableAllEffects();
@@ -1157,6 +1261,41 @@ public abstract class CRole
 
         Timing.KillCoroutines(handle);
         RoleEffectCoroutines.Remove(playerId);
+    }
+
+    private static void CleanupRoleRuntime(Player? player)
+    {
+        if (player == null) return;
+        CleanupRoleRuntime(player.Id);
+    }
+
+    private static void CleanupRoleRuntime(int playerId)
+    {
+        if (!RoleRuntimes.TryGetValue(playerId, out var runtime)) return;
+
+        runtime.Dispose();
+        RoleRuntimes.Remove(playerId);
+    }
+
+    private static void CleanupRoleRuntimes(string uniqueRole)
+    {
+        if (string.IsNullOrEmpty(uniqueRole)) return;
+
+        foreach (var kvp in RoleRuntimes.ToList())
+        {
+            if (!kvp.Value.Matches(uniqueRole)) continue;
+
+            kvp.Value.Dispose();
+            RoleRuntimes.Remove(kvp.Key);
+        }
+    }
+
+    private static void CleanupAllRoleRuntimes()
+    {
+        foreach (var runtime in RoleRuntimes.Values.ToList())
+            runtime.Dispose();
+
+        RoleRuntimes.Clear();
     }
 
     private void TryCreateTeamNpc(Player? player)

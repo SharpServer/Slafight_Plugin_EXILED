@@ -7,7 +7,7 @@ namespace Slafight_Plugin_EXILED.Extensions;
 public static class PlayerAbilityExtensions
 {
     // アビリティ追加（スロット制限付き）
-    public static bool AddAbility<TAbility>(this Player player)
+    public static bool AddAbility<TAbility>(this Player? player)
         where TAbility : AbilityBase
     {
         if (player == null)
@@ -28,7 +28,7 @@ public static class PlayerAbilityExtensions
     }
 
     // 直接インスタンス渡し版
-    public static bool AddAbility(this Player player, AbilityBase ability)
+    public static bool AddAbility(this Player? player, AbilityBase? ability)
     {
         if (player == null || ability == null)
             return false;

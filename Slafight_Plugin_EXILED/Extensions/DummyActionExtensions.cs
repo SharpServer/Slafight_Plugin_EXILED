@@ -2,7 +2,6 @@ using System;
 using Exiled.API.Features;
 using NetworkManagerUtils.Dummies;
 using Slafight_Plugin_EXILED.API.Features;
-using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.Extensions;
 

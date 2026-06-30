@@ -4,16 +4,19 @@ using Exiled.API.Enums;
 using Exiled.API.Features.Doors;
 using Exiled.Events.EventArgs.Player;
 using Interactables.Interobjects.DoorUtils;
+using LabApi.Events.Arguments.ServerEvents;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems.IntermediateBases;
 using UnityEngine;
+using BaseBreakableDoor = Interactables.Interobjects.BreakableDoor;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Core.DoorAccess;
 
 public sealed class SpecialDoorAccessController
 {
     private readonly Dictionary<Vector3, SpecialDoorAccessRule> RulesByDoorPosition = new();
+    private readonly HashSet<BaseBreakableDoor> _pendingForceBreaks = new();
     private readonly float _positionToleranceSq;
 
     internal SpecialDoorAccessController(float positionToleranceSq)
@@ -114,9 +117,55 @@ public sealed class SpecialDoorAccessController
             ev.Player.ShowHint(rule.HintMessage + "\n<size=22><color=yellow>※ヒントはその辺に落ちている、インタラクトできる報告書などに書いてある事があるよ！</color></size>");
     }
 
+    internal void HandleDoorDamaging(DoorDamagingEventArgs ev)
+    {
+        if (ev.Door?.Base == null || RulesByDoorPosition.Count == 0)
+            return;
+
+        var door = Door.List.FirstOrDefault(x => x?.Base == ev.Door.Base);
+        if (door == null || CanBreak(door))
+            return;
+
+        if (ev.Door.Base is BaseBreakableDoor breakableDoor && _pendingForceBreaks.Contains(breakableDoor))
+            return;
+
+        ev.IsAllowed = false;
+    }
+
+    public bool CanBreak(Door door)
+    {
+        if (door == null)
+            return false;
+
+        if (door is BreakableDoor { IsDestroyed: true })
+            return false;
+
+        return !HasRuleAt(door);
+    }
+
+    public bool CanBreak(BreakableDoor breakableDoor)
+        => CanBreak((Door)breakableDoor);
+
+    public bool ForceBreak(BreakableDoor breakableDoor, DoorDamageType damageType = DoorDamageType.ServerCommand)
+    {
+        if (breakableDoor == null || breakableDoor.IsDestroyed || breakableDoor.Base == null)
+            return false;
+
+        _pendingForceBreaks.Add(breakableDoor.Base);
+        try
+        {
+            return breakableDoor.Break(damageType);
+        }
+        finally
+        {
+            _pendingForceBreaks.Remove(breakableDoor.Base);
+        }
+    }
+
     internal void Clear()
     {
         RulesByDoorPosition.Clear();
+        _pendingForceBreaks.Clear();
     }
 
     public bool HasRuleAt(Vector3 position)
