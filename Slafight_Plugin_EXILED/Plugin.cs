@@ -46,7 +46,6 @@ public class Plugin : Plugin<Config>
         Singleton = this;
         PlayerSpeakerManager.RegisterEvents();
         ProximityChat.Handler.RegisterEvents();
-        VoiceRecordingApi.RegisterEvents();
         WaypointChunkStreamer.RegisterEvents();
 
         NetworkVisibilityManager.Register();
@@ -119,7 +118,6 @@ public class Plugin : Plugin<Config>
             
         PlayerSpeakerManager.UnregisterEvents();
         ProximityChat.Handler.UnregisterEvents();
-        VoiceRecordingApi.UnregisterEvents();
         WaypointChunkStreamer.UnregisterEvents();
 
         NvgManager.Unregister();
