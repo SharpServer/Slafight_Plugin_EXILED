@@ -24,13 +24,13 @@ public sealed class SpecificRoundEndDefinitionSource : RoundEndDefinitionSource
 
         yield return RoundEndDefinition.Custom(
             "SnowWarriorWin",
-            CTeam.Others,
+            CTeam.Warriors,
             "<b><size=80><color=#ffffff>雪の戦士達</color>の勝利</size></b>",
             specificReason: RoundEndReasons.SnowWarriorWin);
 
         yield return RoundEndDefinition.Custom(
             "CandyWarriorWin",
-            CTeam.Others,
+            CTeam.Warriors,
             "<b><size=80><color=#ff96de>お菓子の戦士達</color>の勝利</size></b>",
             specificReason: RoundEndReasons.CandyWarriorWin);
 

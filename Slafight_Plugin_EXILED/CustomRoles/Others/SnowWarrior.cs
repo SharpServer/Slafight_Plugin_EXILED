@@ -14,7 +14,7 @@ public class SnowWarrior : CRole
     protected override string RoleName { get; set; } = "<color=white>SNOW WARRIOR</color>";
     protected override string Description { get; set; } = "<size=24>非常に<color=#ffffff>雪玉的</color>である。そうは思わんかね？";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SnowWarrior;
-    protected override CTeam Team { get; set; } = CTeam.Others;
+    protected override CTeam Team { get; set; } = CTeam.Warriors;
     protected override string UniqueRoleKey { get; set; } = "SnowWarrior";
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosRifleman;
     protected override IReadOnlyList<CRoleEffect> SpawnEffects =>

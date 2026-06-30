@@ -126,6 +126,7 @@ public class Scp076Role : CRole
 
         if (!Check(attacker)) return;
         if (attacker.Id == target.Id) return;
+        if (target.GetTeam() is not CTeam.FoundationForces) return;
 
         var kills = KillCounts.GetValueOrDefault(attacker.Id) + 1;
         KillCounts[attacker.Id] = kills;

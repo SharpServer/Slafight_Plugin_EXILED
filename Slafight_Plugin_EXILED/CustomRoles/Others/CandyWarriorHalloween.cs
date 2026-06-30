@@ -16,7 +16,7 @@ public class CandyWarriorHalloween : CRole
     protected override string RoleName { get; set; } = "<color=#EE7600>CANDY WARRIOR</color>";
     protected override string Description { get; set; } = "非常に<color=#EE7600>お菓子的</color>である。そうは思わんかね？";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.CandyWarriorHalloween;
-    protected override CTeam Team { get; set; } = CTeam.Others;
+    protected override CTeam Team { get; set; } = CTeam.Warriors;
     protected override string UniqueRoleKey { get; set; } = "CandyWarriorHalloween";
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosRifleman;
     protected override IReadOnlyList<CRoleEffect> SpawnEffects =>

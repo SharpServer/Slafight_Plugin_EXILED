@@ -1,6 +1,7 @@
 using Exiled.API.Enums;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.API.Features;
@@ -156,34 +157,93 @@ public static class CassieHelper
 
     // =================================== //
 
+    /// <summary>
+    /// 死因を自動判定して終了放送を行う。
+    /// 攻撃者がいればそのチームによる収容、地上での MicroHID なら H.I.D Turret、
+    /// それ以外は原因不明として放送される。
+    /// 死因を明示的に指定したい場合は <see cref="TerminationCause"/> を受け取るオーバーロードを使う。
+    /// </summary>
     public static void AnnounceTermination(DyingEventArgs ev, string targetCassie, string targetTranslated, bool clearCassie = false)
     {
         if (ev.Player == null) return;
-        if (clearCassie) Exiled.API.Features.Cassie.Clear();
-        if (ev.Attacker != null)
-        {
-            var info = ev.Attacker.GetTeam().GetTeamInfo();
-            Exiled.API.Features.Cassie.MessageTranslated(
-                $"{targetCassie} contained successfully by {info.CassieString}",
-                $"{targetTranslated} は、<color={info.TeamColor}>{info.TeamName}</color>によって正常に収容されました。",
-                true);
-        }
-        else
-        {
-            if (ev.DamageHandler?.Type is DamageType.MicroHid && ev.Player?.Zone is ZoneType.Surface)
-            {
-                Exiled.API.Features.Cassie.MessageTranslated(
-                    $"{targetCassie} successfully terminated by H I D System .",
-                    $"{targetTranslated} は、<color=yellow>H.I.D Turret</color>によって終了されました。",
-                    true);
-            }
-            else
-            {
-                Exiled.API.Features.Cassie.MessageTranslated(
-                    $"{targetCassie} successfully terminated. Termination cause unspecified.",
-                    $"{targetTranslated} は、不明な原因によって終了されました。",
-                    true);
-            }
-        }
+        AnnounceTermination(ev, targetCassie, targetTranslated, ResolveCause(ev), clearCassie);
     }
+
+    /// <summary>
+    /// 死因放送を <paramref name="cause"/> で完全に上書きして放送する。
+    /// HIDタレットや特殊な死因など、自動判定では扱いにくいケースで死因を直接指定するために使う。
+    /// </summary>
+    public static void AnnounceTermination(DyingEventArgs ev, string targetCassie, string targetTranslated, TerminationCause cause, bool clearCassie = false)
+    {
+        if (ev.Player == null) return;
+        if (clearCassie) Exiled.API.Features.Cassie.Clear();
+        Exiled.API.Features.Cassie.MessageTranslated(
+            $"{targetCassie} {cause.Cassie}",
+            $"{targetTranslated} {cause.Translated}",
+            true);
+    }
+
+    private static TerminationCause ResolveCause(DyingEventArgs ev)
+    {
+        // HIDTurret はタレットNPCがMicroHIDを撃つ実装のため、Attacker は null ではなくタレットNPCになる。
+        // チームによる収容判定より先に、攻撃者がタレットNPCかどうかを Id で判定する。
+        if (IsHidTurretKill(ev))
+            return TerminationCause.Hid();
+        if (ev.Attacker != null)
+            return TerminationCause.ByTeam(ev.Attacker.GetTeam());
+        return TerminationCause.Unknown();
+    }
+
+    private static bool IsHidTurretKill(DyingEventArgs ev)
+    {
+        if (ev.DamageHandler?.Type is not DamageType.MicroHid)
+            return false;
+        return ev.Attacker != null && HIDTurretObject.PublicTurretNpcIds.Contains(ev.Attacker.Id);
+    }
+}
+
+/// <summary>
+/// 終了放送における死因クローズ（「〜は、◯◯によって終了されました。」の◯◯部分以降）を表す。
+/// <see cref="Cassie"/> / <see cref="Translated"/> はそれぞれ対象名の直後に連結される。
+/// </summary>
+public readonly struct TerminationCause
+{
+    /// <summary>英語キャシー読み上げ用の死因クローズ（対象 cassie 文字列の直後に連結される）。</summary>
+    public readonly string Cassie;
+
+    /// <summary>字幕用の死因クローズ（対象表示名の直後に連結される。「は、〜されました。」の形を想定）。</summary>
+    public readonly string Translated;
+
+    public TerminationCause(string cassie, string translated)
+    {
+        Cassie = cassie;
+        Translated = translated;
+    }
+
+    /// <summary>指定チームによる正常な収容として放送する。</summary>
+    public static TerminationCause ByTeam(CTeam team)
+    {
+        var info = team.GetTeamInfo();
+        return new TerminationCause(
+            $"contained successfully by {info.CassieString}",
+            $"は、<color={info.TeamColor}>{info.TeamName}</color>によって正常に収容されました。");
+    }
+
+    /// <summary>H.I.D Turret による終了として放送する。</summary>
+    public static TerminationCause Hid() => new(
+        "successfully terminated by H I D System .",
+        "は、<color=yellow>H.I.D Turret</color>によって終了されました。");
+
+    /// <summary>アンチミームプロトコルによる無効化として放送する。</summary>
+    public static TerminationCause AntiMeme() => new(
+        "Successfully neutralized by $pitch_.85 Anti- $pitch_1 Me mu Protocol.",
+        $"は、<color={CTeam.Fifthists.GetTeamColor()}>アンチミームプロトコル</color>により正常に無効化されました。");
+
+    /// <summary>原因不明の終了として放送する。</summary>
+    public static TerminationCause Unknown() => new(
+        "successfully terminated. Termination cause unspecified.",
+        "は、不明な原因によって終了されました。");
+
+    /// <summary>任意の死因クローズで放送する。<paramref name="cassie"/>/<paramref name="translated"/> は対象名の直後に連結される。</summary>
+    public static TerminationCause Custom(string cassie, string translated) => new(cassie, translated);
 }

@@ -7,6 +7,7 @@ using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using PlayerRoles;
+using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -79,6 +80,11 @@ public class AbelHandler : IBootstrapHandler
         if (_spawnQueued)
         {
             Log.Debug($"AbelHandler: Pandra's Box spawn is already queued. Ignored duplicate trigger from {reason}.");
+            return;
+        }
+
+        if (Random.Range(0, 3) is not 0)
+        {
             return;
         }
 

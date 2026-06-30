@@ -13,7 +13,7 @@ public sealed class SeasonalWarriorVictoryDefinitionSource : RoundVictoryDefinit
     public override IEnumerable<RoundVictoryGroup> GetGroups()
     {
         yield return RoundVictoryRule.ForCustomRoles(
-            CTeam.Others,
+            CTeam.Warriors,
             priority: 20,
             customRoles: [CRoleTypeId.SnowWarrior],
             debugName: "SnowWarriorWin",
@@ -23,7 +23,7 @@ public sealed class SeasonalWarriorVictoryDefinitionSource : RoundVictoryDefinit
 
         yield return RoundVictoryRule.ForPredicate(
             "CandyWarriorWin",
-            CTeam.Others,
+            CTeam.Warriors,
             player => player.IsCandyWarrior(),
             priority: 20,
             specificReason: RoundEndReasons.CandyWarriorWin,

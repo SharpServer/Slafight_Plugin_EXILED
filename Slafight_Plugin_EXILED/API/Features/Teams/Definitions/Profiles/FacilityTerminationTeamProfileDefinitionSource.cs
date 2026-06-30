@@ -39,6 +39,7 @@ public sealed class FacilityTerminationTeamProfileDefinitionSource : CTeamProfil
             Map(CTeam.UIU, CTeamGroup.Humanity),
             Map(CTeam.SerpentsHand, CTeamGroup.Humanity),
             Map(CTeam.Others, CTeamGroup.Humanity),
+            Map(CTeam.Warriors, CTeamGroup.Humanity),
             Map(CTeam.BrokenGodChurch, CTeamGroup.Humanity),
             Map(CTeam.Sarkic, CTeamGroup.Humanity),
             Map(CTeam.AWCY, CTeamGroup.Humanity),

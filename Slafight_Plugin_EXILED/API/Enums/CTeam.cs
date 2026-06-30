@@ -21,4 +21,5 @@ public enum CTeam
     BlackQueen,
     Initiative,
     Moderators,
+    Warriors,
 }

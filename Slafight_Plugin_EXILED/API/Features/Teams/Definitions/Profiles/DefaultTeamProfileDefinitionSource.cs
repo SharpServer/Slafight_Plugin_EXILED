@@ -37,6 +37,7 @@ public sealed class DefaultTeamProfileDefinitionSource : CTeamProfileDefinitionS
             Map(CTeam.SerpentsHand, CTeamGroup.Undefined),
             Map(CTeam.SCPs, CTeamGroup.Undefined),
             Map(CTeam.Others, CTeamGroup.Undefined),
+            Map(CTeam.Warriors, CTeamGroup.Undefined),
             Map(CTeam.BrokenGodChurch, CTeamGroup.Undefined),
             Map(CTeam.O5, CTeamGroup.Undefined),
             Map(CTeam.Sarkic, CTeamGroup.Undefined),
