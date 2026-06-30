@@ -36,7 +36,6 @@ public class RootCommand : ParentCommand
         RegisterCommand(new SpawnObjectPrefab());
         RegisterCommand(new HitboxCommand());
         RegisterCommand(new ProximityChatCommand());
-        RegisterCommand(new VoiceRecordingCommand());
         RegisterCommand(new SpawnWave());
         RegisterCommand(new PlaySurfaceAttack());
         RegisterCommand(new PlayInstantSurfaceBombing());
