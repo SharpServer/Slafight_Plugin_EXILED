@@ -230,7 +230,7 @@ public class Scp035Role : CRole
             case Scp035StateType.Awaken:
                 player.DisableEffect(EffectType.Poisoned);
                 if (!AbilityBase.HasAbility<Scp035TentacleAbility>(player))
-                    player.AddAbility(new Scp035TentacleAbility(player));
+                    player.AddAbility<Scp035TentacleAbility>();
                 player.EnableEffect(EffectType.Invigorated, 20);
                 player.EnableEffect(EffectType.BodyshotReduction, 30);
                 player.EnableEffect(EffectType.DamageReduction, 30);
@@ -241,7 +241,7 @@ public class Scp035Role : CRole
             case Scp035StateType.FullyAwaken:
                 player.DisableEffect(EffectType.Poisoned);
                 if (!AbilityBase.HasAbility<Scp035TentacleAbility>(player))
-                    player.AddAbility(new Scp035TentacleAbility(player));
+                    player.AddAbility<Scp035TentacleAbility>();
                 player.EnableEffect(EffectType.Invigorated, 30);
                 player.EnableEffect(EffectType.BodyshotReduction, 40);
                 player.EnableEffect(EffectType.DamageReduction, 40);

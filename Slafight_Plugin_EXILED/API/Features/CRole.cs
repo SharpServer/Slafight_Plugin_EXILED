@@ -139,6 +139,7 @@ public abstract class CRole
         if (!_eventsSubscribed)
         {
             PlayerHandlers.Dying += OnAnyPlayerDying;
+            PlayerHandlers.Died += OnAnyPlayerDied;
             PlayerHandlers.ChangingRole += OnAnyPlayerChangingRole;
             PlayerHandlers.Left += OnAnyPlayerLeft;
             PlayerHandlers.Hurting += OnAnyPlayerHurting;
@@ -217,6 +218,7 @@ public abstract class CRole
         if (_eventsSubscribed)
         {
             PlayerHandlers.Dying -= OnAnyPlayerDying;
+            PlayerHandlers.Died -= OnAnyPlayerDied;
             PlayerHandlers.ChangingRole -= OnAnyPlayerChangingRole;
             PlayerHandlers.Left -= OnAnyPlayerLeft;
             PlayerHandlers.Hurting -= OnAnyPlayerHurting;
@@ -322,6 +324,13 @@ public abstract class CRole
         }
     }
 
+    private static void OnAnyPlayerDied(PlayerEvents.DiedEventArgs? ev)
+    {
+        if (ev == null) return;
+
+        Dispatch(ev.Attacker, role => role.OnRoleKilledOthers(ev), nameof(OnRoleKilledOthers));
+    }
+
     private static void OnAnyPlayerChangingRole(PlayerEvents.ChangingRoleEventArgs? ev)
     {
         if (ev?.Player == null || !ev.IsAllowed) return;
@@ -366,6 +375,9 @@ public abstract class CRole
 
         Dispatch(ev.Player, role => role.OnRoleHurting(ev), nameof(OnRoleHurting));
         Dispatch(ev.Attacker, role => role.OnRoleHurtingOthers(ev), nameof(OnRoleHurtingOthers));
+
+        if (ev.IsDeathExpected())
+            Dispatch(ev.Attacker, role => role.OnRoleKillingOthers(ev), nameof(OnRoleKillingOthers));
     }
 
     private static void OnAnyPlayerSpawningRagdoll(PlayerEvents.SpawningRagdollEventArgs? ev)
@@ -541,6 +553,8 @@ public abstract class CRole
     protected virtual void OnRoleLeft(PlayerEvents.LeftEventArgs ev) { }
     protected virtual void OnRoleHurting(PlayerEvents.HurtingEventArgs ev) { }
     protected virtual void OnRoleHurtingOthers(PlayerEvents.HurtingEventArgs ev) { }
+    protected virtual void OnRoleKillingOthers(PlayerEvents.HurtingEventArgs ev) { }
+    protected virtual void OnRoleKilledOthers(PlayerEvents.DiedEventArgs ev) { }
     protected virtual void OnRoleSpawningRagdoll(PlayerEvents.SpawningRagdollEventArgs ev) { }
     protected virtual void OnRoleChangingItem(PlayerEvents.ChangingItemEventArgs ev) { }
     protected virtual void OnRoleChangedItem(PlayerEvents.ChangedItemEventArgs ev) { }

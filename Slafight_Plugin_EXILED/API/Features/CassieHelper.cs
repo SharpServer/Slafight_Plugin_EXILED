@@ -22,7 +22,7 @@ public static class CassieHelper
             "<color=#5bc5ff>九尾狐 予備部隊</color>が施設に到着しました。",
             true);
     }
-    
+
     public static void AnnounceHdArrival()
     {
         Exiled.API.Features.Cassie.MessageTranslated(
@@ -39,7 +39,7 @@ public static class CassieHelper
             "<b><color=#353535>下される鉄槌 - ハンマーダウン 予備部隊</color></b>が施設に到着しました。",
             true);
     }
-    
+
     public static void AnnounceSneArrival()
     {
         Exiled.API.Features.Cassie.MessageTranslated(
@@ -72,7 +72,7 @@ public static class CassieHelper
             $"<color={ServerColors.Silver}><b>Law's Left Hand 予備部隊</color>が施設に到着しました。",
             true);
     }
-    
+
     public static void AnnounceRrhArrival()
     {
         Exiled.API.Features.Cassie.MessageTranslated(
@@ -88,7 +88,15 @@ public static class CassieHelper
             $"<color={ServerColors.Red}><b>Red Right Hand 予備部隊</color>が施設に到着しました。",
             true);
     }
-    
+
+    public static void AnnouncePdxArrival()
+    {
+        Exiled.API.Features.Cassie.MessageTranslated(
+            "MtfUnit Omega 7 designated hand r _SUFFIX_PLURAL_REGULAR o _SUFFIX_PLURAL_SYLLABIC HasEntered AllRemaining .",
+            $"<color={ServerColors.Carmine}><b>機動部隊Omega-7 \"Pandra's Box\"</color>が施設に到着しました。",
+            true);
+    }
+
     public static void AnnounceChaos(int count)
     {
         Exiled.API.Features.Cassie.MessageTranslated(
@@ -104,7 +112,7 @@ public static class CassieHelper
             $"全職員に通達。Gate Bに{count}人の<color=#ff0090>第五主義者</color>が検出されました。<split>見つけ次第終了してください。",
             true);
     }
-    
+
     public static void AnnounceLastOperationArrival()
     {
         Exiled.API.Features.Cassie.MessageTranslated(
@@ -120,7 +128,7 @@ public static class CassieHelper
             "<color=red>最終指令 予備部隊</color>が施設に到着しました。",
             true);
     }
-    
+
     public static void AnnounceGoCEnter(int count)
     {
         Exiled.API.Features.Cassie.MessageTranslated(
@@ -128,7 +136,7 @@ public static class CassieHelper
             $"全職員に通達。Gate Bに{count}人の<b><color=#0000c8>世界オカルト連合</color></b>部隊が検出されました。<split>見つけ次第終了してください。",
             true);
     }
-    
+
     public static void AnnounceInitiativeEnter(int count)
     {
         Exiled.API.Features.Cassie.MessageTranslated(
@@ -136,7 +144,7 @@ public static class CassieHelper
             $"全職員に通達。Gate Bに{count}人の<b><color={ServerColors.BlueGreen}>境界線イニシアチブ</color></b>部隊が検出されました。<split>見つけ次第終了してください。",
             true);
     }
-    
+
     // =================================== //
     public static void AnnounceSecurityTeamEnter(int count)
     {
@@ -145,7 +153,7 @@ public static class CassieHelper
             $"全職員に通達。<color={CTeam.Guards.GetTeamColor()}>保安部隊</color>が施設に到着しました。",
             true);
     }
-    
+
     // =================================== //
 
     public static void AnnounceTermination(DyingEventArgs ev, string targetCassie, string targetTranslated, bool clearCassie = false)
@@ -156,7 +164,7 @@ public static class CassieHelper
         {
             var info = ev.Attacker.GetTeam().GetTeamInfo();
             Exiled.API.Features.Cassie.MessageTranslated(
-                $"{targetCassie} contained successfully by {info.CassieString}", 
+                $"{targetCassie} contained successfully by {info.CassieString}",
                 $"{targetTranslated} は、<color={info.TeamColor}>{info.TeamName}</color>によって正常に収容されました。",
                 true);
         }
@@ -165,14 +173,14 @@ public static class CassieHelper
             if (ev.DamageHandler?.Type is DamageType.MicroHid && ev.Player?.Zone is ZoneType.Surface)
             {
                 Exiled.API.Features.Cassie.MessageTranslated(
-                    $"{targetCassie} successfully terminated by H I D System .", 
+                    $"{targetCassie} successfully terminated by H I D System .",
                     $"{targetTranslated} は、<color=yellow>H.I.D Turret</color>によって終了されました。",
                     true);
             }
             else
             {
                 Exiled.API.Features.Cassie.MessageTranslated(
-                    $"{targetCassie} successfully terminated. Termination cause unspecified.", 
+                    $"{targetCassie} successfully terminated. Termination cause unspecified.",
                     $"{targetTranslated} は、不明な原因によって終了されました。",
                     true);
             }

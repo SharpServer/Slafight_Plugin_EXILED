@@ -301,6 +301,8 @@ public static class ServerSpecificUserSettings
             KeyCode.RightControl => "右Ctrl",
             KeyCode.LeftShift => "左Shift",
             KeyCode.RightShift => "右Shift",
+            KeyCode.LeftArrow => "左矢印",
+            KeyCode.RightArrow => "右矢印",
             KeyCode.Space => "Space",
             _ => keyCode.ToString(),
         };

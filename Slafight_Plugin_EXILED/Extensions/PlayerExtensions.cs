@@ -150,7 +150,12 @@ public static class PlayerExtensions
 
         Log.Debug($"[SetRole-Custom] {player.Nickname} -> {roleTypeId} (flags: {roleSpawnFlags})");
         if (!CRole.TrySpawn(player, roleTypeId, roleSpawnFlags))
+        {
             Log.Warn($"[SetRole-Custom] Unknown or unavailable CRoleTypeId: {roleTypeId}");
+            return;
+        }
+
+        KillCounter.ResetRoleSession(player);
     }
 
     private static bool CanSetRoleSafely(Player player, object role)

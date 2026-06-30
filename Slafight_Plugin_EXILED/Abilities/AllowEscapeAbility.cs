@@ -17,17 +17,6 @@ public class AllowEscapeAbility : AbilityBase
     protected override float DefaultCooldown => 999f;
     protected override int DefaultMaxUses => 1;
 
-    // 完全デフォルト
-    public AllowEscapeAbility(Player owner)
-        : base(owner) { }
-
-    // コマンドなどから上書きしたいとき用
-    public AllowEscapeAbility(Player owner, float cooldownSeconds)
-        : base(owner, cooldownSeconds) { }
-
-    public AllowEscapeAbility(Player owner, float cooldownSeconds, int maxUses)
-        : base(owner, cooldownSeconds, maxUses) { }
-
     protected override bool CanActivate(Player player, out string failureReason)
     {
         if (!base.CanActivate(player, out failureReason))

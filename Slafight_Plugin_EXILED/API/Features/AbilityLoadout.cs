@@ -18,6 +18,17 @@ public class AbilityLoadout
         }
     }
 
+    public bool HasFreeSlot()
+    {
+        for (int i = 0; i < MaxSlots; i++)
+        {
+            if (Slots[i] == null)
+                return true;
+        }
+
+        return false;
+    }
+
     public bool AddAbility(AbilityBase ability)
     {
         for (int i = 0; i < MaxSlots; i++)

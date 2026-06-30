@@ -165,6 +165,7 @@
         <Compile Include="Abilities\AlphaWarheadOverride.cs" />
         <Compile Include="Abilities\CreateSinkholeAbility.cs" />
         <Compile Include="Abilities\DropBiggerShitAbility.cs" />
+        <Compile Include="Abilities\GenerateWeaponAbility.cs" />
         <Compile Include="Abilities\MagicMissileAbility.cs" />
         <Compile Include="Abilities\MemeWaveAbility.cs" />
         <Compile Include="Abilities\PlaceTantrumAbility.cs" />
@@ -184,6 +185,7 @@
         <Compile Include="API\Enums\TaskType.cs" />
         <Compile Include="API\Features\AbilityBase.cs" />
         <Compile Include="API\Features\AbilityLocalisation.cs" />
+        <Compile Include="API\Features\AbilityOption.cs" />
         <Compile Include="API\Features\AbilityInputHandler.cs" />
         <Compile Include="API\Features\AbilityLoadout.cs" />
         <Compile Include="API\Features\AbilityManager.cs" />
@@ -204,6 +206,7 @@
         <Compile Include="API\Features\CItemKeycard.cs" />
         <Compile Include="API\Features\KeycardAccessLevels.cs" />
         <Compile Include="API\Features\CItemWeapon.cs" />
+        <Compile Include="API\Features\KillCounter.cs" />
         <Compile Include="API\Features\CustomShieldEvents.cs" />
         <Compile Include="API\Features\CustomShieldState.cs" />
         <Compile Include="API\Features\CustomInfoDisplay.cs" />
@@ -224,6 +227,7 @@
         <Compile Include="API\Features\Scp914\Scp914Registry.cs" />
         <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\HorizonInitiative.cs" />
         <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\MtfCoreForceUnitPacks.cs" />
+        <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\MtfPandrasBoxUnitPacks.cs" />
         <Compile Include="API\Features\SpeakerApi.cs" />
         <Compile Include="API\Features\VoiceRecordingApi.cs" />
         <Compile Include="API\Features\CRole.cs" />
@@ -276,6 +280,7 @@
         <Compile Include="API\Interface\IObjectPrefab.cs" />
         <Compile Include="API\Interface\ISpawnableObject.cs" />
         <Compile Include="API\Objects\RoleTables.cs" />
+        <Compile Include="API\PositionProvider.cs" />
         <Compile Include="API\Structs\ObjectInfo.cs" />
         <Compile Include="Changes\CandyChanges.cs" />
         <Compile Include="Changes\ChristmasChanges.cs" />
@@ -314,6 +319,7 @@
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv1.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv2.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv3.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\BattleAxe.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Bloodyknife.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CapybaraMissile.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ArmorInfantry.cs" />
@@ -330,6 +336,7 @@
         <Compile Include="CustomItems\SlafightApiItems\KeycardHimself.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardSupplyManager.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Medicine.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\PandraBreaker.cs" />
         <Compile Include="CustomItems\SlafightApiItems\S41MedicalPistol.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardChaosIntruder.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CloakGenerator.cs" />
@@ -343,7 +350,9 @@
         <Compile Include="CustomItems\SlafightApiItems\NvgRed.cs" />
         <Compile Include="CustomItems\SlafightApiItems\SchwarzschildRailbreaker.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ScpcbBatteries.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\Spear.cs" />
         <Compile Include="CustomItems\SlafightApiItems\TapeRecorder.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\ThrowKnife.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Veritas.cs" />
         <Compile Include="CustomItems\NvgManager.cs" />
         <Compile Include="CustomItems\CustomItemsManager.cs" />
@@ -456,6 +465,8 @@
         <Compile Include="CustomRoles\FoundationForces\NtfFieldMedic.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfGunslinger.cs" />
         <Compile Include="CustomRoles\FoundationForces\NtfSpecialist.cs" />
+        <Compile Include="CustomRoles\FoundationForces\PdxWarden.cs" />
+        <Compile Include="CustomRoles\FoundationForces\PdxWatcher.cs" />
         <Compile Include="CustomRoles\FoundationForces\Sculpture.cs" />
         <Compile Include="CustomRoles\FoundationForces\SneGears.cs" />
         <Compile Include="CustomRoles\FoundationForces\SneNeutralitist.cs" />
@@ -535,6 +546,7 @@
         <Compile Include="Extensions\StaticUtils.cs" />
         <Compile Include="Extensions\StringExtensions.cs" />
         <Compile Include="Extensions\TimingUtils.cs" />
+        <Compile Include="MainHandlers\AbelHandler.cs" />
         <Compile Include="MainHandlers\AutoHandlerBootstrapRegister.cs" />
         <Compile Include="MainHandlers\BadgeHandler.cs" />
         <Compile Include="MainHandlers\DebugModeHandler.cs" />
@@ -580,7 +592,7 @@
         <Compile Include="CustomRoles\Fifthist\FifthistRescue.cs" />
         <Compile Include="CustomRoles\FoundationForces\HdCommander.cs" />
         <Compile Include="CustomRoles\FoundationForces\HdInfantry.cs" />
-        <Compile Include="CustomRoles\FoundationForces\NtfAide.cs" />
+        <Compile Include="CustomRoles\FoundationForces\NtfLieutenant.cs" />
         <Compile Include="CustomRoles\Scientist\FacilityManager.cs" />
         <Compile Include="CustomRoles\Scientist\ZoneManager.cs" />
         <Compile Include="CustomRoles\SCPs\Scp3114Role.cs" />

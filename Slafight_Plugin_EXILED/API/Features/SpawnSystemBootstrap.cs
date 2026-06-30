@@ -12,8 +12,9 @@ public static class UnitPackBootstrap
 
         DefaultUnitPacks.Register();
         FacilityTerminationPacks.Register();
-        MtfSeeNoEvilUnitPacks.Register();
         MtfCoreForceUnitPacks.Register();
+        MtfSeeNoEvilUnitPacks.Register();
+        MtfPandrasBoxUnitPacks.Register();
         SnowWarriorsPacks.Register();
         HorizonInitiativeUnitPacks.Register();
     }

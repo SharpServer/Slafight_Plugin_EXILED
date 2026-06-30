@@ -17,17 +17,6 @@ public class AlphaWarheadOverride : AbilityBase
     protected override float DefaultCooldown => 999f;
     protected override int DefaultMaxUses => 1;
 
-    // 完全デフォルト
-    public AlphaWarheadOverride(Player owner)
-        : base(owner) { }
-
-    // コマンドなどから上書きしたいとき用
-    public AlphaWarheadOverride(Player owner, float cooldownSeconds)
-        : base(owner, cooldownSeconds) { }
-
-    public AlphaWarheadOverride(Player owner, float cooldownSeconds, int maxUses)
-        : base(owner, cooldownSeconds, maxUses) { }
-
     protected override bool CanActivate(Player player, out string failureReason)
     {
         if (!base.CanActivate(player, out failureReason))

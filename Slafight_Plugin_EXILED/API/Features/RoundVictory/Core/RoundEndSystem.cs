@@ -323,7 +323,9 @@ public static class RoundEndExecutor
 
         if (definition.UseVanillaEndRound)
         {
-            Round.EndRound(true);
+            if (Round.EndRound(true))
+                RoundVictoryEvents.MarkPendingVanillaRoundEnd(definition);
+
             return;
         }
 
@@ -332,6 +334,8 @@ public static class RoundEndExecutor
 
         if (definition.RestartDelay is { } delay)
             ScheduleRestartIfRoundActive(delay);
+
+        RoundVictoryEvents.OnRoundEnded(RoundVictoryEndedEventArgs.Create(definition));
     }
 
     private static void ClearPlayerHints()

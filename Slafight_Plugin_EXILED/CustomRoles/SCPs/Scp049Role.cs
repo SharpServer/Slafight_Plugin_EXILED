@@ -28,7 +28,7 @@ public class Scp049Role : CRole
         player.Health = player.MaxHealth;
         player.MaxHumeShield = 1200f;
         player.HumeShield = player.MaxHumeShield;
-        player.AddAbility(new SenseOfGreatDoctor(player));
+        player.AddAbility<SenseOfGreatDoctor>();
     }
     
     protected override void OnRoleDying(DyingEventArgs ev)

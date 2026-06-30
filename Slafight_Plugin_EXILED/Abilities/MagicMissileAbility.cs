@@ -20,18 +20,6 @@ public class MagicMissileAbility : AbilityBase
     protected override float DefaultCooldown => 5f;
     protected override int DefaultMaxUses => -1;
 
-    // 完全デフォルト
-    public MagicMissileAbility(Player owner)
-        : base(owner) { }
-
-    // クールダウンだけ変える
-    public MagicMissileAbility(Player owner, float cooldownSeconds)
-        : base(owner, cooldownSeconds, null) { }
-
-    // 両方カスタム
-    public MagicMissileAbility(Player owner, float cooldownSeconds, int maxUses)
-        : base(owner, cooldownSeconds, maxUses) { }
-
     protected override void ExecuteAbility(Player player)
     {
         var startPos = player.Position + new Vector3(0f, 0.5f, 0f);
@@ -81,7 +69,7 @@ public class MagicMissileAbility : AbilityBase
             }
 
             // 発射主 disconnect
-            if (pushPlayer != null && !pushPlayer.IsConnected)
+            if (!pushPlayer.IsConnected)
             {
                 Log.Info("[MagicMissileAbility] MissileCoroutine stopped: owner disconnected.");
                 yield break;

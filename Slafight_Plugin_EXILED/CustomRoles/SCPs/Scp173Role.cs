@@ -46,8 +46,8 @@ public class Scp173Role : CRole
 
         player.EnableEffect(EffectType.Slowness, 95, 60f);
 
-        player.AddAbility(new TeleportRandomAbility(player));
-        player.AddAbility(new PlaceTantrumAbility(player));
+        player.AddAbility<TeleportRandomAbility>();
+        player.AddAbility<PlaceTantrumAbility>();
         Timing.RunCoroutine(WaitAndTeleport(player));
     }
 

@@ -13,17 +13,6 @@ public class DropBiggerShitAbility : AbilityBase
     protected override float DefaultCooldown => 120f;
     protected override int DefaultMaxUses => -1;
 
-    // 完全デフォルト
-    public DropBiggerShitAbility(Player owner)
-        : base(owner) { }
-
-    // コマンドなどから上書きしたいとき用
-    public DropBiggerShitAbility(Player owner, float cooldownSeconds)
-        : base(owner, cooldownSeconds) { }
-
-    public DropBiggerShitAbility(Player owner, float cooldownSeconds, int maxUses)
-        : base(owner, cooldownSeconds, maxUses) { }
-
     protected override void ExecuteAbility(Player player)
     {
         try

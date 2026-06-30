@@ -73,6 +73,8 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
         yield return Timing.WaitForSeconds(1f);
         if (CancelIfOutdated()) yield break;
 
+        Respawn.SummonChaosInsurgencyVan();
+        Respawn.SummonNtfChopper();
         // カオスに変える対象を抽選
         foreach (var player in StaticUtils.SelectRandomPlayersByRatio(CTeam.SCPs, 1f / 3f, true))
             player.SetRole(CRoleTypeId.ChaosCommando);

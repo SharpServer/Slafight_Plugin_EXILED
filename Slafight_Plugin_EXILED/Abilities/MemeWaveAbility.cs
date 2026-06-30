@@ -13,17 +13,6 @@ public class MemeWaveAbility : AbilityBase
     protected override float DefaultCooldown => 150f;
     protected override int DefaultMaxUses => -1;
 
-    // 完全デフォルト
-    public MemeWaveAbility(Player owner)
-        : base(owner) { }
-
-    // コマンドなどから上書きしたいとき用
-    public MemeWaveAbility(Player owner, float cooldownSeconds)
-        : base(owner, cooldownSeconds) { }
-
-    public MemeWaveAbility(Player owner, float cooldownSeconds, int maxUses)
-        : base(owner, cooldownSeconds, maxUses) { }
-
     protected override bool CanActivate(Player player, out string failureReason)
     {
         if (!base.CanActivate(player, out failureReason))

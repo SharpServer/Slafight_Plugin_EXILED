@@ -651,22 +651,37 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
 
         var active = entries[activeEntryIndex].Ability;
         var abilityName = AbilityLocalization.GetDisplayName(active.GetType().Name, target);
+        var optionName = active.GetSelectedOptionName(target);
+        if (!string.IsNullOrWhiteSpace(optionName))
+            abilityName += $" <color=#8fdcff>[{optionName}]</color>";
+
         var statusText = FormatAbilityState(target, active, out var usesText);
         var countText = $"{activeEntryIndex + 1}/{entries.Count}";
         var parameters = new List<HintParameter>
         {
             new SSKeybindHintParameter(ServerSpecifics.AbilityUseKeybindSettingId)
         };
-        var controlText = "<color=#aaffaa>{0}</color>:使用";
+        var controlParts = new List<string> { "<color=#aaffaa>{0}</color>:使用" };
+        var parameterIndex = 1;
+
         if (entries.Count > 1)
         {
             parameters.Add(new SSKeybindHintParameter(ServerSpecifics.AbilitySwitchKeybindSettingId));
-            controlText += " / <color=#aaffaa>{1}</color>:切替";
+            controlParts.Add($"<color=#aaffaa>{{{parameterIndex++}}}</color>:切替");
         }
         else
         {
-            controlText += " / 所持:1";
+            controlParts.Add("所持:1");
         }
+
+        if (active.HasSelectableOptions)
+        {
+            parameters.Add(new SSKeybindHintParameter(ServerSpecifics.AbilityOptionPreviousKeybindSettingId));
+            parameters.Add(new SSKeybindHintParameter(ServerSpecifics.AbilityOptionNextKeybindSettingId));
+            controlParts.Add($"<color=#aaffaa>{{{parameterIndex++}}}</color>/<color=#aaffaa>{{{parameterIndex++}}}</color>:オプション");
+        }
+
+        var controlText = string.Join(" / ", controlParts);
 
         var slotSummary = BuildAbilitySlotSummary(target, entries, activeEntryIndex);
 

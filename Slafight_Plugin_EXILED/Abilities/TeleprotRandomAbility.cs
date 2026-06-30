@@ -41,17 +41,6 @@ public class TeleportRandomAbility : AbilityBase
     protected override float DefaultCooldown => 180f;
     protected override int DefaultMaxUses => -1;
 
-    // 完全デフォルト
-    public TeleportRandomAbility(Player owner)
-        : base(owner) { }
-
-    // コマンドなどから上書きしたいとき用
-    public TeleportRandomAbility(Player owner, float cooldownSeconds)
-        : base(owner, cooldownSeconds) { }
-
-    public TeleportRandomAbility(Player owner, float cooldownSeconds, int maxUses)
-        : base(owner, cooldownSeconds, maxUses) { }
-
     protected override bool CanActivate(Player player, out string failureReason)
     {
         _preparedDestination = null;

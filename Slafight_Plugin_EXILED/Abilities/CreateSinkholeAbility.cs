@@ -13,10 +13,6 @@ public class CreateSinkholeAbility : AbilityBase
     protected override float DefaultCooldown => 60f;
     protected override int DefaultMaxUses => -1;
 
-    public CreateSinkholeAbility(Player owner) : base(owner) { }
-    public CreateSinkholeAbility(Player owner, float cooldownSeconds) : base(owner, cooldownSeconds) { }
-    public CreateSinkholeAbility(Player owner, float cooldownSeconds, int maxUses) : base(owner, cooldownSeconds, maxUses) { }
-
     protected override void ExecuteAbility(Player player)
     {
         try

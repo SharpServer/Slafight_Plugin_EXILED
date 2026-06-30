@@ -89,11 +89,11 @@ public class Scp106Role : CRole
 
         if (MapFlags.GetSeason() == SeasonTypeId.April)
         {
-            player.AddAbility(new DropBiggerShitAbility(player));
+            player.AddAbility<DropBiggerShitAbility>();
         }
         else
         {
-            player.AddAbility(new CreateSinkholeAbility(player));
+            player.AddAbility<CreateSinkholeAbility>();
         }
     }
 
@@ -155,8 +155,7 @@ public class Scp106Role : CRole
         target.EnableEffect(EffectType.Traumatized, duration);
         owner.EnableEffect(EffectType.MovementBoost, HuntMovementBoostIntensity, duration);
         owner.EnableEffect(EffectType.Invigorated, HuntInvigoratedIntensity, duration);
-        var teleportAbility = new Scp106TargetTeleportAbility(owner, Mathf.Max(0f, settings.TeleportCooldown));
-        if (!owner.AddAbility(teleportAbility))
+        if (!owner.AddAbility<Scp106TargetTeleportAbility>(Mathf.Max(0f, settings.TeleportCooldown)))
         {
             AbilityBase.RevokeAbility(owner.Id, typeof(Scp106TargetTeleportAbility));
             Log.Warn($"[Scp106Hunt] Could not add teleport ability to {owner.Nickname}: loadout is full.");

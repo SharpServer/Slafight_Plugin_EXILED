@@ -730,10 +730,16 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
     {
         var ctx = SpawnContextRegistry.ActiveContext;
         if (ctx == null)
+        {
+            Log.Warn($"SpawnSystem: AssignTeamRoles skipped for {spawnType}; active spawn context is null.");
             return;
+        }
 
         if (!ctx.RoleTables.TryGetValue(spawnType, out var table) || table.Count == 0)
+        {
+            Log.Warn($"SpawnSystem: AssignTeamRoles skipped for {spawnType}; role table is missing or empty.");
             return;
+        }
 
         var candidates = Player.List
             .Where(playerFilter)
@@ -741,7 +747,10 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
             .ToList();
 
         if (candidates.Count == 0)
+        {
+            Log.Warn($"SpawnSystem: AssignTeamRoles skipped for {spawnType}; no eligible spectators.");
             return;
+        }
 
         int targetCount;
         if (fixedCount.HasValue)
@@ -760,6 +769,13 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
 
         slots = slots.Shuffle().ToList();
         int assignCount = Math.Min(slots.Count, candidates.Count);
+        if (assignCount == 0)
+        {
+            Log.Warn($"SpawnSystem: AssignTeamRoles skipped for {spawnType}; no slots were built for {targetCount} target(s).");
+            return;
+        }
+
+        Log.Info($"SpawnSystem: Assigning {assignCount}/{candidates.Count} player(s) to {spawnType}.");
 
         for (int i = 0; i < assignCount; i++)
         {

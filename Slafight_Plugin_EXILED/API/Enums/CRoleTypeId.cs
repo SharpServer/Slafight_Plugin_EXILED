@@ -6,7 +6,7 @@ public enum CRoleTypeId
 {
     // ==== None ==== //
     None,
-    
+
     // ==== SCP ==== //
     Scp096Anger,
     Scp3005,
@@ -22,14 +22,14 @@ public enum CRoleTypeId
     Scp610,
     Scp049,
     Scp076,
-    
+
     // ==== Fifthists ==== //
     FifthistRescure,
     FifthistPriest,
     FifthistConvert,
     FifthistGuidance,
     FifthistMarionette,
-    
+
     // ==== Chaos ==== //
     ChaosCommando,
     ChaosSignal,
@@ -37,7 +37,7 @@ public enum CRoleTypeId
     ChaosPenal,
     ChaosUndercoverAgent,
     ChaosSniper,
-    
+
     // ==== EPSILON-11 NINE-TAILED FOX ==== //
     NtfLieutenant,
     NtfGeneral,
@@ -45,7 +45,7 @@ public enum CRoleTypeId
     NtfDetainer,
     NtfFieldMedic,
     NtfGunslinger,
-    
+
     // ==== NU-7 HAMMER DOWN ==== //
     HdInfantry,
     HdCommander,
@@ -53,34 +53,38 @@ public enum CRoleTypeId
     HdShotgunner,
     HdDisarmer,
     HdShielder,
-    
+
     // ==== ETA-10 SEE NO EVIL ==== //
     SneOperator,
     SneGears,
     SneNeutralitist,
     SnePurify,
-    
+
     // ==== OMEGA-0 ARA ORUN ==== //
     AraOrun,
-    
+
     // ==== OMEGA-1 LAW'S LEFT HAND ==== //
     LwsJudgement,
     LwsLiaison,
     LwsForensic,
     LwsAgent,
-    
+
     // ==== ALPHA-1 RED RIGHT HAND ==== //
     RrhWarden,
     RrhEnforcer,
     RrhAegis,
     RrhAssaulter,
-    
+
+    // ==== OMEGA-7 Pandora's Box ==== //
+    PdxWarden,
+    PdxWatcher,
+
     // ==== Guards ==== //
     EvacuationGuard,
     SecurityChief,
     ChamberGuard,
     SupplyManager,
-    
+
     // ==== Scientists ==== //
     ZoneManager,
     FacilityManager,
@@ -91,12 +95,12 @@ public enum CRoleTypeId
     CandyResearcher,
     MarionWheeler,
     AntiMemeDivisionScientist,
-    
+
     // ==== Class-D ==== //
     Janitor,
     CandySubject,
     Bloodfiend,
-    
+
     // ==== GoC ==== //
     GoCSquadLeader,
     GoCDeputy,
@@ -105,14 +109,15 @@ public enum CRoleTypeId
     GoCCommunications,
     GoCOperative,
     GoCHoundDog,
-    
+
     // ==== Initiative ==== //
     InitiativeWolf,
-    
+
     // ==== Others ==== //
     SnowWarrior,
     CandyWarriorApril,
     CandyWarriorHalloween,
+    WaterWarrior,
     Zombified,
     Sculpture,
     SergeyMakarov,
@@ -120,12 +125,12 @@ public enum CRoleTypeId
     Capybara,
     Dante,
     DanteSlayer,
-    
+
     // ==== MODERATORS ==== //
     HideAdmin,
     HideWatch,
     ModeratorRole,
-    
+
     // ==== EXPERIMENTAL STAFF ==== //
     SecurityTeamGuard,
     ChaosIntruder,

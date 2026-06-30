@@ -58,7 +58,8 @@ public static class AbilityParseHelper
         foreach (var asm in AppDomain.CurrentDomain.GetAssemblies())
         {
             var type = asm.GetTypes()
-                .FirstOrDefault(t => t.IsSubclassOf(typeof(AbilityBase)) &&
+                .FirstOrDefault(t => !t.IsAbstract &&
+                                   t.IsSubclassOf(typeof(AbilityBase)) &&
                                    (t.Name.Equals(name, StringComparison.OrdinalIgnoreCase) ||
                                     t.FullName?.EndsWith("." + name, StringComparison.OrdinalIgnoreCase) == true));
             if (type != null) return type;
@@ -73,7 +74,7 @@ public static class AbilityParseHelper
     {
         return AppDomain.CurrentDomain.GetAssemblies()
             .SelectMany(asm => asm.GetTypes())
-            .Where(t => t.IsSubclassOf(typeof(AbilityBase)));
+            .Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(AbilityBase)));
     }
 
     /// <summary>
@@ -87,38 +88,13 @@ public static class AbilityParseHelper
 
         try
         {
-            object? instance;
-
-            // コンストラクタ自動判定
-            if (cooldownOverride == null && maxUsesOverride == null)
-            {
-                instance = Activator.CreateInstance(abilityType, target);
-            }
-            else if (cooldownOverride != null && maxUsesOverride == null)
-            {
-                instance = Activator.CreateInstance(abilityType, target, cooldownOverride.Value);
-            }
-            else
-            {
-                var cd = cooldownOverride ?? 10f;
-                var uses = maxUsesOverride ?? -1;
-                instance = Activator.CreateInstance(abilityType, target, cd, uses);
-            }
-
-            if (instance is AbilityBase ability)
-            {
-                // AbilityBaseの状態も自動登録
-                AbilityBase.GrantAbility(target.Id, abilityType, 
-                    cooldownOverride ?? 10f,
-                    maxUsesOverride ?? -1); 
-                
-                target.AddAbility(ability);
-                return true;
-            }
+            var instance = Activator.CreateInstance(abilityType);
+            return instance is AbilityBase ability &&
+                   target.AddAbility(ability, cooldownOverride, maxUsesOverride);
         }
         catch (Exception ex)
         {
-            Log.Error($"[AbilityParse] Failed to create {abilityType.Name}: {ex.Message}");
+            Log.Error($"[AbilityParse] Failed to create {abilityType.Name}: {ex}");
         }
 
         return false;

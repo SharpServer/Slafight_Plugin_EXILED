@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Reflection;
+using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
@@ -22,7 +23,19 @@ public static class AutoHandlerBootstrapRegister
                 registerMethod.GetParameters().Length != 0)
                 continue;
 
-            registerMethod.Invoke(null, null);
+            try
+            {
+                registerMethod.Invoke(null, null);
+                Log.Debug($"AutoHandlerBootstrapRegister: registered {handlerType.FullName}");
+            }
+            catch (TargetInvocationException ex)
+            {
+                Log.Error($"AutoHandlerBootstrapRegister: Register failed for {handlerType.FullName}: {ex.InnerException ?? ex}");
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"AutoHandlerBootstrapRegister: Register failed for {handlerType.FullName}: {ex}");
+            }
         }
     }
 
@@ -41,7 +54,19 @@ public static class AutoHandlerBootstrapRegister
                 unregisterMethod.GetParameters().Length != 0)
                 continue;
 
-            unregisterMethod.Invoke(null, null);
+            try
+            {
+                unregisterMethod.Invoke(null, null);
+                Log.Debug($"AutoHandlerBootstrapRegister: unregistered {handlerType.FullName}");
+            }
+            catch (TargetInvocationException ex)
+            {
+                Log.Error($"AutoHandlerBootstrapRegister: Unregister failed for {handlerType.FullName}: {ex.InnerException ?? ex}");
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"AutoHandlerBootstrapRegister: Unregister failed for {handlerType.FullName}: {ex}");
+            }
         }
     }
 

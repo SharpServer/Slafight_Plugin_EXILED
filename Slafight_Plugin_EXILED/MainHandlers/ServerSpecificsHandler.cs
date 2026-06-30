@@ -70,7 +70,7 @@ public static class ServerSpecificsHandler
     }
 
     // =====================
-    //  キーバインド (ID: 1, 3, 4, 5)
+    //  キーバインド
     // =====================
 
     private static void HandleKeybind(Player player, int settingId)
@@ -127,6 +127,8 @@ public static class ServerSpecificsHandler
                 player.ExplodeEffect(ProjectileType.FragGrenade);
                 player.Kill("自害した");
             }
+
+            return;
         }
 
         if (!AbilityManager.Loadouts.TryGetValue(player.Id, out var loadout) || loadout == null)
@@ -135,10 +137,20 @@ public static class ServerSpecificsHandler
         try
         {
             if (settingId == ServerSpecifics.AbilityUseKeybindSettingId)
+            {
                 loadout.ActiveAbility?.TryActivateFromInput(player);
+            }
             else if (settingId == ServerSpecifics.AbilitySwitchKeybindSettingId)
             {
                 AbilityManager.NextSlot(player);
+            }
+            else if (settingId == ServerSpecifics.AbilityOptionPreviousKeybindSettingId)
+            {
+                loadout.ActiveAbility?.TrySwitchOptionFromInput(player, AbilityOptionDirection.Previous);
+            }
+            else if (settingId == ServerSpecifics.AbilityOptionNextKeybindSettingId)
+            {
+                loadout.ActiveAbility?.TrySwitchOptionFromInput(player, AbilityOptionDirection.Next);
             }
         }
         catch (Exception e)
@@ -148,7 +160,7 @@ public static class ServerSpecificsHandler
     }
 
     // =====================
-    //  テキスト入力 (ID: 2=RPName, 6=パスコード)
+    //  テキスト入力
     // =====================
 
     private static void HandleText(Player player, int settingId, string text)
@@ -166,7 +178,7 @@ public static class ServerSpecificsHandler
     }
 
     // =====================
-    //  アクセシビリティモード (ID: 8)
+    //  アクセシビリティモード
     // =====================
 
     private static void HandleAccessibilityMode(Player player)
@@ -178,7 +190,7 @@ public static class ServerSpecificsHandler
     }
 
     // =====================
-    //  デバッグモード (ID: 9)
+    //  デバッグモード
     // =====================
 
     private static void HandleDebugMode(Player player, bool isOn)
@@ -187,7 +199,7 @@ public static class ServerSpecificsHandler
 
         try
         {
-            PlayerHUD.Instance.HintSync(SyncType.PHUD_Debug, "", player);
+            PlayerHUD.Instance?.HintSync(SyncType.PHUD_Debug, "", player);
         }
         catch
         {

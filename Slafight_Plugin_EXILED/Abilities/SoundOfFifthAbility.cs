@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using CustomPlayerEffects;
 using Exiled.API.Enums;
@@ -9,34 +10,31 @@ using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.Abilities;
 
-public class SoundOfFifthAbility : AbilityBase
+public class SoundOfFifthAbility : OptionAbilityBase
 {
+    private const float CloseRange = 5f;
+    private const float FarRange = 12f;
+
     // AbilityBase の抽象プロパティを実装
     protected override float DefaultCooldown => 20f;
     protected override int DefaultMaxUses => -1;
 
-    // 完全デフォルト
-    public SoundOfFifthAbility(Player owner)
-        : base(owner) { }
+    protected override IReadOnlyList<AbilityOption> DefineOptions() =>
+    [
+        Option("close", "近距離", "5m以内の対象へ強く干渉します。"),
+        Option("far", "遠距離", "12m以内の対象へ広く干渉します。"),
+    ];
 
-    // コマンドなどから上書きしたいとき用
-    public SoundOfFifthAbility(Player owner, float cooldownSeconds)
-        : base(owner, cooldownSeconds) { }
-
-    public SoundOfFifthAbility(Player owner, float cooldownSeconds, int maxUses)
-        : base(owner, cooldownSeconds, maxUses) { }
-
-    protected override bool CanActivate(Player player, out string failureReason)
+    protected override bool CanUseOption(Player player, AbilityOption option, out string failureReason)
     {
-        if (!base.CanActivate(player, out failureReason))
-            return false;
-
+        failureReason = string.Empty;
+        var range = GetRange(option);
         if (!Player.List.Any(target =>
                 target != null &&
                 target != player &&
                 target.IsAlive &&
                 !target.HasFlag(SpecificFlagType.AntiMemeEffectDisabled) &&
-                Vector3.Distance(target.Position, player.Position) <= 5f))
+                Vector3.Distance(target.Position, player.Position) <= range))
         {
             failureReason = "効果範囲内に対象が存在しません。";
             return false;
@@ -45,14 +43,15 @@ public class SoundOfFifthAbility : AbilityBase
         return true;
     }
 
-    protected override void ExecuteAbility(Player player)
+    protected override void UseOption(Player player, AbilityOption option)
     {
+        var range = GetRange(option);
         foreach (var targetPlayer in Player.List)
         {
             if (targetPlayer == null) continue;
             if (targetPlayer == player) continue;
             if (targetPlayer.HasFlag(SpecificFlagType.AntiMemeEffectDisabled)) continue;
-            if (!(Vector3.Distance(targetPlayer.Position, player.Position) <= 5f)) continue;
+            if (!(Vector3.Distance(targetPlayer.Position, player.Position) <= range)) continue;
             if (targetPlayer.GetTeam() != CTeam.Fifthists)
             {
                 targetPlayer.Explode(ProjectileType.Flashbang,player);
@@ -67,4 +66,7 @@ public class SoundOfFifthAbility : AbilityBase
             }
         }
     }
+
+    private static float GetRange(AbilityOption option)
+        => option.Is("far") ? FarRange : CloseRange;
 }

@@ -9,14 +9,8 @@ namespace Slafight_Plugin_EXILED.Abilities;
 
 public sealed class Scp106TargetTeleportAbility : AbilityBase
 {
-    protected override float DefaultCooldown => 20f;
+    protected override float DefaultCooldown => HuntRole.HuntSettings.TeleportCooldown;
     protected override int DefaultMaxUses => -1;
-
-    public Scp106TargetTeleportAbility(Player owner)
-        : base(owner, HuntRole.HuntSettings.TeleportCooldown) { }
-
-    public Scp106TargetTeleportAbility(Player owner, float cooldownSeconds)
-        : base(owner, cooldownSeconds) { }
 
     protected override bool CanActivate(Player player, out string failureReason)
     {

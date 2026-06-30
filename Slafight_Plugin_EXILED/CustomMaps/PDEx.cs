@@ -172,7 +172,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
                 if (player.GetCustomRole() == CRoleTypeId.Scp106 || (player.GetCustomRole() == CRoleTypeId.None && player.Role.Type == RoleTypeId.Scp106))
                 {
                     player.Position = MapFlags.PocketDimensionExitKingJoinPoint;
-                    player.AddAbility(new AllowEscapeAbility(player));
+                    player.AddAbility<AllowEscapeAbility>();
                     if (player.IsConnected && !player.IsNPC)
                         player.ShowHint("アビリティ「腐蝕からの解放」が付与されました。\n人間を釈放したくなったら使ってください\nまた、近接チャットも一時的に利用可能です！");
                     Handler.SetProximityChatForced(player, true);

@@ -54,8 +54,8 @@ public class Scp3005Role : CRole
         // ★ Scale は触らない
         LabApiHandler.Schem3005(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
 
-        player.AddAbility(new MagicMissileAbility(player));
-        player.AddAbility(new SoundOfFifthAbility(player));
+        player.AddAbility<MagicMissileAbility>();
+        player.AddAbility<SoundOfFifthAbility>();
 
         Timing.RunCoroutine(WaitAndTeleport(player));
         Timing.RunCoroutine(Scp3005Coroutine(player));

@@ -13,17 +13,6 @@ public class PlaceTantrumAbility : AbilityBase
     protected override float DefaultCooldown => 80f;
     protected override int DefaultMaxUses => -1;
 
-    // 完全デフォルト
-    public PlaceTantrumAbility(Player owner)
-        : base(owner) { }
-
-    // コマンドなどから上書きしたいとき用
-    public PlaceTantrumAbility(Player owner, float cooldownSeconds)
-        : base(owner, cooldownSeconds) { }
-
-    public PlaceTantrumAbility(Player owner, float cooldownSeconds, int maxUses)
-        : base(owner, cooldownSeconds, maxUses) { }
-
     protected override void ExecuteAbility(Player player)
     {
         for (int i = 0; i < 5; i++)

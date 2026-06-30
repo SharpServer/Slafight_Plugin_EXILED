@@ -15,12 +15,6 @@ public class SenseOfGreatDoctor : AbilityBase
     protected override float DefaultCooldown => 200f;
     protected override int DefaultMaxUses => -1;
 
-    public SenseOfGreatDoctor(Player owner) : base(owner) { }
-
-    public SenseOfGreatDoctor(Player owner, float cooldownSeconds) : base(owner, cooldownSeconds) { }
-
-    public SenseOfGreatDoctor(Player owner, float cooldownSeconds, int maxUses) : base(owner, cooldownSeconds, maxUses) { }
-
     protected override bool CanActivate(Player player, out string failureReason)
     {
         if (!base.CanActivate(player, out failureReason))

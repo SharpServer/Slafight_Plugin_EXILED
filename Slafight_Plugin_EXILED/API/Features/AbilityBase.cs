@@ -6,50 +6,106 @@ using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
-using UnityEngine; // ← 追加（Time.time 用）
+using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
 public abstract class AbilityBase
 {
-    // プレイヤーIDごとのアビリティ状態（Typeごと）
     protected static readonly Dictionary<int, Dictionary<Type, AbilityState>> playerStates = new();
 
-    protected class AbilityState
+    protected sealed class AbilityState
     {
         public bool CanUse { get; set; } = true;
-        public int MaxUses { get; set; } = -1;   // -1 = 無制限
-        public int UsedCount { get; set; } = 0;
-
-        // ★ 追加: 終了時刻（Time.time ベース）
-        public float CooldownEndTime { get; set; } = 0f;
-
+        public int MaxUses { get; set; } = -1;
+        public int UsedCount { get; set; }
+        public float CooldownEndTime { get; set; }
         public float CooldownSeconds { get; set; } = 10f;
         public CoroutineHandle CooldownHandle;
         public AbilityBase? OwnerAbility { get; set; }
     }
 
-    // ===== 外部API =====
+    private float _cooldownSeconds;
+    private int _maxUses;
+
+    protected AbilityBase()
+    {
+    }
+
+    public Player? Owner { get; private set; }
+    public bool IsInitialized { get; private set; }
+
+    protected abstract float DefaultCooldown { get; }
+    protected abstract int DefaultMaxUses { get; }
+
+    protected float CooldownSeconds => IsInitialized ? _cooldownSeconds : DefaultCooldown;
+    protected int MaxUses => IsInitialized ? _maxUses : DefaultMaxUses;
+
+    public virtual bool HasSelectableOptions => false;
+
+    public virtual string GetSelectedOptionName(Player player) => string.Empty;
+
+    public virtual string GetSelectedOptionDescription(Player player) => string.Empty;
+
+    public virtual bool TrySwitchOptionFromInput(Player player, AbilityOptionDirection direction) => false;
+
+    internal void Initialize(Player owner, float? cooldownSeconds = null, int? maxUses = null)
+    {
+        if (owner?.ReferenceHub == null)
+            throw new ArgumentNullException(nameof(owner));
+
+        Owner = owner;
+        _cooldownSeconds = cooldownSeconds ?? DefaultCooldown;
+        _maxUses = maxUses ?? DefaultMaxUses;
+        IsInitialized = true;
+
+        GrantAbility(owner.Id, GetType(), _cooldownSeconds, _maxUses, this);
+        OnInitialized(owner);
+    }
+
+    protected virtual void OnInitialized(Player owner)
+    {
+    }
+
     public static bool HasAbility(int playerId) => playerStates.ContainsKey(playerId);
 
     public static bool HasAbility(int playerId, Type abilityType) =>
         playerStates.TryGetValue(playerId, out var states) && states.ContainsKey(abilityType);
 
     public static bool CanUseNow(int playerId) =>
-        AbilityManager.TryGetLoadout(Player.Get(playerId), out var loadout) &&
+        AbilityManager.TryGetLoadout(Player.Get(playerId), out _) &&
         CanUseSelectedAbility(playerId);
 
-    public static bool CanUseNow(int playerId, Type abilityType) =>
-        playerStates.TryGetValue(playerId, out var states) &&
-        states.TryGetValue(abilityType, out var state) && state.CanUse;
+    public static bool CanUseNow(int playerId, Type abilityType)
+    {
+        if (!playerStates.TryGetValue(playerId, out var states) ||
+            !states.TryGetValue(abilityType, out var state))
+            return false;
 
-    public static bool IsOnCooldown(int playerId) =>
-        playerStates.TryGetValue(playerId, out var states) &&
-        states.Values.Any(s => !s.CanUse);
+        RefreshCooldownState(state);
+        return state.CanUse;
+    }
 
-    public static bool IsOnCooldown(int playerId, Type abilityType) =>
-        playerStates.TryGetValue(playerId, out var states) &&
-        states.TryGetValue(abilityType, out var state) && !state.CanUse;
+    public static bool IsOnCooldown(int playerId)
+    {
+        if (!playerStates.TryGetValue(playerId, out var states))
+            return false;
+
+        foreach (var state in states.Values)
+            RefreshCooldownState(state);
+
+        return states.Values.Any(state => !state.CanUse);
+    }
+
+    public static bool IsOnCooldown(int playerId, Type abilityType)
+    {
+        if (!playerStates.TryGetValue(playerId, out var states) ||
+            !states.TryGetValue(abilityType, out var state))
+            return false;
+
+        RefreshCooldownState(state);
+        return !state.CanUse;
+    }
 
     public static int GetUsedCount(int playerId) =>
         playerStates.TryGetValue(playerId, out var states) ? states.Values.Sum(s => s.UsedCount) : 0;
@@ -67,7 +123,6 @@ public abstract class AbilityBase
         states.TryGetValue(abilityType, out var state) &&
         (state.MaxUses < 0 || state.UsedCount < state.MaxUses);
 
-    // ★ 現在選択中のアビリティ使用可能か
     public static bool CanUseSelectedAbility(int playerId)
     {
         if (!AbilityManager.TryGetLoadout(Player.Get(playerId), out var loadout))
@@ -77,7 +132,6 @@ public abstract class AbilityBase
         return activeAbility != null && CanUseNow(playerId, activeAbility.GetType());
     }
 
-    // プレイヤーごとの状態取得
     protected static bool TryGetState(int playerId, Type abilityType, out AbilityState state)
     {
         if (playerStates.TryGetValue(playerId, out var states) &&
@@ -88,7 +142,12 @@ public abstract class AbilityBase
         return false;
     }
 
-    public static void GrantAbility(int playerId, Type abilityType, float cooldown = 10f, int maxUses = -1)
+    public static void GrantAbility(
+        int playerId,
+        Type abilityType,
+        float cooldown = 10f,
+        int maxUses = -1,
+        AbilityBase? ownerAbility = null)
     {
         if (!playerStates.TryGetValue(playerId, out var states))
         {
@@ -96,14 +155,27 @@ public abstract class AbilityBase
             playerStates[playerId] = states;
         }
 
-        states[abilityType] = new AbilityState
+        if (!states.TryGetValue(abilityType, out var state))
         {
-            CanUse = true,
-            CooldownSeconds = cooldown,
-            MaxUses = maxUses,
-            OwnerAbility = null,
-            CooldownEndTime = 0f,
-        };
+            state = new AbilityState();
+            states[abilityType] = state;
+        }
+
+        state.CanUse = true;
+        state.UsedCount = 0;
+        state.CooldownSeconds = Math.Max(0f, cooldown);
+        state.MaxUses = maxUses;
+        state.OwnerAbility = ownerAbility;
+        state.CooldownEndTime = 0f;
+
+        try
+        {
+            Timing.KillCoroutines(state.CooldownHandle);
+        }
+        catch
+        {
+            // ignored
+        }
     }
 
     public static void GrantAbility(int playerId, float cooldown = 10f, int maxUses = -1)
@@ -118,7 +190,10 @@ public abstract class AbilityBase
             {
                 Timing.KillCoroutines(state.CooldownHandle);
             }
-            catch { }
+            catch
+            {
+                // ignored
+            }
 
             states.Remove(abilityType);
         }
@@ -126,7 +201,27 @@ public abstract class AbilityBase
 
     public static void RevokeAbility(int playerId)
     {
-        if (playerStates.TryGetValue(playerId, out var states))
+        if (!playerStates.TryGetValue(playerId, out var states))
+            return;
+
+        foreach (var state in states.Values)
+        {
+            try
+            {
+                Timing.KillCoroutines(state.CooldownHandle);
+            }
+            catch
+            {
+                // ignored
+            }
+        }
+
+        playerStates.Remove(playerId);
+    }
+
+    public static void RevokeAllPlayers()
+    {
+        foreach (var states in playerStates.Values)
         {
             foreach (var state in states.Values)
             {
@@ -134,25 +229,13 @@ public abstract class AbilityBase
                 {
                     Timing.KillCoroutines(state.CooldownHandle);
                 }
-                catch { }
-            }
-            playerStates.Remove(playerId);
-        }
-    }
-
-    public static void RevokeAllPlayers()
-    {
-        foreach (var kvp in playerStates)
-        {
-            foreach (var state in kvp.Value.Values)
-            {
-                try
+                catch
                 {
-                    Timing.KillCoroutines(state.CooldownHandle);
+                    // ignored
                 }
-                catch { }
             }
         }
+
         playerStates.Clear();
     }
 
@@ -168,17 +251,16 @@ public abstract class AbilityBase
 
     public static void ResetCooldown(int playerId)
     {
-        if (playerStates.TryGetValue(playerId, out var states))
+        if (!playerStates.TryGetValue(playerId, out var states))
+            return;
+
+        foreach (var state in states.Values)
         {
-            foreach (var state in states.Values)
-            {
-                state.CanUse = true;
-                state.CooldownEndTime = 0f;
-            }
+            state.CanUse = true;
+            state.CooldownEndTime = 0f;
         }
     }
 
-    // Player 拡張
     public static bool GrantAbility(Player player, Type abilityType, float cooldown = 10f, int maxUses = -1)
     {
         GrantAbility(player.Id, abilityType, cooldown, maxUses);
@@ -186,7 +268,7 @@ public abstract class AbilityBase
     }
 
     public static bool GrantAbility(Player player, float cooldown = 10f, int maxUses = -1)
-        => GrantAbility(player, cooldown);
+        => GrantAbility(player, typeof(AbilityBase), cooldown, maxUses);
 
     public static bool HasAbility(Player player) => HasAbility(player.Id);
 
@@ -197,13 +279,13 @@ public abstract class AbilityBase
 
         foreach (var ability in loadout.Slots)
         {
-            if (ability != null && ability is TAbility)
+            if (ability is TAbility)
                 return true;
         }
+
         return false;
     }
 
-    // AbilityInputHandler から叩く入口
     public void TryActivateFromInput(Player player)
     {
         Log.Debug($"[Ability] TryActivateFromInput called for {player.Nickname}, role={player.Role.Type}, team={player.Role.Team}");
@@ -214,7 +296,6 @@ public abstract class AbilityBase
             return;
         }
 
-        // ★ 現在選択中のアビリティかチェック
         if (!AbilityManager.TryGetLoadout(player, out var loadout))
         {
             Log.Debug($"[Ability] No loadout for {player.Nickname}");
@@ -242,32 +323,12 @@ public abstract class AbilityBase
             ExecuteAbility(player);
     }
 
-    // ===== 初期化（ラウンド跨ぎのクールダウンクリア用）=====
     private static bool _initialized;
-
-    // 抽象デフォルト値
-    protected abstract float DefaultCooldown { get; }
-    protected abstract int DefaultMaxUses { get; }
-
-    private readonly float _defaultCooldown;
-    private readonly int _defaultMaxUses;
-
-    protected AbilityBase(Player owner, float? cooldownSeconds = null, int? maxUses = null)
-    {
-        _defaultCooldown = cooldownSeconds ?? DefaultCooldown;
-        _defaultMaxUses  = maxUses ?? DefaultMaxUses;
-
-        GrantAbility(owner.Id, GetType(), _defaultCooldown, _defaultMaxUses);
-    }
-
-    protected AbilityBase(Player owner)
-        : this(owner, null, null)
-    {
-    }
 
     internal static void RegisterEvents()
     {
-        if (_initialized) return;
+        if (_initialized)
+            return;
 
         Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Joined += OnPlayerJoined;
@@ -277,7 +338,8 @@ public abstract class AbilityBase
 
     internal static void UnregisterEvents()
     {
-        if (!_initialized) return;
+        if (!_initialized)
+            return;
 
         Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Joined -= OnPlayerJoined;
@@ -294,56 +356,58 @@ public abstract class AbilityBase
     private static void OnPlayerLeft(LeftEventArgs ev) =>
         RevokeAbility(ev.Player.Id);
 
-    // ★★★ ここを修正: 終了時刻を使ったクールダウン開始
     protected bool TryUseAbility(Player player)
     {
+        if (!IsInitialized)
+            Initialize(player);
+
         var myType = GetType();
-        if (!playerStates.TryGetValue(player.Id, out var states) ||
-            !states.TryGetValue(myType, out var state))
+        if (!playerStates.TryGetValue(player.Id, out var states))
+        {
+            states = new Dictionary<Type, AbilityState>();
+            playerStates[player.Id] = states;
+        }
+
+        if (!states.TryGetValue(myType, out var state))
         {
             state = new AbilityState
             {
-                CooldownSeconds = _defaultCooldown,
-                MaxUses = _defaultMaxUses,
+                CooldownSeconds = CooldownSeconds,
+                MaxUses = MaxUses,
                 OwnerAbility = this,
-                CooldownEndTime = 0f,
             };
             states[myType] = state;
         }
-        else if (state.OwnerAbility == null)
+        else
         {
-            state.OwnerAbility = this;
+            state.OwnerAbility ??= this;
         }
 
         if (state.MaxUses > 0 && state.UsedCount >= state.MaxUses)
             return false;
 
-        // 時間ベースで CanUse を更新
-        if (!state.CanUse && Time.time >= state.CooldownEndTime)
-            state.CanUse = true;
+        RefreshCooldownState(state);
 
         if (!state.CanUse)
             return false;
 
         state.CanUse = false;
         state.UsedCount++;
-
-        // 終了時刻をセット
         state.CooldownEndTime = Time.time + state.CooldownSeconds;
 
         try
         {
             Timing.KillCoroutines(state.CooldownHandle);
         }
-        catch { }
+        catch
+        {
+            // ignored
+        }
 
-        state.CooldownHandle = Timing.RunCoroutine(
-            CooldownCoroutine(player.Id, state));
-
+        state.CooldownHandle = Timing.RunCoroutine(CooldownCoroutine(player.Id, state));
         return true;
     }
 
-    // ★★★ ここも修正: 終了時刻まで待つ
     private static IEnumerator<float> CooldownCoroutine(int playerId, AbilityState state)
     {
         var waitTime = Mathf.Max(0f, state.CooldownEndTime - Time.time);
@@ -384,7 +448,6 @@ public abstract class AbilityBase
         return true;
     }
 
-    // ★ 現在選択中アビリティのみヒント表示
     protected virtual void OnCooldownEnd(Player player)
     {
         if (player != null && player.ReferenceHub != null && player.IsConnected && !player.IsNPC &&
@@ -392,15 +455,18 @@ public abstract class AbilityBase
             loadout.ActiveAbility == this)
         {
             var abilityName = AbilityLocalization.GetDisplayName(GetType().Name, player);
-            player.ShowHint($"<color=yellow>{abilityName} のクールダウンが終了しました。</color>",
-                3f);
+            player.ShowHint($"<color=yellow>{abilityName} のクールダウンが終了しました。</color>", 3f);
             AbilityManager.UpdateAbilityHint(player, loadout);
         }
     }
-    
-    // ===== 外部からのHUD用API =====
-    public static bool TryGetAbilityState(Player player, AbilityBase? ability,
-        out bool canUse, out float cooldownSecondsRemaining, out int usesLeft, out int maxUses)
+
+    public static bool TryGetAbilityState(
+        Player player,
+        AbilityBase? ability,
+        out bool canUse,
+        out float cooldownSecondsRemaining,
+        out int usesLeft,
+        out int maxUses)
     {
         canUse = false;
         cooldownSecondsRemaining = 0f;
@@ -411,20 +477,21 @@ public abstract class AbilityBase
             !states.TryGetValue(ability.GetType(), out var state))
             return false;
 
-        // 時間ベースでCanUse更新
-        if (!state.CanUse && Time.time >= state.CooldownEndTime)
-            state.CanUse = true;
+        RefreshCooldownState(state);
 
         canUse = state.CanUse;
-
-        if (state.CanUse)
-            cooldownSecondsRemaining = 0f;
-        else
-            cooldownSecondsRemaining = Mathf.Max(0f, state.CooldownEndTime - Time.time);
-
+        cooldownSecondsRemaining = state.CanUse
+            ? 0f
+            : Mathf.Max(0f, state.CooldownEndTime - Time.time);
         maxUses = state.MaxUses;
-        usesLeft = (state.MaxUses < 0) ? -1 : (state.MaxUses - state.UsedCount);
+        usesLeft = state.MaxUses < 0 ? -1 : state.MaxUses - state.UsedCount;
 
         return true;
+    }
+
+    private static void RefreshCooldownState(AbilityState state)
+    {
+        if (!state.CanUse && Time.time >= state.CooldownEndTime)
+            state.CanUse = true;
     }
 }

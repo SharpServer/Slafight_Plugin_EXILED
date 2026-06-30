@@ -7,28 +7,22 @@ namespace Slafight_Plugin_EXILED.Extensions;
 public static class PlayerAbilityExtensions
 {
     // アビリティ追加（スロット制限付き）
-    public static bool AddAbility<TAbility>(this Player? player)
-        where TAbility : AbilityBase
+    public static bool AddAbility<TAbility>(this Player? player, float? cooldownOverride = null, int? maxUsesOverride = null)
+        where TAbility : AbilityBase, new()
     {
         if (player == null)
             return false;
 
         Log.Debug($"[Ability] Add {typeof(TAbility).Name} to {player.Nickname}");
-        var loadout = AbilityManager.GetOrCreateLoadout(player);
-        if (loadout == null)
-            return false;
-
-        // TAbility は (Player owner) コンストラクタを持っている前提
-        var ability = (TAbility)Activator.CreateInstance(typeof(TAbility), player)!;
-        var added = loadout.AddAbility(ability);
-        if (added)
-            AbilityManager.UpdateAbilityHint(player, loadout);
-
-        return added;
+        return player.AddAbility(new TAbility(), cooldownOverride, maxUsesOverride);
     }
 
     // 直接インスタンス渡し版
-    public static bool AddAbility(this Player? player, AbilityBase? ability)
+    public static bool AddAbility(
+        this Player? player,
+        AbilityBase? ability,
+        float? cooldownOverride = null,
+        int? maxUsesOverride = null)
     {
         if (player == null || ability == null)
             return false;
@@ -37,7 +31,26 @@ public static class PlayerAbilityExtensions
         if (loadout == null)
             return false;
 
+        if (!loadout.HasFreeSlot())
+            return false;
+
+        try
+        {
+            ability.Initialize(player, cooldownOverride, maxUsesOverride);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[Ability] Failed to initialize {ability.GetType().Name} for {player.Nickname}: {ex}");
+            return false;
+        }
+
         var added = loadout.AddAbility(ability);
+        if (!added)
+        {
+            AbilityBase.RevokeAbility(player.Id, ability.GetType());
+            return false;
+        }
+
         if (added)
             AbilityManager.UpdateAbilityHint(player, loadout);
 

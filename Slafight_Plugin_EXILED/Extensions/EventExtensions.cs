@@ -9,10 +9,6 @@ public static class EventExtensions
     {
         if (!ev.IsAllowed) return false;
         if (ev.Player is null) return false;
-        if (ev.Player.Health - ev.Amount <= 0)
-        {
-            return true;
-        }
-        return false;
+        return ev.IsInstantKill || ev.Player.Health - ev.Amount <= 0;
     }
 }

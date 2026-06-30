@@ -37,6 +37,7 @@ public static class OmegaWarhead
 
     private static SpecialEventsHandler SpecialEventsHandler => SpecialEventsHandler.Instance;
     public static event EventHandler<OmegaWarheadStartingEventArgs> OmegaWarheadStarting;
+    public static event Action OmegaWarheadDetonating;
 
     public static bool CanBeStart() => !IsWarheadStarted && SpecialEventsHandler.IsWarheadable();
 
@@ -114,6 +115,7 @@ public static class OmegaWarhead
 
         if (!Round.InProgress) yield break;
 
+        OmegaWarheadDetonating?.Invoke();
         AlphaWarheadController.Singleton.RpcShake(false);
         foreach (var player in Player.List)
         {
@@ -138,5 +140,6 @@ public static class OmegaWarhead
     {
         Reset();
         OmegaWarheadStarting = null;
+        OmegaWarheadDetonating = null;
     }
 }

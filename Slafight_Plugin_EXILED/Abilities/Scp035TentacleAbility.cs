@@ -12,10 +12,6 @@ public class Scp035TentacleAbility : AbilityBase
     protected override float DefaultCooldown => 10f;
     protected override int DefaultMaxUses => -1;
 
-    public Scp035TentacleAbility(Player owner) : base(owner) { }
-    public Scp035TentacleAbility(Player owner, float cooldownSeconds) : base(owner, cooldownSeconds) { }
-    public Scp035TentacleAbility(Player owner, float cooldownSeconds, int maxUses) : base(owner, cooldownSeconds, maxUses) { }
-
     protected override void ExecuteAbility(Player player)
     {
         try

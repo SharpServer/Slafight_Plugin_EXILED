@@ -14,7 +14,7 @@ using Scp914Events = Exiled.Events.EventArgs.Scp914;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
-/// 複数の CItem を「モード」として持ち、G キー（ServerSpecifics ID 5）で切り替えられる
+/// 複数の CItem を「モード」として持ち、ServerSpecifics のアイテムモード切り替えキーで切り替えられる
 /// 仮想カスタムアイテム基底クラス。
 ///
 /// 設計メモ:

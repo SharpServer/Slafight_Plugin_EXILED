@@ -35,9 +35,9 @@ public class SergeyMakarovAwakenRole : CRole
         var pos = Door.Get(DoorType.Scp106Primary).Position + Vector3.up * 0.25f;
         TrySetPlayerPosition(player, pos, nameof(SergeyMakarovAwakenRole));
 
-        player.AddAbility(new CreateSinkholeAbility(player));
-        player.AddAbility(new MagicMissileAbility(player));
-        player.AddAbility(new SoundOfFifthAbility(player));
+        player.AddAbility<CreateSinkholeAbility>();
+        player.AddAbility<MagicMissileAbility>();
+        player.AddAbility<SoundOfFifthAbility>();
 
         var playerId = player.Id;
         Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
