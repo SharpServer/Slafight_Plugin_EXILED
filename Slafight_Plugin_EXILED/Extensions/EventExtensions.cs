@@ -7,6 +7,7 @@ public static class EventExtensions
     // HurtingEventArgs
     public static bool IsDeathExpected(this HurtingEventArgs ev)
     {
+        if (!ev.IsAllowed) return false;
         if (ev.Player is null) return false;
         if (ev.Player.Health - ev.Amount <= 0)
         {

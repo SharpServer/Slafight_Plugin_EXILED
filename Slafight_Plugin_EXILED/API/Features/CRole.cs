@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.CustomItems.API.Features;
@@ -21,9 +22,21 @@ using MapEvents = Exiled.Events.EventArgs.Map;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
-public readonly record struct CRoleEffect(EffectType EffectType, byte Intensity = 1, float Duration = 0f)
+public class CRoleEffect
 {
-    public void Apply(Player? player)
+    public CRoleEffect(EffectType effectType, byte intensity = 1, float duration = 0f)
+    {
+        EffectType = effectType;
+        Intensity = intensity;
+        Duration = duration;
+    }
+
+    public EffectType EffectType { get; }
+    public byte Intensity { get; }
+    public float Duration { get; }
+    public virtual string EffectName => EffectType.ToString();
+
+    public virtual void Apply(Player? player)
     {
         if (player == null) return;
 
@@ -31,6 +44,26 @@ public readonly record struct CRoleEffect(EffectType EffectType, byte Intensity 
             player.EnableEffect(EffectType, Intensity, Duration);
         else
             player.EnableEffect(EffectType, Intensity);
+    }
+}
+
+public sealed class CRoleEffect<T> : CRoleEffect where T : StatusEffectBase
+{
+    public CRoleEffect(byte intensity = 1, float duration = 0f)
+        : base(EffectType.None, intensity, duration)
+    {
+    }
+
+    public override string EffectName => typeof(T).Name;
+
+    public override void Apply(Player? player)
+    {
+        if (player == null) return;
+
+        if (Duration > 0f)
+            player.EnableEffect<T>(Intensity, Duration);
+        else
+            player.EnableEffect<T>(Intensity);
     }
 }
 
@@ -1107,7 +1140,7 @@ public abstract class CRole
             }
             catch (Exception ex)
             {
-                Log.Warn($"CRole.ApplyRoleEffects: failed to apply {effect.EffectType} for {DisplayName}: {ex.Message}");
+                Log.Warn($"CRole.ApplyRoleEffects: failed to apply {effect.EffectName} for {DisplayName}: {ex.Message}");
             }
         }
     }
