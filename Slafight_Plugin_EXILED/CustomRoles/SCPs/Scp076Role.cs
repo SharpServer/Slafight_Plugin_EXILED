@@ -58,6 +58,15 @@ public class Scp076Role : CRole
     private static readonly Dictionary<int, int> KillCounts = [];
     // 反逆状態に入っている playerId
     private static readonly HashSet<int> ResistancePlayerIds = [];
+    // 抑制装置の起爆処理中の playerId（死因放送を専用のものへ切り替える判定に使用）
+    private static readonly HashSet<int> SuppressionDetonatingIds = [];
+
+    private const string SuppressionDeviceKillReason = "抑制装置により爆発された";
+
+    // 抑制装置の起爆による終了専用の死因放送。
+    private static readonly TerminationCause SuppressionDeviceCause = TerminationCause.Custom(
+        "successfully terminated by detonation of the restraint device .",
+        "は、<color=#ff3333>抑制装置</color>の起爆により終了されました。");
 
     public static bool IsResistanceState(Player? player)
         => player?.ReferenceHub != null && ResistancePlayerIds.Contains(player.Id);
@@ -100,9 +109,29 @@ public class Scp076Role : CRole
 
     protected override void OnRoleDying(DyingEventArgs ev)
     {
-        CassieHelper.AnnounceTermination(ev, "SCP 0 7 6", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
+        var target = $"<color={Team.GetTeamColor()}>{RoleName}</color>";
+        if (ev.Player != null && SuppressionDetonatingIds.Contains(ev.Player.Id))
+            CassieHelper.AnnounceTermination(ev, "SCP 0 7 6", target, SuppressionDeviceCause, true);
+        else
+            CassieHelper.AnnounceTermination(ev, "SCP 0 7 6", target, true);
         CleanupPlayerState(ev.Player);
         base.OnRoleDying(ev);
+    }
+
+    /// <summary>
+    /// 抑制装置の起爆としてアベルを爆死させる。
+    /// 起爆中フラグを立ててから爆破するため、<see cref="OnRoleDying"/> 側で専用の死因放送に切り替えられる。
+    /// </summary>
+    /// <param name="projectile">爆破に使うプロジェクタイル。null の場合は <see cref="Player.Explode()"/>（自己爆発）を使う。</param>
+    private static void DetonateSuppressionDevice(Player player, ProjectileType? projectile = null)
+    {
+        SuppressionDetonatingIds.Add(player.Id);
+        if (projectile.HasValue)
+            player.Explode(projectile.Value);
+        else
+            player.Explode();
+        if (player.IsAlive)
+            player.Kill(SuppressionDeviceKillReason);
     }
 
     protected override void OnRoleChanging(ChangingRoleEventArgs ev)
@@ -181,9 +210,7 @@ public class Scp076Role : CRole
         {
             if (!Check(player)) continue;
 
-            player.Explode();
-            if (player.IsAlive)
-                player.Kill("抑制装置により爆発された");
+            DetonateSuppressionDevice(player);
         }
     }
 
@@ -235,9 +262,7 @@ public class Scp076Role : CRole
 
             if (elapsed >= ResistanceCountdownSeconds)
             {
-                player.Explode(ProjectileType.FragGrenade);
-                if (player.IsAlive)
-                    player.Kill("抑制装置により爆発された");
+                DetonateSuppressionDevice(player, ProjectileType.FragGrenade);
 
                 CleanupPlayerState(player);
                 yield break;
@@ -280,6 +305,7 @@ public class Scp076Role : CRole
         MovementIntensities.Remove(player.Id);
         KillCounts.Remove(player.Id);
         ResistancePlayerIds.Remove(player.Id);
+        SuppressionDetonatingIds.Remove(player.Id);
         RoleSpecificTextProvider.Clear(player);
         EffectedInfoTextProvider.Clear(player);
     }
@@ -301,5 +327,6 @@ public class Scp076Role : CRole
         MovementIntensities.Clear();
         KillCounts.Clear();
         ResistancePlayerIds.Clear();
+        SuppressionDetonatingIds.Clear();
     }
 }
