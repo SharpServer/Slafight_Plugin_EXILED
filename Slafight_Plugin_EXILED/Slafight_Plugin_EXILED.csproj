@@ -219,6 +219,7 @@
         <Compile Include="API\Features\NetworkVisibilityManager.cs" />
         <Compile Include="API\Features\PlayerSpeakerManager.cs" />
         <Compile Include="API\Features\PlayerVisiblitySyncProvider.cs" />
+        <Compile Include="API\Features\PositionProvider.cs" />
         <Compile Include="API\Features\Scp1576Database.cs" />
         <Compile Include="API\Features\Scp914\Scp914Context.cs" />
         <Compile Include="API\Features\Scp914\Scp914Rule.cs" />
@@ -280,7 +281,6 @@
         <Compile Include="API\Interface\IObjectPrefab.cs" />
         <Compile Include="API\Interface\ISpawnableObject.cs" />
         <Compile Include="API\Objects\RoleTables.cs" />
-        <Compile Include="API\PositionProvider.cs" />
         <Compile Include="API\Structs\ObjectInfo.cs" />
         <Compile Include="Changes\CandyChanges.cs" />
         <Compile Include="Changes\ChristmasChanges.cs" />

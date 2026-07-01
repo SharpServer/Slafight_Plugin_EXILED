@@ -1,8 +1,8 @@
 using UnityEngine;
 
-namespace Slafight_Plugin_EXILED.API;
+namespace Slafight_Plugin_EXILED.API.Features;
 
-public class PositionProvider
+public static class PositionProvider
 {
     public static Vector3 GetNtfSpawnPosition()
     {
