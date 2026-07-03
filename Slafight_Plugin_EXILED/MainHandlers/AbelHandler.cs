@@ -133,7 +133,7 @@ public class AbelHandler : IBootstrapHandler
 
     private static bool IsEligibleSpectator(Player player)
         => player is not null &&
-           player.IsNotNpc() &&
+           player.IsNotHost() &&
            player.Role == RoleTypeId.Spectator &&
            player.GetCustomRole() == CRoleTypeId.None;
 }
