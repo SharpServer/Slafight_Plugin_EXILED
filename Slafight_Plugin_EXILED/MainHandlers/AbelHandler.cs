@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Warhead;
@@ -14,11 +15,12 @@ namespace Slafight_Plugin_EXILED.MainHandlers;
 public class AbelHandler : IBootstrapHandler
 {
     private const float SpawnDelaySeconds = 1f;
+    private const float SpectatorCheckIntervalSeconds = 1f;
+    private const int RequiredSpectators = 2;
 
     private static CoroutineHandle _spawnHandle;
     private static bool _registered;
     private static bool _spawnQueued;
-    private static bool _roundLockApplied;
 
     public static void Register()
     {
@@ -43,7 +45,6 @@ public class AbelHandler : IBootstrapHandler
         if (_spawnHandle.IsRunning)
             Timing.KillCoroutines(_spawnHandle);
 
-        ReleaseRoundLock();
         _spawnQueued = false;
         _registered = false;
         Log.Debug("AbelHandler: unregistered warhead detonation hooks.");
@@ -71,12 +72,6 @@ public class AbelHandler : IBootstrapHandler
             return;
         }
 
-        if (Round.InProgress && !Round.IsLocked)
-        {
-            Round.IsLocked = true;
-            _roundLockApplied = true;
-        }
-
         if (_spawnQueued)
         {
             Log.Debug($"AbelHandler: Pandra's Box spawn is already queued. Ignored duplicate trigger from {reason}.");
@@ -89,47 +84,56 @@ public class AbelHandler : IBootstrapHandler
         }
 
         _spawnQueued = true;
-        Log.Info($"AbelHandler: queued Pandra's Box spawn from {reason} after {delay:0.00}s.");
+        Log.Info($"AbelHandler: queued Pandra's Box spawn from {reason} after {delay:0.00}s and {RequiredSpectators} eligible spectator(s).");
 
         if (_spawnHandle.IsRunning)
             Timing.KillCoroutines(_spawnHandle);
 
-        _spawnHandle = Timing.CallDelayed(delay, () => ExecutePandraBoxSpawn(reason));
+        _spawnHandle = Timing.RunCoroutine(SpawnPandraBoxWhenReady(reason, delay));
     }
 
-    private static void ExecutePandraBoxSpawn(string reason)
+    private static IEnumerator<float> SpawnPandraBoxWhenReady(string reason, float delay)
+    {
+        if (delay > 0f)
+            yield return Timing.WaitForSeconds(delay);
+
+        while (_registered && !Round.IsLobby && !Round.IsEnded)
+        {
+            int spectators = CountEligibleSpectators();
+            if (spectators >= RequiredSpectators)
+            {
+                ExecutePandraBoxSpawn(reason, spectators);
+                yield break;
+            }
+
+            Log.Debug($"AbelHandler: waiting for Pandra's Box spawn from {reason}. Spectators={spectators}/{RequiredSpectators}");
+            yield return Timing.WaitForSeconds(SpectatorCheckIntervalSeconds);
+        }
+
+        _spawnQueued = false;
+        Log.Warn($"AbelHandler: skipped Pandra's Box spawn from {reason}. Lobby={Round.IsLobby}, Ended={Round.IsEnded}, Registered={_registered}");
+    }
+
+    private static void ExecutePandraBoxSpawn(string reason, int spectators)
     {
         _spawnQueued = false;
 
-        try
+        if (Round.IsLobby || Round.IsEnded)
         {
-            if (Round.IsLobby || Round.IsEnded)
-            {
-                Log.Warn($"AbelHandler: skipped Pandra's Box spawn from {reason}. Lobby={Round.IsLobby}, Ended={Round.IsEnded}");
-                return;
-            }
-
-            var spectators = Player.List.Count(player =>
-                player.Role == RoleTypeId.Spectator &&
-                player.GetCustomRole() == CRoleTypeId.None);
-
-            Log.Info($"AbelHandler: spawning Pandra's Box from {reason}. Spectators={spectators}, RoundLocked={Round.IsLocked}");
-            SpawnSystem.ForceSpawnNow(SpawnTypeId.MtfPdx);
-        }
-        finally
-        {
-            Timing.CallDelayed(2f, ReleaseRoundLock);
-        }
-    }
-
-    private static void ReleaseRoundLock()
-    {
-        if (!_roundLockApplied)
+            Log.Warn($"AbelHandler: skipped Pandra's Box spawn from {reason}. Lobby={Round.IsLobby}, Ended={Round.IsEnded}");
             return;
+        }
 
-        if (!Round.IsLobby)
-            Round.IsLocked = false;
-
-        _roundLockApplied = false;
+        Log.Info($"AbelHandler: spawning Pandra's Box from {reason}. Spectators={spectators}");
+        SpawnSystem.ForceSpawnNow(SpawnTypeId.MtfPdx);
     }
+
+    private static int CountEligibleSpectators()
+        => Player.List.Count(IsEligibleSpectator);
+
+    private static bool IsEligibleSpectator(Player player)
+        => player is not null &&
+           player.IsNotNpc() &&
+           player.Role == RoleTypeId.Spectator &&
+           player.GetCustomRole() == CRoleTypeId.None;
 }

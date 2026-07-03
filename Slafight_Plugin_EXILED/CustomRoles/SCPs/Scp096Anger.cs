@@ -743,6 +743,20 @@ public class Scp096Anger : CRole
             if (npc.CustomName == ChamberGuardName)
                 npc.Destroy();
         }
+        foreach (Door door in Door.List)
+        {
+            if (door.Type != DoorType.HeavyContainmentDoor)
+                continue;
+
+            if (door.Room is null || door.Room.Type != RoomType.Hcz096)
+                continue;
+
+            if (door is BreakableDoor breakableDoor)
+            {
+                if (!breakableDoor.CanBreak()) continue;
+                breakableDoor.Break();
+            }
+        }
     }
 
     private void CleanupPlayer(Player player)

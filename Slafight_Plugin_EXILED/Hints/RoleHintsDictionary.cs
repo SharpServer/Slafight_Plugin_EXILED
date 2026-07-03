@@ -39,6 +39,7 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.Scp079]       = ("<color=#c50000>SCP-079</color>",            ScpTeam, "施設制御システムを操り、施設に混沌を引き起こせ。"),
         [CRoleTypeId.Scp173]       = ("<color=#c50000>SCP-173</color>",            ScpTeam, "一瞬の隙を突き、財団職員共をへし折れ！"),
         [CRoleTypeId.Scp610]       = ("<color=#c50000>SCP-610</color>",            ScpTeam, "生存者を探し出し、施設をにくで埋め尽くせ"),
+        [CRoleTypeId.Scp076]       = ("<color=#ff1493>SCP-076</color>",            FoundTeam + " - " + ScpTeam, "財団の制御下で敵対勢力を殲滅せよ。財団を3人殺害、またはOmega-7全滅で反逆状態になる。"),
 
         // ── Fifthists ─────────────────────────────────────────────────────
         [CRoleTypeId.Scp3005]            = ("<color=#ff00fa>SCP-3005</color>",              ScpTeam + " - " + FifthTeam, "第五教会に道を示し、施設を占領せよ"),

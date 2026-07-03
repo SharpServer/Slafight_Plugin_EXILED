@@ -32,4 +32,13 @@ public static class NpcExtensions
         if (player is null) return false;
         return !player.IsHost && !player.ReferenceHub.IsHost &&!HIDTurretObject.PublicTurretNpcIds.Contains(player.Id);
     }
+
+    /// <summary>
+    /// PlayerがNPCではなく、Host級でもないかどうかを判定します。
+    /// </summary>
+    public static bool IsNotNpc(this Player player)
+    {
+        if (player is null) return false;
+        return player.IsNotHost() && !player.IsNPC;
+    }
 }

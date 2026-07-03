@@ -31,7 +31,7 @@ public static class ServerSpecificUserSettings
 
         foreach (var entry in settings)
         {
-            if (entry.SettingId == settingId && entry is T typed)
+            if (entry != null && entry.SettingId == settingId && entry is T typed)
             {
                 setting = typed;
                 return true;
@@ -62,6 +62,9 @@ public static class ServerSpecificUserSettings
             return false;
 
         var setting = ServerSpecificSettingsSync.GetSettingOfUser<SSKeybindSetting>(hub, settingId);
+        if (setting == null)
+            return false;
+
         setting.SyncIsPressed = isPressed;
         return true;
     }
@@ -110,6 +113,9 @@ public static class ServerSpecificUserSettings
             return false;
 
         var setting = ServerSpecificSettingsSync.GetSettingOfUser<SSPlaintextSetting>(hub, settingId);
+        if (setting == null)
+            return false;
+
         setting.SyncInputText = text ?? string.Empty;
         return true;
     }
@@ -142,6 +148,9 @@ public static class ServerSpecificUserSettings
             return false;
 
         var setting = ServerSpecificSettingsSync.GetSettingOfUser<SSSliderSetting>(hub, settingId);
+        if (setting == null)
+            return false;
+
         setting.SyncFloatValue = value;
         return true;
     }
@@ -177,6 +186,9 @@ public static class ServerSpecificUserSettings
             return false;
 
         var setting = ServerSpecificSettingsSync.GetSettingOfUser<SSTwoButtonsSetting>(hub, settingId);
+        if (setting == null)
+            return false;
+
         setting.SyncIsB = isB;
         return true;
     }
@@ -213,19 +225,29 @@ public static class ServerSpecificUserSettings
         if (!TryGetSettings(player, out var settings))
             return;
 
-        settings.RemoveAll(setting => setting.SettingId == settingId);
+        settings.RemoveAll(setting => setting != null && setting.SettingId == settingId);
     }
 
     public static void ClearSettingFromAll(int settingId)
     {
         foreach (var settings in ServerSpecificSettingsSync.ReceivedUserSettings.Values)
-            settings.RemoveAll(setting => setting.SettingId == settingId);
+        {
+            if (settings == null)
+                continue;
+
+            settings.RemoveAll(setting => setting != null && setting.SettingId == settingId);
+        }
     }
 
     public static void ClearAll()
     {
         foreach (var settings in ServerSpecificSettingsSync.ReceivedUserSettings.Values)
-            settings.RemoveAll(setting => ServerSpecifics.IsManagedSettingId(setting.SettingId));
+        {
+            if (settings == null)
+                continue;
+
+            settings.RemoveAll(setting => setting != null && ServerSpecifics.IsManagedSettingId(setting.SettingId));
+        }
     }
 
     private static float ClampDocumentHintDuration(float value)
@@ -243,7 +265,8 @@ public static class ServerSpecificUserSettings
         settings = null!;
 
         return TryGetHub(player, out var hub) &&
-               ServerSpecificSettingsSync.ReceivedUserSettings.TryGetValue(hub, out settings);
+               ServerSpecificSettingsSync.ReceivedUserSettings.TryGetValue(hub, out settings) &&
+               settings != null;
     }
 
     private static bool TryGetHub(Player? player, out ReferenceHub hub)
@@ -272,7 +295,7 @@ public static class ServerSpecificUserSettings
 
         foreach (var definition in definitions)
         {
-            if (definition.SettingId == settingId && definition is T typed)
+            if (definition != null && definition.SettingId == settingId && definition is T typed)
             {
                 setting = typed;
                 return true;

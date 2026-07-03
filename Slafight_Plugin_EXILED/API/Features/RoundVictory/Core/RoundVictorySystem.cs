@@ -8,6 +8,7 @@ using Slafight_Plugin_EXILED.API.Features.Common;
 using Slafight_Plugin_EXILED.API.Features.Teams.Profiles;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomRoles;
+using Slafight_Plugin_EXILED.CustomRoles.SCPs;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.SpecialEvents;
@@ -223,7 +224,7 @@ public sealed class RoundVictoryGroup
         return new RoundVictoryGroup(
             debugName,
             winnerTeam,
-            player => teams.Contains(player.GetTeam()),
+            player => teams.Contains(RoundVictoryDefinitions.GetVictoryTeam(player)),
             specificReason,
             isEnabled,
             requiresVanillaEndLock,
@@ -401,6 +402,17 @@ public static class RoundVictoryDefinitions
                           group.IncludesPlayer(player));
     }
 
+    internal static CTeam GetVictoryTeam(Player? player)
+    {
+        if (player == null)
+            return CTeam.Null;
+
+        if (Scp076Role.IsFoundationAlignedForVictory(player))
+            return CTeam.FoundationForces;
+
+        return player.GetTeam();
+    }
+
     internal static bool HasOnlyTargetRoleOnSideAgainstSingleOpposingTeam(
         IReadOnlyList<Player> players,
         Func<Player, bool> isSideMember,
@@ -428,7 +440,7 @@ public static class RoundVictoryDefinitions
                 return false;
             }
 
-            opposingTeams.Add(player.GetTeam());
+            opposingTeams.Add(GetVictoryTeam(player));
         }
 
         return sidePlayerCount > 0 &&
@@ -451,7 +463,10 @@ public static class RoundVictoryDefinitions
 
     internal static bool IsAliveRoundPlayer(Player? player)
     {
-        return player != null && player.IsAlive && player.Role.Type != RoleTypeId.Spectator;
+        return player != null &&
+               player.IsAlive &&
+               player.Role.Type != RoleTypeId.Spectator &&
+               !CRole.IsTeamNpc(player);
     }
 
     internal static void ExecuteAIKill()

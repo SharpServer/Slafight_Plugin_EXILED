@@ -40,6 +40,18 @@ public static class ServerSpecificsHandler
 
     private static void OnSettingValueReceived(ReferenceHub hub, ServerSpecificSettingBase @base)
     {
+        try
+        {
+            ProcessSettingValueReceived(hub, @base);
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"[ServerSpecifics] Failed to process setting value. Hub={DescribeHub(hub)}, Setting={DescribeSetting(@base)}\n{e}");
+        }
+    }
+
+    private static void ProcessSettingValueReceived(ReferenceHub hub, ServerSpecificSettingBase @base)
+    {
         if (hub == null || @base == null)
             return;
 
@@ -75,6 +87,9 @@ public static class ServerSpecificsHandler
 
     private static void HandleKeybind(Player player, int settingId)
     {
+        if (!IsConnectedPlayer(player))
+            return;
+
         // VCトグルは常に許可
         if (settingId == ServerSpecifics.ProximityChatKeybindSettingId)
         {
@@ -83,9 +98,7 @@ public static class ServerSpecificsHandler
         }
 
         // 生きているロールだけ処理
-        if (player.Role == null ||
-            player.Role.Type is RoleTypeId.None or RoleTypeId.Spectator ||
-            player.Role.Team == Team.Dead)
+        if (!CanHandleAlivePlayer(player))
             return;
 
         if (settingId == ServerSpecifics.ItemModeSwitchKeybindSettingId)
@@ -119,15 +132,7 @@ public static class ServerSpecificsHandler
 
         if (settingId == ServerSpecifics.SuicideButtonKeybindSettingId)
         {
-            var item = player.CurrentItem;
-            if (item is null) return;
-            if (item is Firearm firearm)
-            {
-                player.PlayGunSound(firearm.FirearmType);
-                player.ExplodeEffect(ProjectileType.FragGrenade);
-                player.Kill("自害した");
-            }
-
+            HandleSuicideKeybind(player);
             return;
         }
 
@@ -207,5 +212,169 @@ public static class ServerSpecificsHandler
         }
 
         Log.Debug($"[DebugMode] {player.Nickname} => {(isOn ? "ON" : "OFF")}");
+    }
+
+    private static void HandleSuicideKeybind(Player player)
+    {
+        try
+        {
+            if (!CanHandleAlivePlayer(player))
+                return;
+
+            var item = player.CurrentItem;
+            if (item is null)
+            {
+                Log.Debug($"[Input] K: no CurrentItem for {DescribePlayer(player)}");
+                return;
+            }
+
+            if (item is not Firearm firearm)
+            {
+                Log.Debug($"[Input] K: CurrentItem is not Firearm ({DescribeItem(item)}) for {DescribePlayer(player)}");
+                return;
+            }
+
+            TryPlaySuicideGunSound(player, firearm);
+            TryExplodeSuicideEffect(player);
+            TryKillBySuicide(player);
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"[Input] K suicide handling error for {DescribePlayer(player)}: {e}");
+        }
+    }
+
+    private static void TryPlaySuicideGunSound(Player player, Firearm firearm)
+    {
+        try
+        {
+            var firearmType = firearm.FirearmType;
+            if (firearmType is FirearmType.None or FirearmType.ParticleDisruptor)
+                return;
+
+            player.PlayGunSound(firearmType);
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"[Input] K: failed to play suicide gun sound for {DescribePlayer(player)} with {DescribeItem(firearm)}: {e.GetType().Name}: {e.Message}");
+        }
+    }
+
+    private static void TryExplodeSuicideEffect(Player player)
+    {
+        try
+        {
+            player.ExplodeEffect(ProjectileType.FragGrenade);
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"[Input] K: failed to play suicide effect for {DescribePlayer(player)}: {e.GetType().Name}: {e.Message}");
+        }
+    }
+
+    private static void TryKillBySuicide(Player player)
+    {
+        try
+        {
+            if (!CanHandleAlivePlayer(player))
+                return;
+
+            player.Kill("自害した");
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"[Input] K: failed to kill suicide player {DescribePlayer(player)}: {e}");
+        }
+    }
+
+    private static bool IsConnectedPlayer(Player player)
+    {
+        try
+        {
+            return player != null &&
+                   player.ReferenceHub != null &&
+                   player.IsConnected;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static bool CanHandleAlivePlayer(Player player)
+    {
+        try
+        {
+            return IsConnectedPlayer(player) &&
+                   player.Role != null &&
+                   player.Role.Type is not (RoleTypeId.None or RoleTypeId.Spectator or RoleTypeId.Destroyed) &&
+                   player.Role.Team != Team.Dead;
+        }
+        catch (Exception e)
+        {
+            Log.Debug($"[Input] Invalid player state for {DescribePlayer(player)}: {e.GetType().Name}: {e.Message}");
+            return false;
+        }
+    }
+
+    private static string DescribeHub(ReferenceHub hub)
+    {
+        try
+        {
+            if (hub == null)
+                return "null";
+
+            var player = Player.Get(hub);
+            return player == null
+                ? $"ReferenceHub#{hub.PlayerId}"
+                : DescribePlayer(player);
+        }
+        catch
+        {
+            return "unknown";
+        }
+    }
+
+    private static string DescribePlayer(Player player)
+    {
+        try
+        {
+            if (player == null)
+                return "null";
+
+            return $"{player.Nickname}({player.Id})";
+        }
+        catch
+        {
+            return "unknown";
+        }
+    }
+
+    private static string DescribeSetting(ServerSpecificSettingBase setting)
+    {
+        try
+        {
+            return setting == null
+                ? "null"
+                : $"{setting.GetType().Name}#{setting.SettingId}";
+        }
+        catch
+        {
+            return "unknown";
+        }
+    }
+
+    private static string DescribeItem(Item item)
+    {
+        try
+        {
+            return item == null
+                ? "null"
+                : $"{item.GetType().Name}/{item.Type}/{item.Serial}";
+        }
+        catch
+        {
+            return "unknown";
+        }
     }
 }

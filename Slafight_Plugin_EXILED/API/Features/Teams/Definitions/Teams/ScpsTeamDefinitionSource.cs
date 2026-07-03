@@ -19,7 +19,7 @@ public sealed class ScpsTeamDefinitionSource : CTeamDefinitionSource
             victoryRule: RoundVictoryRule.ForPredicate(
                 "ScpWin",
                 CTeam.SCPs,
-                player => player.GetTeam() == CTeam.SCPs &&
+                player => RoundVictoryDefinitions.GetVictoryTeam(player) == CTeam.SCPs &&
                           player.GetCustomRole() is not (CRoleTypeId.Scp3005 or CRoleTypeId.Scp999),
                 priority: 40),
             roundEndDefinition: RoundEndDefinition.Vanilla(

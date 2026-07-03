@@ -153,7 +153,10 @@ public sealed class RoundVictoryEndedEventArgs : EventArgs
     private static IReadOnlyList<Player> GetAlivePlayersSnapshot()
     {
         return Player.List
-            .Where(player => player != null && player.IsAlive && player.Role.Type != RoleTypeId.Spectator)
+            .Where(player => player != null &&
+                             player.IsAlive &&
+                             player.Role.Type != RoleTypeId.Spectator &&
+                             !CRole.IsTeamNpc(player))
             .ToList();
     }
 

@@ -77,7 +77,7 @@ public sealed class RoundVictoryRule
         return ForPredicate(
             debugName ?? $"{winnerTeam}Win",
             winnerTeam,
-            player => teams.Contains(player.GetTeam()),
+            player => teams.Contains(RoundVictoryDefinitions.GetVictoryTeam(player)),
             priority,
             specificReason,
             requiresVanillaEndLock,

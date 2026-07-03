@@ -17,7 +17,7 @@ public sealed class DefaultRoundVictoryDefinitionSource : RoundVictoryDefinition
             "AIWin",
             context => RoundVictoryDefinitions.HasOnlyTargetRoleOnSideAgainstSingleOpposingTeam(
                 context.AlivePlayers,
-                player => player.GetTeam() == CTeam.SCPs,
+                player => RoundVictoryDefinitions.GetVictoryTeam(player) == CTeam.SCPs,
                 RoundVictoryDefinitions.IsScp079Player),
             RoundVictoryDefinitions.ExecuteAIKill,
             isForEnd: false);
@@ -27,7 +27,7 @@ public sealed class DefaultRoundVictoryDefinitionSource : RoundVictoryDefinition
             "AraOrunDeath",
             context => RoundVictoryDefinitions.HasOnlyTargetRoleOnSideAgainstSingleOpposingTeam(
                 context.AlivePlayers,
-                player => !player.GetTeam().IsGoI(),
+                player => !RoundVictoryDefinitions.GetVictoryTeam(player).IsGoI(),
                 RoundVictoryDefinitions.IsAraOrunPlayer),
             RoundVictoryDefinitions.ExecuteAraOrunKill,
             context => context.ActiveEvent is SpecialEventType.CaseColourlessGreen,

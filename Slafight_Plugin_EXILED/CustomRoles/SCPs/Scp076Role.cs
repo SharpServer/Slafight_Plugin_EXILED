@@ -21,11 +21,16 @@ public class Scp076Role : CRole
 {
     private const int ResistanceKillThreshold = 3;
     private const float ResistanceCountdownSeconds = 600f;
+    private const float OmegaSevenLossCheckDelaySeconds = RoleSpawnTimings.CustomRoleRemovalCleanup;
     private const byte BaseMovementIntensity = 25;
     private const byte BoostedMovementIntensity = 40;
 
     protected override string RoleName { get; set; } = "SCP-076";
-    protected override string Description { get; set; } = "W.I.P";
+    protected override string Description { get; set; } =
+        "機動部隊Omega-7 \"Pandra's Box\" に運用される、財団制御下の異常戦闘員。\n" +
+        "槍とアビリティを使い、財団の敵対勢力を殲滅せよ。\n" +
+        "未反逆の間は財団側の勝利に貢献する。\n" +
+        "<color=#ff3333>財団職員を3人殺害、またはOmega-7が全滅すると反逆状態となり、10分後に抑制装置が起爆する。</color>";
     protected override float DescriptionDuration { get; set; } = 15f;
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp076;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
@@ -59,6 +64,7 @@ public class Scp076Role : CRole
     private static readonly HashSet<int> ResistancePlayerIds = [];
     // 抑制装置の起爆処理中の playerId（死因放送を専用のものへ切り替える判定に使用）
     private static readonly HashSet<int> SuppressionDetonatingIds = [];
+    private static int omegaSevenLossCheckGeneration;
 
     private const string SuppressionDeviceKillReason = "抑制装置により爆発された";
 
@@ -69,6 +75,16 @@ public class Scp076Role : CRole
 
     public static bool IsResistanceState(Player? player)
         => player?.ReferenceHub != null && ResistancePlayerIds.Contains(player.Id);
+
+    public static bool IsFoundationAlignedForVictory(Player? player)
+    {
+        if (player?.ReferenceHub == null)
+            return false;
+
+        return player.GetCustomRole() == CRoleTypeId.Scp076 &&
+               !IsResistanceState(player) &&
+               HasAliveOmegaSevenControllers();
+    }
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
@@ -86,11 +102,14 @@ public class Scp076Role : CRole
         CleanupPlayerState(player);
         MovementIntensities[player.Id] = BaseMovementIntensity;
         Timing.RunCoroutine(MovementBoostLoop(player));
+        ScheduleOmegaSevenLossCheck("SCP-076 spawned");
     }
 
     public override void RegisterEvents()
     {
         Exiled.Events.Handlers.Player.Died += OnAnyPlayerDied;
+        Exiled.Events.Handlers.Player.ChangingRole += OnAnyPlayerChangingRole;
+        Exiled.Events.Handlers.Player.Left += OnAnyPlayerLeft;
         RoundVictoryEvents.RoundEnded += OnRoundEnded;
         Exiled.Events.Handlers.Server.WaitingForPlayers += ResetRoundState;
         Exiled.Events.Handlers.Server.RestartingRound += ResetRoundState;
@@ -100,6 +119,8 @@ public class Scp076Role : CRole
     public override void UnregisterEvents()
     {
         Exiled.Events.Handlers.Player.Died -= OnAnyPlayerDied;
+        Exiled.Events.Handlers.Player.ChangingRole -= OnAnyPlayerChangingRole;
+        Exiled.Events.Handlers.Player.Left -= OnAnyPlayerLeft;
         RoundVictoryEvents.RoundEnded -= OnRoundEnded;
         Exiled.Events.Handlers.Server.WaitingForPlayers -= ResetRoundState;
         Exiled.Events.Handlers.Server.RestartingRound -= ResetRoundState;
@@ -152,7 +173,11 @@ public class Scp076Role : CRole
         var attacker = ev?.Attacker;
         var target = ev?.Player;
 
+        if (IsOmegaSevenController(target))
+            ScheduleOmegaSevenLossCheck("Omega-7 died");
+
         if (!Check(attacker)) return;
+        if (target == null) return;
         if (attacker.Id == target.Id) return;
         if (target.GetTeam() is not CTeam.FoundationForces) return;
 
@@ -165,6 +190,21 @@ public class Scp076Role : CRole
 
         if (kills >= ResistanceKillThreshold)
             EnterResistanceState(attacker);
+    }
+
+    private void OnAnyPlayerChangingRole(ChangingRoleEventArgs ev)
+    {
+        if (ev?.Player == null || !ev.IsAllowed)
+            return;
+
+        if (IsOmegaSevenController(ev.Player))
+            ScheduleOmegaSevenLossCheck("Omega-7 changed role");
+    }
+
+    private void OnAnyPlayerLeft(LeftEventArgs ev)
+    {
+        if (IsOmegaSevenController(ev?.Player))
+            ScheduleOmegaSevenLossCheck("Omega-7 left");
     }
 
     private static bool IsCountable(Player? player)
@@ -191,13 +231,72 @@ public class Scp076Role : CRole
 
     // ===== 反逆状態 =====
 
-    private void EnterResistanceState(Player player)
+    private void ScheduleOmegaSevenLossCheck(string reason)
+    {
+        int generation = ++omegaSevenLossCheckGeneration;
+
+        Timing.CallDelayed(OmegaSevenLossCheckDelaySeconds, () =>
+        {
+            if (generation != omegaSevenLossCheckGeneration)
+                return;
+
+            EnterResistanceIfOmegaSevenLost(reason);
+        });
+    }
+
+    private void EnterResistanceIfOmegaSevenLost(string reason)
+    {
+        if (Round.IsLobby || Round.IsEnded)
+            return;
+
+        if (HasAliveOmegaSevenControllers())
+            return;
+
+        var triggered = 0;
+        foreach (var player in Player.List)
+        {
+            if (!Check(player) || !player.IsAlive || IsResistanceState(player))
+                continue;
+
+            EnterResistanceState(
+                player,
+                "Omega-7が不在となったため、あなたは財団に反逆した！");
+            triggered++;
+        }
+
+        if (triggered > 0)
+            Log.Debug($"[SCP-076] Resistance state started because Omega-7 was lost. Reason={reason}, Count={triggered}");
+    }
+
+    private static bool HasAliveOmegaSevenControllers()
+    {
+        foreach (var player in Player.List)
+        {
+            if (player == null || !player.IsAlive)
+                continue;
+
+            if (IsOmegaSevenController(player))
+                return true;
+        }
+
+        return false;
+    }
+
+    private static bool IsOmegaSevenController(Player? player)
+    {
+        if (player?.ReferenceHub == null)
+            return false;
+
+        return player.GetCustomRole() is CRoleTypeId.PdxWarden or CRoleTypeId.PdxWatcher;
+    }
+
+    private void EnterResistanceState(Player player, string? triggerMessage = null)
     {
         if (!Check(player) || !player.IsAlive) return;
         if (!ResistancePlayerIds.Add(player.Id)) return;
 
         player.SetCustomInfo($"<color={ServerColors.Red}>SCP-076</color>");
-        ShowResistanceWarning(player);
+        ShowResistanceWarning(player, triggerMessage);
         Timing.RunCoroutine(ResistanceCountdownLoop(player));
 
         Log.Debug($"[SCP-076] Resistance state started for {player.Nickname}({player.Id}).");
@@ -274,15 +373,16 @@ public class Scp076Role : CRole
 
     // ===== HUD / 警告 =====
 
-    private static void ShowResistanceWarning(Player player)
+    private static void ShowResistanceWarning(Player player, string? triggerMessage = null)
     {
-        const string warning =
-            "<size=26><color=red><b>※あなたは財団に反逆した！ロール名が赤くなりました。\n10分後に抑制装置が起爆し爆死します！</b></color></size>";
+        triggerMessage ??= "あなたは財団に反逆した！";
+        string warning =
+            $"<size=26><color=red><b>※{triggerMessage}ロール名が赤くなりました。\n10分後に抑制装置が起爆し爆死します！</b></color></size>";
 
         player.ShowHint(warning, 8f);
         EffectedInfoTextProvider.Set(
             player,
-            "<color=#ff3333><b>SCP-076 反逆状態</b></color>\n<size=21>10分後に抑制装置が起爆します。</size>",
+            $"<color=#ff3333><b>SCP-076 反逆状態</b></color>\n<size=21>{triggerMessage}</size>\n<size=21>10分後に抑制装置が起爆します。</size>",
             8f);
         UpdateResistanceHud(player, (int)ResistanceCountdownSeconds);
     }
@@ -327,5 +427,6 @@ public class Scp076Role : CRole
         KillCounts.Clear();
         ResistancePlayerIds.Clear();
         SuppressionDetonatingIds.Clear();
+        omegaSevenLossCheckGeneration++;
     }
 }

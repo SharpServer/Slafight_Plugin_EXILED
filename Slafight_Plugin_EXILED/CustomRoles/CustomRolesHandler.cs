@@ -130,7 +130,10 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
 
     private static bool IsAliveRoundPlayer(Player? player)
     {
-        return player != null && player.IsAlive && player.Role.Type != RoleTypeId.Spectator;
+        return player != null &&
+               player.IsAlive &&
+               player.Role.Type != RoleTypeId.Spectator &&
+               !CRole.IsTeamNpc(player);
     }
 
     private void CancelEnd(EndingRoundEventArgs ev)
