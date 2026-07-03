@@ -238,6 +238,9 @@
         <Compile Include="API\Features\GlobalVentManager.cs" />
         <Compile Include="API\Features\CItemNvg.cs" />
         <Compile Include="API\Features\ObjectPrefab.cs" />
+        <Compile Include="API\Features\ObjectPrefabInteraction.cs" />
+        <Compile Include="API\Features\ObjectPrefabOption.cs" />
+        <Compile Include="API\Features\ObjectPrefabRegistry.cs" />
         <Compile Include="API\Features\PrefabSaveData.cs" />
         <Compile Include="API\Features\RoleLimitManager.cs" />
         <Compile Include="API\Features\RoleSpawnTimings.cs" />
@@ -316,9 +319,11 @@
         <Compile Include="CustomEffects\DamageBoost.cs" />
         <Compile Include="CustomEffects\NaturalHeal.cs" />
         <Compile Include="CustomEffects\VisualTraumatized.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\AccessTunerBroken.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv1.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv2.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv3.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\DataCells.cs" />
         <Compile Include="CustomItems\SlafightApiItems\BattleAxe.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Bloodyknife.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CapybaraMissile.cs" />
@@ -430,6 +435,7 @@
         <Compile Include="CustomMaps\Bridges\ObjectPrefabHandler.cs" />
         <Compile Include="CustomMaps\Bridges\ItemSpawnpointCItemBridge.cs" />
         <Compile Include="CustomMaps\Bridges\SchematicObjectPrefabBridge.cs" />
+        <Compile Include="CustomMaps\ObjectPrefabs\AccessTunerBox.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\AntiMemeBomb.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\HIDTurretObject.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Document.cs" />
@@ -527,6 +533,7 @@
         <Compile Include="Extensions\AbilityResetUtil.cs" />
         <Compile Include="Extensions\BreakableDoorExtensions.cs" />
         <Compile Include="Extensions\ColorExtensions.cs" />
+        <Compile Include="Extensions\LockerExtensions.cs" />
         <Compile Include="Extensions\CustomBooleans.cs" />
         <Compile Include="Extensions\CustomTeamUtils.cs" />
         <Compile Include="Extensions\CustomItemExtensions.cs" />

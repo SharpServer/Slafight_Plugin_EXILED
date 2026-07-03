@@ -21,12 +21,8 @@ namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
 public class Trashbox : ObjectPrefab
 {
-    public override float ToySearchRadius { get; set; } = 1.2f;
+    protected override string SchematicName => "trashbox";
 
-    private SchematicObject? _schematicObject;
-    private InteractableToy? _interactableToy;
-    private static readonly Vector3 InteractableLocalOffset = Vector3.zero;
-    private static readonly Vector3 InteractableBaseScale = Vector3.one + Vector3.up * 2f;
     private readonly Dictionary<int, List<TrashboxEventType>> _triggeredEventsByPlayer = [];
     private static readonly Dictionary<int, byte> TriggeredSecretCountsByPlayer = [];
 
@@ -34,31 +30,17 @@ public class Trashbox : ObjectPrefab
     public IReadOnlyDictionary<int, List<TrashboxEventType>> TriggeredEventsByPlayer => _triggeredEventsByPlayer;
     public static IReadOnlyDictionary<int, byte> TriggeredSecretCounts => TriggeredSecretCountsByPlayer;
     public static bool HimselfTriggered { get; private set; }
+
     protected override void OnCreate()
     {
-         _schematicObject = SpawnManagedSchematic("trashbox");
-         _triggeredEventsByPlayer.Clear();
-
-         ScheduleDelayed(0.5f, CreateInteractableToy);
-         base.OnCreate();
+        _triggeredEventsByPlayer.Clear();
     }
 
-    private void CreateInteractableToy()
+    protected override void OnSetup()
     {
-        _interactableToy = CreateManagedInteractable(
-            interactionDuration: 3.5f,
-            shape: InvisibleInteractableToy.ColliderShape.Box,
-            localOffset: InteractableLocalOffset,
-            baseScale: InteractableBaseScale);
+        AddInteractable(duration: 3.5f, scale: Vector3.one + Vector3.up * 2f);
     }
 
-    protected override void OnDestroy()
-    {
-        _schematicObject = null;
-        _interactableToy = null;
-        base.OnDestroy();
-    }
-    
     public enum TrashboxEventType
     {
         Nothing,
@@ -77,7 +59,7 @@ public class Trashbox : ObjectPrefab
         if (player == null)
             return;
 
-        var pos = _schematicObject?.Position ?? Position;
+        var pos = Schematic?.Position ?? Position;
         var triggeredEvents = GetTriggeredEvents(player.Id);
 
         if (triggeredEvents.Count >= 3)

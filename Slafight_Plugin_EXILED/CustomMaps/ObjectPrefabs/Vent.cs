@@ -18,42 +18,15 @@ namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
 public class Vent : ObjectPrefab
 {
-    public override float ToySearchRadius { get; set; } = 1.75f;
+    protected override string SchematicName => "Vent";
 
-    private SchematicObject? _schematicObject;
-    private InteractableToy? _interactableToy;
-    private static readonly Vector3 InteractableLocalOffset = Vector3.zero;
-    private static readonly Vector3 InteractableBaseScale = Vector3.one;
     private Dictionary<int, byte> _touchedDictionary = [];
     private Dictionary<int, double> _lastTouchTime = [];   // LocalTime 用
     private const double TouchTimeout = 30d;               // 30秒でリセット
 
-    protected override void OnCreate()
+    protected override void OnSetup()
     {
-        _schematicObject = SpawnManagedSchematic("Vent");
-        ScheduleDelayed(0.5f, CreateInteractableToy);
-        base.OnCreate();
-    }
-
-    private void CreateInteractableToy()
-    {
-        if (_schematicObject == null) return;
-
-        _interactableToy = CreateManagedInteractable(
-            interactionDuration: 3f,
-            shape: InvisibleInteractableToy.ColliderShape.Box,
-            localOffset: InteractableLocalOffset,
-            baseScale: InteractableBaseScale);
-
-        Log.Info($"Vent Interactable spawned at {_interactableToy.Position}");
-    }
-
-    protected override void OnDestroy()
-    {
-        _schematicObject = null;
-        _interactableToy = null;
-        Log.Debug("[Vent] Destroyed");
-        base.OnDestroy();
+        AddInteractable(duration: 3f);
     }
 
     protected override void OnToySearchingNearby(PlayerSearchingToyEventArgs ev)
@@ -138,10 +111,10 @@ public class Vent : ObjectPrefab
     protected override void OnToySearchedNearby(PlayerSearchedToyEventArgs ev)
     {
         var player = Player.Get(ev.Player);
-        if (_schematicObject == null)
+        if (Schematic == null)
             return;
-    
-        SpeakerApi.Play("ventsound.ogg", "Vent", _schematicObject.Position, true, null, false, 10f, 0f);
+
+        SpeakerApi.Play("ventsound.ogg", "Vent", Schematic.Position, true, null, false, 10f, 0f);
 
         var currentRoomType = player.CurrentRoom?.Type ?? RoomType.Unknown;
 

@@ -196,13 +196,12 @@ internal sealed class RoundStartupCoordinator : IDisposable
         if (MapFlags.AntiAntiMemeDocPoint == default)
             return;
 
-        var doc = new Document().Create() as Document;
-        if (doc == null)
-            return;
-
-        doc.DocumentType = DocumentType.AntiAntiMeme;
-        doc.Position = MapFlags.AntiAntiMemeDocPoint;
-        doc.ShowModel = false;
+        new Document
+        {
+            DocumentType = DocumentType.AntiAntiMeme,
+            Position = MapFlags.AntiAntiMemeDocPoint,
+            ShowModel = false,
+        }.Create();
     }
 
     private static void LoadSeasonMap()

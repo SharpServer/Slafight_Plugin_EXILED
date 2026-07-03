@@ -808,6 +808,34 @@ public virtual Pickup? Spawn(Vector3 position)
     public static bool TryGetByKey(string uniqueKey, out CItem? cItem)
         => UniqueKeyToItem.TryGetValue(uniqueKey, out cItem!);
 
+    /// <summary>
+    /// UniqueKey（大文字小文字無視）を優先し、見つからなければ
+    /// クラス名の一意一致で CItem を解決する。ItemSpawnpoint の統一 Item 指定などに使う。
+    /// </summary>
+    public static bool TryResolve(string nameOrKey, out CItem? cItem)
+    {
+        cItem = null;
+        if (string.IsNullOrWhiteSpace(nameOrKey))
+            return false;
+
+        string trimmed = nameOrKey.Trim();
+        if (TryGetByKey(trimmed, out cItem) && cItem != null)
+            return true;
+
+        var matches = RegisteredInstances
+            .Where(item => string.Equals(item.GetType().Name, trimmed, StringComparison.OrdinalIgnoreCase))
+            .ToList();
+
+        if (matches.Count == 1)
+        {
+            cItem = matches[0];
+            return true;
+        }
+
+        cItem = null;
+        return false;
+    }
+
     public static T? Get<T>() where T : CItem
         => RegisteredInstances.OfType<T>().FirstOrDefault();
 

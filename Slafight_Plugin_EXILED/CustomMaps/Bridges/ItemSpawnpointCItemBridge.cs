@@ -1,9 +1,7 @@
 #nullable enable
-using System;
-using System.Linq;
-using System.Reflection;
 using Exiled.API.Features;
 using InventorySystem.Items.Pickups;
+using ProjectMER.Features;
 using ProjectMER.Features.Serializable;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
@@ -12,65 +10,31 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
 
 /// <summary>
-/// Registers Slafight CItem support with ProjectMER's ItemSpawnpoint custom item registry.
+/// ProjectMER の ItemSpawnpoint カスタムアイテムレジストリへ CItem プロバイダを登録するブリッジ。
+/// ItemSpawnpoint 側の統一 Item 指定（"名前" / "(CItem)名前"）はここを経由して CItem に解決される。
 /// </summary>
 public class ItemSpawnpointCItemBridge : IBootstrapHandler
 {
-    private const string RegistryTypeName = "ProjectMER.Features.ItemSpawnpointCustomItemRegistry, ProjectMER";
-    private static readonly MethodInfo SpawnMethod = typeof(ItemSpawnpointCItemBridge).GetMethod(
-        nameof(TrySpawnCItem),
-        BindingFlags.Static | BindingFlags.NonPublic)!;
-    private static readonly MethodInfo GiveMethod = typeof(ItemSpawnpointCItemBridge).GetMethod(
-        nameof(TryGiveCItem),
-        BindingFlags.Static | BindingFlags.NonPublic)!;
-
-    private static Type? _registryType;
-    private static Delegate? _spawnDelegate;
-    private static Delegate? _giveDelegate;
+    private static bool _registered;
 
     public static void Register()
     {
-        if (_spawnDelegate != null || _giveDelegate != null)
+        if (_registered)
             return;
 
-        _registryType = Type.GetType(RegistryTypeName);
-        if (_registryType == null)
-        {
-            Log.Warn("[ItemSpawnpointCItemBridge] ProjectMER custom ItemSpawnpoint registry was not found. Update ProjectMER to enable CItem ItemSpawnpoints.");
-            return;
-        }
-
-        MethodInfo? registerMethod = GetRegistryMethod("Register");
-        if (registerMethod == null)
-        {
-            Log.Warn("[ItemSpawnpointCItemBridge] ProjectMER custom ItemSpawnpoint registry has no compatible Register method.");
-            return;
-        }
-
-        ParameterInfo[] parameters = registerMethod.GetParameters();
-        _spawnDelegate = Delegate.CreateDelegate(parameters[0].ParameterType, SpawnMethod);
-        _giveDelegate = Delegate.CreateDelegate(parameters[1].ParameterType, GiveMethod);
-        registerMethod.Invoke(null, [_spawnDelegate, _giveDelegate]);
+        ItemSpawnpointCustomItemRegistry.Register(TrySpawnCItem, TryGiveCItem);
+        _registered = true;
         Log.Info("[ItemSpawnpointCItemBridge] Registered CItem provider for ProjectMER ItemSpawnpoints.");
     }
 
     public static void Unregister()
     {
-        if (_registryType == null || _spawnDelegate == null || _giveDelegate == null)
+        if (!_registered)
             return;
 
-        MethodInfo? unregisterMethod = GetRegistryMethod("Unregister");
-        unregisterMethod?.Invoke(null, [_spawnDelegate, _giveDelegate]);
-
-        _spawnDelegate = null;
-        _giveDelegate = null;
-        _registryType = null;
+        ItemSpawnpointCustomItemRegistry.Unregister(TrySpawnCItem, TryGiveCItem);
+        _registered = false;
     }
-
-    private static MethodInfo? GetRegistryMethod(string name)
-        => _registryType?
-            .GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .FirstOrDefault(method => method.Name == name && method.GetParameters().Length == 2);
 
     private static bool TrySpawnCItem(
         string customItemKey,
@@ -82,7 +46,7 @@ public class ItemSpawnpointCItemBridge : IBootstrapHandler
     {
         pickupBase = null;
 
-        if (!CItem.TryGetByKey(customItemKey, out CItem? cItem) || cItem == null)
+        if (!CItem.TryResolve(customItemKey, out CItem? cItem) || cItem == null)
             return false;
 
         var pickup = cItem.Spawn(position);
@@ -109,7 +73,7 @@ public class ItemSpawnpointCItemBridge : IBootstrapHandler
 
     private static bool TryGiveCItem(string customItemKey, ItemPickupBase pickup, LabApi.Features.Wrappers.Player player)
     {
-        if (!CItem.TryGetByKey(customItemKey, out CItem? cItem) || cItem == null)
+        if (!CItem.TryResolve(customItemKey, out CItem? cItem) || cItem == null)
             return false;
 
         var exiledPlayer = Exiled.API.Features.Player.Get(player.ReferenceHub);
@@ -136,5 +100,4 @@ public class ItemSpawnpointCItemBridge : IBootstrapHandler
 
         pickup.IsLocked = !spawnpoint.CanBePickedUp;
     }
-
 }

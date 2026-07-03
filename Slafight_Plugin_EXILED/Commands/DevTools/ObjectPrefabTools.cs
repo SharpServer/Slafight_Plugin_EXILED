@@ -186,42 +186,14 @@ public class SpawnObjectPrefab : ICommand
         "  .sl objprefab bringpos [InstanceID]\n" +
         "  .sl objprefab max [InstanceID] <count>\n";
 
-    private static IEnumerable<Type> GetPrefabTypes()
-    {
-        return Assembly.GetExecutingAssembly().GetTypes()
-            .Where(t => !t.IsAbstract && t.IsSubclassOf(typeof(ObjectPrefab)))
-            .OrderBy(t => t.Name);
-    }
+    private static IEnumerable<Type> GetPrefabTypes() => ObjectPrefabRegistry.All;
 
     private static bool TryResolvePrefabType(string input, out Type prefabType, out string response)
     {
-        prefabType = null;
-        response = string.Empty;
-
-        var exact = GetPrefabTypes()
-            .FirstOrDefault(t => t.Name.Equals(input, StringComparison.OrdinalIgnoreCase) ||
-                                 t.FullName?.Equals(input, StringComparison.OrdinalIgnoreCase) == true ||
-                                 t.FullName?.EndsWith("." + input, StringComparison.OrdinalIgnoreCase) == true);
-
-        if (exact != null)
-        {
-            prefabType = exact;
+        if (ObjectPrefabRegistry.TryResolve(input, out prefabType, out response))
             return true;
-        }
 
-        var matches = GetPrefabTypes()
-            .Where(t => t.Name.IndexOf(input, StringComparison.OrdinalIgnoreCase) >= 0)
-            .ToList();
-
-        if (matches.Count == 1)
-        {
-            prefabType = matches[0];
-            return true;
-        }
-
-        response = matches.Count > 1
-            ? $"Prefab class '{input}' is ambiguous: {string.Join(", ", matches.Select(t => t.Name))}"
-            : $"Prefab class '{input}' not found. Use '.sl objprefab types {input}' to search.";
+        response += $" Use '.sl objprefab types {input}' to search.";
         return false;
     }
 
@@ -1186,8 +1158,8 @@ public class SpawnObjectPrefab : ICommand
                     $" Scale: {prefab.Scale}\n" +
                     $" Tag: {(string.IsNullOrWhiteSpace(prefab.Tag) ? "(none)" : prefab.Tag)}\n" +
                     $" MaxRooms: {prefab.MaxRooms}\n" +
-                    $" ManagedSchematic: {(prefab.ManagedSchematic != null ? "yes" : "no")}\n" +
-                    $" ManagedInteractables: {prefab.ManagedInteractables.Count}\n" +
+                    $" Schematic: {(prefab.Schematic != null ? "yes" : "no")}\n" +
+                    $" Interactables: {prefab.Interactables.Count}\n" +
                     $" AutoDestroy: {(prefab.AutoDestroyEnabled ? prefab.AutoDestroyTime.ToString() : "disabled")}";
                 var options = prefab.CollectOptions();
                 if (options.Count > 0)
@@ -1527,18 +1499,14 @@ public static class ObjectPrefabLoader
     {
         LastLoadedMapName = mapName;
         var cfg = ObjectPrefabConfig.Load(mapName);
-        InstanceManager.ClearAll();
+        ClearSaveablePrefabs();
         int totalSpawned = 0;
 
         foreach (var data in cfg.Prefabs)
         {
-            var type = Type.GetType(data.PrefabType) ??
-                       Assembly.GetExecutingAssembly().GetTypes()
-                           .FirstOrDefault(t => t.FullName == data.PrefabType || t.Name == data.PrefabType);
-
-            if (type == null || !type.IsSubclassOf(typeof(ObjectPrefab)))
+            if (!ObjectPrefabRegistry.TryResolve(data.PrefabType, out var type, out string error))
             {
-                Log.Warn($"[ObjectPrefabLoader] Type '{data.PrefabType}' not found or not ObjectPrefab.");
+                Log.Warn($"[ObjectPrefabLoader] {error}");
                 continue;
             }
 
@@ -1594,6 +1562,12 @@ public static class ObjectPrefabLoader
 
         Log.Info($"[ObjectPrefabLoader] Loaded map '{mapName}' ({totalSpawned} prefabs spawned).");
         return totalSpawned;
+    }
+
+    private static void ClearSaveablePrefabs()
+    {
+        foreach (var prefab in InstanceManager.GetAll().Where(prefab => prefab.IsSaveable).ToList())
+            prefab.Destroy();
     }
 }
 public class ObjectPrefabConfig

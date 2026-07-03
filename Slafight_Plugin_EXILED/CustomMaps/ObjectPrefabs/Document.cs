@@ -1,24 +1,37 @@
 using System;
-using AdminToys;
+using System.Collections.Generic;
+using System.Reflection;
 using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
-using LabApi.Features.Wrappers;
-using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
-using UnityEngine;
 using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
 public class Document : ObjectPrefab
 {
-    public override float ToySearchRadius { get; set; } = 1.75f;
+    private const string SchematicNameOption = "SchematicName";
+    private const string DefaultSchematicName = "Document";
+    private const float DefaultInteractionDuration = 3f;
+
+    private string _modelSchematicName = DefaultSchematicName;
+    private bool _showModel = true;
+    private float _interactionDuration = DefaultInteractionDuration;
 
     /// <summary>
     /// このDocumentの種類。DocumentDictionaryから内容を引くときに使用。
     /// </summary>
     public DocumentType DocumentType { get; set; } = DocumentType.Scp033;
+
+    /// <summary>
+    /// 表示に使うスキマティック名。保存/マーカー Option では SchematicName として扱う。
+    /// </summary>
+    public string ModelSchematicName
+    {
+        get => _modelSchematicName;
+        set => SetModelSchematicName(value);
+    }
 
     /// <summary>
     /// モデル(Schematic)を表示するかどうか。falseの場合、インタラクタブルのみスポーンする。
@@ -28,54 +41,41 @@ public class Document : ObjectPrefab
         get => _showModel;
         set
         {
-            _showModel = value;
-            if (string.IsNullOrEmpty(ObjectInstanceID))
+            if (_showModel == value)
                 return;
 
-            if (value && _schematicObject == null)
-            {
-                _schematicObject = SpawnManagedSchematic("Document");
-            }
-            else if (!value && _schematicObject != null)
-            {
-                DestroyManagedSchematic();
-                _schematicObject = null;
-                SyncManagedObjects();
-            }
+            _showModel = value;
+            RefreshModel();
         }
     }
 
-    private bool _showModel = true;
-    private SchematicObject? _schematicObject;
-    private InteractableToy? _interactableToy;
-    private static readonly Vector3 InteractableLocalOffset = Vector3.zero;
-    private static readonly Vector3 InteractableBaseScale = Vector3.one;
+    /// <summary>
+    /// Documentを読み取るために必要な長押し時間。
+    /// </summary>
+    public float InteractionDuration
+    {
+        get => _interactionDuration;
+        set
+        {
+            float normalized = NormalizeInteractionDuration(value);
+            if (_interactionDuration == normalized)
+                return;
+
+            _interactionDuration = normalized;
+            ApplyInteractionDuration();
+        }
+    }
+
+    private bool ShouldSpawnModel => _showModel && !string.IsNullOrWhiteSpace(_modelSchematicName);
+
     protected override void OnCreate()
     {
-        if (ShowModel)
-            _schematicObject = SpawnManagedSchematic("Document");
-
-        ScheduleDelayed(0.5f, CreateInteractableToy);
-        base.OnCreate();
+        RefreshModel();
     }
 
-    private void CreateInteractableToy()
+    protected override void OnSetup()
     {
-        _interactableToy = CreateManagedInteractable(
-            interactionDuration: 3f,
-            shape: InvisibleInteractableToy.ColliderShape.Box,
-            localOffset: InteractableLocalOffset,
-            baseScale: InteractableBaseScale);
-
-        Log.Info($"Document Interactable spawned at {_interactableToy.Position}");
-    }
-
-    protected override void OnDestroy()
-    {
-        _schematicObject = null;
-        _interactableToy = null;
-        Log.Debug("[Document] Destroyed");
-        base.OnDestroy();
+        AddInteractable(duration: _interactionDuration);
     }
 
     protected override void OnToySearchedNearby(PlayerSearchedToyEventArgs? ev)
@@ -87,50 +87,103 @@ public class Document : ObjectPrefab
         if (player == null || !player.IsConnected)
             return;
 
-        var pos = _schematicObject?.Position ?? Position;
+        var pos = Schematic?.Position ?? Position;
         SpeakerApi.Play("PickItem0.ogg", "Vent", pos, true, null, false, 2.5f, 0f);
 
         player.ShowHint(DocumentDictionary.Get(DocumentType), ServerSpecificUserSettings.GetDocumentHintDuration(player));
     }
 
-    // ===== Mod Command =====
-
-    public override bool HandleModCommand(ArraySegment<string> args, out string response)
+    public override Dictionary<string, string> CollectOptions()
     {
-        if (args.Count >= 2 && args.At(1).Equals("showmodel", StringComparison.OrdinalIgnoreCase))
-        {
-            if (args.Count < 3)
-            {
-                response = $"Current: {ShowModel}\nUsage: mod showmodel <true|false>";
-                return true;
-            }
-            if (!bool.TryParse(args.At(2), out var val))
-            {
-                response = $"Invalid value '{args.At(2)}'. Use true or false.";
-                return true;
-            }
-            ShowModel = val;
-            response = $"Set ShowModel to {val}.";
-            return true;
-        }
-
-        if (args.Count >= 2 && args.At(1).Equals("documenttype", StringComparison.OrdinalIgnoreCase))
-        {
-            if (args.Count < 3)
-            {
-                response = $"Current: {DocumentType}\nUsage: mod documenttype <{string.Join("|", Enum.GetNames(typeof(DocumentType)))}>";
-                return true;
-            }
-            if (!Enum.TryParse<DocumentType>(args.At(2), true, out var dt))
-            {
-                response = $"Unknown DocumentType '{args.At(2)}'. Available: {string.Join(", ", Enum.GetNames(typeof(DocumentType)))}";
-                return true;
-            }
-            DocumentType = dt;
-            response = $"Set DocumentType to {dt}.";
-            return true;
-        }
-        return base.HandleModCommand(args, out response);
+        Dictionary<string, string> options = base.CollectOptions();
+        options[SchematicNameOption] = _modelSchematicName;
+        return options;
     }
 
+    public override void ApplyOptions(Dictionary<string, string> options)
+    {
+        if (options == null || options.Count == 0)
+            return;
+
+        foreach (KeyValuePair<string, string> option in options)
+        {
+            if (IsSchematicNameOption(option.Key))
+                SetModelSchematicName(option.Value);
+        }
+
+        base.ApplyOptions(options);
+    }
+
+    protected override bool IsAutomaticOptionProperty(PropertyInfo property)
+        => !string.Equals(property.Name, nameof(ModelSchematicName), StringComparison.Ordinal) &&
+           base.IsAutomaticOptionProperty(property);
+
+    private void SetModelSchematicName(string? schematicName)
+    {
+        string normalized = schematicName?.Trim() ?? string.Empty;
+        if (string.Equals(_modelSchematicName, normalized, StringComparison.Ordinal))
+            return;
+
+        _modelSchematicName = normalized;
+        RefreshModel();
+    }
+
+    private void RefreshModel()
+    {
+        if (string.IsNullOrEmpty(ObjectInstanceID))
+            return;
+
+        if (!ShouldSpawnModel)
+        {
+            if (Schematic == null)
+                return;
+
+            DestroyManagedSchematic();
+            SyncManagedObjects();
+            return;
+        }
+
+        try
+        {
+            SpawnManagedSchematic(_modelSchematicName);
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"[Document] Failed to spawn schematic '{_modelSchematicName}': {e.Message}");
+            SyncManagedObjects();
+        }
+    }
+
+    private void ApplyInteractionDuration()
+    {
+        foreach (InteractableHandle handle in Interactables)
+        {
+            if (!handle.Toy.IsDestroyed)
+                handle.Toy.InteractionDuration = _interactionDuration;
+        }
+    }
+
+    private static bool IsSchematicNameOption(string key)
+    {
+        switch (NormalizeOptionKey(key))
+        {
+            case "schematic":
+            case "schematicname":
+            case "model":
+            case "modelschematic":
+            case "modelschematicname":
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    private static string NormalizeOptionKey(string key)
+        => (key ?? string.Empty).Replace("_", string.Empty).Replace("-", string.Empty).ToLowerInvariant();
+
+    private static float NormalizeInteractionDuration(float value)
+        => float.IsNaN(value) || float.IsInfinity(value) ? DefaultInteractionDuration : Math.Max(0f, value);
+
+    // 主な Option:
+    //   SchematicName=<schematic> / ShowModel=<bool> / InteractionDuration=<seconds> / DocumentType=<type>
 }

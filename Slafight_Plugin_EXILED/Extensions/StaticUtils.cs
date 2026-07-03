@@ -115,11 +115,18 @@ public static class StaticUtils
     
     /// <summary>型引数でCItemを付与 or ドロップします。</summary>
     public static void GiveOrDrop<T>(this Player player, bool showHint = false) where T : CItem
+        => player.GiveOrDrop(CItem.Get<T>(), showHint);
+
+    /// <summary>解決済みCItemインスタンスを付与 or ドロップします。</summary>
+    public static void GiveOrDrop(this Player player, CItem? item, bool showHint = false)
     {
+        if (item == null)
+            return;
+
         if (player.IsInventoryFull)
-            CItem.Get<T>()?.Spawn(player.Position + Vector3.up * 0.5f);
+            item.Spawn(player.Position + Vector3.up * 0.5f);
         else
-            CItem.Get<T>()?.Give(player, showHint);
+            item.Give(player, showHint);
     }
 
     // ───────────────────────────────

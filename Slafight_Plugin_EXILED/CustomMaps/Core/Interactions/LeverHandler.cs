@@ -57,7 +57,7 @@ public class LeverHandler : IBootstrapHandler, IDisposable
     {
         RegisterTagHandler("EZ_RemoteDoorControl", ev =>
         {
-            if (ev.TurnedOff) return;
+            if (ev.TurnedOn) return;
             ev.Lever.CanInteract = false;
             foreach (var player in Player.List.Where(p => p?.GetCustomRole() is CRoleTypeId.Scp079).ToList())
             {
@@ -72,7 +72,9 @@ public class LeverHandler : IBootstrapHandler, IDisposable
             {
                 if (ev.Lever is null) return;
                 ev.Lever.CanInteract = true;
-                ev.Lever.IsOn = false;
+                ev.Lever.IsOn = true;
+                if (ev.SourceEventArgs is null) return;
+                SpeakerApi.Play("LeverFlip.ogg", ev.Lever.GetSoundId(ev.SourceEventArgs), ev.Lever.Position, true, isSpatial: false, maxDistance: 10f, minDistance: 0.1f);
             });
         });
     }

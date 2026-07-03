@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using Player = Exiled.API.Features.Player;
 
@@ -59,7 +60,7 @@ public abstract class SpecialEvent
     /// </summary>
     public virtual bool IsEventExecutable()
     {
-        return Player.List.Count >= MinPlayersRequired && IsReadyToExecute();
+        return Player.List.Count(p => p.IsNotHost()) >= MinPlayersRequired && IsReadyToExecute();
     }
 
     /// <summary>

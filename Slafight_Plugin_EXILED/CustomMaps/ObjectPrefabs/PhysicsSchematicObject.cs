@@ -28,7 +28,11 @@ public class PhysicsSchematicObject : ObjectPrefab
     private bool _physicsEnabled;
     private bool _isCreated;
 
-    public string SchematicName { get; set; } = string.Empty;
+    /// <summary>
+    /// 物理化するスキマティック名（Option: Schematic）。
+    /// 基底の宣言的 SchematicName とは別管理（物理有効化を伴う独自スポーンのため）。
+    /// </summary>
+    public string TargetSchematicName { get; set; } = string.Empty;
     public float Mass { get; set; } = 1f;
     public bool UseGravity { get; set; } = true;
     public bool IsKinematic { get; set; } = false;
@@ -60,7 +64,7 @@ public class PhysicsSchematicObject : ObjectPrefab
     {
         return new Dictionary<string, string>
         {
-            [SchematicOption] = SchematicName,
+            [SchematicOption] = TargetSchematicName,
             [MassOption] = Mass.ToString(CultureInfo.InvariantCulture),
             [UseGravityOption] = UseGravity.ToString(),
             [IsKinematicOption] = IsKinematic.ToString(),
@@ -83,7 +87,7 @@ public class PhysicsSchematicObject : ObjectPrefab
                 case "schematic":
                 case "schematicname":
                 case "name":
-                    SchematicName = value;
+                    TargetSchematicName = value;
                     break;
                 case "mass":
                     if (TryParseFloat(value, out float mass) && mass > 0f)
@@ -174,16 +178,16 @@ public class PhysicsSchematicObject : ObjectPrefab
     {
         DestroyPhysicsSchematic();
 
-        if (string.IsNullOrWhiteSpace(SchematicName))
+        if (string.IsNullOrWhiteSpace(TargetSchematicName))
         {
             Log.Warn("[PhysicsSchematicObject] Schematic option is empty. Use Schematic=<schematicName>.");
             return;
         }
 
-        _schematicObject = SpawnManagedSchematic(SchematicName);
+        _schematicObject = SpawnManagedSchematic(TargetSchematicName);
         if (_schematicObject == null)
         {
-            Log.Warn($"[PhysicsSchematicObject] Failed to spawn schematic '{SchematicName}'.");
+            Log.Warn($"[PhysicsSchematicObject] Failed to spawn schematic '{TargetSchematicName}'.");
             return;
         }
 
@@ -251,7 +255,7 @@ public class PhysicsSchematicObject : ObjectPrefab
         if (_physicsBlocks.Count > 0)
             _syncCoroutine = Timing.RunCoroutine(SyncPhysicsBlocks());
 
-        Log.Info($"[PhysicsSchematicObject] Enabled physics for {_physicsBlocks.Count} blocks in '{SchematicName}'.");
+        Log.Info($"[PhysicsSchematicObject] Enabled physics for {_physicsBlocks.Count} blocks in '{TargetSchematicName}'.");
     }
 
     private void ApplyRigidbodyOptions()

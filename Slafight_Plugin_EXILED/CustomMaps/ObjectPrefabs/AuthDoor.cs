@@ -14,10 +14,8 @@ namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
 public class AuthDoor : ObjectPrefab
 {
-    public override float ToySearchRadius { get; set; } = 1.2f;
+    protected override string SchematicName => "MovingDoor";
 
-    private SchematicObject? _schematicObject;
-    private InteractableToy? _interactableToy;
     private static readonly Vector3 InteractableLocalOffset = Vector3.up * 0.75f;
     private static readonly Vector3 InteractableBaseScale = Vector3.one + Vector3.up * 2f - new Vector3(-0.8f, 0f, -0.8f);
 
@@ -43,33 +41,12 @@ public class AuthDoor : ObjectPrefab
     private bool _isOpen = false;
     // ===== Lifecycle =====
 
-    protected override void OnCreate()
+    protected override void OnSetup()
     {
-        _schematicObject = SpawnManagedSchematic("MovingDoor");
+        AddInteractable(duration: 0.1f, offset: InteractableLocalOffset, scale: InteractableBaseScale);
 
-        ScheduleDelayed(0.5f, () =>
-        {
-            CreateInteractableToy();
-            // IsOpen=true → OpenIdle(door2) / IsOpen=false → CloseIdle(door0)
-            _schematicObject?.AnimationController.Play(IsOpen ? "door2" : "door0");
-        });
-        base.OnCreate();
-    }
-
-    private void CreateInteractableToy()
-    {
-        _interactableToy = CreateManagedInteractable(
-            interactionDuration: 0.1f,
-            shape: InvisibleInteractableToy.ColliderShape.Box,
-            localOffset: InteractableLocalOffset,
-            baseScale: InteractableBaseScale);
-    }
-
-    protected override void OnDestroy()
-    {
-        _schematicObject = null;
-        _interactableToy = null;
-        base.OnDestroy();
+        // IsOpen=true → OpenIdle(door2) / IsOpen=false → CloseIdle(door0)
+        Schematic?.AnimationController.Play(IsOpen ? "door2" : "door0");
     }
 
     // ===== Interaction =====
@@ -107,87 +84,13 @@ public class AuthDoor : ObjectPrefab
     private void SwitchDoor(bool isOpen)
     {
         SpeakerApi.Play(isOpen ? "ElevatorOpen1.ogg" : "ElevatorClose1.ogg", "KeycardDoorOpeningSound",
-            _schematicObject?.Position ?? Position, true);
+            Schematic?.Position ?? Position, true);
 
         // 開く: CloseToOpen(door1) → Animator側でOpenIdle(door2)に遷移
         // 閉じる: OpenToClose(door3) → Animator側でCloseIdle(door0)に遷移
-        _schematicObject?.AnimationController.Play(isOpen ? "door1" : "door3");
+        Schematic?.AnimationController.Play(isOpen ? "door1" : "door3");
     }
 
-    // ===== Mod Command =====
-
-    public override bool HandleModCommand(ArraySegment<string> args, out string response)
-    {
-        if (args.Count >= 2)
-        {
-            switch (args.At(1).ToLowerInvariant())
-            {
-                case "keycardpermissions":
-                    if (args.Count < 3)
-                    {
-                        response = $"Current: {KeycardPermissions}\n" +
-                                   $"Usage: mod keycardpermissions <perm1|perm2|...>\n" +
-                                   $"Available: {string.Join(", ", Enum.GetNames(typeof(KeycardPermissions)))}";
-                        return true;
-                    }
-                    var permRaw = string.Join("|", args.Skip(2)).Replace("|", ", ");
-                    if (!Enum.TryParse<KeycardPermissions>(permRaw, true, out var newPerm))
-                    {
-                        response = $"Unknown permission '{permRaw}'.\n" +
-                                   $"Available: {string.Join(", ", Enum.GetNames(typeof(KeycardPermissions)))}";
-                        return true;
-                    }
-                    KeycardPermissions = newPerm;
-                    response = $"Set KeycardPermissions to {newPerm}.";
-                    return true;
-
-                case "requireallpermissions":
-                    if (args.Count < 3)
-                    {
-                        response = $"Current: {RequireAllPermissions}\nUsage: mod requireallpermissions <true|false>";
-                        return true;
-                    }
-                    if (!bool.TryParse(args.At(2), out var requireAll))
-                    {
-                        response = $"Invalid value '{args.At(2)}'. Use true or false.";
-                        return true;
-                    }
-                    RequireAllPermissions = requireAll;
-                    response = $"Set RequireAllPermissions to {requireAll}.";
-                    return true;
-
-                case "canclose":
-                    if (args.Count < 3)
-                    {
-                        response = $"Current: {CanClose}\nUsage: mod canclose <true|false>";
-                        return true;
-                    }
-                    if (!bool.TryParse(args.At(2), out var canClose))
-                    {
-                        response = $"Invalid value '{args.At(2)}'. Use true or false.";
-                        return true;
-                    }
-                    CanClose = canClose;
-                    response = $"Set CanClose to {canClose}.";
-                    return true;
-
-                case "isopen":
-                    if (args.Count < 3)
-                    {
-                        response = $"Current: {IsOpen}\nUsage: mod isopen <true|false>";
-                        return true;
-                    }
-                    if (!bool.TryParse(args.At(2), out var isOpen))
-                    {
-                        response = $"Invalid value '{args.At(2)}'. Use true or false.";
-                        return true;
-                    }
-                    IsOpen = isOpen;
-                    response = $"Set IsOpen to {isOpen}.";
-                    return true;
-            }
-        }
-
-        return base.HandleModCommand(args, out response);
-    }
+    // KeycardPermissions / RequireAllPermissions / CanClose / IsOpen は
+    // すべて public プロパティのため `.sl objprefab modify option <key> <value>` で汎用的に設定できる。
 }

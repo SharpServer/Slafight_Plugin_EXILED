@@ -23,7 +23,7 @@ public class Tentacle : ObjectPrefab
     private static readonly HashSet<int> TentacleNpcIds = [];
     private static bool _eventsRegistered;
 
-    private const string SchematicName = "Tentacle";
+    private const string TentacleSchematicName = "Tentacle";
     private const float SpawnAnimationDuration = 1f;
     private const float DestroyAnimationDuration = 1.05f;
     private const float IdleAnimationRefreshInterval = 5f;
@@ -121,10 +121,10 @@ public class Tentacle : ObjectPrefab
 
     protected override void OnCreate()
     {
-        _schematicObject = ObjectSpawner.SpawnSchematic(SchematicName, base.Position, base.Rotation);
+        _schematicObject = ObjectSpawner.SpawnSchematic(TentacleSchematicName, base.Position, base.Rotation);
         if (_schematicObject == null)
         {
-            Log.Error($"[Tentacle] Failed to spawn schematic '{SchematicName}'.");
+            Log.Error($"[Tentacle] Failed to spawn schematic '{TentacleSchematicName}'.");
             Destroy();
             return;
         }

@@ -1,11 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Exiled.API.Features;
 using LabApi.Events.Handlers;
 using MEC;
-using ProjectMER.Events.Arguments;
+using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 using UnityEngine;
@@ -13,368 +12,194 @@ using Object = UnityEngine.Object;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
 
+/// <summary>
+/// ProjectMER のマーカー（SchematicObjectPrefabObject）と ObjectPrefab を結び付けるブリッジ。
+/// フォーク側の Spawned / Destroyed イベント駆動で動作し、発見ポーリングは行わない。
+/// transform 追従はマーカー GO に付与する <see cref="MarkerPrefabFollower"/> が担当する。
+/// </summary>
 public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHandler
 {
     private static SchematicObjectPrefabBridge _instance;
-    private static readonly Dictionary<int, MarkerBinding> MarkerBindings = new();
-    private static CoroutineHandle _syncCoroutine;
-    private static CoroutineHandle _discoveryCoroutine;
-    private static CoroutineHandle _scheduledSpawnCoroutine;
-    private static int _spawnRefreshGeneration;
 
     public static void Register() => _instance = LabApiHandlerRegistry.Register(_instance);
 
     public static void Unregister()
     {
-        ClearMarkerPrefabs();
-        _spawnRefreshGeneration++;
-        if (_scheduledSpawnCoroutine.IsRunning)
-            Timing.KillCoroutines(_scheduledSpawnCoroutine);
-
-        if (_discoveryCoroutine.IsRunning)
-            Timing.KillCoroutines(_discoveryCoroutine);
-
+        MarkerPrefabFollower.ReleaseAll();
         LabApiHandlerRegistry.Unregister(ref _instance);
     }
 
     protected override void RegisterEvents(EventSubscriptionScope subscriptions)
     {
-        subscriptions.Add(() => ServerEvents.WaitingForPlayers += OnWaitingForPlayers, () => ServerEvents.WaitingForPlayers -= OnWaitingForPlayers);
-        subscriptions.Add(() => ServerEvents.RoundStarted += OnRoundStarted, () => ServerEvents.RoundStarted -= OnRoundStarted);
-        subscriptions.Add(() => ServerEvents.RoundRestarted += OnRoundRestarted, () => ServerEvents.RoundRestarted -= OnRoundRestarted);
         subscriptions.Add(
-            () => ProjectMER.Events.Handlers.Schematic.SchematicSpawned += OnSchematicSpawned,
-            () => ProjectMER.Events.Handlers.Schematic.SchematicSpawned -= OnSchematicSpawned);
+            () => SchematicObjectPrefabObject.Spawned += OnMarkerSpawned,
+            () => SchematicObjectPrefabObject.Spawned -= OnMarkerSpawned);
+        subscriptions.Add(
+            () => ServerEvents.WaitingForPlayers += SweepUnboundMarkers,
+            () => ServerEvents.WaitingForPlayers -= SweepUnboundMarkers);
     }
 
-    private static void OnWaitingForPlayers()
+    private static void OnMarkerSpawned(SchematicObjectPrefabObject marker)
     {
-        ScheduleSpawnFromMarkers(5.1f);
-        EnsureDiscoveryCoroutine();
-    }
-
-    private static void OnRoundStarted()
-    {
-        ScheduleSpawnFromMarkers(2.6f);
-        EnsureDiscoveryCoroutine();
-    }
-
-    private static void OnRoundRestarted()
-    {
-        ClearMarkerPrefabs();
-    }
-
-    private static void OnSchematicSpawned(SchematicSpawnedEventArgs ev)
-    {
-        if (!ContainsObjectPrefabMarkers(ev))
-            return;
-
-        ScheduleSpawnFromMarkers(0.1f);
-    }
-
-    private static bool ContainsObjectPrefabMarkers(SchematicSpawnedEventArgs ev)
-    {
-        Type markerType = GetMarkerType();
-        return markerType != null &&
-               ev.Schematic.GetComponentsInChildren(markerType, false).Length > 0;
-    }
-
-    private static void ScheduleSpawnFromMarkers(float delay)
-    {
-        int generation = ++_spawnRefreshGeneration;
-        if (_scheduledSpawnCoroutine.IsRunning)
-            Timing.KillCoroutines(_scheduledSpawnCoroutine);
-
-        _scheduledSpawnCoroutine = Timing.CallDelayed(delay, () =>
+        // Interactable のネットワークスポーンをスキマティック構築と同フレームにしないための猶予。
+        Timing.CallDelayed(0.1f, () =>
         {
-            if (generation != _spawnRefreshGeneration)
-                return;
-
-            SpawnFromMarkers();
+            if (marker != null)
+                BindMarker(marker);
         });
     }
 
-    private static void SpawnFromMarkers()
+    /// <summary>
+    /// イベント購読前に生成済みのマーカー（プラグイン再ロード時など）を一度だけ拾う。
+    /// </summary>
+    private static void SweepUnboundMarkers()
     {
-        Type markerType = GetMarkerType();
-        if (markerType == null)
+        foreach (SchematicObjectPrefabObject marker in
+                 Object.FindObjectsByType<SchematicObjectPrefabObject>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
         {
-            Log.Debug("[SchematicObjectPrefabBridge] ProjectMER marker type was not found; schematic ObjectPrefab markers are unavailable.");
+            if (marker.GetComponent<MarkerPrefabFollower>() == null)
+                OnMarkerSpawned(marker);
+        }
+    }
+
+    private static void BindMarker(SchematicObjectPrefabObject marker)
+    {
+        if (string.IsNullOrWhiteSpace(marker.PrefabType))
+            return;
+
+        if (!ObjectPrefabRegistry.TryResolve(marker.PrefabType, out Type prefabType, out string error))
+        {
+            Log.Warn($"[SchematicObjectPrefabBridge] {error}");
             return;
         }
 
-        int spawned = 0;
-        HashSet<int> seenMarkers = [];
-        foreach (Object marker in Object.FindObjectsByType(markerType, FindObjectsInactive.Exclude, FindObjectsSortMode.None))
+        MarkerPrefabFollower follower = marker.GetComponent<MarkerPrefabFollower>();
+        ObjectPrefab? existing = follower != null ? follower.Prefab : null;
+
+        // 更新経路: 同じ型ならオプションと transform を再適用するだけ
+        if (existing != null && InstanceManager.Get(existing.ObjectInstanceID) == existing)
         {
-            if (!TryReadMarker(marker, out MarkerData data))
-                continue;
-
-            if (string.IsNullOrWhiteSpace(data.PrefabType))
-                continue;
-
-            int markerId = marker.GetInstanceID();
-            seenMarkers.Add(markerId);
-
-            if (TrySyncExistingMarkerPrefab(markerId, data))
-                continue;
-
-            if (!TryResolvePrefabType(data.PrefabType, out Type prefabType))
+            if (existing.GetType() == prefabType)
             {
-                Log.Warn($"[SchematicObjectPrefabBridge] ObjectPrefab type '{data.PrefabType}' was not found.");
-                continue;
+                ApplyMarker(existing, marker);
+                existing.SyncManagedObjects();
+                return;
             }
 
-            var prefab = (ObjectPrefab)Activator.CreateInstance(prefabType)!;
-            prefab.Position = data.Transform.position;
-            prefab.Rotation = data.Transform.rotation;
-            prefab.Scale = data.Transform.lossyScale;
-            prefab.MaxRooms = Math.Max(1, data.MaxRooms);
-            prefab.AutoDestroyEnabled = data.AutoDestroyEnabled;
-            prefab.AutoDestroyTime = data.AutoDestroyTime;
-            prefab.Tag = data.Tag;
-            prefab.IsSaveable = false;
-
-            if (data.Options.Count > 0)
-                prefab.ApplyOptions(data.Options);
-
-            prefab.Create();
-            MarkerBindings[markerId] = new MarkerBinding(data.Transform, prefab.ObjectInstanceID, data.PrefabType, data.Options);
-            spawned++;
+            existing.Destroy();
         }
 
-        RemoveMissingMarkerPrefabs(seenMarkers);
-        EnsureSyncCoroutine();
+        var prefab = (ObjectPrefab)Activator.CreateInstance(prefabType)!;
+        ApplyMarker(prefab, marker);
+        prefab.IsSaveable = false;
+        prefab.Create();
 
-        if (spawned > 0)
-            Log.Info($"[SchematicObjectPrefabBridge] Spawned {spawned} ObjectPrefabs from schematic markers.");
+        follower ??= marker.gameObject.AddComponent<MarkerPrefabFollower>();
+        follower.Bind(prefab);
     }
 
-    private static bool TrySyncExistingMarkerPrefab(int markerId, MarkerData data)
+    private static void ApplyMarker(ObjectPrefab prefab, SchematicObjectPrefabObject marker)
     {
-        if (!MarkerBindings.TryGetValue(markerId, out MarkerBinding binding))
-            return false;
-
-        ObjectPrefab? prefab = InstanceManager.Get(binding.PrefabId);
-        if (prefab == null)
-        {
-            MarkerBindings.Remove(markerId);
-            return false;
-        }
-
-        if (!binding.PrefabType.Equals(data.PrefabType, StringComparison.OrdinalIgnoreCase))
-        {
-            prefab.Destroy();
-            MarkerBindings.Remove(markerId);
-            return false;
-        }
-
-        SyncPrefabTransform(prefab, data.Transform);
-        prefab.Tag = data.Tag;
-        SyncPrefabOptions(markerId, prefab, binding, data.Options);
-        return true;
-    }
-
-    private static void SyncPrefabOptions(int markerId, ObjectPrefab prefab, MarkerBinding binding, Dictionary<string, string> options)
-    {
-        if (AreOptionsEqual(binding.Options, options))
-            return;
-
-        prefab.ApplyOptions(options);
-        prefab.SyncManagedObjects();
-        MarkerBindings[markerId] = binding.WithOptions(options);
-    }
-
-    private static void RemoveMissingMarkerPrefabs(HashSet<int> seenMarkers)
-    {
-        foreach (KeyValuePair<int, MarkerBinding> pair in MarkerBindings.ToList())
-        {
-            if (seenMarkers.Contains(pair.Key))
-                continue;
-
-            ObjectPrefab? prefab = InstanceManager.Get(pair.Value.PrefabId);
-            prefab?.Destroy();
-            MarkerBindings.Remove(pair.Key);
-        }
-    }
-
-    private static void ClearMarkerPrefabs()
-    {
-        foreach (MarkerBinding binding in MarkerBindings.Values.ToList())
-        {
-            ObjectPrefab? prefab = InstanceManager.Get(binding.PrefabId);
-            prefab?.Destroy();
-        }
-
-        MarkerBindings.Clear();
-        if (_syncCoroutine.IsRunning)
-            Timing.KillCoroutines(_syncCoroutine);
-    }
-
-    private static void EnsureDiscoveryCoroutine()
-    {
-        if (_discoveryCoroutine.IsRunning)
-            return;
-
-        _discoveryCoroutine = Timing.RunCoroutine(DiscoverMarkerPrefabsCoroutine());
-    }
-
-    private static IEnumerator<float> DiscoverMarkerPrefabsCoroutine()
-    {
-        while (true)
-        {
-            SpawnFromMarkers();
-            yield return Timing.WaitForSeconds(1f);
-        }
-    }
-
-    private static void EnsureSyncCoroutine()
-    {
-        if (MarkerBindings.Count == 0 || _syncCoroutine.IsRunning)
-            return;
-
-        _syncCoroutine = Timing.RunCoroutine(SyncMarkerPrefabsCoroutine());
-    }
-
-    private static IEnumerator<float> SyncMarkerPrefabsCoroutine()
-    {
-        while (MarkerBindings.Count > 0)
-        {
-            foreach (KeyValuePair<int, MarkerBinding> pair in MarkerBindings.ToList())
-            {
-                if (pair.Value.Transform == null)
-                {
-                    ObjectPrefab? missingMarkerPrefab = InstanceManager.Get(pair.Value.PrefabId);
-                    missingMarkerPrefab?.Destroy();
-                    MarkerBindings.Remove(pair.Key);
-                    continue;
-                }
-
-                ObjectPrefab? prefab = InstanceManager.Get(pair.Value.PrefabId);
-                if (prefab == null)
-                {
-                    MarkerBindings.Remove(pair.Key);
-                    continue;
-                }
-
-                SyncPrefabTransform(prefab, pair.Value.Transform);
-            }
-
-            yield return Timing.WaitForSeconds(0.05f);
-        }
-    }
-
-    private static void SyncPrefabTransform(ObjectPrefab prefab, Transform markerTransform)
-    {
-        if (!prefab.FollowMarkerTransform)
-            return;
-
+        Transform markerTransform = marker.transform;
         prefab.Position = markerTransform.position;
         prefab.Rotation = markerTransform.rotation;
         prefab.Scale = markerTransform.lossyScale;
+        prefab.MaxRooms = Math.Max(1, marker.MaxRooms);
+        prefab.AutoDestroyEnabled = marker.AutoDestroyEnabled;
+        prefab.AutoDestroyTime = marker.AutoDestroyTime;
+        prefab.Tag = marker.EffectiveTag;
+
+        if (marker.Options.Count > 0)
+            prefab.ApplyOptions(marker.Options);
+    }
+}
+
+/// <summary>
+/// マーカー GO に付与され、Prefab の transform をマーカーに追従させるコンポーネント。
+/// マーカー破棄 = Prefab 破棄。
+/// </summary>
+public sealed class MarkerPrefabFollower : MonoBehaviour
+{
+    private static readonly List<MarkerPrefabFollower> Active = [];
+
+    private Vector3 _lastPosition;
+    private Quaternion _lastRotation;
+    private Vector3 _lastScale;
+
+    public ObjectPrefab? Prefab { get; private set; }
+
+    /// <summary>プラグイン無効化時に全バインドを解除し、Prefab を破棄する。</summary>
+    public static void ReleaseAll()
+    {
+        foreach (MarkerPrefabFollower follower in Active.ToList())
+            follower.Release(destroyPrefab: true);
     }
 
-    private static bool AreOptionsEqual(IReadOnlyDictionary<string, string> left, IReadOnlyDictionary<string, string> right)
+    public void Bind(ObjectPrefab prefab)
     {
-        if (left.Count != right.Count)
-            return false;
+        Prefab = prefab;
+        CacheTransform();
+    }
 
-        foreach (KeyValuePair<string, string> pair in left)
+    private void Awake() => Active.Add(this);
+
+    private void OnDestroy()
+    {
+        Active.Remove(this);
+        ObjectPrefab? prefab = Prefab;
+        Prefab = null;
+        prefab?.Destroy();
+    }
+
+    private void LateUpdate()
+    {
+        ObjectPrefab? prefab = Prefab;
+        if (prefab == null)
+            return;
+
+        // 外部から破棄された Prefab には追従しない
+        if (InstanceManager.Get(prefab.ObjectInstanceID) != prefab)
         {
-            if (!right.TryGetValue(pair.Key, out string value) || value != pair.Value)
-                return false;
+            Prefab = null;
+            return;
         }
 
-        return true;
+        if (!prefab.FollowMarkerTransform)
+            return;
+
+        Transform markerTransform = transform;
+        Vector3 position = markerTransform.position;
+        Quaternion rotation = markerTransform.rotation;
+        Vector3 scale = markerTransform.lossyScale;
+
+        if (position == _lastPosition && rotation == _lastRotation && scale == _lastScale)
+            return;
+
+        _lastPosition = position;
+        _lastRotation = rotation;
+        _lastScale = scale;
+
+        prefab.Position = position;
+        prefab.Rotation = rotation;
+        prefab.Scale = scale;
     }
 
-    private static Type GetMarkerType()
-        => Type.GetType("ProjectMER.Features.Objects.SchematicObjectPrefabObject, ProjectMER");
-
-    private static bool TryResolvePrefabType(string input, out Type prefabType)
+    private void Release(bool destroyPrefab)
     {
-        prefabType = Type.GetType(input) ??
-                     Assembly.GetExecutingAssembly().GetTypes()
-                         .FirstOrDefault(t =>
-                             !t.IsAbstract &&
-                             t.IsSubclassOf(typeof(ObjectPrefab)) &&
-                             (t.FullName == input ||
-                              t.Name.Equals(input, StringComparison.OrdinalIgnoreCase) ||
-                              t.FullName?.EndsWith("." + input, StringComparison.OrdinalIgnoreCase) == true));
+        ObjectPrefab? prefab = Prefab;
+        Prefab = null;
 
-        return prefabType != null;
+        if (destroyPrefab)
+            prefab?.Destroy();
+
+        Destroy(this);
     }
 
-    private static bool TryReadMarker(Object marker, out MarkerData data)
+    private void CacheTransform()
     {
-        data = default;
-
-        if (marker is not Component component)
-            return false;
-
-        Type type = marker.GetType();
-        data = new MarkerData
-        {
-            Transform = component.transform,
-            PrefabType = ReadField<string>(type, marker, "PrefabType") ?? string.Empty,
-            Tag = ReadField<string>(type, marker, "Tag") ?? string.Empty,
-            MaxRooms = ReadField<int>(type, marker, "MaxRooms"),
-            AutoDestroyEnabled = ReadField<bool>(type, marker, "AutoDestroyEnabled"),
-            AutoDestroyTime = ReadField<float>(type, marker, "AutoDestroyTime"),
-            Options = ReadField<Dictionary<string, string>>(type, marker, "Options") ?? new Dictionary<string, string>(),
-        };
-
-        if (string.IsNullOrWhiteSpace(data.Tag) &&
-            data.Options.TryGetValue("Tag", out string legacyTag))
-        {
-            data.Tag = legacyTag;
-        }
-
-        return true;
-    }
-
-    private static T? ReadField<T>(Type type, object instance, string name)
-    {
-        FieldInfo? field = type.GetField(name, BindingFlags.Public | BindingFlags.Instance);
-        if (field == null)
-            return default;
-
-        object? value = field.GetValue(instance);
-        return value is T typed ? typed : default;
-    }
-
-    private struct MarkerData
-    {
-        public Transform Transform;
-        public string PrefabType;
-        public string Tag;
-        public int MaxRooms;
-        public bool AutoDestroyEnabled;
-        public float AutoDestroyTime;
-        public Dictionary<string, string> Options;
-    }
-
-    private readonly struct MarkerBinding
-    {
-        public MarkerBinding(Transform transform, string prefabId, string prefabType, Dictionary<string, string> options)
-        {
-            Transform = transform;
-            PrefabId = prefabId;
-            PrefabType = prefabType;
-            Options = CopyOptions(options);
-        }
-
-        public Transform Transform { get; }
-
-        public string PrefabId { get; }
-
-        public string PrefabType { get; }
-
-        public IReadOnlyDictionary<string, string> Options { get; }
-
-        public MarkerBinding WithOptions(Dictionary<string, string> options) => new(Transform, PrefabId, PrefabType, options);
-
-        private static Dictionary<string, string> CopyOptions(Dictionary<string, string> options)
-            => options.Count == 0 ? new Dictionary<string, string>() : new Dictionary<string, string>(options);
+        Transform markerTransform = transform;
+        _lastPosition = markerTransform.position;
+        _lastRotation = markerTransform.rotation;
+        _lastScale = markerTransform.lossyScale;
     }
 }

@@ -10,40 +10,15 @@ namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
 public class AntiMemeBomb : ObjectPrefab
 {
-    public override float ToySearchRadius { get; set; } = 1.75f;
+    protected override string SchematicName => "AntiMemeBomb";
 
-    private SchematicObject? _schematicObject;
-    private InteractableToy? _interactableToy;
-    private static readonly Vector3 InteractableLocalOffset = Vector3.up * 2.05f;
-    private static readonly Vector3 InteractableBaseScale = Vector3.one * 3f;
-    protected override void OnCreate()
+    protected override void OnSetup()
     {
-         _schematicObject = SpawnManagedSchematic("AntiMemeBomb");
-
-        ScheduleDelayed(0.5f, CreateInteractableToy);
-        base.OnCreate();
-    }
-
-    private void CreateInteractableToy()
-    {
-        _interactableToy = CreateManagedInteractable(
-            interactionDuration: 5f,
-            shape: InvisibleInteractableToy.ColliderShape.Box,
-            localOffset: InteractableLocalOffset,
-            baseScale: InteractableBaseScale);
-    }
-
-    protected override void OnDestroy()
-    {
-        _schematicObject = null;
-        _interactableToy = null;
-        base.OnDestroy();
+        AddInteractable(duration: 5f, offset: Vector3.up * 2.05f, scale: Vector3.one * 3f);
     }
 
     protected override void OnToySearchedNearby(PlayerSearchedToyEventArgs ev)
     {
-        var player = Player.Get(ev.Player);
-        var pos = _schematicObject?.Position ?? Position;
         foreach (var p in Player.List)
         {
             if (p is null || !p.IsAlive) continue;

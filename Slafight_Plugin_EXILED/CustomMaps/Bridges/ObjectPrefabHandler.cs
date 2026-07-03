@@ -3,11 +3,14 @@ using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
+using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
 
 /// <summary>
-/// This Handler is wrapper for ObjectPrefabs event receiving.
+/// ObjectPrefab へのイベント配送。
+/// managed Interactable はルーター経由で O(1) に直接ディスパッチし、
+/// Interactable を持たない Prefab のみ半径フォールバックで通知する。
 /// </summary>
 public class ObjectPrefabHandler : SlafightLabApiHandler, IBootstrapHandler
 {
@@ -23,66 +26,49 @@ public class ObjectPrefabHandler : SlafightLabApiHandler, IBootstrapHandler
         subscriptions.Add(() => ServerEvents.RoundStarted += OnRoundStarted, () => ServerEvents.RoundStarted -= OnRoundStarted);
         subscriptions.Add(() => ServerEvents.RoundRestarted += OnRoundRestarting, () => ServerEvents.RoundRestarted -= OnRoundRestarting);
     }
-    
-    /// <summary>
-    /// This method for prefab triggering. Get Near and Invoke that's invoked event.
-    /// but it's for SearchingToy.
-    /// </summary>
-    /// <param name="ev"><seealso cref="PlayerSearchingToyEventArgs"/></param>
+
     private static void OnSearchingToy(PlayerSearchingToyEventArgs ev)
     {
-        var exiledPlayer = Player.Get(ev.Player);
-        if (exiledPlayer == null)
+        var player = Player.Get(ev.Player);
+        if (player == null)
             return;
 
-        // LabApi 側が渡してくる「実際に調べられたオブジェクト」の位置を優先
-        // Interactable が null のときだけ Player の位置を fallback にする
-        var toyPos = ev.Interactable != null
-            ? ev.Interactable.Position
-            : ev.Player.Position;
+        if (ObjectPrefabInteractionRouter.TryRoute(ev.Interactable, out var handle))
+        {
+            handle.RaiseSearching(player, ev);
+            handle.Owner.InvokeToySearchingNearby(ev);
+            return;
+        }
 
+        Vector3 toyPos = ev.Interactable?.Position ?? ev.Player.Position;
         foreach (var prefab in InstanceManager.GetAll())
         {
-            if (prefab == null)
-                continue;
-
-            if (prefab.MatchesInteractableToy(ev.Interactable, toyPos))
-            {
+            if (prefab != null && prefab.MatchesSearchRadius(toyPos))
                 prefab.InvokeToySearchingNearby(ev);
-            }
         }
     }
 
-    /// <summary>
-    /// This method for prefab triggering. Get Near and Invoke that's invoked event.
-    /// </summary>
-    /// <param name="ev"><seealso cref="PlayerSearchedToyEventArgs"/></param>
     private static void OnSearchedToy(PlayerSearchedToyEventArgs ev)
     {
-        var exiledPlayer = Player.Get(ev.Player);
-        if (exiledPlayer == null)
+        var player = Player.Get(ev.Player);
+        if (player == null)
             return;
 
-        // LabApi 側が渡してくる「実際に調べられたオブジェクト」の位置を優先
-        // Interactable が null のときだけ Player の位置を fallback にする
-        var toyPos = ev.Interactable != null
-            ? ev.Interactable.Position
-            : ev.Player.Position;
+        if (ObjectPrefabInteractionRouter.TryRoute(ev.Interactable, out var handle))
+        {
+            handle.RaiseSearched(player, ev);
+            handle.Owner.InvokeToySearchedNearby(ev);
+            return;
+        }
 
+        Vector3 toyPos = ev.Interactable?.Position ?? ev.Player.Position;
         foreach (var prefab in InstanceManager.GetAll())
         {
-            if (prefab == null)
-                continue;
-
-            if (prefab.MatchesInteractableToy(ev.Interactable, toyPos))
-            {
+            if (prefab != null && prefab.MatchesSearchRadius(toyPos))
                 prefab.InvokeToySearchedNearby(ev);
-            }
         }
     }
 
-    // ==== Pure Triggering Wrappers ==== //
-    
     private static void OnRoundStarted()
     {
         foreach (var prefab in InstanceManager.GetAll())

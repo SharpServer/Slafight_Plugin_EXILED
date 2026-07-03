@@ -39,7 +39,8 @@ public class InteractableLever : ObjectPrefab
 {
     public static event EventHandler<InteractableLeverToggledEventArgs>? Toggled;
 
-    public override float ToySearchRadius { get; set; } = 1.75f;
+    protected override string SchematicName => "InteractableLever";
+
     public bool IsOn
     {
         get;
@@ -52,68 +53,45 @@ public class InteractableLever : ObjectPrefab
 
     public bool CanInteract { get; set; } = true;
 
-    private SchematicObject? _schematicObject;
-    private InteractableToy? _interactableToy;
-    private static readonly Vector3 InteractableLocalOffset = Vector3.zero;
-    private static readonly Vector3 InteractableBaseScale = Vector3.one * 0.25f;
-
-    protected override void OnCreate()
+    protected override void OnSetup()
     {
-        _schematicObject = SpawnManagedSchematic("InteractableLever");
-        ScheduleDelayed(0.5f, Setup);
-        base.OnCreate();
-    }
+        if (Schematic == null) return;
 
-    private void Setup()
-    {
-        if (_schematicObject == null) return;
+        var handle = AddInteractable(duration: 0.05f, scale: Vector3.one * 0.25f);
+        handle.Searching += OnLeverSearching;
+        handle.Searched += OnLeverSearched;
 
-        _interactableToy = CreateManagedInteractable(
-            interactionDuration: 0.05f,
-            shape: InvisibleInteractableToy.ColliderShape.Box,
-            localOffset: InteractableLocalOffset,
-            baseScale: InteractableBaseScale);
-        
         AnimationLever(IsOn);
     }
 
     private void AnimationLever(bool nextIsOn)
     {
-        if (_schematicObject == null) return;
+        if (Schematic == null) return;
         string animState = nextIsOn switch
         {
             true => "Mode1",
             false => "Mode0"
         };
-        _schematicObject.AnimationController.Play(animState);
+        Schematic.AnimationController.Play(animState);
     }
 
-    protected override void OnDestroy()
+    private void OnLeverSearching(Player player, PlayerSearchingToyEventArgs ev)
     {
-        _schematicObject = null;
-        _interactableToy = null;
-        base.OnDestroy();
+        if (!CanInteract) ev.IsAllowed = false;
     }
 
-    protected override void OnToySearchingNearby(PlayerSearchingToyEventArgs eventArgs)
+    private void OnLeverSearched(Player player, PlayerSearchedToyEventArgs ev)
     {
-        if (!CanInteract) eventArgs.IsAllowed = false;
-        base.OnToySearchingNearby(eventArgs);
-    }
-
-    protected override void OnToySearchedNearby(PlayerSearchedToyEventArgs ev)
-    {
-        var player = Player.Get(ev.Player);
-        if (player == null || _schematicObject == null)
+        if (Schematic == null)
             return;
 
         bool previousIsOn = IsOn;
         IsOn = !IsOn;
-        SpeakerApi.Play("LeverFlip.ogg", GetSoundId(ev), _schematicObject.Position, true, isSpatial: false, maxDistance: 10f, minDistance: 0.1f);
+        SpeakerApi.Play("LeverFlip.ogg", GetSoundId(ev), Schematic.Position, true, isSpatial: false, maxDistance: 10f, minDistance: 0.1f);
         Toggled?.Invoke(this, new InteractableLeverToggledEventArgs(this, player, ev, previousIsOn, IsOn));
     }
 
-    private string GetSoundId(PlayerSearchedToyEventArgs ev)
+    public string GetSoundId(PlayerSearchedToyEventArgs ev)
     {
         string id = ev.Interactable != null
             ? ev.Interactable.Base.netId.ToString()

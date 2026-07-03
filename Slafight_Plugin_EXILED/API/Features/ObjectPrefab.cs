@@ -9,6 +9,7 @@ using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Features.Wrappers;
 using MEC;
+using Mirror;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Interface;
@@ -26,7 +27,9 @@ public enum ObjectPrefabTagSearchMode
 public abstract class ObjectPrefab : IObjectPrefab
 {
     private static readonly Dictionary<Type, PropertyInfo[]> AutomaticOptionProperties = new();
-    private readonly List<ManagedInteractableToy> _managedInteractables = [];
+    private static readonly Dictionary<Type, MemberInfo[]> DeclaredOptionMembers = new();
+    private readonly List<InteractableHandle> _interactables = [];
+    private readonly Dictionary<string, SchematicBlock> _managedBlocks = new(StringComparer.OrdinalIgnoreCase);
     private readonly List<CoroutineHandle> _scheduledCallbacks = [];
     private Vector3 _position = Vector3.zero;
     private Quaternion _rotation = Quaternion.identity;
@@ -96,18 +99,65 @@ public abstract class ObjectPrefab : IObjectPrefab
     public virtual int MaxRooms { get; set; } = 1;
 
     public virtual float ToySearchRadius { get; set; } = 0f;
-    public SchematicObject? ManagedSchematic => _managedSchematic;
-    public IReadOnlyCollection<InteractableToy> ManagedInteractables => _managedInteractables.Select(i => i.Toy).ToList();
+
+    /// <summary>
+    /// この Prefab が管理しているスキマティック。
+    /// <see cref="SchematicName"/> を宣言していれば Create 時に自動でスポーンされる。
+    /// </summary>
+    public SchematicObject? Schematic => _managedSchematic;
+
+    /// <summary>この Prefab が管理している Interactable のハンドル一覧。</summary>
+    public IReadOnlyList<InteractableHandle> Interactables => _interactables;
+
+    /// <summary>managed Interactable を 1 つ以上持つか（半径フォールバック対象の判定に使う）。</summary>
+    public bool HasInteractables => _interactables.Count > 0;
+
+    /// <summary>
+    /// 宣言すると Create 時に自動でスキマティックをスポーンする。
+    /// null / 空文字なら何もスポーンしない（動的に切り替える場合は getter で分岐してよい）。
+    /// </summary>
+    protected virtual string? SchematicName => null;
+
+    /// <summary>
+    /// Create から <see cref="OnSetup"/> 呼び出しまでの遅延秒数。0 以下なら即時。
+    /// </summary>
+    protected virtual float SetupDelay => 0.5f;
 
     public virtual ObjectPrefab Create()
     {
         Log.Debug($"[ObjectPrefab]{GetType().Name} Create Invoked.");
-        ObjectInstanceID = Guid.NewGuid().ToString("N")[..5];
+        ObjectInstanceID = InstanceManager.GenerateUniqueId();
         InstanceManager.Register(this);
         if (AutoDestroyEnabled && AutoDestroyTime > 0f)
             AutoDestroyCoroutineHandle = Timing.RunCoroutine(AutoDestroy());
+
+        string? schematicName = SchematicName;
+        if (!string.IsNullOrEmpty(schematicName))
+            SpawnManagedSchematic(schematicName!);
+
         OnCreate();
+
+        if (SetupDelay > 0f)
+            ScheduleDelayed(SetupDelay, InvokeSetup);
+        else
+            InvokeSetup();
+
         return this;
+    }
+
+    private void InvokeSetup()
+    {
+        if (_isDestroyed)
+            return;
+
+        try
+        {
+            OnSetup();
+        }
+        catch (Exception e)
+        {
+            Log.Error($"[ObjectPrefab]{GetType().Name} OnSetup exception: {e}");
+        }
     }
 
     public virtual void Destroy()
@@ -142,6 +192,13 @@ public abstract class ObjectPrefab : IObjectPrefab
     }
 
     protected virtual void OnCreate() { }
+
+    /// <summary>
+    /// Create から <see cref="SetupDelay"/> 経過後に 1 回呼ばれる。
+    /// Interactable の生成やアニメーションの初期化はここで行う。
+    /// </summary>
+    protected virtual void OnSetup() { }
+
     protected virtual void OnDestroy() { }
     protected virtual void OnTransformUpdated() => SyncManagedObjects();
 
@@ -152,6 +209,7 @@ public abstract class ObjectPrefab : IObjectPrefab
         if (_managedSchematic != null && applyScale)
             _managedSchematic.Scale = Scale;
 
+        AdoptSchematicBlocks();
         SyncManagedObjects();
         return _managedSchematic;
     }
@@ -165,11 +223,14 @@ public abstract class ObjectPrefab : IObjectPrefab
         if (_managedSchematic != null && applyScale)
             _managedSchematic.Scale = Scale;
 
+        AdoptSchematicBlocks();
         SyncManagedObjects();
     }
 
     protected void DestroyManagedSchematic()
     {
+        ReleaseAdoptedBlocks();
+
         var schematic = _managedSchematic;
         _managedSchematic = null;
 
@@ -187,61 +248,212 @@ public abstract class ObjectPrefab : IObjectPrefab
         }
     }
 
-    protected InteractableToy CreateManagedInteractable(
-        float interactionDuration = 3f,
+    /// <summary>
+    /// スキマティック内の ObjectPrefabSchematicInfo 付きブロックを管理下へ採用する。
+    /// Interactable ブロックは <see cref="InteractableHandle"/> になり、
+    /// その他のブロックは <see cref="GetBlock"/> でキー参照できる。
+    /// </summary>
+    private void AdoptSchematicBlocks()
+    {
+        ReleaseAdoptedBlocks();
+
+        if (_managedSchematic == null)
+            return;
+
+        foreach (SchematicBlock block in _managedSchematic.GetPrefabManagedBlocks())
+        {
+            string key = block.ObjectPrefabKey;
+            _managedBlocks[key] = block;
+
+            if (!block.TryGetComponent(out InvisibleInteractableToy toyBase))
+                continue;
+
+            InteractableToy? toy = InteractableToy.Get(toyBase);
+            if (toy == null)
+            {
+                Log.Warn($"[ObjectPrefab]{GetType().Name} adopted block '{key}' has an interactable without a LabAPI wrapper.");
+                continue;
+            }
+
+            var handle = new InteractableHandle(
+                this,
+                toy,
+                Vector3.zero,
+                Vector3.one,
+                key: key,
+                ownsToy: false,
+                syncTransform: false);
+
+            _interactables.Add(handle);
+            ObjectPrefabInteractionRouter.Register(handle);
+        }
+    }
+
+    /// <summary>採用したブロック / Interactable を管理から外す（Toy 自体は破棄しない）。</summary>
+    private void ReleaseAdoptedBlocks()
+    {
+        RemoveInteractableCore(handle => !handle.OwnsToy, destroyToy: false);
+        _managedBlocks.Clear();
+    }
+
+    /// <summary>
+    /// ObjectPrefabSchematicInfo のキーで採用済み Interactable を取得する（大文字小文字無視）。
+    /// </summary>
+    public InteractableHandle? GetInteractable(string key)
+        => _interactables.FirstOrDefault(handle =>
+            string.Equals(handle.Key, key, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// ObjectPrefabSchematicInfo のキーで採用済みブロックを取得する（大文字小文字無視）。
+    /// </summary>
+    public SchematicBlock? GetBlock(string key)
+        => _managedBlocks.TryGetValue(key, out SchematicBlock block) && block != null ? block : null;
+
+    /// <summary>
+    /// キー（ObjectPrefabSchematicInfo）またはブロック名からコンポーネントを取得する。
+    /// キー一致を優先し、無ければブロック名で検索する。
+    /// </summary>
+    public T? GetBlockComponent<T>(string keyOrName) where T : UnityEngine.Component
+    {
+        SchematicBlock? block = GetBlock(keyOrName) ?? _managedSchematic?.FindBlock(keyOrName);
+        return block != null && block.TryGetComponent(out T component) ? component : null;
+    }
+
+    /// <summary>
+    /// 採用ブロック（ObjectPrefabSchematicInfo キー）またはブロック名（完全一致）の
+    /// ブロックをサブツリーごとネットワーク破棄する。
+    /// 配下に採用 Interactable があれば自動で管理から外れる（Toy はブロックと一緒に破棄）。
+    /// </summary>
+    protected bool DestroyBlock(string keyOrName)
+    {
+        SchematicBlock? block = GetBlock(keyOrName) ?? _managedSchematic?.FindBlock(keyOrName, allowPartial: false);
+        if (block == null)
+            return false;
+
+        Transform root = block.transform;
+
+        RemoveInteractableCore(
+            handle => !handle.OwnsToy && !handle.Toy.IsDestroyed && handle.Toy.Transform.IsChildOf(root),
+            destroyToy: false);
+
+        foreach (string managedKey in _managedBlocks
+                     .Where(pair => pair.Value == null || pair.Value.transform.IsChildOf(root))
+                     .Select(pair => pair.Key)
+                     .ToList())
+        {
+            _managedBlocks.Remove(managedKey);
+        }
+
+        foreach (NetworkIdentity identity in block.GetComponentsInChildren<NetworkIdentity>(true))
+        {
+            if (identity != null && identity.isServer)
+                NetworkServer.Destroy(identity.gameObject);
+        }
+
+        if (block != null && block.gameObject != null)
+            UnityEngine.Object.Destroy(block.gameObject);
+
+        return true;
+    }
+
+    /// <summary>
+    /// 採用ブロック（ObjectPrefabSchematicInfo キー）またはブロック名（完全一致）の
+    /// ブロックサブツリーのネットワーク可視状態を UnSpawn / Spawn で切り替える。
+    /// サーバー側オブジェクトは保持されるため、何度でも切り替えられる。
+    /// </summary>
+    protected bool SetBlockSpawned(string keyOrName, bool spawned)
+    {
+        SchematicBlock? block = GetBlock(keyOrName) ?? _managedSchematic?.FindBlock(keyOrName, allowPartial: false);
+        if (block == null)
+            return false;
+
+        foreach (NetworkIdentity identity in block.GetComponentsInChildren<NetworkIdentity>(true))
+        {
+            if (identity == null)
+                continue;
+
+            bool isSpawned = identity.netId != 0;
+            if (spawned == isSpawned)
+                continue;
+
+            if (spawned)
+                NetworkServer.Spawn(identity.gameObject);
+            else
+                NetworkServer.UnSpawn(identity.gameObject);
+        }
+
+        return true;
+    }
+
+    /// <summary>
+    /// managed Interactable を 1 つ生成して登録する。
+    /// 返り値のハンドルで Searching / Searched を購読できる。
+    /// 位置・スケールは Prefab（Schematic があればその transform）に自動追従する。
+    /// </summary>
+    protected InteractableHandle AddInteractable(
+        float duration = 3f,
+        Vector3? offset = null,
+        Vector3? scale = null,
         InvisibleInteractableToy.ColliderShape shape = InvisibleInteractableToy.ColliderShape.Box,
-        Vector3? localOffset = null,
-        Vector3? baseScale = null,
         bool spawn = true)
     {
         var toy = InteractableToy.Create(networkSpawn: false);
-        toy.InteractionDuration = interactionDuration;
+        toy.InteractionDuration = duration;
         toy.Shape = shape;
 
-        RegisterManagedInteractable(toy, localOffset ?? Vector3.zero, baseScale ?? Vector3.one);
+        InteractableHandle handle = RegisterManagedInteractable(toy, offset ?? Vector3.zero, scale ?? Vector3.one);
         if (spawn)
             toy.Spawn();
 
         SyncManagedObjects();
-        return toy;
+        return handle;
     }
 
-    protected void RegisterManagedInteractable(InteractableToy toy, Vector3 localOffset, Vector3 baseScale)
+    /// <summary>
+    /// 外部で生成した Toy を managed Interactable として登録する。
+    /// </summary>
+    protected InteractableHandle RegisterManagedInteractable(InteractableToy toy, Vector3 localOffset, Vector3 baseScale)
     {
-        _managedInteractables.RemoveAll(i => ReferenceEquals(i.Toy, toy));
-        _managedInteractables.Add(new ManagedInteractableToy(toy, localOffset, baseScale));
+        RemoveInteractableCore(i => ReferenceEquals(i.Toy, toy), destroyToy: false);
+
+        var handle = new InteractableHandle(this, toy, localOffset, baseScale);
+        _interactables.Add(handle);
+        ObjectPrefabInteractionRouter.Register(handle);
         SyncManagedObjects();
+        return handle;
     }
 
-    protected void UnregisterManagedInteractable(InteractableToy toy, bool destroy = false)
-    {
-        _managedInteractables.RemoveAll(i =>
-        {
-            if (!ReferenceEquals(i.Toy, toy))
-                return false;
-
-            if (destroy && !i.Toy.IsDestroyed)
-                i.Toy.Destroy();
-            return true;
-        });
-    }
+    protected void UnregisterManagedInteractable(InteractableHandle handle, bool destroy = false)
+        => RemoveInteractableCore(i => ReferenceEquals(i, handle), destroy);
 
     protected void DestroyManagedInteractables()
+        => RemoveInteractableCore(_ => true, destroyToy: true);
+
+    private void RemoveInteractableCore(Func<InteractableHandle, bool> predicate, bool destroyToy)
     {
-        foreach (var interactable in _managedInteractables.ToList())
+        for (int i = _interactables.Count - 1; i >= 0; i--)
         {
+            InteractableHandle handle = _interactables[i];
+            if (!predicate(handle))
+                continue;
+
+            ObjectPrefabInteractionRouter.Unregister(handle);
+            _interactables.RemoveAt(i);
+
+            // 採用分（OwnsToy=false）はスキマティック側が寿命を持つため破棄しない
+            if (!destroyToy || !handle.OwnsToy)
+                continue;
+
             try
             {
-                if (!interactable.Toy.IsDestroyed)
-                    interactable.Toy.Destroy();
+                if (!handle.Toy.IsDestroyed)
+                    handle.Toy.Destroy();
             }
             catch (Exception e)
             {
-                Log.Error($"[ObjectPrefab]{GetType().Name} DestroyManagedInteractables exception: {e}");
+                Log.Error($"[ObjectPrefab]{GetType().Name} interactable destroy exception: {e}");
             }
         }
-
-        _managedInteractables.Clear();
     }
 
     protected CoroutineHandle ScheduleDelayed(float delay, Action callback)
@@ -288,13 +500,17 @@ public abstract class ObjectPrefab : IObjectPrefab
         var sourcePosition = _managedSchematic?.Position ?? Position;
         var sourceRotation = _managedSchematic?.Rotation ?? Rotation;
 
-        foreach (var interactable in _managedInteractables)
+        foreach (var handle in _interactables)
         {
+            // 採用分はスキマティックの親子関係で追従するため同期しない
+            if (!handle.SyncTransform)
+                continue;
+
             SyncInteractableTransform(
-                interactable.Toy,
-                sourcePosition + sourceRotation * interactable.LocalOffset,
+                handle.Toy,
+                sourcePosition + sourceRotation * handle.LocalOffset,
                 sourceRotation,
-                Vector3.Scale(interactable.BaseScale, Scale));
+                Vector3.Scale(handle.BaseScale, Scale));
         }
     }
 
@@ -312,31 +528,12 @@ public abstract class ObjectPrefab : IObjectPrefab
         toy.Base.NetworkScale = toy.Transform.localScale;
     }
 
-    public virtual bool MatchesInteractableToy(InteractableToy? interactable, Vector3 toyPosition)
-    {
-        if (interactable != null)
-        {
-            foreach (var managed in _managedInteractables)
-            {
-                if (ReferenceEquals(managed.Toy, interactable) ||
-                    Vector3.Distance(managed.Toy.Position, interactable.Position) <= 0.05f)
-                {
-                    return true;
-                }
-            }
-
-            // 管理Interactableを持つPrefabは、別のToyを位置半径だけで横取りしない。
-            // 近接配置された複数Prefabのうち、CanInteract=falseの個体が
-            // 隣のInteractableまでキャンセルすることを防ぐ。
-            if (_managedInteractables.Count > 0)
-                return false;
-        }
-
-        if (_managedInteractables.Any(i => Vector3.Distance(i.Toy.Position, toyPosition) <= 0.25f))
-            return true;
-
-        return ToySearchRadius > 0f && Vector3.Distance(Position, toyPosition) <= ToySearchRadius;
-    }
+    /// <summary>
+    /// 半径フォールバック用の判定。managed Interactable を持つ Prefab は
+    /// ルーター経由で直接ディスパッチされるため対象外。
+    /// </summary>
+    public bool MatchesSearchRadius(Vector3 toyPosition)
+        => !HasInteractables && ToySearchRadius > 0f && Vector3.Distance(Position, toyPosition) <= ToySearchRadius;
 
     /// <summary>
     /// このインスタンスの実行時型を基準にTag検索する。
@@ -355,7 +552,8 @@ public abstract class ObjectPrefab : IObjectPrefab
         => InstanceManager.GetByTag<TPrefab>(tag, includeDerivedTypes);
 
     /// <summary>
-    /// 派生Prefabで宣言されたpublic getter/setter付きプロパティを自動収集する。
+    /// 派生Prefabで宣言されたpublic getter/setter付きプロパティと
+    /// public な <see cref="Option"/> メンバーを自動収集する。
     /// 独自のキー名や変換処理が必要な場合はoverrideできる。
     /// </summary>
     public virtual Dictionary<string, string> CollectOptions()
@@ -375,6 +573,9 @@ public abstract class ObjectPrefab : IObjectPrefab
             }
         }
 
+        foreach (KeyValuePair<string, Option> declared in GetDeclaredOptions())
+            options[declared.Key] = declared.Value.Serialize();
+
         return options;
     }
 
@@ -389,12 +590,25 @@ public abstract class ObjectPrefab : IObjectPrefab
 
         var properties = GetAutomaticOptionProperties()
             .ToDictionary(property => property.Name, StringComparer.OrdinalIgnoreCase);
+        var declaredOptions = GetDeclaredOptions();
 
         foreach (KeyValuePair<string, string> option in options)
         {
             if (option.Key.Equals(nameof(Tag), StringComparison.OrdinalIgnoreCase))
             {
                 Tag = option.Value;
+                continue;
+            }
+
+            if (declaredOptions.TryGetValue(option.Key, out Option declared))
+            {
+                if (!declared.TryApply(option.Value, out string optionError))
+                {
+                    Log.Warn(
+                        $"[ObjectPrefab]{GetType().Name} could not apply option " +
+                        $"'{option.Key}={option.Value}': {optionError}");
+                }
+
                 continue;
             }
 
@@ -450,6 +664,7 @@ public abstract class ObjectPrefab : IObjectPrefab
                             getter.IsStatic ||
                             setter.IsStatic ||
                             getter.GetBaseDefinition().DeclaringType == typeof(ObjectPrefab) ||
+                            property.PropertyType == typeof(Option) ||
                             property.GetIndexParameters().Length != 0 ||
                             properties.ContainsKey(property.Name))
                         {
@@ -470,7 +685,69 @@ public abstract class ObjectPrefab : IObjectPrefab
         return candidates.Where(IsAutomaticOptionProperty).ToArray();
     }
 
-    private static bool TrySerializeOptionValue(object value, Type declaredType, out string serialized)
+    /// <summary>
+    /// public な <see cref="Option"/> プロパティ/フィールド（メンバー名 → インスタンス）を収集する。
+    /// </summary>
+    protected Dictionary<string, Option> GetDeclaredOptions()
+    {
+        Type prefabType = GetType();
+        MemberInfo[] members;
+
+        lock (DeclaredOptionMembers)
+        {
+            if (!DeclaredOptionMembers.TryGetValue(prefabType, out members))
+            {
+                var collected = new Dictionary<string, MemberInfo>(StringComparer.OrdinalIgnoreCase);
+
+                for (Type type = prefabType;
+                     type != null && type != typeof(ObjectPrefab);
+                     type = type.BaseType)
+                {
+                    foreach (PropertyInfo property in type.GetProperties(
+                                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+                    {
+                        if (property.PropertyType == typeof(Option) &&
+                            property.GetGetMethod() is { IsStatic: false } &&
+                            property.GetIndexParameters().Length == 0 &&
+                            !collected.ContainsKey(property.Name))
+                        {
+                            collected[property.Name] = property;
+                        }
+                    }
+
+                    foreach (FieldInfo field in type.GetFields(
+                                 BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly))
+                    {
+                        if (field.FieldType == typeof(Option) && !collected.ContainsKey(field.Name))
+                            collected[field.Name] = field;
+                    }
+                }
+
+                members = collected.Values
+                    .OrderBy(member => member.Name, StringComparer.Ordinal)
+                    .ToArray();
+                DeclaredOptionMembers[prefabType] = members;
+            }
+        }
+
+        var result = new Dictionary<string, Option>(StringComparer.OrdinalIgnoreCase);
+        foreach (MemberInfo member in members)
+        {
+            Option? option = member switch
+            {
+                PropertyInfo property => property.GetValue(this) as Option,
+                FieldInfo field => field.GetValue(this) as Option,
+                _ => null,
+            };
+
+            if (option != null)
+                result[member.Name] = option;
+        }
+
+        return result;
+    }
+
+    internal static bool TrySerializeOptionValue(object? value, Type declaredType, out string serialized)
     {
         if (value == null)
         {
@@ -521,7 +798,7 @@ public abstract class ObjectPrefab : IObjectPrefab
         return false;
     }
 
-    private static bool TryDeserializeOptionValue(string serialized, Type declaredType, out object value)
+    internal static bool TryDeserializeOptionValue(string serialized, Type declaredType, out object value)
     {
         Type nullableType = Nullable.GetUnderlyingType(declaredType);
         Type valueType = nullableType ?? declaredType;
@@ -668,25 +945,25 @@ public abstract class ObjectPrefab : IObjectPrefab
     }
     public void InvokeRoundRestarting()
         => OnRoundRestarting();
-
-    private sealed class ManagedInteractableToy
-    {
-        public ManagedInteractableToy(InteractableToy toy, Vector3 localOffset, Vector3 baseScale)
-        {
-            Toy = toy;
-            LocalOffset = localOffset;
-            BaseScale = baseScale;
-        }
-
-        public InteractableToy Toy { get; }
-        public Vector3 LocalOffset { get; }
-        public Vector3 BaseScale { get; }
-    }
 }
 
 public static class InstanceManager
 {
     private static readonly Dictionary<string, ObjectPrefab> _instances = new();
+
+    /// <summary>
+    /// 既存インスタンスと衝突しない 5 文字の InstanceID を生成する。
+    /// </summary>
+    public static string GenerateUniqueId()
+    {
+        string id;
+        do
+        {
+            id = Guid.NewGuid().ToString("N")[..5];
+        } while (_instances.ContainsKey(id));
+
+        return id;
+    }
 
     public static void Register(ObjectPrefab prefab)
     {

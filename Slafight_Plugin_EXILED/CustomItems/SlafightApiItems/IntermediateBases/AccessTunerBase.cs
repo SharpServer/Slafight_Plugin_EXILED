@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
@@ -34,6 +35,14 @@ public abstract class AccessTunerBase : CItem
         LevelThree = 3,
         Broken = -1,
         Undefined = -2
+    }
+
+    public enum DataCellApplyResult
+    {
+        Upgraded,
+        FilledPoints,
+        LowerThanTuner,
+        Failed
     }
 
     protected override void OnWaitingForPlayers()
@@ -318,6 +327,58 @@ public abstract class AccessTunerBase : CItem
         service = new AccessTunerService(resolvedLevel);
         Services[serial] = service;
         return service;
+    }
+
+    public int GetCurrentLevelNumber(ushort serial)
+    {
+        AccessTunerService service = GetOrCreateService(serial);
+        return Math.Max(0, (int)NormalizeAccessLevel(service.AccessTunerLevel));
+    }
+
+    public DataCellApplyResult ApplyDataCell(Player player, Item item, AccessTunerLevel dataCellLevel)
+    {
+        if (player == null || item == null || !Check(item))
+            return DataCellApplyResult.Failed;
+
+        AccessTunerLevel targetLevel = NormalizeAccessLevel(dataCellLevel);
+        int targetLevelNumber = (int)targetLevel;
+        if (targetLevelNumber <= 0)
+            return DataCellApplyResult.Failed;
+
+        AccessTunerService current = GetOrCreateService(item.Serial);
+        int currentLevelNumber = Math.Max(0, (int)NormalizeAccessLevel(current.AccessTunerLevel));
+
+        if (targetLevelNumber < currentLevelNumber)
+            return DataCellApplyResult.LowerThanTuner;
+
+        if (targetLevelNumber == currentLevelNumber)
+        {
+            current.TunePoints = GetMaxPoints(current.AccessTunerLevel);
+            current.LastHackResult = "Data Cell同期（ポイント最大）";
+            UpdateEffectedInfo(player, item.Serial);
+            return DataCellApplyResult.FilledPoints;
+        }
+
+        AccessTunerBase? target = CItem.GetAllInstances()
+            .OfType<AccessTunerBase>()
+            .FirstOrDefault(t => NormalizeAccessLevel(t.AccessLevel) == targetLevel);
+        if (target == null)
+            return DataCellApplyResult.Failed;
+
+        var migrated = new AccessTunerService(targetLevel)
+        {
+            TunePoints = Math.Min(current.TunePoints, GetMaxPoints(targetLevel)),
+            UsedCounts = current.UsedCounts,
+            LastHackResult = $"Data Cell同期（Lv.{targetLevelNumber}へ強化）"
+        };
+
+        Services.Remove(item.Serial);
+        target.Services[item.Serial] = migrated;
+        CItem.SerialTracker.ForceRegister(item.Serial, target);
+        ApplyNoPermissions(item);
+        target.ReapplyNoPermissionsDelayed(item);
+        target.UpdateEffectedInfo(player, item.Serial);
+        return DataCellApplyResult.Upgraded;
     }
 
     private static void ApplyNoPermissions(Item item)
