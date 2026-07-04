@@ -63,6 +63,7 @@ public class Scp035Role : CRole
 
     public override void RegisterEvents()
     {
+        Exiled.Events.Handlers.Player.Handcuffing += OnHandcuffing;
         Exiled.Events.Handlers.Player.Dying += OnDyingByRole;
         Exiled.Events.Handlers.Warhead.Starting += OnWarheadStartingGlobal;
         OmegaWarhead.OmegaWarheadStarting += OnOmegaWarheadStartingGlobal;
@@ -71,6 +72,7 @@ public class Scp035Role : CRole
 
     public override void UnregisterEvents()
     {
+        Exiled.Events.Handlers.Player.Handcuffing -= OnHandcuffing;
         Exiled.Events.Handlers.Player.Dying -= OnDyingByRole;
         Exiled.Events.Handlers.Warhead.Starting -= OnWarheadStartingGlobal;
         OmegaWarhead.OmegaWarheadStarting -= OnOmegaWarheadStartingGlobal;
@@ -105,6 +107,12 @@ public class Scp035Role : CRole
         Cleanup(ev.Player);
         CassieHelper.AnnounceTermination(ev, "SCP 0 3 5", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
         base.OnRoleDying(ev);
+    }
+
+    private void OnHandcuffing(HandcuffingEventArgs ev)
+    {
+        if (!Check(ev.Target)) return;
+        ev.IsAllowed = false;
     }
 
     private void OnDyingByRole(DyingEventArgs ev)
