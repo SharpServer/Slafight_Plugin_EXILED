@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.API.Features.Doors;
 using Exiled.Events.EventArgs.Warhead;
 using MEC;
 using Slafight_Plugin_EXILED.Extensions;
@@ -43,10 +45,17 @@ public static class WarheadBoomEffectHandler
                 player.Kill(DamageType.Warhead);
             }
         }
+        
         foreach (var player in Player.List)
         {
-            if (player is null || !player.IsAlive) continue;
-            player.EnableEffect(EffectType.Concussed, 255, 10f);
+            if (player is null || player.IsDead) continue;
+            player.EnableEffect<Concussed>(255, 10f);
+        }
+
+        foreach (var door in Door.List)
+        {
+            if (door is null || !door.IsElevator) continue;
+            door.Lock(DoorLockType.NoPower);
         }
     }
 

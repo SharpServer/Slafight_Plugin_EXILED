@@ -15,6 +15,8 @@ internal static class RoleHintsDictionary
     private const string InitiativeTeam = $"<color={ServerColors.BlueGreen}>Horizon Initiative</color>";
     private const string NeutFoundTeam  = "<color=#faff86>Neutral - Side Foundation</color>";
     private const string NeutChaosTeam  = "<color=#ee7600>Neutral - Side Chaos</color>";
+    private const string UnknownTeam    = "<color=#ffffff>Unknown Forces</color>";
+    private const string ModeratorTeam  = "<color=#c0c0c0>Moderators</color>";
 
     private const string FoundObj = "研究員を救出し、施設の秩序を守護せよ。";
     private const string ChaosObj = "Dクラス職員を救出し、施設を略奪せよ。";
@@ -37,6 +39,7 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.Scp999]       = ("<color=#ff1493>SCP-999</color>",            ScpTeam, "可愛いペットとして施設を歩き回れ！　※勝敗に影響しません。良い感じに遊んでね！"),
         [CRoleTypeId.Scp035]       = ("<color=#c50000>SCP-035</color>",            ScpTeam, "あなたは仮面に乗っ取られ、精神が不安定になっている。<color=red>核弾頭を起動しろ</color>"),
         [CRoleTypeId.Scp079]       = ("<color=#c50000>SCP-079</color>",            ScpTeam, "施設制御システムを操り、施設に混沌を引き起こせ。"),
+        [CRoleTypeId.Scp049]       = ("<color=#c50000>SCP-049</color>",            ScpTeam, "悪疫を根絶するため、名医の勘で患者を見つけ出し救済せよ。"),
         [CRoleTypeId.Scp173]       = ("<color=#c50000>SCP-173</color>",            ScpTeam, "一瞬の隙を突き、財団職員共をへし折れ！"),
         [CRoleTypeId.Scp610]       = ("<color=#c50000>SCP-610</color>",            ScpTeam, "生存者を探し出し、施設をにくで埋め尽くせ"),
         [CRoleTypeId.Scp076]       = ("<color=#ff1493>SCP-076</color>",            FoundTeam + " - " + ScpTeam, "財団の制御下で敵対勢力を殲滅せよ。財団を3人殺害、またはOmega-7全滅で反逆状態になる。"),
@@ -57,6 +60,7 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.ChaosPenal]           = ("<color=#228b22>Chaos Insurgency Breaker</color>",         ChaosTeam, ChaosObj),
         [CRoleTypeId.ChaosUndercoverAgent] = ("<color=#228b22>Chaos Insurgency Undercover Agent</color>",ChaosTeam, ChaosObj),
         [CRoleTypeId.ChaosSniper] = ("<color=#228b22>Chaos Insurgency Sniper</color>",ChaosTeam, ChaosObj),
+        [CRoleTypeId.DanteSlayer] = ("<color=#39ff14>Dante Slayer Unit</color>", ChaosTeam, "対物ライフルと制圧火器でDANTEを削り切り、業火の指揮者を討伐せよ。"),
 
         // ── Foundation Forces ─────────────────────────────────────────────
         [CRoleTypeId.NtfLieutenant]  = ("<color=#00b7eb>MTF E-11: Lieutenant</color>",     FoundTeam, FoundObj),
@@ -84,6 +88,8 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.RrhEnforcer]    = ($"<color={ServerColors.Red}><b>MTF Alpha-1: Enforcer</b></color>",    FoundTeam, AlphaObj),
         [CRoleTypeId.RrhAegis]       = ($"<color={ServerColors.Red}><b>MTF Alpha-1: Aegis</b></color>",       FoundTeam, AlphaObj),
         [CRoleTypeId.RrhAssaulter]   = ($"<color={ServerColors.Red}><b>MTF Alpha-1: Assaulter</b></color>",   FoundTeam, AlphaObj),
+        [CRoleTypeId.PdxWarden]      = ($"<color={ServerColors.Carmine}><b>Pandra's Box: Warden</b></color>", FoundTeam, "アベルを監視し、暴走時には抑制装置を起動して制御せよ。"),
+        [CRoleTypeId.PdxWatcher]     = ($"<color={ServerColors.Carmine}><b>Pandra's Box: Watcher</b></color>",FoundTeam, "Wardenを補助し、アベルの異常を察知したら迅速に報告せよ。"),
 
         // ── Guards ────────────────────────────────────────────────────────
         [CRoleTypeId.EvacuationGuard] = ("<color=#00b7eb>Emergency Evacuation Guard</color>", FoundTeam, "職員達を上部階層へ避難させ、施設の秩序を守護せよ。"),
@@ -100,6 +106,7 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.Surveillance]   = ("<color=#faff86>Surveillance</color>",      NeutFoundTeam, "施設の状況を監視し、脱出の機会を見極めよ。"),
         [CRoleTypeId.CandyResearcher]= ("<color=#faff86>Candy Researcher</color>",  NeutFoundTeam, "キャンディーを活用しながら、施設から脱出せよ。"),
         [CRoleTypeId.MarionWheeler]  = ("<color=#ffa500>Marion Wheeler</color>",    NeutFoundTeam, "第五の目を搔い潜り、反ミーム爆弾を起爆しろ！"),
+        [CRoleTypeId.AntiMemeDivisionScientist] = ("<color=#faff86>Anti-Meme Division Scientist</color>", NeutFoundTeam, "反ミーム爆弾を起動し、第五教会によるアウトブレイクをリセットせよ。たとえ命を落としても。"),
 
         // ── Class-D / Neutral-Chaos ───────────────────────────────────────
         [CRoleTypeId.Janitor]      = ("<color=#ee7600>Janitor</color>",       NeutChaosTeam, "施設から脱出せよ。また、汚物をグレネードで清掃せよ。"),
@@ -131,11 +138,23 @@ internal static class RoleHintsDictionary
             "<b><color=#ffffff>CANDY WARRIER</color></b>",
             "<b><color=#ffffff>CANDY WARRIER's DIVISION</color></b>",
             "全施設にFunnyなお菓子の正義を執行しろ"),
+        [CRoleTypeId.WaterWarrior] = (
+            $"<b><color={ServerColors.Aqua}>WATER WARRIOR</color></b>",
+            $"<b><color={ServerColors.Aqua}>WATER WARRIOR's DIVISION</color></b>",
+            "水鉄砲を使い、施設をSUMMER AURAで制圧しろ！"),
 
         // ── Special ───────────────────────────────────────────────────────
         [CRoleTypeId.Sculpture] = (
             "<color=#00b7eb>Sculpture</color>", FoundTeam,
             "財団に従い、人類を根絶させよ。"),
+        [CRoleTypeId.Capybara] = (
+            "<color=#ffffff>Xx_CAPYBARA_xX</color>",
+            UnknownTeam,
+            "小さな姿で施設を駆け回り、Capybara Missileで混沌を撒き散らせ。"),
+        [CRoleTypeId.Dante] = (
+            "<color=#ff1a1a>DANTE ─ 業火の指揮者</color>",
+            UnknownTeam,
+            "業火と触腕で討伐部隊を焼き払い、地上を支配せよ。"),
         [CRoleTypeId.SergeyMakarov] = (
             "<color=#dc143c>Facility Manager - Sergey Makarov</color>",
             "<color=#faff86>The Foundation</color>",
@@ -152,6 +171,10 @@ internal static class RoleHintsDictionary
                 $"<color={ServerColors.Cyan}><b>THE HIDEWATCH</b></color>",
                 "<color=#FF1493>THE ADMINISTRATOR</color>",
                 "ぐへへへへ"),
+        [CRoleTypeId.ModeratorRole] = (
+            $"<color={ServerColors.Pink}><b>Law's Left Hand: Moderator</b></color>",
+            ModeratorTeam,
+            "正しくモデレーション処置を行い、秩序を回復し安全なシャープ鯖を死守せよ。"),
         
         // ── Experimental Features ─────────────────────────────────────────
         [CRoleTypeId.SecurityTeamGuard] = ("<color=#00b7eb>Security Team Guard</color>", FoundTeam, FoundObj),
