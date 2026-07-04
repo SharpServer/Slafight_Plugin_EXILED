@@ -179,49 +179,6 @@ public class EventHandler : IBootstrapHandler, IDisposable
         candidate.ShowHint("※SCPプレイヤーが切断したため代わりにスポーンしました");
     }
 
-    public static void SyncSpecialEvent()
-    {
-        Timing.CallDelayed(0.05f, () =>
-        {
-            if (Round.InProgress) return;
-            foreach (var player in Player.List)
-            {
-                if (!CanReceiveClientUi(player)) continue;
-                ShowLobbyInfoHint(player);
-            }
-        });
-    }
-
-    private static void ShowLobbyInfoHint(Player player)
-    {
-        try
-        {
-            var display = player.GetPlayerDisplay();
-            var oldHint = display.GetHint(HudConstId.LobbyInfo);
-            if (oldHint != null)
-                display.RemoveHint(oldHint);
-
-            var hint = new HsmHint
-            {
-                Id = HudConstId.LobbyInfo,
-                Alignment = HintAlignment.Center,
-                XCoordinate = 0,
-                YCoordinate = 835,
-                FontSize = 32,
-                SyncSpeed = HintSyncSpeed.Fast,
-                ResolutionBasedAlign = true,
-                Text = "<size=32>次のイベント：" + SpecialEventsHandler.Instance.LocalizedEventName + "</size>" +
-                       $"\n\n<size=28>Tips: {Tips.GetRandomTip()}</size>",
-            };
-
-            display.AddHint(hint);
-        }
-        catch (Exception ex)
-        {
-            Log.Debug($"[LobbyInfoHint] failed for {player.Nickname}: {ex.Message}");
-        }
-    }
-
     private static void ClearLobbyInfoHint(Player player)
     {
         try

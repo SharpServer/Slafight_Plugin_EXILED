@@ -3,7 +3,6 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Toys;
 using MEC;
-using PlayerRoles.FirstPersonControl;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
@@ -19,8 +18,9 @@ public class AquaSplashAbility : AbilityBase
     protected override int DefaultMaxUses => -1;
 
     private const float Radius            = 6f;
-    private const float KnockbackPower     = 6f;
-    private const float UpwardPower        = 3f;
+    private const float KnockbackPower     = 8.5f;
+    private const float UpwardPower        = 4f;
+    private const float KnockbackDuration  = 0.28f;
     private const byte SinkHoleIntensity   = 40;
     private const float SinkHoleDuration   = 8f;
     private const int RingSegments         = 10;
@@ -58,16 +58,18 @@ public class AquaSplashAbility : AbilityBase
 
     private static void Knockback(Player player, Player target)
     {
-        if (target.ReferenceHub?.roleManager?.CurrentRole is not IFpcRole fpcRole ||
-            fpcRole.FpcModule?.ModuleReady != true)
-            return;
-
         var direction = target.Position - player.Position;
         direction.y = 0f;
-        direction = direction.sqrMagnitude > 0.01f ? direction.normalized : UnityEngine.Random.insideUnitSphere.normalized;
+        direction = direction.sqrMagnitude > 0.01f
+            ? direction.normalized
+            : Vector3.ProjectOnPlane(UnityEngine.Random.insideUnitSphere, Vector3.up).normalized;
 
-        fpcRole.FpcModule.Motor.Velocity =
-            new Vector3(direction.x * KnockbackPower, UpwardPower, direction.z * KnockbackPower);
+        if (direction.sqrMagnitude < 0.01f)
+            direction = Vector3.forward;
+
+        target.ApplyFpcImpulse(
+            new Vector3(direction.x * KnockbackPower, UpwardPower, direction.z * KnockbackPower),
+            KnockbackDuration);
     }
 
     private static void SpawnSplashRing(Vector3 center)

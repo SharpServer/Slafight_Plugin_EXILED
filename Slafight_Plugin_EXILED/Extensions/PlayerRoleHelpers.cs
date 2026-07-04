@@ -16,7 +16,7 @@ public static class PlayerRoleHelpers
         return CRole.GetRoleIdFromUnique(player.UniqueRole);
     }
 
-    public struct PlayerRoleInfo
+    public record struct PlayerRoleInfo
     {
         public RoleTypeId Vanilla;
         public CRoleTypeId Custom;

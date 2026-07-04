@@ -431,7 +431,6 @@ public class SpecialEventsHandler : IBootstrapHandler, IDisposable
         {
             LocalizedEventName = "無し";
             EventNeedTriggers = "無し";
-            EventHandler.SyncSpecialEvent();
             return;
         }
         else
@@ -440,8 +439,6 @@ public class SpecialEventsHandler : IBootstrapHandler, IDisposable
         var ev = SpecialEvent.GetEvent(type);
         LocalizedEventName = ev?.LocalizedName ?? "無し";
         EventNeedTriggers = ev?.TriggerRequirement ?? "無し";
-
-        EventHandler.SyncSpecialEvent();
     }
 
     // =====================

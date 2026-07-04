@@ -2,8 +2,8 @@ using System;
 using Exiled.API.Features;
 using Exiled.API.Features.Toys;
 using MEC;
-using PlayerRoles.FirstPersonControl;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.Abilities;
@@ -16,13 +16,15 @@ public class AquaJumpAbility : AbilityBase
     protected override float DefaultCooldown => 12f;
     protected override int DefaultMaxUses => -1;
 
-    private const float JumpPower    = 7.5f;
-    private const float ForwardBoost = 3.5f;
-    private const int JetCount       = 6;
-    private const float JetLifetime  = 0.35f;
-    private const float JetSpread    = 0.3f;
+    private const float JumpPower       = 8.75f;
+    private const float ForwardBoost    = 6f;
+    private const float ForwardDuration = 0.2f;
+    private const int JetCount          = 6;
+    private const float JetLifetime     = 0.35f;
+    private const float JetSpread       = 0.3f;
 
     private static readonly Color WaterColor = new(0.25f, 0.85f, 1f, 0.5f);
+    private static readonly Vector3 JetGravity = new(0f, -4.5f, 0f);
 
     protected override void ExecuteAbility(Player player)
     {
@@ -39,21 +41,16 @@ public class AquaJumpAbility : AbilityBase
 
     private static void Launch(Player player)
     {
-        if (player.ReferenceHub?.roleManager?.CurrentRole is not IFpcRole fpcRole ||
-            fpcRole.FpcModule?.ModuleReady != true)
-            return;
-
         var forward = player.CameraTransform != null
             ? Vector3.ProjectOnPlane(player.CameraTransform.forward, Vector3.up).normalized
             : Vector3.zero;
 
-        var current = fpcRole.FpcModule.Motor.Velocity;
-        fpcRole.FpcModule.Motor.Velocity = new Vector3(
-            current.x + forward.x * ForwardBoost,
-            JumpPower,
-            current.z + forward.z * ForwardBoost);
+        var horizontalVelocity = forward * ForwardBoost;
 
-        fpcRole.FpcModule.Motor.ResetFallDamageCooldown();
+        if (!player.ForceFpcJump(JumpPower, horizontalVelocity, JetGravity, JetLifetime))
+            return;
+
+        player.ApplyFpcImpulse(horizontalVelocity, ForwardDuration);
     }
 
     private static void SpawnWaterJet(Player player)

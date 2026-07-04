@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Toys;
 using Exiled.Events.EventArgs.Player;
 using MEC;
-using PlayerRoles.FirstPersonControl;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
@@ -17,12 +18,15 @@ public class HydroCannon : CItemWeapon
 {
     private const byte SinkHoleIntensity  = 60;
     private const float SinkHoleDuration  = 14f;
-    private const float KnockbackPower    = 5f;
-    private const float UpwardPower       = 2f;
+    private const float KnockbackPower    = 12f;
+    private const float UpwardPower       = 2.5f;
+    private const float KnockbackDuration = 0.35f;
+    private const float ShotMemorySeconds = 0.35f;
     private const int BurstCount          = 4;
     private const float BurstLifetime     = 0.3f;
 
     private static readonly Color WaterColor = new(0.2f, 0.75f, 1f, 0.5f);
+    private readonly Dictionary<(int AttackerId, int TargetId), ShotImpulse> _recentShotImpulses = new();
 
     public override string DisplayName => "ハイドロ・キャノン";
     public override string Description =>
@@ -40,7 +44,8 @@ public class HydroCannon : CItemWeapon
 
     protected override void OnHurtingOthers(HurtingEventArgs ev)
     {
-        if (ev.Player != null)
+        if (ev.IsAllowed && ev.Attacker != null && ev.Player != null &&
+            ev.Attacker.GetTeam() != ev.Player.GetTeam())
         {
             ev.Player.EnableEffect(EffectType.SinkHole, SinkHoleIntensity, SinkHoleDuration);
             Knockback(ev.Attacker, ev.Player);
@@ -52,22 +57,82 @@ public class HydroCannon : CItemWeapon
     protected override void OnShot(ShotEventArgs ev)
     {
         base.OnShot(ev);
+        RememberShotImpulse(ev);
         SpawnSplashBurst(ev.Position);
     }
 
-    private static void Knockback(Player? attacker, Player target)
+    protected override void OnWaitingForPlayers()
     {
-        if (attacker == null) return;
-        if (target.ReferenceHub?.roleManager?.CurrentRole is not IFpcRole fpcRole ||
-            fpcRole.FpcModule?.ModuleReady != true)
+        _recentShotImpulses.Clear();
+        base.OnWaitingForPlayers();
+    }
+
+    private void RememberShotImpulse(ShotEventArgs ev)
+    {
+        if (ev.Player == null || ev.Target == null || ev.Player.GetTeam() == ev.Target.GetTeam())
             return;
 
-        var direction = target.Position - attacker.Position;
-        direction.y = 0f;
-        direction = direction.sqrMagnitude > 0.01f ? direction.normalized : Vector3.forward;
+        var direction = GetShotDirection(ev);
+        if (direction.sqrMagnitude < 0.01f)
+            return;
 
-        fpcRole.FpcModule.Motor.Velocity =
-            new Vector3(direction.x * KnockbackPower, UpwardPower, direction.z * KnockbackPower);
+        _recentShotImpulses[(ev.Player.Id, ev.Target.Id)] = new ShotImpulse(direction.normalized, Time.time + ShotMemorySeconds);
+    }
+
+    private void Knockback(Player attacker, Player target)
+    {
+        var direction = TryTakeShotDirection(attacker, target, out var shotDirection)
+            ? shotDirection
+            : GetFallbackDirection(attacker, target);
+
+        var impulse = direction.normalized * KnockbackPower;
+        impulse.y = Mathf.Max(impulse.y, UpwardPower);
+
+        target.ApplyFpcImpulse(impulse, KnockbackDuration);
+    }
+
+    private bool TryTakeShotDirection(Player attacker, Player target, out Vector3 direction)
+    {
+        var key = (attacker.Id, target.Id);
+        if (_recentShotImpulses.TryGetValue(key, out var impulse))
+        {
+            _recentShotImpulses.Remove(key);
+            if (Time.time <= impulse.ExpiresAt)
+            {
+                direction = impulse.Direction;
+                return true;
+            }
+        }
+
+        direction = Vector3.zero;
+        return false;
+    }
+
+    private static Vector3 GetShotDirection(ShotEventArgs ev)
+    {
+        if (ev.Player?.CameraTransform != null)
+        {
+            var direction = ev.Position - ev.Player.CameraTransform.position;
+            if (direction.sqrMagnitude > 0.01f)
+                return direction.normalized;
+
+            return ev.Player.CameraTransform.forward.normalized;
+        }
+
+        return Vector3.forward;
+    }
+
+    private static Vector3 GetFallbackDirection(Player attacker, Player target)
+    {
+        if (attacker.CameraTransform != null)
+        {
+            var cameraDirection = attacker.CameraTransform.forward;
+            if (cameraDirection.sqrMagnitude > 0.01f)
+                return cameraDirection.normalized;
+        }
+
+        var direction = target.Position - attacker.Position;
+        return direction.sqrMagnitude > 0.01f ? direction.normalized : Vector3.forward;
     }
 
     private static void SpawnSplashBurst(Vector3 position)
@@ -94,5 +159,17 @@ public class HydroCannon : CItemWeapon
                 Log.Error($"HydroCannon splash burst spawn failed: {ex}");
             }
         }
+    }
+
+    private readonly struct ShotImpulse
+    {
+        public ShotImpulse(Vector3 direction, float expiresAt)
+        {
+            Direction = direction;
+            ExpiresAt = expiresAt;
+        }
+
+        public Vector3 Direction { get; }
+        public float ExpiresAt { get; }
     }
 }

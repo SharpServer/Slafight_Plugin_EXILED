@@ -364,6 +364,7 @@
         <Compile Include="CustomItems\SlafightApiItems\SchwarzschildRailbreaker.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ScpcbBatteries.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Spear.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\SuspiciousTablet.cs" />
         <Compile Include="CustomItems\SlafightApiItems\TapeRecorder.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ThrowKnife.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Veritas.cs" />
@@ -549,6 +550,7 @@
         <Compile Include="Extensions\CustomTeamUtils.cs" />
         <Compile Include="Extensions\CustomItemExtensions.cs" />
         <Compile Include="Extensions\EventExtensions.cs" />
+        <Compile Include="Extensions\FpcMovementExtensions.cs" />
         <Compile Include="Extensions\DummyActionExtensions.cs" />
         <Compile Include="Extensions\NpcExtensions.cs" />
         <Compile Include="Extensions\OnlyChecker.cs" />

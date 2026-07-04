@@ -30,11 +30,13 @@ public class WaitingForPlayersChanges : IBootstrapHandler
     private static readonly Vector3 WaitingRoomPosition = new(246.92f, 198.50f, -60.89f);
 
     private const string WaitingMusicClipName = "finalflash.ogg";
+    private const string WaitingMusicAudioPlayerPrefix = "WaitingForPlayers_RoomMusic_";
     private const float WaitingMusicStartDelay = 1.5f; // メニューテーマが消えるまで待つ
     private const float WaitingMusicFadeInDuration = 3f;
 
     // 実ファイルは未用意。差し替えるまでは LoadClip/Play が失敗し警告ログのみ出る。
     private const string RoundStartOutroClipName = "finalflash_outro.ogg";
+    private const string RoundStartOutroAudioPlayerPrefix = "WaitingForPlayers_RoundStartOutro_";
 
     private const float RoundStartTriggerRemainingTime = 1f;
     private static readonly Vector3 RoundStartMovePosition = new(247.15f, 199.30f, -63.33f);
@@ -61,6 +63,10 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         ResetWaitingRoomTextRefs();
         TutorialWaitingPlayers.Clear();
         StopAllWaitingMusic();
+        StopAllRoundStartOutros();
+        KillRoundStartTransitionCoroutines();
+        KillRoundStartResumeCallback();
+        Round.IsLobbyLocked = false;
         _roundStartTransitionTriggered = false;
     }
 
@@ -73,8 +79,10 @@ public class WaitingForPlayersChanges : IBootstrapHandler
 
     // プレイヤーごとのロビー BGM(finalflash.ogg)の再生管理
     private static readonly Dictionary<int, SpeakerApi.Playback> WaitingMusicPlaybacks = new();
+    private static readonly Dictionary<int, SpeakerApi.Playback> RoundStartOutroPlaybacks = new();
 
     private static CoroutineHandle _handle;
+    private static CoroutineHandle _roundStartResumeHandle;
     private static readonly List<CoroutineHandle> _roundStartTransitionHandles = new();
     private static TextToy? _playerCountText;
     private static TextToy? _nextEventText;
@@ -87,9 +95,11 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         ResetWaitingRoomTextRefs();
         TutorialWaitingPlayers.Clear();
         StopAllWaitingMusic();
+        StopAllRoundStartOutros();
         _roundStartTransitionTriggered = false;
         Round.IsLobbyLocked = false; // 前ラウンドの演出が異常終了した場合の保険
         KillRoundStartTransitionCoroutines();
+        KillRoundStartResumeCallback();
         _handle = Timing.RunCoroutine(Coroutine());
 
         // スムーズにアウトロへ切り替えられるよう、Waiting 開始時点でクリップを先読みしておく
@@ -145,11 +155,8 @@ public class WaitingForPlayersChanges : IBootstrapHandler
     {
         if (ev.Player == null) return;
 
-        if (WaitingMusicPlaybacks.TryGetValue(ev.Player.Id, out var playback))
-        {
-            playback.Stop();
-            WaitingMusicPlaybacks.Remove(ev.Player.Id);
-        }
+        StopWaitingMusic(ev.Player.Id);
+        StopRoundStartOutro(ev.Player.Id);
     }
 
     private static void StartWaitingMusic(Player player)
@@ -162,7 +169,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         int ownerId = player.Id;
         SpeakerApi.Playback playback = SpeakerApi.PlayLoop(
             WaitingMusicClipName,
-            $"WaitingForPlayers_RoomMusic_{player.Id}",
+            $"{WaitingMusicAudioPlayerPrefix}{player.Id}",
             player.Position,
             player.Transform,
             maxDistance: 10f,
@@ -193,16 +200,68 @@ public class WaitingForPlayersChanges : IBootstrapHandler
 
     private static void StopAllWaitingMusic()
     {
-        foreach (SpeakerApi.Playback playback in WaitingMusicPlaybacks.Values)
+        foreach (SpeakerApi.Playback playback in WaitingMusicPlaybacks.Values.ToArray())
             playback.Stop();
 
         WaitingMusicPlaybacks.Clear();
+        StopAudioPlayersByPrefix(WaitingMusicAudioPlayerPrefix);
+    }
+
+    private static void StopWaitingMusic(int playerId)
+    {
+        if (playerId <= 0) return;
+
+        if (WaitingMusicPlaybacks.TryGetValue(playerId, out var playback))
+        {
+            playback.Stop();
+            WaitingMusicPlaybacks.Remove(playerId);
+        }
+
+        SpeakerApi.TryDestroy($"{WaitingMusicAudioPlayerPrefix}{playerId}");
+    }
+
+    private static void StopAllRoundStartOutros()
+    {
+        foreach (SpeakerApi.Playback playback in RoundStartOutroPlaybacks.Values.ToArray())
+            playback.Stop();
+
+        RoundStartOutroPlaybacks.Clear();
+        StopAudioPlayersByPrefix(RoundStartOutroAudioPlayerPrefix);
+    }
+
+    private static void StopRoundStartOutro(int playerId)
+    {
+        if (playerId <= 0) return;
+
+        if (RoundStartOutroPlaybacks.TryGetValue(playerId, out var playback))
+        {
+            playback.Stop();
+            RoundStartOutroPlaybacks.Remove(playerId);
+        }
+
+        SpeakerApi.TryDestroy($"{RoundStartOutroAudioPlayerPrefix}{playerId}");
+    }
+
+    private static void StopAudioPlayersByPrefix(string audioPlayerNamePrefix)
+    {
+        foreach (string audioPlayerName in SpeakerApi.GetAudioPlayerNames()
+                     .Where(name => name.StartsWith(audioPlayerNamePrefix, StringComparison.OrdinalIgnoreCase))
+                     .ToArray())
+        {
+            SpeakerApi.TryDestroy(audioPlayerName);
+        }
     }
 
     private static void OnRoundStarted()
     {
         Timing.KillCoroutines(_handle);
+        KillRoundStartResumeCallback();
         KillRoundStartTransitionCoroutines();
+        StopAllWaitingMusic();
+        StopAllRoundStartOutros();
+        Round.IsLobbyLocked = false;
+        _roundStartTransitionTriggered = false;
+
         Timing.CallDelayed(2f, () =>
         {
             foreach (var player in Player.List)
@@ -223,6 +282,14 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         _roundStartTransitionHandles.Clear();
     }
 
+    private static void KillRoundStartResumeCallback()
+    {
+        if (_roundStartResumeHandle.IsRunning)
+            Timing.KillCoroutines(_roundStartResumeHandle);
+
+        _roundStartResumeHandle = default;
+    }
+
     private static void TriggerRoundStartTransition()
     {
         // 演出が終わるまで実際のラウンド開始を足止めする。
@@ -236,6 +303,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         // 移動/Blindness コルーチンの途中でもラウンドを開始できる(意図的な調整幅として許容する)。
         float outroDuration = SpeakerApi.GetClipDuration(RoundStartOutroClipName);
         float resumeDelay = Mathf.Max(0f, outroDuration + RoundStartOutroExtraHold);
+        KillRoundStartResumeCallback();
 
         foreach (Player player in TutorialWaitingPlayers.ToArray())
         {
@@ -249,12 +317,14 @@ public class WaitingForPlayersChanges : IBootstrapHandler
                 WaitingMusicPlaybacks.Remove(player.Id);
             }
 
+            StopRoundStartOutro(player.Id);
+
             try
             {
                 int ownerId = player.Id;
-                SpeakerApi.Play(
+                SpeakerApi.Playback outroPlayback = SpeakerApi.Play(
                     RoundStartOutroClipName,
-                    $"WaitingForPlayers_RoundStartOutro_{player.Id}",
+                    $"{RoundStartOutroAudioPlayerPrefix}{player.Id}",
                     player.Position,
                     destroyOnEnd: true,
                     parent: player.Transform,
@@ -262,6 +332,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
                     minDistance: 0.1f,
                     volume: 1f,
                     listeners: p => p != null && p.Id == ownerId);
+                RoundStartOutroPlaybacks[player.Id] = outroPlayback;
             }
             catch (Exception ex)
             {
@@ -271,8 +342,10 @@ public class WaitingForPlayersChanges : IBootstrapHandler
             _roundStartTransitionHandles.Add(Timing.RunCoroutine(RoundStartTransitionCoroutine(player)));
         }
 
-        Timing.CallDelayed(resumeDelay, () =>
+        _roundStartResumeHandle = Timing.CallDelayed(resumeDelay, () =>
         {
+            _roundStartResumeHandle = default;
+
             // 演出 / outro 終了。ロックを解除し、自然なタイマー再開を待たず直接ラウンドを開始する
             Round.IsLobbyLocked = false;
             if (!Round.IsLobby) return;
@@ -368,8 +441,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
 
         _playerCountText?.TextFormat = $"<b><u>{playerCount} / {Server.MaxPlayerCount}</u></b>";
 
-        SpecialEventType nextEvent = SpecialEventsHandler.Instance.EventQueue.FirstOrDefault();
-        string nextEventName = nextEvent.ToString();
+        string nextEventName = SpecialEventsHandler.Instance.LocalizedEventName;
         _nextEventText?.TextFormat = $"<b><u>Next Event: {nextEventName}</u></b>";
 
         // 演出中(LobbyWaitingTime を RoundStartStallTime まで足止めしている間)は 0 固定表示にする
