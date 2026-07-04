@@ -52,6 +52,15 @@ public class SuspiciousTablet : CItemUsable
         base.OnWaitingForPlayers();
     }
 
+    protected override void OnUsing(UsingItemEventArgs ev)
+    {
+        if (ev.Player.GetTeam() is CTeam.SCPs or CTeam.Warriors)
+        {
+            ev.IsAllowed = false;
+        }
+        base.OnUsing(ev);
+    }
+
     protected override void OnUsedEffect(UsingItemCompletedEventArgs ev)
     {
         var player = ev.Player;
