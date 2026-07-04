@@ -48,7 +48,6 @@ public class WaitingForPlayersChanges : IBootstrapHandler
     {
         Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Verified += OnVerified;
-        Exiled.Events.Handlers.Player.VoiceChatting += OnVoiceChatting;
         Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
         Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
     }
@@ -57,7 +56,6 @@ public class WaitingForPlayersChanges : IBootstrapHandler
     {
         Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Verified -= OnVerified;
-        Exiled.Events.Handlers.Player.VoiceChatting -= OnVoiceChatting;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
         Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
         ResetWaitingRoomTextRefs();
@@ -134,11 +132,12 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         TutorialWaitingPlayers.Add(ev.Player);
 
         Player joined = ev.Player;
+        Intercom.TrySetOverride(joined, true);
         Timing.CallDelayed(WaitingMusicStartDelay, () => StartWaitingMusic(joined));
-        Timing.CallDelayed(0.1f, () =>
+        Timing.CallDelayed(1.5f, () =>
         {
             if (ev.Player?.ReferenceHub?.playerEffectsController is null) return;
-            joined.EnableEffect<Fade>();
+            joined.EnableEffect<Fade>(255);
         });
     }
 
@@ -200,28 +199,20 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         WaitingMusicPlaybacks.Clear();
     }
 
-    private static void OnVoiceChatting(VoiceChattingEventArgs ev)
-    {
-        if (ev.Player is null || !TutorialWaitingPlayers.Contains(ev.Player))
-            return;
-
-        // 疑似待機画面ではチャンネル判定(距離・ミュート等)を無視し、本来の Lobby と同様に全プレイヤーへ直接中継する
-        ev.IsAllowed = false;
-
-        VoiceMessage message = ev.VoiceMessage;
-        foreach (ReferenceHub hub in ReferenceHub.AllHubs)
-        {
-            if (hub == null || hub.connectionToClient == null)
-                continue;
-
-            hub.connectionToClient.Send(message);
-        }
-    }
-
     private static void OnRoundStarted()
     {
         Timing.KillCoroutines(_handle);
         KillRoundStartTransitionCoroutines();
+        Timing.CallDelayed(2f, () =>
+        {
+            foreach (var player in Player.List)
+            {
+                if (player is null || !player.IsNotHost() || player.IsHidTurretNpc()) continue;
+                player.IsNoclipEnabled = false;
+                player.IsGodModeEnabled = false;
+                Intercom.TrySetOverride(player, false);
+            }
+        });
     }
 
     private static void KillRoundStartTransitionCoroutines()

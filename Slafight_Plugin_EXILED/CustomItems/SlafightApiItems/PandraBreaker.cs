@@ -2,10 +2,8 @@ using System.Collections.Generic;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
-using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomRoles.SCPs;
-using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
@@ -38,24 +36,26 @@ public class PandraBreaker : CItem
             return;
         }
 
+        var scp076Exists = false;
         var activated = false;
         foreach (var player in Player.List)
         {
-            if (player?.GetCustomRole() is not CRoleTypeId.Scp076) continue;
+            if (!Scp076Role.IsActiveScp076(player)) continue;
+
+            scp076Exists = true;
             if (Scp076Role.IsResistanceState(player))
             {
-                activated = true;
-                player.Explode();
-                if (player.IsAlive)
-                {
-                    player.Kill("抑制装置により爆発された");
-                }
+                activated = Scp076Role.TryDetonateSuppressionDevice(player) || activated;
             }
         }
 
         if (!activated)
         {
-            ev.Player?.ShowHint("<size=23>反逆状態のSCP-076が存在しません。</size>", 5f);
+            ev.Player?.ShowHint(
+                scp076Exists
+                    ? "<size=23>SCP-076は存在しますが、まだ反逆状態ではありません。</size>"
+                    : "<size=23>SCP-076が存在しません。</size>",
+                5f);
             return;
         }
 

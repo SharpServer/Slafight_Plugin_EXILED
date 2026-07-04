@@ -585,6 +585,8 @@ public abstract class CRole
 
     protected abstract string UniqueRoleKey { get; set; }
 
+    protected virtual RoleTypeId? GetTeamNpcRoleTypeId(Player player) => TeamNpcRoleTypeId;
+
     public string UniqueRoleName => UniqueRoleKey;
     public CRoleTypeId TypeId => CRoleTypeId;
     public CTeam TeamId => Team;
@@ -1312,10 +1314,19 @@ public abstract class CRole
         RoleRuntimes.Clear();
     }
 
+    protected void RefreshTeamNpc(Player? player)
+    {
+        if (player == null) return;
+
+        CleanupTeamNpc(player);
+        TryCreateTeamNpc(player);
+    }
+
     private void TryCreateTeamNpc(Player? player)
     {
-        if (TeamNpcRoleTypeId == null) return;
         if (player == null || player.ReferenceHub == null) return;
+        var teamNpcRoleTypeId = GetTeamNpcRoleTypeId(player);
+        if (teamNpcRoleTypeId == null) return;
         if (!player.IsNotHost() || IsTeamNpc(player)) return;
         if (!Check(player)) return;
 
@@ -1323,7 +1334,7 @@ public abstract class CRole
 
         try
         {
-            var npc = Npc.Spawn($"{DisplayName}-TeamNpc", TeamNpcRoleTypeId.Value);
+            var npc = Npc.Spawn($"{DisplayName}-TeamNpc", teamNpcRoleTypeId.Value);
             if (npc == null)
             {
                 Log.Warn($"{DisplayName} team NPC spawn returned null for {player.Nickname}");

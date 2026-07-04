@@ -35,7 +35,7 @@ public class Scp076Role : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Scp076;
     protected override CTeam Team { get; set; } = CTeam.SCPs;
     protected override string UniqueRoleKey { get; set; } = "Scp076";
-    protected override RoleTypeId? TeamNpcRoleTypeId { get; set; } = RoleTypeId.Scp0492;
+    protected override RoleTypeId? TeamNpcRoleTypeId { get; set; } = RoleTypeId.NtfPrivate;
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Tutorial;
     protected override float? SpawnMaxHealth => 1500f;
     protected override bool SpawnClearsInventory => true;
@@ -55,6 +55,9 @@ public class Scp076Role : CRole
         SpecificFlagType.PickingDisabled,
         SpecificFlagType.DroppingDisabled
     ];
+
+    protected override RoleTypeId? GetTeamNpcRoleTypeId(Player player)
+        => IsResistanceState(player) ? RoleTypeId.Scp0492 : TeamNpcRoleTypeId;
 
     // playerId -> 適用中の MovementBoost 強度
     private static readonly Dictionary<int, byte> MovementIntensities = [];
@@ -76,14 +79,28 @@ public class Scp076Role : CRole
     public static bool IsResistanceState(Player? player)
         => player?.ReferenceHub != null && ResistancePlayerIds.Contains(player.Id);
 
+    public static bool IsActiveScp076(Player? player)
+        => player?.ReferenceHub != null &&
+           (player.IsConnected || player.IsNPC) &&
+           player.IsAlive &&
+           player.GetCustomRole() == CRoleTypeId.Scp076;
+
+    public static bool TryDetonateSuppressionDevice(Player? player, ProjectileType? projectile = null)
+    {
+        if (!IsActiveScp076(player))
+            return false;
+
+        DetonateSuppressionDevice(player, projectile);
+        return true;
+    }
+
     public static bool IsFoundationAlignedForVictory(Player? player)
     {
         if (player?.ReferenceHub == null)
             return false;
 
         return player.GetCustomRole() == CRoleTypeId.Scp076 &&
-               !IsResistanceState(player) &&
-               HasAliveOmegaSevenControllers();
+               !IsResistanceState(player);
     }
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
@@ -179,7 +196,7 @@ public class Scp076Role : CRole
         if (!Check(attacker)) return;
         if (target == null) return;
         if (attacker.Id == target.Id) return;
-        if (target.GetTeam() is not CTeam.FoundationForces) return;
+        if (!IsFoundationPersonnel(target)) return;
 
         var kills = KillCounts.GetValueOrDefault(attacker.Id) + 1;
         KillCounts[attacker.Id] = kills;
@@ -209,6 +226,14 @@ public class Scp076Role : CRole
 
     private static bool IsCountable(Player? player)
         => player is not null && player.IsNotHost();
+
+    private static bool IsFoundationPersonnel(Player? player)
+    {
+        if (player?.ReferenceHub == null)
+            return false;
+
+        return player.GetTeam() is CTeam.FoundationForces or CTeam.Scientists or CTeam.Guards or CTeam.O5;
+    }
 
     // ===== キル報酬：60秒後に火力と移動速度を一時強化 =====
 
@@ -296,6 +321,7 @@ public class Scp076Role : CRole
         if (!ResistancePlayerIds.Add(player.Id)) return;
 
         player.SetCustomInfo($"<color={ServerColors.Red}>SCP-076</color>");
+        RefreshTeamNpc(player);
         ShowResistanceWarning(player, triggerMessage);
         Timing.RunCoroutine(ResistanceCountdownLoop(player));
 
