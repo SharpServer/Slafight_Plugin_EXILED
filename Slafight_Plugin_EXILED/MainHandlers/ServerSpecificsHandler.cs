@@ -235,7 +235,6 @@ public static class ServerSpecificsHandler
             }
 
             TryPlaySuicideGunSound(player, firearm);
-            TryExplodeSuicideEffect(player);
             TryKillBySuicide(player);
         }
         catch (Exception e)
@@ -253,22 +252,11 @@ public static class ServerSpecificsHandler
                 return;
 
             player.PlayGunSound(firearmType);
+            SpeakerApi.Play("suicide_shot.ogg", $"{player.NetId}_suicideShotSound", player.Position, true);
         }
         catch (Exception e)
         {
             Log.Warn($"[Input] K: failed to play suicide gun sound for {DescribePlayer(player)} with {DescribeItem(firearm)}: {e.GetType().Name}: {e.Message}");
-        }
-    }
-
-    private static void TryExplodeSuicideEffect(Player player)
-    {
-        try
-        {
-            player.ExplodeEffect(ProjectileType.FragGrenade);
-        }
-        catch (Exception e)
-        {
-            Log.Warn($"[Input] K: failed to play suicide effect for {DescribePlayer(player)}: {e.GetType().Name}: {e.Message}");
         }
     }
 
