@@ -43,6 +43,7 @@ public class RootCommand : ParentCommand
         RegisterCommand(new PlayOmegaWarhead());
         RegisterCommand(new ActivateGenerator());
         RegisterCommand(new WaypointStreamCommand());
+        RegisterCommand(new FilmmakerAnimationCommand());
     }
 
     protected override bool ExecuteParent(ArraySegment<string> arguments, ICommandSender sender, out string response)

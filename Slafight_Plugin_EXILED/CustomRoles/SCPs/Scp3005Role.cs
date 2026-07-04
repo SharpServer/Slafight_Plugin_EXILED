@@ -13,7 +13,6 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
-using Slafight_Plugin_EXILED.MainHandlers;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
@@ -51,8 +50,7 @@ public class Scp3005Role : CRole
         player.Health = player.MaxHealth - 1;
         player.EnableEffect(EffectType.MovementBoost, 50);
 
-        // ★ Scale は触らない
-        LabApiHandler.Schem3005(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
+        RoleSchematicWears.WearScp3005(player);
 
         player.AddAbility<MagicMissileAbility>();
         player.AddAbility<SoundOfFifthAbility>();
@@ -63,6 +61,8 @@ public class Scp3005Role : CRole
     
     protected override void OnRoleDying(DyingEventArgs ev)
     {
+        RoleSchematicWears.SpawnScp3005DeathModel(ev.Player);
+
         if (FacilityControlRoom.IsAntiMemeProtocolActive && ev.Attacker is null)
         {
             CassieHelper.AnnounceTermination(ev, "SCP 3 0 0 5", $"<color={Team.GetTeamColor()}>{RoleName}</color>", TerminationCause.AntiMeme(), true);

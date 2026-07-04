@@ -10,6 +10,7 @@ using System.Text.Json;
 using System.Threading;
 using HarmonyLib;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Features.FilmmakerAnimations;
 using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.CustomEffects;
@@ -47,6 +48,7 @@ public class Plugin : Plugin<Config>
         PlayerSpeakerManager.RegisterEvents();
         ProximityChat.Handler.RegisterEvents();
         WaypointChunkStreamer.RegisterEvents();
+        FilmmakerAnimationPlayer.RegisterEvents();
 
         NetworkVisibilityManager.Register();
         NvgManager.Register();
@@ -119,6 +121,7 @@ public class Plugin : Plugin<Config>
         PlayerSpeakerManager.UnregisterEvents();
         ProximityChat.Handler.UnregisterEvents();
         WaypointChunkStreamer.UnregisterEvents();
+        FilmmakerAnimationPlayer.UnregisterEvents();
 
         NvgManager.Unregister();
         NetworkVisibilityManager.Unregister();

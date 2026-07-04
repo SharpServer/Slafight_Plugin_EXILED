@@ -7,7 +7,6 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
-using Slafight_Plugin_EXILED.MainHandlers;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -80,7 +79,7 @@ public class Scp999Role : CRole
         player.ClearInventory();
 
         player.SetCustomInfo("SCP-999");
-        LabApiHandler.Schem999(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
+        RoleSchematicWears.WearScp999(player);
     }
     
     private void CancelRagdoll(SpawningRagdollEventArgs ev)
@@ -91,6 +90,7 @@ public class Scp999Role : CRole
     
     protected override void OnRoleDying(DyingEventArgs ev)
     {
+        RoleSchematicWears.SpawnScp999DeathModel(ev.Player);
         CassieHelper.AnnounceTermination(ev, "SCP 9 9 9", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
         base.OnRoleDying(ev);
     }

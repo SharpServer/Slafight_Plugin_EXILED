@@ -200,6 +200,9 @@
         <Compile Include="API\Features\EffectedInfoTextProvider.cs" />
         <Compile Include="API\Features\EffectFakeSyncProvider.cs" />
         <Compile Include="API\Features\EventSubscriptionScope.cs" />
+        <Compile Include="API\Features\FilmmakerAnimations\FilmmakerAnimationClip.cs" />
+        <Compile Include="API\Features\FilmmakerAnimations\FilmmakerAnimationPlayer.cs" />
+        <Compile Include="API\Features\FilmmakerAnimations\FilmmakerAnimationStorage.cs" />
         <Compile Include="API\Features\CItem.cs" />
         <Compile Include="API\Features\CItemHybrid.cs" />
         <Compile Include="API\Features\CItemArmor.cs" />
@@ -252,6 +255,7 @@
         <Compile Include="API\Features\RoundVictory\Core\*.cs" />
         <Compile Include="API\Features\RoundVictory\Sources\*.cs" />
         <Compile Include="API\Features\RoleSpecificTextProvider.cs" />
+        <Compile Include="API\Features\RoleSchematicWears.cs" />
         <Compile Include="API\Features\ServerSpecifics.cs" />
         <Compile Include="API\Features\ServerSpecificUserSettings.cs" />
         <Compile Include="API\Features\SpawnContext.cs" />
@@ -293,10 +297,12 @@
         <Compile Include="Changes\Scp1509Handler.cs" />
         <Compile Include="Changes\Scp914Changes.cs" />
         <Compile Include="Changes\ScpPermissions.cs" />
+        <Compile Include="Changes\WaitingForPlayersChanges.cs" />
         <Compile Include="Commands\DevTools\AbilityUniversal.cs" />
         <Compile Include="Commands\DevTools\ActivateGenerator.cs" />
         <Compile Include="Commands\DevTools\AddQueue.cs" />
         <Compile Include="Commands\DevTools\DebugStart.cs" />
+        <Compile Include="Commands\DevTools\FilmmakerAnimationCommand.cs" />
         <Compile Include="Commands\DevTools\GetQueue.cs" />
         <Compile Include="Commands\DevTools\GiveItem.cs" />
         <Compile Include="Commands\DevTools\HelpCommand.cs" />
@@ -530,6 +536,7 @@
         <Compile Include="CustomRoles\Warriors\CandyWarriorApril.cs" />
         <Compile Include="CustomRoles\Warriors\CandyWarriorHalloween.cs" />
         <Compile Include="CustomRoles\Warriors\SnowWarrior.cs" />
+        <Compile Include="CustomRoles\Warriors\WaterWarrior.cs" />
         <Compile Include="Extensions\AbilityResetUtil.cs" />
         <Compile Include="Extensions\BreakableDoorExtensions.cs" />
         <Compile Include="Extensions\ColorExtensions.cs" />
@@ -612,6 +619,7 @@
         <Compile Include="Hints\RoleHintsDictionary.cs" />
         <Compile Include="Hints\Scp079PingHints.cs" />
         <Compile Include="Hints\ScpStatusHints.cs" />
+        <Compile Include="Hints\StatusHintChannel.cs" />
         <Compile Include="Patches\CandyPatch.cs" />
         <Compile Include="Patches\DummyActionContextPatch.cs" />
         <Compile Include="Patches\NpcEffectCleanupPatch.cs" />

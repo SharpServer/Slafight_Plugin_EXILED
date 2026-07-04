@@ -8,6 +8,7 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Objects;
+using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
@@ -102,8 +103,11 @@ public class FirstRolesHandler : IBootstrapHandler
         _LimitChecker();
 
         var players = Player.List
-            .Where(p => p != null && p.IsConnected && p.IsRoleUnassigned())
+            .Where(p => p != null && p.IsConnected &&
+                        (p.IsRoleUnassigned() || WaitingForPlayersChanges.TutorialWaitingPlayers.Contains(p)))
             .ToList();
+
+        WaitingForPlayersChanges.TutorialWaitingPlayers.Clear();
 
         int playerCount = players.Count;
         if (playerCount == 0)

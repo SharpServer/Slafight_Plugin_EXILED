@@ -256,6 +256,15 @@ public static class SpeakerApi
         return playback;
     }
 
+    /// <summary>プリロード済みクリップの再生時間(秒)。未ロードなら 0。</summary>
+    public static float GetClipDuration(string clipName)
+    {
+        if (string.IsNullOrWhiteSpace(clipName))
+            return 0f;
+
+        return ClipCache.TryGetValue(clipName, out var clip) ? clip.Duration : 0f;
+    }
+
     public static void LoadClip(string fileName, string? clipName = null)
     {
         if (string.IsNullOrWhiteSpace(fileName))

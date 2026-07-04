@@ -5,7 +5,6 @@ using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.MainHandlers;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.Warriors;
 
@@ -30,7 +29,7 @@ public class SnowWarrior : CRole
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
         player.Role.Set(RoleTypeId.Tutorial, RoleSpawnFlags.AssignInventory);
-        LabApiHandler.SchemSnowWarrior(LabApi.Features.Wrappers.Player.Get(player.ReferenceHub));
+        RoleSchematicWears.WearSnowWarrior(player);
 
         const int maxHealth = 1000;
         var playerId = player.Id;

@@ -162,6 +162,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     private void PlayerHUDSetup(Player player)
     {
         if (!IsPlayerValid(player)) return; // FIX: nullガード
+        if (Round.IsLobby) return; // Waiting中(Tutorial含む)はRoundStartまで通常HUD群を作らない
 
         var display = TryGetDisplay(player);
         if (display == null) return;
@@ -454,6 +455,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
 
         Timing.CallDelayed(0.5f, () =>
         {
+            if (Round.IsLobby) return; // RoundStartまでは通常HUD群を同期しない
             var player = Player.List.FirstOrDefault(p => p?.Id == playerId);
             if (player == null || !IsPlayerValid(player)) return; // FIX: 遅延後の生存確認
             if (player.Role?.Team == Team.Dead) return;
@@ -484,6 +486,36 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         }
 
         ApplyAbilityHud(abilityHint, player);
+    }
+
+    public bool ForceDebugHudSync(Player player, bool logException = false)
+    {
+        if (!IsPlayerValid(player)) return false;
+
+        var display = TryGetDisplay(player);
+        if (display == null) return false;
+
+        var debugHint = display.GetHint(HudConstId.PlayerHUD_Debug);
+        if (debugHint == null)
+        {
+            // DebugModeはロビー中でも見たいので、PlayerHUDSetup(通常HUD群)は経由せず単独で作る
+            EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Debug, string.Empty, HintAlignment.Left, HintSyncSpeed.Fast, 24, -350, 345);
+            debugHint = display.GetHint(HudConstId.PlayerHUD_Debug);
+            if (debugHint == null) return false;
+        }
+
+        try
+        {
+            debugHint.Text = BuildDebugHud(player);
+            return true;
+        }
+        catch (Exception e)
+        {
+            if (logException)
+                Log.Debug($"[ForceDebugHudSync] Exception for {player.Nickname}: {e.Message}");
+
+            return false;
+        }
     }
 
     // =========================================================
@@ -920,36 +952,12 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
  
         for (;;)
         {
-            if (Round.IsLobby)
-            {
-                yield return Timing.WaitForSeconds(0.5f);
-                continue;
-            }
- 
             foreach (var player in Player.List.ToList())
             {
                 if (!IsPlayerValid(player)) continue;
                 if (!DebugModeHandler.IsDebugMode(player)) continue;
- 
-                var display = TryGetDisplay(player);
-                if (display == null) continue;
- 
-                var hint = display.GetHint("PlayerHUD_Debug");
-                if (hint == null)
-                {
-                    PlayerHUDSetup(player);
-                    hint = display.GetHint("PlayerHUD_Debug");
-                    if (hint == null) continue;
-                }
- 
-                try
-                {
-                    hint.Text = BuildDebugHud(player);
-                }
-                catch (Exception)
-                {
-                    // Log.Debug($"[DebugHudLoop] Exception for {player.Nickname}: {e.Message}");
-                }
+
+                ForceDebugHudSync(player);
             }
  
             yield return Timing.WaitForSeconds(0.1f);

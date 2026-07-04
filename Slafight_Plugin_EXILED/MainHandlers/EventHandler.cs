@@ -142,13 +142,6 @@ public class EventHandler : IBootstrapHandler, IDisposable
             true);
 
         if (Round.InProgress) return;
-
-        Timing.CallDelayed(0.05f, () =>
-        {
-            if (!CanReceiveClientUi(player)) return;
-            if (Round.InProgress) return;
-            ShowLobbyInfoHint(player);
-        });
     }
 
     private static void OnLeft(LeftEventArgs? ev)
