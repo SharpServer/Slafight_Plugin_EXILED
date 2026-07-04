@@ -59,7 +59,7 @@ public class Scp035Role : CRole
     }
 
     // インスタンス側の状態辞書（互換保持用）
-    private readonly Dictionary<int, Scp035State> states = new();
+    private readonly Dictionary<int, Scp035State> _states = new();
 
     public override void RegisterEvents()
     {
@@ -155,7 +155,7 @@ public class Scp035Role : CRole
 
     public void Cleanup(Player player)
     {
-        states.Remove(player.Id, out _);
+        _states.Remove(player.Id, out _);
         GlobalStates.Remove(player.Id, out _);
         FrozenPlayers.Remove(player.Id);
         RoleSpecificTextProvider.Clear(player);
@@ -184,7 +184,7 @@ public class Scp035Role : CRole
     {
         try
         {
-            states[player.Id] = newState;
+            _states[player.Id] = newState;
             GlobalStates[player.Id] = newState;
             return true;
         }
@@ -197,7 +197,7 @@ public class Scp035Role : CRole
 
     public Scp035State GetState(Player player)
     {
-        if (states.TryGetValue(player.Id, out var local))
+        if (_states.TryGetValue(player.Id, out var local))
             return local;
 
         if (GlobalStates.TryGetValue(player.Id, out var global))
