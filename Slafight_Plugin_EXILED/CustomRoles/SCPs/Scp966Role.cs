@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Extensions;
@@ -33,11 +34,15 @@ public class Scp966Role : CRole
     [
         new(EffectType.NightVision, 255)
     ];
+    private const float BlackoutRadius = 15f;
+    private const float BlackoutCheckInterval = 0.5f;
+
     private readonly Dictionary<Player, List<Player>> _invisibleEffectivePlayers = [];
     private readonly Dictionary<Player, byte> _speedLevels = [];
     private readonly Dictionary<Player, CoroutineHandle> _visibilityCoroutineHandles = [];
-    private readonly Dictionary<Player, CoroutineHandle> _flickerCoroutineHandles = [];
     private readonly Dictionary<Player, CoroutineHandle> _speedCoroutineHandles = [];
+    private readonly HashSet<Room> _blackoutRooms = [];
+    private bool _blackoutCoroutineRunning;
     
     public override void RegisterEvents()
     {
@@ -62,11 +67,15 @@ public class Scp966Role : CRole
         _invisibleEffectivePlayers[player] = [];
         _speedLevels[player] = 1;
         _visibilityCoroutineHandles[player] = new CoroutineHandle();
-        _flickerCoroutineHandles[player] = new CoroutineHandle();
         _speedCoroutineHandles[player] = new CoroutineHandle();
         _visibilityCoroutineHandles[player] = Timing.RunCoroutine(VisibilityCoroutine(player));
-        _flickerCoroutineHandles[player] = Timing.RunCoroutine(FlickerCoroutine(player));
         _speedCoroutineHandles[player] = Timing.RunCoroutine(SpeedCoroutine(player));
+
+        if (!_blackoutCoroutineRunning)
+        {
+            _blackoutCoroutineRunning = true;
+            Timing.RunCoroutine(BlackoutCoroutine());
+        }
         
         RoleSpecificTextProvider.Set(player, $"Speed Level: {_speedLevels[player]} / 5");
         base.OnRoleSpawned(player, roleSpawnFlags);
@@ -92,6 +101,7 @@ public class Scp966Role : CRole
     protected override void OnRoleDying(DyingEventArgs ev)
     {
         CleanupPlayer(ev.Player);
+        CassieHelper.AnnounceTermination(ev, "SCP 9 6 6", $"<color={Team.GetTeamColor()}>{RoleName}</color>", true);
         base.OnRoleDying(ev);
     }
 
@@ -144,16 +154,67 @@ public class Scp966Role : CRole
         }
     }
 
-    private IEnumerator<float> FlickerCoroutine(Player player)
+    private IEnumerator<float> BlackoutCoroutine()
     {
         while (true)
         {
-            if (!Check(player)) yield break;
-            if (Round.IsLobby || player.ReferenceHub == null || player.IsDead)
-                yield break;
-            player.CurrentRoom?.TurnOffLights(Random.Range(1f, 3.5f));
-            yield return Timing.WaitForSeconds(Random.Range(0f, 7f));
+            if (Round.IsLobby)
+                break;
+
+            var scpPositions = new List<Vector3>();
+            foreach (var player in Player.List)
+            {
+                if (player != null && Check(player) && player.IsAlive)
+                    scpPositions.Add(player.Position);
+            }
+
+            if (scpPositions.Count == 0)
+                break;
+
+            var roomsInRange = new HashSet<Room>();
+            foreach (var room in Room.List)
+            {
+                if (room == null) continue;
+
+                foreach (var position in scpPositions)
+                {
+                    if ((room.Position - position).sqrMagnitude > BlackoutRadius * BlackoutRadius)
+                        continue;
+
+                    roomsInRange.Add(room);
+                    break;
+                }
+            }
+
+            foreach (var room in roomsInRange)
+            {
+                if (_blackoutRooms.Add(room))
+                    room.AreLightsOff = true;
+            }
+
+            foreach (var room in _blackoutRooms.ToList())
+            {
+                if (roomsInRange.Contains(room)) continue;
+                room.AreLightsOff = false;
+                _blackoutRooms.Remove(room);
+            }
+
+            yield return Timing.WaitForSeconds(BlackoutCheckInterval);
         }
+
+        RestoreBlackoutRooms();
+        _blackoutCoroutineRunning = false;
+    }
+
+    private void RestoreBlackoutRooms()
+    {
+        foreach (var room in _blackoutRooms)
+        {
+            if (room != null)
+                room.AreLightsOff = false;
+        }
+
+        _blackoutRooms.Clear();
     }
 
     private IEnumerator<float> SpeedCoroutine(Player player)
@@ -221,14 +282,10 @@ public class Scp966Role : CRole
         if (_visibilityCoroutineHandles.TryGetValue(player, out var visibilityHandle))
             Timing.KillCoroutines(visibilityHandle);
 
-        if (_flickerCoroutineHandles.TryGetValue(player, out var flickerHandle))
-            Timing.KillCoroutines(flickerHandle);
-
         if (_speedCoroutineHandles.TryGetValue(player, out var speedHandle))
             Timing.KillCoroutines(speedHandle);
 
         _visibilityCoroutineHandles.Remove(player);
-        _flickerCoroutineHandles.Remove(player);
         _speedCoroutineHandles.Remove(player);
         _invisibleEffectivePlayers.Remove(player);
         _speedLevels.Remove(player);

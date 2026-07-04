@@ -209,6 +209,7 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
             player.IsSpectatable = true;
             player.IsGodModeEnabled = false;
             player.IsNoclipPermitted = false;
+            player.IsNoclipEnabled = false;
             player.IsBypassModeEnabled = false;
             player.ClearCustomInfo();
             player.DisableAllEffects();

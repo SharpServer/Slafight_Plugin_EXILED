@@ -30,6 +30,12 @@ public static class NpcExtensions
     public static bool IsNotHost(this Player player)
     {
         if (player is null) return false;
-        return !player.IsHost && !player.ReferenceHub.IsHost &&!HIDTurretObject.PublicTurretNpcIds.Contains(player.Id);
+        return !player.IsHost && !player.ReferenceHub.IsHost && !player.IsHidTurretNpc();
+    }
+
+    public static bool IsHidTurretNpc(this Player player)
+    {
+        if (player is null) return false;
+        return HIDTurretObject.PublicTurretNpcIds.Contains(player.Id);
     }
 }

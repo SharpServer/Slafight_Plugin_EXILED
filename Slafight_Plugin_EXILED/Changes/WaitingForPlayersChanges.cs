@@ -360,6 +360,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
                 {
                     p.Position = WaitingRoomPosition;
                     p.IsNoclipEnabled = true;
+                    p.IsGodModeEnabled = true;
                 });
             }
 

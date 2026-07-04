@@ -634,9 +634,7 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
         try
         {
             var specs = Player.List
-                .Where(p =>
-                    p.Role == RoleTypeId.Spectator &&
-                    p.GetCustomRole() == CRoleTypeId.None)
+                .Where(IsWaveSpawnCandidate)
                 .ToList();
 
             int spawnCount = specs.Count;
@@ -699,6 +697,13 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
             ScheduleDefaultWaveGateReopen();
         }
     }
+
+    private static bool IsWaveSpawnCandidate(Player player)
+        => player != null &&
+           player.IsNotHost() &&
+           !player.IsHidTurretNpc() &&
+           player.Role == RoleTypeId.Spectator &&
+           player.GetCustomRole() == CRoleTypeId.None;
 
     private void CloseDefaultWaveGate()
     {
