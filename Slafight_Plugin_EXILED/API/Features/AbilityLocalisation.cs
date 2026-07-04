@@ -21,7 +21,9 @@ public static class AbilityLocalization
         ["SenseOfGreatDoctor"] = "名医の感",
         ["Scp106TargetTeleportAbility"] = "獲物への侵食",
         ["AbsolutePowerAbility"] = "驚異的な力",
-        ["GenerateWeaponAbility"] = "武器の錬成"
+        ["GenerateWeaponAbility"] = "武器の錬成",
+        ["AquaJumpAbility"] = "アクアジェットジャンプ",
+        ["AquaSplashAbility"] = "アクアスプラッシュ"
     };
     private static readonly Dictionary<string, string> JaNamesSergey = new()
     {

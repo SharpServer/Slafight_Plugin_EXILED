@@ -25,7 +25,7 @@ public class CaseColourlessGreen : SpecialEvent
 
     public override bool IsReadyToExecute()
     {
-        return MapFlags.GetSeason() is SeasonTypeId.FifthFestival;
+        return MapFlags.GetSeason() is SeasonTypeId.FifthFestival or SeasonTypeId.Summer;
     }
 
     // ===== ショートカット =====

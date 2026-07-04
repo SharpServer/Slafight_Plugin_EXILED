@@ -5,6 +5,7 @@ public enum SeasonTypeId
     None,
     April,
     FifthFestival,
+    Summer,
     Halloween,
     Christmas,
 }

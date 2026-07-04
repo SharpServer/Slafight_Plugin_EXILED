@@ -91,6 +91,7 @@ public static class MapFlags
             2 => SeasonTypeId.Christmas,
             3 => SeasonTypeId.April,
             4 => SeasonTypeId.FifthFestival,
+            5 => SeasonTypeId.Summer,
             _ => SeasonTypeId.None
         };
     }

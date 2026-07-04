@@ -3,8 +3,11 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using MEC;
 using PlayerRoles;
+using Slafight_Plugin_EXILED.Abilities;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.Warriors;
@@ -47,11 +50,16 @@ public class WaterWarrior : CRole
             current.Health = maxHealth;
 
             current.AddItem(ItemType.SCP1509);
-            current.AddItem(ItemType.GunCOM18);
             current.AddItem(ItemType.ArmorHeavy);
             current.AddItem(ItemType.SCP500);
             current.AddItem(ItemType.SCP500);
             current.AddItem(ItemType.KeycardO5);
+
+            GiveCItem<AquaBlaster>(current, true);
+            GiveCItem<HydroCannon>(current, true);
+
+            current.AddAbility<AquaJumpAbility>();
+            current.AddAbility<AquaSplashAbility>();
 
             current.SetAmmo(AmmoType.Nato9, 50);
         });

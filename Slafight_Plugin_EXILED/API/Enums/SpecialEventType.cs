@@ -37,6 +37,12 @@ public enum SpecialEventType
     /// <summary>MEGABALL ATTACK YEAHHHH</summary>
     SnowWarriorsAttack,
     
+    /// <summary>Candyyyyyy!!! AprilとHalloweenで仕様が異なる</summary>
+    CandyWarriorsAttack,
+    
+    /// <summary>夏だ！水だ！SLだああああ！！！！！</summary>
+    WaterWarriorsAttack,
+    
     /// <summary>DELTA 2.0</summary>
     FacilityTermination,
     
@@ -51,9 +57,6 @@ public enum SpecialEventType
     
     /// <summary>何かに使う予定だったような何か</summary>
     DailyFoundation,
-    
-    /// <summary>Candyyyyyy!!! AprilとHalloweenで仕様が異なる</summary>
-    CandyWarriorsAttack,
     
     /// <summary>CASE COLOURLESS GREEN</summary>
     CaseColourlessGreen,

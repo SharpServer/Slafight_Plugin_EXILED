@@ -14,7 +14,7 @@ public class Config : IConfig
     [Description("デバッグログを出力するかどうか")]
     public bool Debug { get; set; } = true;
 
-    [Description("サーバーのシーズンを設定します。0=通常, 1=ハロウィン, 2=クリスマス, 3=エイプリルフール, 4=第五祭")]
+    [Description("サーバーのシーズンを設定します。0=通常, 1=ハロウィン, 2=クリスマス, 3=エイプリルフール, 4=第五祭, 5=夏")]
     public int Season { get; set; } = 0;
 
     [Description("ベータモードを有効にするかどうか")]

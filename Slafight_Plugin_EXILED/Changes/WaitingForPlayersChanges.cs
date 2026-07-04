@@ -30,7 +30,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
     private static readonly Vector3 WaitingRoomPosition = new(246.92f, 198.50f, -60.89f);
 
     private const string WaitingMusicClipName = "finalflash.ogg";
-    private const float WaitingMusicStartDelay = 7.5f; // メニューテーマが消えるまで待つ
+    private const float WaitingMusicStartDelay = 1.5f; // メニューテーマが消えるまで待つ
     private const float WaitingMusicFadeInDuration = 3f;
 
     // 実ファイルは未用意。差し替えるまでは LoadClip/Play が失敗し警告ログのみ出る。
@@ -135,6 +135,11 @@ public class WaitingForPlayersChanges : IBootstrapHandler
 
         Player joined = ev.Player;
         Timing.CallDelayed(WaitingMusicStartDelay, () => StartWaitingMusic(joined));
+        Timing.CallDelayed(0.1f, () =>
+        {
+            if (ev.Player?.ReferenceHub?.playerEffectsController is null) return;
+            joined.EnableEffect<Fade>();
+        });
     }
 
     private static void OnPlayerLeft(LeftEventArgs ev)

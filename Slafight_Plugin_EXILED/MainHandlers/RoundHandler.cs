@@ -111,9 +111,13 @@ public class RoundHandler : IBootstrapHandler
             {
                 RefreshFirstTeamOverrides();
 
+                // NtfMiniWave/ChaosMiniWave は RespawnTokens が 0 から始まり、
+                // メインの Normal Wave (NtfWave/ChaosWave) が一度湧くまで解放されないため、
+                // ラウンド開始直後の「最初の湧き」を強制する対象にはできない。
+                // 最初に湧く Normal Wave 側のタイマーを進める。
                 SpawnableFaction faction = IsSecurityTeamExpected()
-                    ? SpawnableFaction.NtfMiniWave
-                    : SpawnableFaction.ChaosMiniWave;
+                    ? SpawnableFaction.NtfWave
+                    : SpawnableFaction.ChaosWave;
 
                 Respawn.AdvanceTimer(faction, 999);
                 _firstTeamSpawnRequested = true;
@@ -133,12 +137,12 @@ public class RoundHandler : IBootstrapHandler
             {
                 new SpawnSystem.NextSpawnOverride(SpawnTypeId.SecurityTeam)
                 {
-                    SourceSpawnableFaction = SpawnableFaction.NtfMiniWave,
+                    SourceSpawnableFaction = SpawnableFaction.NtfWave,
                     Priority = 1000,
                 },
                 new SpawnSystem.NextSpawnOverride(SpawnTypeId.ChaosAgents)
                 {
-                    SourceSpawnableFaction = SpawnableFaction.ChaosMiniWave,
+                    SourceSpawnableFaction = SpawnableFaction.ChaosWave,
                     Priority = 1000,
                 },
             },
@@ -154,6 +158,12 @@ public class RoundHandler : IBootstrapHandler
     private static void OnSpawnSystemSpawned(object sender, SpawnSystem.CustomSpawningEventArgs ev)
     {
         if (IsAlreadySpawned || !ev.SpawnType.HasValue || !IsFirstTeamSchedulerActive())
+            return;
+
+        // SecurityTeam/ChaosAgents 以外の湧き（Predicate 不一致などで
+        // オーバーライドが未消費のまま別の湧きが発生した場合）で
+        // スケジューラを完了扱いにしないようにする。
+        if (ev.SpawnType.Value is not (SpawnTypeId.SecurityTeam or SpawnTypeId.ChaosAgents))
             return;
 
         CompleteFirstTeamSpawn(ev.SpawnType.Value);

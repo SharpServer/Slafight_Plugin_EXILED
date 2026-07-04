@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using CentralAuth;
 using Exiled.API.Features;
+using Exiled.API.Features.Roles;
 using HarmonyLib;
 using MEC;
 using Mirror;
@@ -398,6 +399,25 @@ public static class PlayerRolesNetUtilsWriteRoleSyncInfoPackPatch
         }
     }
 
+    private static bool IsHiddenFromReceiver(ReferenceHub receiverHub, ReferenceHub targetHub)
+    {
+        try
+        {
+            Player receiverPlayer = Player.Get(receiverHub);
+            Player targetPlayer = Player.Get(targetHub);
+
+            if (receiverPlayer?.ReferenceHub == null || targetPlayer?.ReferenceHub == null)
+                return false;
+
+            return targetPlayer.Role is FpcRole fpcRole &&
+                   (fpcRole.IsInvisible || fpcRole.IsInvisibleFor.Contains(receiverPlayer));
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     private static bool TryGetPackRole(ReferenceHub receiverHub, ReferenceHub targetHub, out RoleTypeId targetRole)
     {
         targetRole = RoleTypeId.None;
@@ -414,6 +434,10 @@ public static class PlayerRolesNetUtilsWriteRoleSyncInfoPackPatch
             targetRole = currentRole is IObfuscatedRole obfuscatedRole
                 ? obfuscatedRole.GetRoleForUser(receiverHub)
                 : currentRole.RoleTypeId;
+
+            if (targetRole is not (RoleTypeId.None or RoleTypeId.Destroyed or RoleTypeId.Spectator) &&
+                IsHiddenFromReceiver(receiverHub, targetHub))
+                targetRole = RoleTypeId.Spectator;
 
             return targetRole is not RoleTypeId.None and not RoleTypeId.Destroyed;
         }

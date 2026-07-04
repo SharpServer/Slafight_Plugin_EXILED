@@ -163,6 +163,8 @@
         <Compile Include="Abilities\AbsolutePowerAbility.cs" />
         <Compile Include="Abilities\AllowEscapeAbility.cs" />
         <Compile Include="Abilities\AlphaWarheadOverride.cs" />
+        <Compile Include="Abilities\AquaJumpAbility.cs" />
+        <Compile Include="Abilities\AquaSplashAbility.cs" />
         <Compile Include="Abilities\CreateSinkholeAbility.cs" />
         <Compile Include="Abilities\DropBiggerShitAbility.cs" />
         <Compile Include="Abilities\GenerateWeaponAbility.cs" />
@@ -375,6 +377,8 @@
         <Compile Include="CustomItems\SlafightApiItems\FakeGrenade.cs" />
         <Compile Include="CustomItems\SlafightApiItems\FlashBangE.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GoCRecruitPaper.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\AquaBlaster.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\HydroCannon.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunCOM77.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunFRMGX.cs" />
         <Compile Include="CustomItems\SlafightApiItems\GunFSP18.cs" />
@@ -621,6 +625,7 @@
         <Compile Include="Hints\ScpStatusHints.cs" />
         <Compile Include="Hints\StatusHintChannel.cs" />
         <Compile Include="Patches\CandyPatch.cs" />
+        <Compile Include="Patches\DenySpectatingTurretNpcPatch.cs" />
         <Compile Include="Patches\DummyActionContextPatch.cs" />
         <Compile Include="Patches\NpcEffectCleanupPatch.cs" />
         <Compile Include="Patches\PlayerRoleManagerRoleSyncPatch.cs" />
@@ -650,6 +655,7 @@
         <Compile Include="SpecialEvents\Events\SergeyMakarovReturns.cs" />
         <Compile Include="SpecialEvents\Events\SnowWarriorsAttack.cs" />
         <Compile Include="SpecialEvents\Events\SpeedUpEvent.cs" />
+        <Compile Include="SpecialEvents\Events\WaterWarriorsAttack.cs" />
         <Compile Include="SpecialEvents\SpecialEventsHandler.cs" />
         <Compile Include="SpecialEvents\SpecialEventWeightContext.cs" />
     </ItemGroup>
