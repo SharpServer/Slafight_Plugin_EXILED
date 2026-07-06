@@ -3,6 +3,7 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Pickups;
 using Exiled.Events.EventArgs.Scp914;
+using InventorySystem.Items.Usables.Scp330;
 using MEC;
 using PlayerRoles;
 using Scp914;
@@ -758,6 +759,44 @@ public static class Scp914Changes
                 FullyRemoveItem(ctx);
                 Map.ExplodeEffect(ctx.OutputPosition, ProjectileType.Flashbang);
             })
+        });
+        
+        Scp914Registry.RegisterCItem<HydroCannon>(new()
+        {
+            Rough = Scp914Rule.Destroy,
+            Coarse = Scp914Rule.ToCItem<AquaBlaster>(),
+            OneToOne = Scp914Rule.Keep,
+            Fine = Scp914Rule.ToVanilla(ItemType.ParticleDisruptor),
+            VeryFine = Scp914Rule.Destroy
+        });
+        
+        Scp914Registry.RegisterCItem<SuspiciousTablet>(new()
+        {
+            Rough = Scp914Rule.Destroy,
+            Coarse = Scp914Rule.ToVanilla(ItemType.Painkillers),
+            OneToOne = Scp914Rule.Custom(ctx =>
+            {
+                FullyRemoveItem(ctx);
+                ctx.Owner?.AddItem(ItemType.SCP330);
+                if (Scp330Bag.TryGetBag(ctx.Owner?.ReferenceHub, out var bag))
+                {
+                    bag.Candies.Clear();
+                    for (int i = 0; i < 6; i++)
+                        bag.TryAddSpecific(CandyKindID.Pink);
+                    bag.ServerRefreshBag();
+                }
+            }),
+            Fine = Scp914Rule.ToCItem<ClassBMemoryRemovePill>(),
+            VeryFine = Scp914Rule.ToCItem<LsdPill>()
+        });
+
+        Scp914Registry.RegisterCItem<ClassBMemoryRemovePill>(new()
+        {
+            Rough = Scp914Rule.Destroy,
+            Coarse = Scp914Rule.ToVanilla(ItemType.SCP500),
+            OneToOne = Scp914Rule.ToCItem<ClassXMemoryForcePil>(),
+            Fine = Scp914Rule.ToCItem<SerumC>(),
+            VeryFine = Scp914Rule.ToCItem<ClassZMemoryForcePil>()
         });
     }
 

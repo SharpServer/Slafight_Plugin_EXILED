@@ -336,6 +336,7 @@
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv1.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv2.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv3.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\ClassBMemoryRemovePill.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CopiCola.cs" />
         <Compile Include="CustomItems\SlafightApiItems\DataCells.cs" />
         <Compile Include="CustomItems\SlafightApiItems\BattleAxe.cs" />
@@ -354,6 +355,7 @@
         <Compile Include="CustomItems\SlafightApiItems\KeycardHeadResearcherGeneric.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardHimself.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardSupplyManager.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\LsdPill.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Medicine.cs" />
         <Compile Include="CustomItems\SlafightApiItems\PandraBreaker.cs" />
         <Compile Include="CustomItems\SlafightApiItems\PapsiCola.cs" />
@@ -552,6 +554,7 @@
         <Compile Include="Extensions\AbilityResetUtil.cs" />
         <Compile Include="Extensions\BreakableDoorExtensions.cs" />
         <Compile Include="Extensions\ColorExtensions.cs" />
+        <Compile Include="Extensions\EnumUtils.cs" />
         <Compile Include="Extensions\LockerExtensions.cs" />
         <Compile Include="Extensions\CustomBooleans.cs" />
         <Compile Include="Extensions\CustomTeamUtils.cs" />
@@ -571,7 +574,7 @@
         <Compile Include="Extensions\RoundUtils.cs" />
         <Compile Include="Extensions\SchematicHelpers.cs" />
         <Compile Include="Extensions\StaticUtils.cs" />
-        <Compile Include="Extensions\StringExtensions.cs" />
+        <Compile Include="Extensions\StringUtils.cs" />
         <Compile Include="Extensions\TimingUtils.cs" />
         <Compile Include="MainHandlers\AbelHandler.cs" />
         <Compile Include="MainHandlers\AutoHandlerBootstrapRegister.cs" />
