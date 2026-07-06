@@ -162,6 +162,10 @@ public class CaseColourlessGreen : SpecialEvent
     
                 p.SetRole(roleToAssign);
             }
+            
+            Exiled.API.Features.Cassie.MessageTranslated("Attention, All personnel. Were detected 5 5 5 Mega Forces. Please detonate anti- me mu process in light containment zone. . . . . . . .",
+                $"全職員に通達。<color={CTeam.Fifthists.GetTeamColor()}>大勢の反ミーム勢力</color>を検知しました。<split>直ちに<color=yellow>各階の発電機を起動</color>して下層に向かい、<color={ServerColors.Green}>反ミーム爆弾</color>を起爆してください。",
+                true);
         });
     }
 
