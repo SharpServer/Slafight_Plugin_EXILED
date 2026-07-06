@@ -35,8 +35,8 @@ public class WaterWarriorsRaidEvent : SpecialEvent
 
     private const string FloodSongFileName = "flood_facility.ogg";
     private const float StabilizationWindowSeconds = 1000f;
-    private const float TentacleBreakElapsedSeconds = 163f;
-    private const float SurfaceGroundReachElapsedSeconds = TentacleBreakElapsedSeconds + 35f;
+    private const float TentacleBreakElapsedSeconds = 143f;
+    private const float SurfaceGroundReachElapsedSeconds = TentacleBreakElapsedSeconds + 55f;
     private const float FinalFloodSurgeSeconds = 5f;
     private const float FloodPhaseSeconds = SurfaceGroundReachElapsedSeconds + FinalFloodSurgeSeconds;
     private const float SurfaceGroundTopY = 290f;
