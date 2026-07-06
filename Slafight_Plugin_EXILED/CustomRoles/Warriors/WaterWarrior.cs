@@ -18,7 +18,7 @@ public class WaterWarrior : CRole
 {
     protected override string RoleName { get; set; } = $"<color={ServerColors.Aqua}>WATER WARRIOR</color>";
     protected override string Description { get; set; } = $"<size=24><color={ServerColors.Aqua}>夏にヒャッハーしてる謎の勢力。</color>\n" +
-                                                          $"水鉄砲を使って施設を<color=red>SUMMER AURA</color>で制圧しろ！</size>";
+                                                          $"水鉄砲を使って施設を水没まで追い込め！！！！！</size>";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.WaterWarrior;
     protected override CTeam Team { get; set; } = CTeam.Warriors;
     protected override string UniqueRoleKey { get; set; } = "WaterWarrior";

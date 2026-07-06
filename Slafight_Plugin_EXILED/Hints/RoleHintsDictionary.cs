@@ -141,7 +141,7 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.WaterWarrior] = (
             $"<b><color={ServerColors.Aqua}>WATER WARRIOR</color></b>",
             $"<b><color={ServerColors.Aqua}>WATER WARRIOR's DIVISION</color></b>",
-            "水鉄砲を使い、施設をSUMMER AURAで制圧しろ！"),
+            "水鉄砲を使い、施設を水没まで追い込め！！！！！"),
 
         // ── Special ───────────────────────────────────────────────────────
         [CRoleTypeId.Sculpture] = (
