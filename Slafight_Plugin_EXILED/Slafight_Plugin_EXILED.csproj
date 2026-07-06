@@ -336,6 +336,7 @@
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv1.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv2.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv3.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\CopiCola.cs" />
         <Compile Include="CustomItems\SlafightApiItems\DataCells.cs" />
         <Compile Include="CustomItems\SlafightApiItems\BattleAxe.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Bloodyknife.cs" />
@@ -355,6 +356,7 @@
         <Compile Include="CustomItems\SlafightApiItems\KeycardSupplyManager.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Medicine.cs" />
         <Compile Include="CustomItems\SlafightApiItems\PandraBreaker.cs" />
+        <Compile Include="CustomItems\SlafightApiItems\PapsiCola.cs" />
         <Compile Include="CustomItems\SlafightApiItems\S41MedicalPistol.cs" />
         <Compile Include="CustomItems\SlafightApiItems\KeycardChaosIntruder.cs" />
         <Compile Include="CustomItems\SlafightApiItems\CloakGenerator.cs" />
