@@ -249,7 +249,7 @@ public class WaterTentacle : ObjectPrefab
 
         PlaySchematicAnimation("attacking");
         _nextIdleAnimationTime = Time.time + Mathf.Max(0.1f, StrikeDuration);
-        target.Hurt(AttackDamage, "SCP-035の触手に襲われた");
+        target.Hurt(AttackDamage, "水の触手に飲み込まれた");
     }
 
     private Player? FindTarget()
