@@ -4,7 +4,6 @@ using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.Features; // SpecialEvent 基底クラス
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -16,8 +15,6 @@ public class OmegaWarheadEvent : SpecialEvent
     public override string LocalizedName => "OMEGA WARHEAD";
     public override string TriggerRequirement => "無し";
 
-    // ===== ショートカット =====
-    private EventHandler EventHandler => EventHandler.Instance;
     // ===== 実行本体 =====
     protected override void OnExecute(int eventPid)
     {
@@ -26,8 +23,8 @@ public class OmegaWarheadEvent : SpecialEvent
             return;
 
         // Warhead 関連フラグ
-        Warhead.IsLocked = true;
-        EventHandler.DeadmanDisable = true;
+        RoundHazardController.SetAlphaWarheadDisarmLocked(true);
+        RoundHazardController.SetDeadmanSwitchBlocked(true);
 
         if (CancelIfOutdated())
             return;

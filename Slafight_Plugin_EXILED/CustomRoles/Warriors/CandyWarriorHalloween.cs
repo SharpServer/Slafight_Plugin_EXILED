@@ -17,7 +17,8 @@ public class CandyWarriorHalloween : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.CandyWarriorHalloween;
     protected override CTeam Team { get; set; } = CTeam.Warriors;
     protected override string UniqueRoleKey { get; set; } = "CandyWarriorHalloween";
-    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosRifleman;
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Tutorial;
+    protected override RoleSpawnFlags? SpawnBaseRoleFlags => RoleSpawnFlags.AssignInventory;
     protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
     [
         new(EffectType.Slowness, 10)
@@ -30,7 +31,7 @@ public class CandyWarriorHalloween : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        player.Role.Set(RoleTypeId.Tutorial, RoleSpawnFlags.AssignInventory);
+        TrySetPlayerPosition(player, PositionProvider.GetChaosSpawnPosition(), nameof(CandyWarriorHalloween));
 
         const int maxHealth = 1000;
         var playerId = player.Id;

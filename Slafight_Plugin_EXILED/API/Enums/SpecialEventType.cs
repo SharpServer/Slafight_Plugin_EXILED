@@ -41,7 +41,7 @@ public enum SpecialEventType
     CandyWarriorsAttack,
     
     /// <summary>夏だ！水だ！SLだああああ！！！！！</summary>
-    WaterWarriorsAttack,
+    WaterWarriorsRaid,
     
     /// <summary>DELTA 2.0</summary>
     FacilityTermination,

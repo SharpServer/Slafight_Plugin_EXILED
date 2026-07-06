@@ -6,9 +6,7 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
 using Exiled.API.Features.Pickups;
-using Exiled.Events.EventArgs.Map;
 using Exiled.Events.EventArgs.Player;
-using Exiled.Events.EventArgs.Warhead;
 using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Extension;
 using InventorySystem.Items.Usables.Scp330;
@@ -27,8 +25,6 @@ using PlayerHandler = Exiled.Events.Handlers.Player;
 using Room = Exiled.API.Features.Room;
 using ServerHandler = Exiled.Events.Handlers.Server;
 using Slafight_Plugin_EXILED.API.Interface;
-using WarheadHandler = Exiled.Events.Handlers.Warhead;
-using MapHandler = Exiled.Events.Handlers.Map;
 using HsmHint = HintServiceMeow.Core.Models.Hints.Hint;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
@@ -57,15 +53,11 @@ public class EventHandler : IBootstrapHandler, IDisposable
         ServerHandler.RoundStarted += OnRoundStarted;
         ServerHandler.ReloadedPlugins += OnPluginLoad;
 
-        MapHandler.Decontaminating += DeconCancel;
-
         PlayerHandler.ChangingRole += OnChangingRole;
         PlayerHandler.InteractingDoor += DoorGet;
         PlayerHandler.UsedItem += OnUsed;
         PlayerHandler.Hurting += OnHurting;
         PlayerHandler.Dying += OnDying;
-        
-        WarheadHandler.DeadmanSwitchInitiating += DeadmanCancel;
     }
 
     public void Dispose()
@@ -80,20 +72,14 @@ public class EventHandler : IBootstrapHandler, IDisposable
         ServerHandler.RoundStarted -= OnRoundStarted;
         ServerHandler.ReloadedPlugins -= OnPluginLoad;
 
-        MapHandler.Decontaminating -= DeconCancel;
-
         PlayerHandler.ChangingRole -= OnChangingRole;
         PlayerHandler.InteractingDoor -= DoorGet;
         PlayerHandler.UsedItem -= OnUsed;
         PlayerHandler.Hurting -= OnHurting;
         PlayerHandler.Dying -= OnDying;
-
-        WarheadHandler.DeadmanSwitchInitiating -= DeadmanCancel;
         GC.SuppressFinalize(this);
     }
 
-    public bool DeadmanDisable = false;
-    public bool DeconCancellFlag = false;
     private bool _pluginLoaded = false;
 
     private static bool IsPlayerValid(Player? p)
@@ -201,8 +187,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
 
         Timing.CallDelayed(0.1f, () =>
         {
-            DeadmanDisable = false;
-            DeconCancellFlag = false;
+            RoundHazardController.ResetRoundState();
         });
     }
 
@@ -337,21 +322,6 @@ public class EventHandler : IBootstrapHandler, IDisposable
                     player.GiveOrDrop(ItemType.Flashlight);
             }
         });
-    }
-
-    private void DeadmanCancel(DeadmanSwitchInitiatingEventArgs? ev)
-    {
-        if (ev is null) return;
-        if (DeadmanDisable)
-            ev.IsAllowed = false;
-    }
-
-    private void DeconCancel(DecontaminatingEventArgs? ev)
-    {
-        if (ev is null) return;
-        if (!DeconCancellFlag) return;
-        ev.IsAllowed = false;
-        Log.Debug("Decon Cancel called.");
     }
 
     /// <summary>

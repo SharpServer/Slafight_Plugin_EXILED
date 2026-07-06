@@ -1,6 +1,8 @@
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.Abilities;
@@ -20,11 +22,18 @@ public class WaterWarrior : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.WaterWarrior;
     protected override CTeam Team { get; set; } = CTeam.Warriors;
     protected override string UniqueRoleKey { get; set; } = "WaterWarrior";
-    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosRifleman;
+    protected override string? SpawnCustomInfo => $"<color={ServerColors.Aqua}>WATER WARRIOR</color>";
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Tutorial;
     protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
     [
         new(EffectType.Slowness, 10)
     ];
+
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>()
+    {
+        [AmmoType.Nato9] = 220,
+        [AmmoType.Nato556] = 220
+    };
 
     protected override IReadOnlyList<SpecificFlagType> SpawnSpecificFlags =>
     [
@@ -33,35 +42,35 @@ public class WaterWarrior : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        player.Role.Set(RoleTypeId.Tutorial, RoleSpawnFlags.AssignInventory);
+        player.Position = PositionProvider.GetChaosSpawnPosition();
         RoleSchematicWears.WearWarrior(player, CRoleTypeId.WaterWarrior, "WaterWarriorsModel", Color.black);
 
         const int maxHealth = 1000;
-        var playerId = player.Id;
 
-        Timing.CallDelayed(RoleSpawnTimings.AfterRoleSet, () =>
+        player.MaxHealth = maxHealth;
+        player.Health = maxHealth;
+
+        player.AddItem(ItemType.SCP1509);
+        player.AddItem(ItemType.ArmorHeavy);
+        player.AddItem(ItemType.SCP500);
+        player.AddItem(ItemType.SCP500);
+        player.AddItem(ItemType.KeycardO5);
+
+        GiveCItem<AquaBlaster>(player, true);
+        GiveCItem<HydroCannon>(player, true);
+
+        player.AddAbility<AquaJumpAbility>();
+        player.AddAbility<AquaSplashAbility>();
+
+        player.SetAmmo(AmmoType.Nato9, 50);
+    }
+
+    protected override void OnRoleHurting(HurtingEventArgs ev)
+    {
+        if (ev.DamageHandler.Type is DamageType.Tesla)
         {
-            var current = Player.Get(playerId);
-            if (!Check(current) || !IsSafeRolePlayer(current))
-                return;
-
-            CustomInfoDisplay.Apply(current, $"<color={ServerColors.Aqua}>WATER WARRIOR</color>");
-            current.MaxHealth = maxHealth;
-            current.Health = maxHealth;
-
-            current.AddItem(ItemType.SCP1509);
-            current.AddItem(ItemType.ArmorHeavy);
-            current.AddItem(ItemType.SCP500);
-            current.AddItem(ItemType.SCP500);
-            current.AddItem(ItemType.KeycardO5);
-
-            GiveCItem<AquaBlaster>(current, true);
-            GiveCItem<HydroCannon>(current, true);
-
-            current.AddAbility<AquaJumpAbility>();
-            current.AddAbility<AquaSplashAbility>();
-
-            current.SetAmmo(AmmoType.Nato9, 50);
-        });
+            ev.Amount *= 1.25f;
+        }
+        base.OnRoleHurting(ev);
     }
 }

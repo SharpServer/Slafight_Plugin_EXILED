@@ -15,7 +15,8 @@ public class SnowWarrior : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.SnowWarrior;
     protected override CTeam Team { get; set; } = CTeam.Warriors;
     protected override string UniqueRoleKey { get; set; } = "SnowWarrior";
-    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.ChaosRifleman;
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Tutorial;
+    protected override RoleSpawnFlags? SpawnBaseRoleFlags => RoleSpawnFlags.AssignInventory;
     protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
     [
         new(EffectType.Slowness, 10)
@@ -28,7 +29,7 @@ public class SnowWarrior : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        player.Role.Set(RoleTypeId.Tutorial, RoleSpawnFlags.AssignInventory);
+        TrySetPlayerPosition(player, PositionProvider.GetChaosSpawnPosition(), nameof(SnowWarrior));
         RoleSchematicWears.WearSnowWarrior(player);
 
         const int maxHealth = 1000;

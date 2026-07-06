@@ -1,289 +1,649 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
-using Exiled.API.Features.Doors;
-using Exiled.Events.EventArgs.Player;
-using LightContainmentZoneDecontamination;
+using Exiled.API.Features.Toys;
 using MEC;
-using ProjectMER.Features;
-using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Changes;
+using Slafight_Plugin_EXILED.CustomEffects;
 using Slafight_Plugin_EXILED.CustomMaps;
+using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
-public class WaterWarriorsAttackEvent : SpecialEvent
+public class WaterWarriorsRaidEvent : SpecialEvent
 {
-    // ===== メタ情報 =====
-    public override SpecialEventType EventType => SpecialEventType.WaterWarriorsAttack;
+    public override SpecialEventType EventType => SpecialEventType.WaterWarriorsRaid;
     public override int MinPlayersRequired => 5;
     public override string LocalizedName => "Water Warriors Raid";
     public override string TriggerRequirement => "5人以上のプレイヤー";
 
-    // ===== 内部状態 =====
-    private bool _teslaDisabled = false;
+    private CoroutineHandle _handle;
+    private Primitive? _activeFloodInDss;
+    private readonly List<Primitive> _activeFloodSurfaces = [];
+    private readonly List<WaterParticleState> _activeWaterParticles = [];
+    private readonly List<WaterTentacle> _activeTentacles = [];
+    private readonly Dictionary<Room, Color> _originalFloodRoomColors = [];
+    private BossBar? _floodCountdownBar;
+    private SpeakerApi.Playback? _floodSongPlayback;
+    private float _nextFloodVisualUpdateTime;
+    private float _nextRoomTintUpdateTime;
 
-    private EventHandler EventHandler => EventHandler.Instance;
-    // ===== 実行エントリポイント =====
+    private const string FloodSongFileName = "flood_facility.ogg";
+    private const float StabilizationWindowSeconds = 1000f;
+    private const float TentacleBreakElapsedSeconds = 163f;
+    private const float SurfaceGroundReachElapsedSeconds = TentacleBreakElapsedSeconds + 35f;
+    private const float FinalFloodSurgeSeconds = 5f;
+    private const float FloodPhaseSeconds = SurfaceGroundReachElapsedSeconds + FinalFloodSurgeSeconds;
+    private const float SurfaceGroundTopY = 290f;
+    private const float SurfaceFloodTopY = 325f;
+    private const float FinalFloodHorizontalScale = 865f;
+    private const int UnderwaterParticleCount = 72;
+    private const float FloodVisualUpdateInterval = 0.2f;
+    private const float RoomTintUpdateInterval = 0.5f;
+    private const float RoomTintLeadHeight = 4f;
+    private const float RoomTintFullDepth = 35f;
+    private const float RoomTintHorizontalLead = 8f;
+    private const float RoomTintHorizontalFullDepth = 24f;
+    private static readonly Vector3 InitialFloodScale = new Vector3(6.5f, 8f, 6.5f);
+    private static readonly Color FloodBodyColor = new(0.0f, 0.95f, 1f, 0.28f);
+    private static readonly Color FloodSurfaceColor = new(0.2f, 0.95f, 1f, 0.48f);
+    private static readonly Color FloodParticleColor = new(0.72f, 1f, 1f, 0.55f);
+    private static readonly Color FloodRoomShallowColor = new(0.15f, 0.92f, 1f, 1f);
+    private static readonly Color FloodRoomDeepColor = new(0.0f, 0.22f, 0.48f, 1f);
+
     public override bool IsReadyToExecute()
     {
-        return MapFlags.GetSeason() == SeasonTypeId.Summer;
+        return MapFlags.GetSeason() is SeasonTypeId.Summer;
     }
 
-    protected override void OnExecute(int eventPID)
+    protected override void OnExecute(int eventPid)
     {
-        _teslaDisabled = false;
+        if (_handle.IsRunning)
+            Timing.KillCoroutines(_handle);
 
-        if (CancelIfOutdated()) return;
-
-        Timing.RunCoroutine(RaidCoroutine());
+        CleanupActiveState(destroyFlood: true);
+        _handle = Timing.RunCoroutine(Coroutine());
     }
 
-    public override void RegisterEvents()
+    public bool TryPlayFloodScene(out string failureReason)
     {
-        Exiled.Events.Handlers.Player.TriggeringTesla += DisableTesla;
+        if (_handle.IsRunning)
+            Timing.KillCoroutines(_handle);
+
+        CleanupActiveState(destroyFlood: true);
+
+        if (!TryCreateDssFlood(out Primitive? floodInDss, out failureReason))
+            return false;
+
+        _handle = Timing.RunCoroutine(FloodSceneCoroutine(floodInDss, cancelIfOutdated: false, requireLivingWaterWarrior: false));
+        failureReason = string.Empty;
+        return true;
+    }
+
+    public bool TryCreateDssFlood(out Primitive? floodInDss, out string failureReason)
+    {
+        floodInDss = null;
+
+        Room? dssRoom = Room.Get(RoomType.HczCrossRoomWater);
+        if (dssRoom == null)
+        {
+            failureReason = "[WaterWarriorsRaid] Failed to find HczCrossRoomWater for DSS flood.";
+            Log.Warn(failureReason);
+            return false;
+        }
+
+        floodInDss = Primitive.Create(dssRoom.WorldPosition(Vector3.up), scale: InitialFloodScale);
+        _activeFloodInDss = floodInDss;
+        floodInDss.Collidable = false;
+        floodInDss.Color = FloodBodyColor;
+        floodInDss.MovementSmoothing = 60;
+
+        UpdateFloodVisuals(FloodVolumeState.FromPrimitive(floodInDss), force: true);
+
+        failureReason = string.Empty;
+        return true;
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Player.TriggeringTesla -= DisableTesla;
+        if (_handle.IsRunning)
+            Timing.KillCoroutines(_handle);
+
+        CleanupActiveState(destroyFlood: true);
     }
 
-    // ===== メイン処理 =====
-    private IEnumerator<float> RaidCoroutine()
+    private IEnumerator<float> Coroutine()
     {
-        var evHandler = EventHandler;
+        RoundHazardController.SetAlphaWarheadDisarmLocked(true);
+        RoundHazardController.SetDeadmanSwitchBlocked(true);
 
-        Warhead.IsLocked = true;
-        evHandler.DeadmanDisable = true;
-
-        DecontaminationController.Singleton.DecontaminationOverride =
-            DecontaminationController.DecontaminationStatus.Disabled;
-        DecontaminationController.Singleton.TimeOffset = int.MinValue;
-        DecontaminationController.DeconBroadcastDeconMessage = "除染は取り消されました";
-
-        yield return Timing.WaitForSeconds(1f);
+        yield return Timing.WaitForSeconds(2f);
         if (CancelIfOutdated()) yield break;
 
-        // 役職変換
-        foreach (var player in StaticUtils.SelectRandomPlayersByRatio(CTeam.SCPs, 1f / 3f))
-            player.SetRole(CRoleTypeId.SnowWarrior);
+        foreach (var player in StaticUtils.SelectRandomPlayersByRatio(CTeam.SCPs, 1f / 3f, true))
+            player.SetRole(CRoleTypeId.WaterWarrior);
 
-        yield return Timing.WaitForSeconds(8f);
-        if (CancelIfOutdated()) yield break;
+        IntercomApi.Timeout();
+        IntercomApi.SetUnavailable("WATER_WARRIORS_ATTACK", "<size=24><color=red>ERROR: SYSTEM IS NOW FLOODING WATER</color></size>");
 
-        Exiled.API.Features.Cassie.MessageTranslated(
-            "$pitch_1.02 Danger Detected Unknown Organism in Gate A . Please Check $pitch_.2 .g4 .g1 .g2",
-            "警告、不明な生命体がGate Aで検出されました。確認を",
-            true);
+        Exiled.API.Features.Cassie.MessageTranslated("$PITCH_1 Attention, All personnel. Unknown Anomaly found in Surface Gate A . Please Check $PITCH_.7 .g2 .g2 .g3 .g3 .g3",
+            "全職員に通達。不明な物体が地上ゲートAにて確認されました。直ちに<split>[ノイズ音]",true);
 
-        yield return Timing.WaitForSeconds(12f);
-        if (CancelIfOutdated()) yield break;
+        if (!TryCreateDssFlood(out Primitive? floodInDss, out _))
+            yield break;
 
-        Exiled.API.Features.Cassie.MessageTranslated(
-            "$pitch_.8 Successfully terminated Foundations Cassie System and putted New Division Cassie System . Cassie is now under us",
-            "<color=#00b7eb>財団のCassieシステム</color>の<color=red>終了</color>に成功。新たな<color=#ffffff>雪の戦士たちのCassieシステム</color>の導入も成功。<split> Cassieは今や<b><color=#ffffff>雪の帝王</color></b>の手中にある。",
-            false);
-
-        yield return Timing.WaitForSeconds(45f);
-        if (CancelIfOutdated()) yield break;
-
-        Exiled.API.Features.Cassie.MessageTranslated(
-            "$pitch_.8 First Order . Light up all facility . Accepted .",
-            "<b><color=#ffffff>雪の帝王</color></b>の最初の指令：全施設のライトアップ ...承認",
-            false);
-
-        Timing.RunCoroutine(LightUpCoroutine());
-
-        yield return Timing.WaitForSeconds(8f);
-        if (CancelIfOutdated()) yield break;
-
-        Exiled.API.Features.Cassie.MessageTranslated(
-            "$pitch_.8 Next Order . Turn off Tesla Gates . Accepted .",
-            "次の指令：テスラゲートの無効化 ...承認",
-            false);
-
-        _teslaDisabled = true;
-
-        yield return Timing.WaitForSeconds(8f);
-        if (CancelIfOutdated()) yield break;
-
-        Exiled.API.Features.Cassie.MessageTranslated(
-            "$pitch_.8 All Division . Work Time .",
-            "戦士達よ、働く時間だ。",
-            false);
-
-        yield return Timing.WaitForSeconds(1000f);
-        if (CancelIfOutdated()) yield break;
-
-        bool snowAlive = false;
-        foreach (var player in Player.List)
+        yield return Timing.WaitUntilDone(AnimationApi.MoveByCoroutine(floodInDss.Transform, new Vector3(0f, 3f, 0f), 1.5f));
+        UpdateFloodVisuals(FloodVolumeState.FromPrimitive(floodInDss), force: true);
+        if (CancelIfOutdated())
         {
-            if (player != null && player.GetCustomRole() is CRoleTypeId.SnowWarrior)
-            {
-                snowAlive = true;
-                break;
-            }
+            CleanupActiveState(destroyFlood: true);
+            yield break;
         }
 
-        if (snowAlive)
-            Timing.RunCoroutine(SnowSuccessCoroutine());
+        Exiled.API.Features.Cassie.MessageTranslated("$PITCH_1.05 Attention, All Personnel. Were Forces is here. Going to SUNDAY . . .",
+            $"全職員に<color={ServerColors.Aqua}>WATER WARRIOR</color>から通達。<split>夏よあれ！！！！！万歳！！！！！");
+        yield return Timing.WaitForSeconds(5f);
+        if (CancelIfOutdated())
+        {
+            CleanupActiveState(destroyFlood: true);
+            yield break;
+        }
+
+        Exiled.API.Features.Cassie.MessageTranslated("Checking Facility _SUFFIX_PLURAL_REGULAR . . . Intercom . . . Break Confirmed . D S S 0 8 Status . . . Cannot Control able . Confirmed .",
+            "施設の状態を確認...<split>放送室の状態...<color=red>破損</color>を確認。<split>DSS-08の状態...制御不能を確認。",true);
+        Exiled.API.Features.Cassie.MessageTranslated("Attention, All personnel. Were get bad facility status report. Please terminate unknown forces for alive.",
+            $"全職員に通達。施設状態は現在<color=red>危険</color>です。<split>設備の制御を取り戻すため、<color={ServerColors.Aqua}>不明な勢力</color>を必ず打倒してください。");
+        yield return Timing.WaitUntilDone(WaitWithCancellation(StabilizationWindowSeconds, floodInDss));
+        if (CancelIfOutdated())
+        {
+            CleanupActiveState(destroyFlood: true);
+            yield break;
+        }
+
+        if (HasLivingWaterWarrior())
+        {
+            Exiled.API.Features.Cassie.MessageTranslated("$PITCH_.95 Attention, All personnel. Were Failed To Stabilize Facility. Facility get to FRONT POINT . . . PLEASE ESCAPE IMMEDIATELY FROM EXIT GATES.",
+                "全職員に通達。施設の安定化に失敗しました。今や制御不能な玄妙除却システムの水が溢れ出してきています。<split>直ちに、脱出口から脱出してください。",true);
+
+            SpawnEscapeTentacles();
+            yield return Timing.WaitUntilDone(FloodFacilityCoroutine(floodInDss, cancelIfOutdated: true, requireLivingWaterWarrior: true));
+        }
         else
-            HandleSnowWarriorFailure();
+        {
+            HandleFacilityStabilized();
+        }
     }
 
-    // ===== 成功時 =====
-    private IEnumerator<float> SnowSuccessCoroutine()
+    public IEnumerator<float> FloodSceneCoroutine(
+        Primitive floodInDss,
+        bool cancelIfOutdated = false,
+        bool requireLivingWaterWarrior = false)
     {
-        if (CancelIfOutdated()) yield break;
+        yield return Timing.WaitUntilDone(AnimationApi.MoveByCoroutine(floodInDss.Transform, new Vector3(0f, 3f, 0f), 1.5f));
+        UpdateFloodVisuals(FloodVolumeState.FromPrimitive(floodInDss), force: true);
 
-        Exiled.API.Features.Cassie.MessageTranslated(
-            "$pitch_.8 All Division Agents Tasks completed . Last Order . . $pitch_.75 Destroy the Facility . $pitch_.4 .g1 $pitch_.26 .g5 .g6 .g4 $pitch_2 .g1 $pitch_.75 Good by all anomalys and foundation personnels .",
-            "全戦士達の任務完了を確認。最後の指令を下す：<b><color=white>施設を埋もれさせよ</color></b>",
-            true);
-
-        yield return Timing.WaitForSeconds(15f);
-        if (CancelIfOutdated()) yield break;
-
-        Exiled.API.Features.Cassie.MessageTranslated(
-            "$pitch_.2 .g4 .g4 $pitch_1 $pitch_.75 BY ORDER OF DIVISION COMMAND . THE DEAD MANS SEQUENCE AND ATTACK PROTOCOL ACTIVATED . DETONATION IN TMINUS 145 SECONDS . PLEASE D .g4 IE .g6 .g3 .g4",
-            "BY ORDER OF <color=#ffffff><b>DIVISION COMMAND</b></color>. THE DEAD MANS SEQUENCE AND MEGABALL ATTACK PROTOCOL ACTIVATED. DETONATION IN T-145 SECONDS. <color=red><b>PLEASE DIE</b></color>",
-            true);
-
-        yield return Timing.WaitForSeconds(10f);
-        if (CancelIfOutdated()) yield break;
-
-        SpeakerApi.Play("cir.ogg", "Cassie", Vector3.zero, true, null, false, 999999999f, 0f);
-
-        SchematicObject schematicObject;
-        try
+        if (ShouldCancelFloodScene(cancelIfOutdated))
         {
-            schematicObject = ObjectSpawner.SpawnSchematic("Xmas_Nuke", Vector3.zero);
-        }
-        catch (Exception)
-        {
+            CleanupActiveState(destroyFlood: true);
             yield break;
         }
 
-        yield return Timing.WaitForSeconds(0.5f);
-
-        if (schematicObject == null) yield break;
-
-        schematicObject.Position = new Vector3(-90f, 500f, -45f);
-        schematicObject.Rotation = Quaternion.Euler(new Vector3(0, 0, 55));
-        Timing.RunCoroutine(NukeDownCoroutine(schematicObject));
-
-        foreach (var room in Room.List)
-        {
-            room.AreLightsOff = false;
-            room.Color = new Color32(255, 255, 0, 255);
-        }
-
-        foreach (var door in Door.List)
-        {
-            if (door.Type is DoorType.ElevatorGateA or DoorType.ElevatorGateB
-                          or DoorType.ElevatorLczA  or DoorType.ElevatorLczB
-                          or DoorType.ElevatorNuke  or DoorType.ElevatorScp049
-                          or DoorType.ElevatorServerRoom)
-                continue;
-
-            door.IsOpen = true;
-            door.Lock(DoorLockType.Warhead);
-        }
-
-        yield return Timing.WaitForSeconds(145f);
-        if (CancelIfOutdated()) yield break;
-
-        foreach (var player in Player.List)
-        {
-            if (player == null || !player.IsAlive) continue;
-
-            player.ExplodeEffect(ProjectileType.FragGrenade);
-            player.Kill(player.Zone == ZoneType.Surface
-                ? "MEGABALL ATTACKに爆破された"
-                : "ALPHA WARHEADに爆破された");
-        }
+        SpawnEscapeTentacles();
+        yield return Timing.WaitUntilDone(FloodFacilityCoroutine(floodInDss, cancelIfOutdated, requireLivingWaterWarrior));
     }
 
-    // ===== 失敗時 =====
-    private void HandleSnowWarriorFailure()
+    public IEnumerator<float> FloodFacilityCoroutine(
+        Primitive floodInDss,
+        bool cancelIfOutdated = true,
+        bool requireLivingWaterWarrior = true)
     {
-        if (CancelIfOutdated()) return;
+        Vector3 startScale = floodInDss.Scale;
+        Vector3 startPosition = floodInDss.Position;
+        float bottomY = startPosition.y - startScale.y * 0.5f;
+        float startTopY = startPosition.y + startScale.y * 0.5f;
 
-        Exiled.API.Features.Cassie.MessageTranslated(
-            "$pitch_.2 .g3 $pitch_.7 .g2 $pitch_.4 .g4 .g5 .g5 $pitch_1 .g1 .g2 .g3 Attention . All personnel . the Foundation Forces Successfully Terminated All Forces . All System now backed to the Foundation . All Division Command Orders Now Terminated . Please back to normal Containment Breach Security Mode",
-            "全職員に報告します。財団の部隊は全雪の戦士達勢力の排除に成功しました。全てのDIVISION COMMANDの指令は正常に終了。全職員は収容違反の対応モデルに復帰してください。",
-            true);
-    }
+        _floodSongPlayback = SpeakerApi.Play(FloodSongFileName, "DSS-08", Vector3.zero, true, null, false, 999999999f, 0f, volume: 1.5f);
+        _floodCountdownBar = CreateFloodCountdownBar();
+        _floodCountdownBar.Show();
 
-    // ===== Tesla 無効化 =====
-    private void DisableTesla(TriggeringTeslaEventArgs ev)
-    {
-        if (CancelIfOutdated()) return;
-        ev.DisableTesla = _teslaDisabled;
-    }
+        bool tentaclesDestroyed = false;
+        float elapsed = 0f;
 
-    // ===== コルーチン =====
-    private IEnumerator<float> NukeDownCoroutine(SchematicObject schem)
-    {
-        if (schem == null || schem.transform == null)
+        while (elapsed < FloodPhaseSeconds)
         {
-            Log.Warn("[Snow Raid] NukeDown aborted: schem or transform is null at start.");
-            yield break;
-        }
-
-        float elapsedTime = 0f;
-        const float totalDuration = 150f;
-        float z = schem.transform.position.z;
-        Vector3 startPos = new Vector3(-90f, 500f, z);
-        Vector3 endPos   = new Vector3( 70f, 300f, z);
-
-        while (elapsedTime < totalDuration)
-        {
-            if (CancelIfOutdated() || Round.IsLobby || Round.IsEnded)
+            if (ShouldCancelFloodScene(cancelIfOutdated))
             {
-                Log.Info("[Snow Raid] NukeDown stopped: event outdated or round ended.");
+                CleanupActiveState(destroyFlood: true);
                 yield break;
             }
 
-            if (schem == null || schem.transform == null)
+            if (requireLivingWaterWarrior && !HasLivingWaterWarrior())
             {
-                Log.Warn("[Snow Raid] NukeDown stopped: schem destroyed.");
+                HandleFacilityStabilized();
                 yield break;
             }
 
-            elapsedTime += Time.deltaTime;
-            schem.transform.position = Vector3.Lerp(startPos, endPos, elapsedTime / totalDuration);
+            ApplyFloodProgress(floodInDss, startScale, startPosition, bottomY, startTopY, elapsed);
+            FloodVolumeState volume = FloodVolumeState.FromPrimitive(floodInDss);
+            UpdateFloodVisuals(volume);
+            UpdateFloodRoomColors(volume, force: false);
 
+            float remainingSeconds = Mathf.Max(0f, FloodPhaseSeconds - elapsed);
+            UpdateFloodCountdownBar(elapsed, remainingSeconds);
+
+            if (!tentaclesDestroyed && elapsed >= TentacleBreakElapsedSeconds)
+            {
+                tentaclesDestroyed = true;
+                DestroyEscapeTentacles();
+            }
+
+            elapsed += Time.deltaTime;
             yield return 0f;
         }
 
-        if (schem != null && schem.transform != null)
-            schem.transform.position = endPos;
+        Exiled.API.Features.Cassie.MessageTranslated("Attention, Were Successfully Destroyed Exit Gates It.",
+            "通達。脱出口をふさいでいた触手の破壊に成功しました。<split>時間は一刻一刻と迫ってきています。早急に脱出してください！",false);
+
+        ApplyFloodProgress(floodInDss, startScale, startPosition, bottomY, startTopY, FloodPhaseSeconds);
+        FloodVolumeState finalVolume = FloodVolumeState.FromPrimitive(floodInDss);
+        UpdateFloodVisuals(finalVolume, force: true);
+        UpdateFloodRoomColors(finalVolume, force: true);
+        UpdateFloodCountdownBar(FloodPhaseSeconds, 0f);
+        DestroyEscapeTentacles();
+        StopFloodSong();
+
+        _floodCountdownBar?.Hide();
+        _floodCountdownBar = null;
+
+        foreach (var player in Player.List)
+        {
+            if (player == null || !player.IsSafePlayer()|| !player.IsAlive)
+                continue;
+
+            if (IsWaterWarrior(player))
+                continue;
+
+            player.EnableEffect<FloodDrowning>(255);
+        }
     }
 
-    private IEnumerator<float> LightUpCoroutine()
+    private IEnumerator<float> WaitWithCancellation(float seconds, Primitive? floodVisual = null)
     {
-        for (;;)
+        float elapsed = 0f;
+        while (elapsed < seconds)
         {
-            if (CancelIfOutdated()) yield break;
+            if (CancelIfOutdated())
+                yield break;
 
-            foreach (var room in Room.List)
-            {
-                room.AreLightsOff = false;
-                room.Color = new Color32(
-                    (byte)UnityEngine.Random.Range(0, 256),
-                    (byte)UnityEngine.Random.Range(0, 256),
-                    (byte)UnityEngine.Random.Range(0, 256),
-                    255);
-            }
+            if (floodVisual != null)
+                UpdateFloodVisuals(FloodVolumeState.FromPrimitive(floodVisual));
 
-            yield return Timing.WaitForSeconds(30f);
+            float step = Mathf.Min(floodVisual == null ? 1f : FloodVisualUpdateInterval, seconds - elapsed);
+            elapsed += step;
+            yield return Timing.WaitForSeconds(step);
         }
+    }
+
+    private void SpawnEscapeTentacles()
+    {
+        DestroyEscapeTentacles();
+
+        foreach (var point in EscapeHandler.Instance.EscapePoints)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                var tentacle = new WaterTentacle();
+                tentacle.Create();
+                var offset = new Vector3(UnityEngine.Random.Range(0f, 0.15f), 0f, UnityEngine.Random.Range(0f, 0.15f));
+                tentacle.Position = point + offset + Vector3.down * 0.25f;
+                _activeTentacles.Add(tentacle);
+            }
+        }
+    }
+
+    private void DestroyEscapeTentacles()
+    {
+        foreach (var tentacle in _activeTentacles.ToList())
+        {
+            try { tentacle.Destroy(); }
+            catch { /* ignore */ }
+        }
+
+        _activeTentacles.Clear();
+    }
+
+    private BossBar CreateFloodCountdownBar()
+    {
+        return new BossBar
+        {
+            Title = "FACILITY FLOODING",
+            TitleColor = ServerColors.Aqua,
+            Subtitle = $"地表到達まで {Mathf.CeilToInt(SurfaceGroundReachElapsedSeconds)}秒",
+            MaxValue = FloodPhaseSeconds,
+            Value = FloodPhaseSeconds,
+            BarColor = ServerColors.Aqua,
+            Segments = 30,
+            ShowNumbers = false,
+            RefreshInterval = 0.25f,
+            BroadcastDuration = 2,
+            DisplayOrder = -10,
+        };
+    }
+
+    private void UpdateFloodCountdownBar(float elapsedSeconds, float remainingSeconds)
+    {
+        if (_floodCountdownBar == null)
+            return;
+
+        _floodCountdownBar.Value = Mathf.Clamp(remainingSeconds, 0f, FloodPhaseSeconds);
+        _floodCountdownBar.Subtitle = elapsedSeconds < SurfaceGroundReachElapsedSeconds
+            ? $"地表到達まで {Mathf.CeilToInt(SurfaceGroundReachElapsedSeconds - elapsedSeconds)}秒"
+            : $"完全水没まで {Mathf.CeilToInt(remainingSeconds)}秒";
+        _floodCountdownBar.BarColor = elapsedSeconds >= TentacleBreakElapsedSeconds
+            ? "#ff3333"
+            : ServerColors.Aqua;
+    }
+
+    private static void ApplyFloodProgress(
+        Primitive floodInDss,
+        Vector3 startScale,
+        Vector3 startPosition,
+        float bottomY,
+        float startTopY,
+        float elapsedSeconds)
+    {
+        float topY;
+        if (elapsedSeconds < SurfaceGroundReachElapsedSeconds)
+        {
+            float progress = Mathf.Clamp01(elapsedSeconds / SurfaceGroundReachElapsedSeconds);
+            topY = Mathf.LerpUnclamped(startTopY, SurfaceGroundTopY, AnimationApi.Evaluate(AnimationEase.SmootherStep, progress));
+        }
+        else
+        {
+            float progress = Mathf.Clamp01((elapsedSeconds - SurfaceGroundReachElapsedSeconds) / FinalFloodSurgeSeconds);
+            topY = Mathf.LerpUnclamped(SurfaceGroundTopY, SurfaceFloodTopY, AnimationApi.Evaluate(AnimationEase.EaseOutSine, progress));
+        }
+
+        float horizontalProgress = Mathf.Clamp01(elapsedSeconds / FloodPhaseSeconds);
+        float horizontalScale = Mathf.LerpUnclamped(startScale.x, FinalFloodHorizontalScale, AnimationApi.Evaluate(AnimationEase.SmootherStep, horizontalProgress));
+        float height = Mathf.Max(startScale.y, topY - bottomY);
+
+        floodInDss.Scale = new Vector3(horizontalScale, height, horizontalScale);
+        floodInDss.Position = new Vector3(startPosition.x, bottomY + height * 0.5f, startPosition.z);
+    }
+
+    private void EnsureFloodVisuals(FloodVolumeState volume)
+    {
+        while (_activeFloodSurfaces.Count < 2)
+        {
+            float rotationX = _activeFloodSurfaces.Count == 0 ? 90f : -90f;
+            var surface = Primitive.Create(
+                PrimitiveType.Quad,
+                volume.SurfacePosition,
+                new Vector3(rotationX, 0f, 0f),
+                new Vector3(volume.HorizontalScale, volume.HorizontalScale, 1f),
+                true,
+                FloodSurfaceColor);
+
+            surface.Collidable = false;
+            surface.MovementSmoothing = 60;
+            _activeFloodSurfaces.Add(surface);
+        }
+
+        while (_activeWaterParticles.Count < UnderwaterParticleCount)
+            _activeWaterParticles.Add(CreateWaterParticleState(volume));
+    }
+
+    private WaterParticleState CreateWaterParticleState(FloodVolumeState volume)
+    {
+        float angle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
+        float radius = Mathf.Sqrt(UnityEngine.Random.Range(0f, 1f));
+        float size = UnityEngine.Random.Range(0.14f, 0.38f);
+        var type = _activeWaterParticles.Count % 5 == 0
+            ? PrimitiveType.Capsule
+            : PrimitiveType.Sphere;
+        var color = new Color(
+            Mathf.Clamp01(FloodParticleColor.r + UnityEngine.Random.Range(-0.08f, 0.08f)),
+            Mathf.Clamp01(FloodParticleColor.g + UnityEngine.Random.Range(-0.04f, 0.0f)),
+            1f,
+            UnityEngine.Random.Range(0.34f, 0.62f));
+
+        Primitive particle = Primitive.Create(
+            type,
+            volume.Center,
+            Vector3.zero,
+            Vector3.one * size,
+            true,
+            color);
+
+        particle.Collidable = false;
+        particle.MovementSmoothing = 60;
+
+        return new WaterParticleState
+        {
+            Primitive = particle,
+            NormalizedHorizontalOffset = new Vector2(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius),
+            VerticalFactor = UnityEngine.Random.Range(0.1f, 0.9f),
+            DriftRadiusFactor = UnityEngine.Random.Range(0.015f, 0.055f),
+            OrbitSpeed = UnityEngine.Random.Range(0.12f, 0.55f),
+            BobSpeed = UnityEngine.Random.Range(0.6f, 1.6f),
+            Phase = UnityEngine.Random.Range(0f, Mathf.PI * 2f),
+            RotationSpeed = UnityEngine.Random.Range(18f, 80f),
+        };
+    }
+
+    private void UpdateFloodVisuals(FloodVolumeState volume, bool force = false)
+    {
+        EnsureFloodVisuals(volume);
+
+        if (force || Time.time >= _nextFloodVisualUpdateTime)
+        {
+            _nextFloodVisualUpdateTime = Time.time + FloodVisualUpdateInterval;
+            UpdateFloodSurfaces(volume);
+            UpdateWaterParticles(volume);
+        }
+    }
+
+    private void UpdateFloodSurfaces(FloodVolumeState volume)
+    {
+        for (int i = 0; i < _activeFloodSurfaces.Count; i++)
+        {
+            Primitive surface = _activeFloodSurfaces[i];
+            surface.Position = volume.SurfacePosition + Vector3.up * (i == 0 ? 0.03f : -0.03f);
+            surface.Scale = new Vector3(volume.HorizontalScale * 1.06f, volume.HorizontalScale * 1.06f, 1f);
+        }
+    }
+
+    private void UpdateWaterParticles(FloodVolumeState volume)
+    {
+        float visualSeconds = Time.time;
+        float radius = volume.HorizontalScale * 0.48f;
+        float usableHeight = Mathf.Max(1f, volume.Height - 1.6f);
+
+        foreach (WaterParticleState state in _activeWaterParticles)
+        {
+            Primitive particle = state.Primitive;
+            float driftRadius = Mathf.Max(0.5f, volume.HorizontalScale * state.DriftRadiusFactor);
+            float orbit = visualSeconds * state.OrbitSpeed + state.Phase;
+            float x = state.NormalizedHorizontalOffset.x * radius + Mathf.Cos(orbit) * driftRadius;
+            float z = state.NormalizedHorizontalOffset.y * radius + Mathf.Sin(orbit * 0.73f) * driftRadius;
+            float y = volume.BottomY + 0.8f + state.VerticalFactor * usableHeight;
+            y += Mathf.Sin(visualSeconds * state.BobSpeed + state.Phase) * Mathf.Min(1.4f, usableHeight * 0.22f);
+            y = Mathf.Clamp(y, volume.BottomY + 0.45f, volume.TopY - 0.65f);
+
+            particle.Position = new Vector3(volume.Center.x + x, y, volume.Center.z + z);
+            particle.Rotation = Quaternion.Euler(
+                visualSeconds * state.RotationSpeed,
+                visualSeconds * (state.RotationSpeed * 0.7f) + state.Phase * Mathf.Rad2Deg,
+                visualSeconds * (state.RotationSpeed * 0.35f));
+        }
+    }
+
+    private void UpdateFloodRoomColors(FloodVolumeState volume, bool force)
+    {
+        if (!force && Time.time < _nextRoomTintUpdateTime)
+            return;
+
+        _nextRoomTintUpdateTime = Time.time + RoomTintUpdateInterval;
+
+        foreach (Room room in Room.List)
+        {
+            if (room == null || room.Zone is ZoneType.Unspecified or ZoneType.Pocket)
+                continue;
+
+            float horizontalDistance = Vector2.Distance(
+                new Vector2(volume.Center.x, volume.Center.z),
+                new Vector2(room.Position.x, room.Position.z));
+            float horizontalDepth = volume.HorizontalScale * 0.5f - horizontalDistance;
+            float reachStrength = Mathf.Clamp01((horizontalDepth + RoomTintHorizontalLead) / RoomTintHorizontalFullDepth);
+            if (reachStrength <= 0f)
+                continue;
+
+            float depth = volume.TopY - room.Position.y;
+            float tintStrength = Mathf.Clamp01((depth + RoomTintLeadHeight) / RoomTintFullDepth) * reachStrength;
+            if (tintStrength <= 0f)
+                continue;
+
+            if (!_originalFloodRoomColors.ContainsKey(room))
+                _originalFloodRoomColors[room] = room.Color;
+
+            float deepStrength = Mathf.Clamp01(depth / RoomTintFullDepth);
+            Color targetWaterColor = Color.Lerp(FloodRoomShallowColor, FloodRoomDeepColor, deepStrength);
+            Color originalColor = _originalFloodRoomColors[room];
+            Color roomColor = Color.Lerp(originalColor, targetWaterColor, tintStrength);
+            roomColor.a = 1f;
+
+            room.AreLightsOff = false;
+            room.Color = roomColor;
+        }
+    }
+
+    private void HandleFacilityStabilized()
+    {
+        CleanupActiveState(destroyFlood: true);
+        Exiled.API.Features.Cassie.MessageTranslated("Attention, All personnel. Were Stabilized Facility Successfully. Return Normal Decision.",
+            "全職員に通達。施設の安定化に成功しました。<split>通常通りのプロトコルに復帰してください");
+    }
+
+    private bool ShouldCancelFloodScene(bool cancelIfOutdated)
+    {
+        return (cancelIfOutdated && CancelIfOutdated()) || Round.IsLobby || Round.IsEnded;
+    }
+
+    private void CleanupActiveState(bool destroyFlood)
+    {
+        _floodCountdownBar?.Hide();
+        _floodCountdownBar = null;
+        StopFloodSong();
+        DestroyEscapeTentacles();
+        DestroyFloodVisuals();
+        RestoreFloodRoomColors();
+
+        if (!destroyFlood || _activeFloodInDss == null)
+            return;
+
+        try { _activeFloodInDss.Destroy(); }
+        catch { /* ignore */ }
+        _activeFloodInDss = null;
+    }
+
+    private void DestroyFloodVisuals()
+    {
+        foreach (Primitive surface in _activeFloodSurfaces.ToList())
+            SafeDestroyPrimitive(surface);
+
+        _activeFloodSurfaces.Clear();
+
+        foreach (WaterParticleState particleState in _activeWaterParticles.ToList())
+            SafeDestroyPrimitive(particleState.Primitive);
+
+        _activeWaterParticles.Clear();
+    }
+
+    private void RestoreFloodRoomColors()
+    {
+        foreach (KeyValuePair<Room, Color> entry in _originalFloodRoomColors.ToList())
+        {
+            Room room = entry.Key;
+            if (room == null)
+                continue;
+
+            try { room.Color = entry.Value; }
+            catch { /* ignore */ }
+        }
+
+        _originalFloodRoomColors.Clear();
+    }
+
+    private static void SafeDestroyPrimitive(Primitive? primitive)
+    {
+        if (primitive == null)
+            return;
+
+        try { primitive.Destroy(); }
+        catch { /* ignore */ }
+    }
+
+    private void StopFloodSong()
+    {
+        if (_floodSongPlayback is { } playback)
+        {
+            try { playback.Stop(); }
+            catch { /* ignore */ }
+        }
+
+        _floodSongPlayback = null;
+    }
+
+    private static bool HasLivingWaterWarrior()
+    {
+        return Player.List.Any(player => player != null && player.IsAlive && IsWaterWarrior(player));
+    }
+
+    private static bool IsWaterWarrior(Player player)
+    {
+        return player.GetCustomRole() is CRoleTypeId.WaterWarrior;
+    }
+
+    private readonly struct FloodVolumeState
+    {
+        public FloodVolumeState(Vector3 center, Vector3 scale)
+        {
+            Center = center;
+            Height = scale.y;
+            BottomY = center.y - Height * 0.5f;
+            TopY = center.y + Height * 0.5f;
+            HorizontalScale = Mathf.Max(scale.x, scale.z);
+            SurfacePosition = new Vector3(center.x, TopY, center.z);
+        }
+
+        public Vector3 Center { get; }
+        public float Height { get; }
+        public float BottomY { get; }
+        public float TopY { get; }
+        public float HorizontalScale { get; }
+        public Vector3 SurfacePosition { get; }
+
+        public static FloodVolumeState FromPrimitive(Primitive primitive)
+        {
+            return new FloodVolumeState(primitive.Position, primitive.Scale);
+        }
+    }
+
+    private sealed class WaterParticleState
+    {
+        public Primitive Primitive { get; set; } = null!;
+        public Vector2 NormalizedHorizontalOffset { get; set; }
+        public float VerticalFactor { get; set; }
+        public float DriftRadiusFactor { get; set; }
+        public float OrbitSpeed { get; set; }
+        public float BobSpeed { get; set; }
+        public float Phase { get; set; }
+        public float RotationSpeed { get; set; }
     }
 }

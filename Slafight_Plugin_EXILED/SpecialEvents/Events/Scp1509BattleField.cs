@@ -3,7 +3,6 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
 using Exiled.API.Features.Pickups;
-using LightContainmentZoneDecontamination;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -44,10 +43,7 @@ public class Scp1509BattleFieldEvent : SpecialEvent
     // ===== メイン処理 =====
     private void RunBattleField()
     {
-        // 除染停止
-        DecontaminationController.Singleton.DecontaminationOverride =
-            DecontaminationController.DecontaminationStatus.Disabled;
-        DecontaminationController.DeconBroadcastDeconMessage = "除染は取り消されました";
+        RoundHazardController.DisableLightDecontamination();
 
         if (CancelIfOutdated())
             return;

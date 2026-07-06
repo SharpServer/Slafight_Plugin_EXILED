@@ -5,7 +5,6 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
 using Exiled.Events.EventArgs.Player;
-using LightContainmentZoneDecontamination;
 using MEC;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
@@ -14,7 +13,6 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -29,8 +27,6 @@ public class CandyWarriorsAttackEvent : SpecialEvent
     // ===== 内部状態 =====
     private bool _teslaDisabled = false;
     private string _warrierColor = "#ffffff";
-
-    private EventHandler EventHandler => EventHandler.Instance;
     // ===== 実行エントリポイント =====
     public override bool IsReadyToExecute()
     {
@@ -59,17 +55,11 @@ public class CandyWarriorsAttackEvent : SpecialEvent
     // ===== メイン処理 =====
     private IEnumerator<float> RaidCoroutine()
     {
-        var evHandler = EventHandler;
+        RoundHazardController.SetAlphaWarheadDisarmLocked(true);
+        RoundHazardController.SetDeadmanSwitchBlocked(true);
+        RoundHazardController.DisableLightDecontamination();
 
-        Warhead.IsLocked = true;
-        evHandler.DeadmanDisable = true;
-
-        DecontaminationController.Singleton.DecontaminationOverride =
-            DecontaminationController.DecontaminationStatus.Disabled;
-        DecontaminationController.Singleton.TimeOffset = int.MinValue;
-        DecontaminationController.DeconBroadcastDeconMessage = "除染は取り消されました";
-
-        yield return Timing.WaitForSeconds(1f);
+        yield return Timing.WaitForSeconds(2f);
         if (CancelIfOutdated()) yield break;
 
         // カラー決定

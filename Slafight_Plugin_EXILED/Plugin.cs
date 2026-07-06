@@ -71,7 +71,6 @@ public class Plugin : Plugin<Config>
         CandyChanges.Register();
         MapGuardHandler.Register();
         TerminalRift.Register();
-        VentControl.Register();
         FacilityLightHandler.Register();
         // GateAEnding.Register(); SCRAPPED
         WarheadBoomEffectHandler.Register();
@@ -143,7 +142,6 @@ public class Plugin : Plugin<Config>
         CandyChanges.Unregister();
         MapGuardHandler.Unregister();
         TerminalRift.Unregister();
-        VentControl.Unregister();
         FacilityLightHandler.Unregister();
         // GateAEnding.Unregister(); SCRAPPED
         WarheadBoomEffectHandler.Unregister();

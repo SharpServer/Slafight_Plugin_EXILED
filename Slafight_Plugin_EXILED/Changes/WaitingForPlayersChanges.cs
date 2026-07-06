@@ -22,6 +22,7 @@ namespace Slafight_Plugin_EXILED.Changes;
 
 public class WaitingForPlayersChanges : IBootstrapHandler
 {
+    private const string IntercomOwner = nameof(WaitingForPlayersChanges);
     private const string WaitingRoomSchematicName = "OldMenuRoom";
     private const string PlayerCountBlockName = "PlayerCountText";
     private const string NextEventBlockName = "NextEventText";
@@ -142,7 +143,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         TutorialWaitingPlayers.Add(ev.Player);
 
         Player joined = ev.Player;
-        Intercom.TrySetOverride(joined, true);
+        IntercomApi.SetOverride(joined, true, IntercomOwner);
         Timing.CallDelayed(WaitingMusicStartDelay, () => StartWaitingMusic(joined));
         Timing.CallDelayed(1.5f, () =>
         {
@@ -269,7 +270,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
                 if (player is null || !player.IsNotHost() || player.IsHidTurretNpc()) continue;
                 player.IsNoclipEnabled = false;
                 player.IsGodModeEnabled = false;
-                Intercom.TrySetOverride(player, false);
+                IntercomApi.SetOverride(player, false, IntercomOwner);
             }
         });
     }

@@ -21,7 +21,8 @@ public class InitiativeWolf : CRole
     protected override string UniqueRoleKey { get; set; } = "InitiativeWolf";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.InitiativeWolf;
     protected override CTeam Team { get; set; } = CTeam.Initiative;
-    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfPrivate;
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp049;
+    protected override RoleSpawnFlags? SpawnBaseRoleFlags => RoleSpawnFlags.AssignInventory;
     public override bool CanUseProximityChat => true;
     protected override IReadOnlyList<CRoleEffect> SpawnEffects => 
     [
@@ -40,8 +41,7 @@ public class InitiativeWolf : CRole
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        player.Role.Set(RoleTypeId.Scp049, RoleSpawnFlags.AssignInventory);
-        AssignIdentity(player);
+        TrySetPlayerPosition(player, PositionProvider.GetNtfSpawnPosition(), nameof(InitiativeWolf));
 
         player.MaxHealth = 110f;
         player.Health = player.MaxHealth;

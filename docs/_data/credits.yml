@@ -31,12 +31,34 @@
   title: Delta Warhead Remade
   category: イベントBGM
   author: I Dunno
-  license: 要確認
+  license: 
   usage: DELTA WARHEAD関連BGM。
   links:
     - https://www.youtube.com/watch?v=lspAXs4F4sU
   notes:
     - 元曲はJacek "Fragik" RogalによるThe Final Flash of ExistenceとAjouraによるThe SCP Foundation Main Theme。
+
+- id: operation-blackout-theme
+  title: Operation Blackout使用曲
+  category: イベントBGM
+  author: I Dunno
+  license: 
+  usage: "OPERATION: BLACKOUT関連BGM。"
+  links:
+    - https://www.youtube.com/watch?v=p6WITY_JE4Y
+  notes:
+    - Avery Alexanderの曲とJacek "Fragik" Rogalの曲を含むリミックス的作品。
+
+- id: water-warriors-theme
+  title: Water Warriors Raid使用曲
+  category: イベントBGM
+  author: I Dunno
+  license:
+  usage: "Water Warriors Raid関連BGM。"
+  links:
+    - https://www.youtube.com/watch?v=GvIcbYvaky8
+  notes:
+    - Crinklesの曲とJacek "Fragik" Rogalの曲を含むリミックス的作品。
 
 - id: let-there-be-chaos
   title: Let There Be Chaos - Chaos Insurgency Raid Theme
@@ -46,17 +68,6 @@
   usage: CHAOS INSURGENCY RAID / SNOW WARRIERS RAID関連BGM。
   links:
     - https://www.youtube.com/watch?v=s5JdvfpuuZ0
-
-- id: operation-blackout-theme
-  title: Operation Blackout使用曲
-  category: イベントBGM
-  author: I Dunno
-  license: 要確認
-  usage: "OPERATION: BLACKOUT関連BGM。"
-  links:
-    - https://www.youtube.com/watch?v=p6WITY_JE4Y
-  notes:
-    - Avery Alexanderの曲とJacek "Fragik" Rogalの曲を含むリミックス的作品。
 
 - id: blackout-source-avery
   title: Avery Alexander source track

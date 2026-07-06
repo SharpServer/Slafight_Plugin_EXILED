@@ -9,7 +9,6 @@ using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.MainHandlers;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 using Random = UnityEngine.Random;
 using Slafight_Plugin_EXILED.API.Interface;
 
@@ -355,9 +354,7 @@ public class SpecialEventsHandler : IBootstrapHandler, IDisposable
 
     private void ResetRoundScopedState()
     {
-        EventHandler.Instance.DeadmanDisable = false;
-        EventHandler.Instance.DeconCancellFlag = false;
-        Warhead.IsLocked = false;
+        RoundHazardController.ResetRoundState();
         EscapeHandler.ClearEscapeOverrides();
         EvacuationRoundEndState.Reset();
         SpawnSystem.Disable = false;

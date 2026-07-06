@@ -5,6 +5,7 @@ using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
+using UnityEngine;
 using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
@@ -75,7 +76,7 @@ public class Document : ObjectPrefab
 
     protected override void OnSetup()
     {
-        AddInteractable(duration: _interactionDuration);
+        AddInteractable(duration: _interactionDuration, scale: Vector3.one * 0.75f);
     }
 
     protected override void OnToySearchedNearby(PlayerSearchedToyEventArgs? ev)

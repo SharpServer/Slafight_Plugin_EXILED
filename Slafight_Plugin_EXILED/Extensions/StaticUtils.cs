@@ -43,7 +43,7 @@ public static class StaticUtils
     /// </summary>
     public static List<Player> SelectRandomPlayersByRatio(CTeam excludeTeam, float ratio, bool elseMode = false)
     {
-        var allPlayers = Player.List.ToList();
+        var allPlayers = Player.List.Where(p => p.IsSafePlayer()).ToList();
         if (allPlayers.Count == 0) return [];
 
         var candidates = CandidatePlayersByCTeam(excludeTeam, elseMode);

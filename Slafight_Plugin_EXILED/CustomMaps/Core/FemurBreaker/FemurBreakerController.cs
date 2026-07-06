@@ -14,6 +14,7 @@ namespace Slafight_Plugin_EXILED.CustomMaps.Core.FemurBreaker;
 
 internal sealed class FemurBreakerController
 {
+    private const string IntercomOwner = nameof(FemurBreakerController);
     private const float ExecutionDelaySeconds = 28f;
 
     private readonly float _joinRadiusSq;
@@ -215,7 +216,7 @@ internal sealed class FemurBreakerController
         if (player?.ReferenceHub == null)
             return;
 
-        if (Intercom.TrySetOverride(player, true))
+        if (IntercomApi.SetOverride(player, true, IntercomOwner))
             _intercomOverridePlayerIds.Add(player.Id);
     }
 
@@ -226,7 +227,7 @@ internal sealed class FemurBreakerController
 
         var player = Player.List.FirstOrDefault(p => p?.Id == playerId);
         if (player?.ReferenceHub != null)
-            Intercom.TrySetOverride(player, false);
+            IntercomApi.SetOverride(player, false, IntercomOwner);
     }
 
     private void DisableAllIntercomOverrides()
@@ -283,4 +284,3 @@ internal sealed class FemurBreakerController
         _scheduledHandles.Clear();
     }
 }
-

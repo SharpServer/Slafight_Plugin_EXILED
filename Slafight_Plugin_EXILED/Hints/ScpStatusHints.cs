@@ -193,7 +193,7 @@ public class ScpStatusHints : IBootstrapHandler
     {
         return player.GetTeam() == CTeam.SCPs &&
                player.GetCustomRole() is not CRoleTypeId.Scp3005 &&
-               !CRole.IsTeamNpc(player);
+               !CRole.IsTeamNpc(player) && player.IsSafePlayer();
     }
 
     private static bool IsScpStatusRecipient(Player player)
@@ -205,7 +205,7 @@ public class ScpStatusHints : IBootstrapHandler
     {
         return (player.GetTeam() == CTeam.Fifthists ||
                 player.GetCustomRole() == CRoleTypeId.Scp3005) &&
-               !CRole.IsTeamNpc(player);
+               !CRole.IsTeamNpc(player) && player.IsSafePlayer();
     }
 
     private static void OnRoundStarted()
@@ -781,7 +781,7 @@ public class ScpStatusHints : IBootstrapHandler
     {
         try
         {
-            return player != null && player.IsConnected && player.ReferenceHub != null;
+            return player != null && player.IsConnected && player.ReferenceHub != null && player.IsSafePlayer();
         }
         catch
         {

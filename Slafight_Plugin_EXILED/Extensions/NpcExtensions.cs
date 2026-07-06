@@ -22,18 +22,24 @@ public static class NpcExtensions
         Log.Debug($"[Npc] Hidden from client player list ({source}): {npc.Nickname} Id={npc.Id} NetId={hub.netId} ServerMode={auth.InstanceMode}");
     }
 
+    public static bool IsSafePlayer(this Player? player)
+    {
+        if (player is null) return false;
+        return player.IsNotHost() && !player.IsHidTurretNpc();
+    }
+
     /// <summary>
     /// PlayerがIsHost級ではないかどうかを判定します。
     /// </summary>
     /// <param name="player"></param>
     /// <returns>Player, ReferenceHubのIsHost及びその他の特殊NPCでないかどうかを返します。</returns>
-    public static bool IsNotHost(this Player player)
+    public static bool IsNotHost(this Player? player)
     {
         if (player is null) return false;
         return !player.IsHost && !player.ReferenceHub.IsHost && !player.IsHidTurretNpc();
     }
 
-    public static bool IsHidTurretNpc(this Player player)
+    public static bool IsHidTurretNpc(this Player? player)
     {
         if (player is null) return false;
         return HIDTurretObject.PublicTurretNpcIds.Contains(player.Id);

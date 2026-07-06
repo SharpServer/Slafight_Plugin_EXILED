@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -32,8 +31,6 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
 
     // ===== 内部状態 =====
     private bool _teslaDisabled = false;
-
-    private EventHandler EventHandler => EventHandler.Instance;
     // ===== 実行エントリポイント =====
     public override bool IsReadyToExecute()
     {
@@ -64,13 +61,11 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
     // ===== メイン処理 =====
     private IEnumerator<float> RaidCoroutine()
     {
-        var evHandler = EventHandler;
-
         // Warhead ロックなど
-        Warhead.IsLocked = true;
-        evHandler.DeadmanDisable = true;
+        RoundHazardController.SetAlphaWarheadDisarmLocked(true);
+        RoundHazardController.SetDeadmanSwitchBlocked(true);
         
-        yield return Timing.WaitForSeconds(1f);
+        yield return Timing.WaitForSeconds(2f);
         if (CancelIfOutdated()) yield break;
 
         Respawn.SummonChaosInsurgencyVan();

@@ -9,7 +9,6 @@ using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
@@ -46,8 +45,8 @@ public static class OmegaWarhead
         Log.Debug("[OMEGA WARHEAD]Called Start Protocol.");
         if (!CanBeStart()) return false;
         if (Warhead.IsInProgress) Warhead.Stop();
-        EventHandler.Instance.DeadmanDisable = true;
-        Warhead.IsLocked = true;
+        RoundHazardController.SetDeadmanSwitchBlocked(true);
+        RoundHazardController.SetAlphaWarheadDisarmLocked(true);
 
         if (_warheadCoroutine.IsRunning)
             Timing.KillCoroutines(_warheadCoroutine);

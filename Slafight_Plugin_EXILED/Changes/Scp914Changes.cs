@@ -1,5 +1,6 @@
 using System;
 using Exiled.API.Enums;
+using Exiled.API.Features;
 using Exiled.API.Features.Pickups;
 using Exiled.Events.EventArgs.Scp914;
 using MEC;
@@ -744,6 +745,19 @@ public static class Scp914Changes
                         grenade.Explode();
                 }
             }),
+        });
+        
+        Scp914Registry.RegisterCItem<AquaBlaster>(new()
+        {
+            Rough = Scp914Rule.Destroy,
+            Coarse = Scp914Rule.Destroy,
+            OneToOne = Scp914Rule.ToVanilla(ItemType.GunE11SR),
+            Fine = Scp914Rule.ToCItem<HydroCannon>(),
+            VeryFine = Scp914Rule.Custom(ctx =>
+            {
+                FullyRemoveItem(ctx);
+                Map.ExplodeEffect(ctx.OutputPosition, ProjectileType.Flashbang);
+            })
         });
     }
 

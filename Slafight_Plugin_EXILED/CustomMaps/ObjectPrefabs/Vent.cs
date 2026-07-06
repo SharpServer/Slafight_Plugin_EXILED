@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using AdminToys;
 using Exiled.API.Enums;
 using Exiled.API.Features;
@@ -7,11 +8,15 @@ using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Features.Wrappers;
 using MEC;
 using PlayerRoles;
+using ProjectMER.Features;
 using ProjectMER.Features.Objects;
+using ProjectMER.Features.Serializable;
+using ProjectMER.Features.Serializable.Schematics;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Object = UnityEngine.Object;
 using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
@@ -19,128 +24,32 @@ namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 public class Vent : ObjectPrefab
 {
     protected override string SchematicName => "Vent";
-
-    private Dictionary<int, byte> _touchedDictionary = [];
-    private Dictionary<int, double> _lastTouchTime = [];   // LocalTime 用
-    private const double TouchTimeout = 30d;               // 30秒でリセット
+    public string ExitPointTag { get; set; }
 
     protected override void OnSetup()
     {
-        AddInteractable(duration: 3f);
+        AddInteractable(duration: 1.5f);
     }
-
-    protected override void OnToySearchingNearby(PlayerSearchingToyEventArgs ev)
-    {
-        var player = Player.Get(ev.Player);
-        if (player is null)
-            return;
-
-        var now = Timing.LocalTime;
-
-        // タイムアウトチェック
-        if (_lastTouchTime.TryGetValue(player.Id, out var last) &&
-            now - last > TouchTimeout)
-        {
-            _touchedDictionary.Remove(player.Id);
-            _lastTouchTime.Remove(player.Id);
-        }
-
-        _lastTouchTime[player.Id] = now;
-
-        var roleInfo = player.GetRoleInfo();
-        if (player.GetTeam() == CTeam.ChaosInsurgency ||
-            roleInfo is { Vanilla: RoleTypeId.Scp173, Custom: CRoleTypeId.Scp173 or CRoleTypeId.None })
-            return;
-
-        ev.IsAllowed = false;
-
-        var touch = _touchedDictionary.GetValueOrDefault(player.Id, (byte)0);
-
-        switch (touch)
-        {
-            case 0:
-                player.ShowHint("<size=24>あなたのロールでは使用することが出来ません。</size>");
-                touch = 1;
-                break;
-            case 1:
-                player.ShowHint("<size=24>あなたのロールでは使用することが出来ません...</size>");
-                touch = 2;
-                break;
-            case 2:
-                player.ShowHint("<size=24>あなたのロールでは使用することが出来ません...!</size>");
-                touch = 3;
-                break;
-            case 3:
-                player.ShowHint("<size=24>あなたのロールでは使用することが出来ません...!!!!!</size>");
-                touch = 4;
-                break;
-            case 4:
-                player.ShowHint("<size=24>だから使用することが出来ないんだって!!!!!</size>");
-                touch = 5;
-                break;
-            case 5:
-                player.ShowHint("<size=24>諦めてくれって!!!!!</size>");
-                touch = 6;
-                break;
-            case 6:
-                player.ShowHint("<size=24>これ以上触ったらNullReferenceExceptionを起こしますよ！？</size>");
-                touch = 7;
-                break;
-            default: // 7以上
-                var innerEx = new UnauthorizedAccessException(
-                    $"VentAccessViolation Details:\n" +
-                    $"Player ID: {player.Id}\n" +
-                    $"Team: {player.GetTeam()}\n" +
-                    $"Role Vanilla: {roleInfo.Vanilla}\n" +
-                    $"Role Custom: {roleInfo.Custom}\n\n" +
-                    "Required Access:\n" +
-                    "- CTeam.ChaosInsurgency\n" +
-                    "OR\n" +
-                    "- RoleTypeId.Scp173 + CRoleTypeId.Scp173/None"
-                );
-
-                var nre = new NullReferenceException("VentAccessViolation", innerEx);
-                player.ShowHint($"<size=16><color=#FF4444>{nre}</color></size>", 7f);
-                touch = 7; // これ以上は増やさない
-                break;
-        }
-
-        _touchedDictionary[player.Id] = touch;
-    }
-
     protected override void OnToySearchedNearby(PlayerSearchedToyEventArgs ev)
     {
         var player = Player.Get(ev.Player);
         if (Schematic == null)
             return;
-
+        
+        if (string.IsNullOrEmpty(ExitPointTag)) return;
+        CustomTriggerPoint marker = null;
+        marker = CustomTriggerPoint.GetAll().FirstOrDefault(x => x.Tag == ExitPointTag);
+        if (marker is null) return;
+        
         SpeakerApi.Play("ventsound.ogg", "Vent", Schematic.Position, true, null, false, 10f, 0f);
 
-        var currentRoomType = player.CurrentRoom?.Type ?? RoomType.Unknown;
-
-        if (!GlobalVentManager.TryTriggerLoose(player, currentRoomType, out var point))
-        {
-            Log.Warn($"[Vent] No VentPoint (loose) from {currentRoomType} for {player.Nickname}");
-            return;
-        }
-
-        Vector3 exitSoundPos;
-        if (point.ExitWorldPosition != Vector3.zero)
-            exitSoundPos = point.ExitWorldPosition;
-        else if (point.ExitRoomType.HasValue)
-            exitSoundPos = StaticUtils
-                .GetWorldFromRoomLocal(point.ExitRoomType.Value, point.ExitLocalPosition, Vector3.zero)
-                .worldPosition;
-        else
-            exitSoundPos = player.Position;
+        player.Position = marker.Position;
+        player.Rotation = marker.Rotation;
 
         Timing.CallDelayed(0.1f, () =>
-            SpeakerApi.Play("ventsound.ogg", "Vent", exitSoundPos, true, null, false, 10f, 0f));
-    }
-
-    protected override void OnRoundStarted()
-    {
-        _touchedDictionary = [];
-        _lastTouchTime = [];
+        {
+            if (marker is null) return;
+            SpeakerApi.Play("ventsound.ogg", "Vent", marker.Position, true, null, false, 10f, 0f);
+        });
     }
 }

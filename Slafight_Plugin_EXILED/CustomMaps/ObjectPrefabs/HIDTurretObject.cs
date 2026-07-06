@@ -3,6 +3,7 @@ using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
+using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp096;
 using InventorySystem.Items.MicroHID.Modules;
 using MEC;
@@ -20,6 +21,7 @@ namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 public class HIDTurretObject : ObjectPrefab
 {
     private static readonly HashSet<int> TurretNpcIds = [];
+    private static readonly Dictionary<int, RoleTypeId> PendingTurretRoleChanges = new();
     private static bool _eventsRegistered;
     private static CoroutineHandle _powerTimeoutHandle;
     private static float _powerEnabledUntil;
@@ -34,6 +36,7 @@ public class HIDTurretObject : ObjectPrefab
     private const float NpcCountRetentionMargin = 0.5f;
     private const float IdleAimDistance = 25f;
     private const float ReserveNpcDepth = 100f;
+    private const float PendingRoleChangeTimeout = Npc.SpawnSetRoleDelay + 1f;
 
     public static HashSet<int> PublicTurretNpcIds => TurretNpcIds;
 
@@ -79,6 +82,7 @@ public class HIDTurretObject : ObjectPrefab
         if (_eventsRegistered)
             return;
 
+        Exiled.Events.Handlers.Player.ChangingRole += OnChangingRole;
         Exiled.Events.Handlers.Scp096.AddingTarget += OnScp096AddingTarget;
         _eventsRegistered = true;
     }
@@ -88,9 +92,11 @@ public class HIDTurretObject : ObjectPrefab
         if (!_eventsRegistered)
             return;
 
+        Exiled.Events.Handlers.Player.ChangingRole -= OnChangingRole;
         Exiled.Events.Handlers.Scp096.AddingTarget -= OnScp096AddingTarget;
         ResetPowerState();
         TurretNpcIds.Clear();
+        PendingTurretRoleChanges.Clear();
         _eventsRegistered = false;
     }
 
@@ -165,6 +171,7 @@ public class HIDTurretObject : ObjectPrefab
             SetNpcFiring(state, false);
             int npcId = state.Npc.Id;
             state.Npc.Destroy();
+            PendingTurretRoleChanges.Remove(npcId);
             Timing.CallDelayed(NpcEffectCleanupState.DestroyDelay + 0.1f, () => TurretNpcIds.Remove(npcId));
         }
 
@@ -472,6 +479,7 @@ public class HIDTurretObject : ObjectPrefab
             int capturedIndex = index;
             _npcs.Add(state);
             TurretNpcIds.Add(npc.Id);
+            AllowNextTurretRoleChange(npc.Id, RoleTypeId.Tutorial);
             npc.HideNpcFromClientPlayerList($"HIDTurret:{index}:spawn");
             ScheduleDelayed(Npc.SpawnSetRoleDelay + 0.1f, () =>
             {
@@ -488,6 +496,43 @@ public class HIDTurretObject : ObjectPrefab
 
         if (TurretNpcIds.Contains(ev.Target.Id))
             ev.IsAllowed = false;
+    }
+
+    private static void OnChangingRole(ChangingRoleEventArgs ev)
+    {
+        if (ev?.Player == null)
+            return;
+
+        if (!TurretNpcIds.Contains(ev.Player.Id))
+            return;
+
+        if (TryConsumeTurretRoleChange(ev.Player.Id, ev.NewRole))
+            return;
+
+        ev.IsAllowed = false;
+    }
+
+    private static void AllowNextTurretRoleChange(int npcId, RoleTypeId role)
+    {
+        PendingTurretRoleChanges[npcId] = role;
+
+        Timing.CallDelayed(PendingRoleChangeTimeout, () =>
+        {
+            if (PendingTurretRoleChanges.TryGetValue(npcId, out RoleTypeId pendingRole) && pendingRole == role)
+                PendingTurretRoleChanges.Remove(npcId);
+        });
+    }
+
+    private static bool TryConsumeTurretRoleChange(int npcId, RoleTypeId requestedRole)
+    {
+        if (!PendingTurretRoleChanges.TryGetValue(npcId, out RoleTypeId pendingRole))
+            return false;
+
+        if (pendingRole != requestedRole)
+            return false;
+
+        PendingTurretRoleChanges.Remove(npcId);
+        return true;
     }
 
     private void ParkReserveNpcs(Vector3 centerPosition)

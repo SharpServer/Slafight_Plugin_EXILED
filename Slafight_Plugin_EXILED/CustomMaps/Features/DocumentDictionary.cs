@@ -136,6 +136,27 @@ public static class DocumentDictionary
                        "<size=30><b>0 7 2 7</b></size>\n\n\n\n<size=8><color=black><b>BE CURIOUS</b></color></size>";
             case DocumentType.Kai:
                 return "<size=23>Kai was fucked up by Tentacle :trollface:</size>";
+            case DocumentType.OperationDoc:
+                return "<size=22>■■/■■\n" +
+                       "作戦概要:\n" +
+                       "本作戦は、Site-02のアイテムSCPオブジェクトの回収と、作戦の支障になる場合は、破壊を許可する。\n" +
+                       "外部部隊は、潜入部隊と合流せよ。\n\n" +
+                       "この文書は呼んだ後に必ず焼却し、廃棄せよ。\n\n" +
+                       "カオス・インサージェンシー ガンマ地域司令部構成員</size>";
+            case DocumentType.SpecDoc:
+                return "<size=22>■■/■■\n" +
+                       "特別作戦指揮者:シャン\n" +
+                       "[実施対象:MF361小隊]\n" +
+                       "[作戦概要]\n" +
+                       "MF361小隊は、実働部隊、アルマ連隊の部隊に加わり、以下の作戦を実施せよ。\n" +
+                       "作戦実施者に生命の危険が発生した場合、その他作戦隊員を放棄してよし。\n\n" +
+                       "[最優先事項]\n" +
+                       "- SCP-1509,1853確保 -\n" +
+                       "- 要注意人物の排除 -\n" +
+                       "- C.A.S.S.I.Eの指令上書き -\n\n" +
+                       "[特記事項]\n" +
+                       "C.A.S.S.I.Eに上書きする特別指令361の解除は、シャン小隊長デバイスのみ利用可能。\n" +
+                       "その他全て考慮する必要なし。</size>";
             default:
                 throw new ArgumentOutOfRangeException(nameof(type), type, null);
         }
@@ -160,5 +181,7 @@ public enum DocumentType
     AprilWtf,
     Overbeyond,
     AboutSQ,
-    Kai
+    Kai,
+    OperationDoc,
+    SpecDoc,
 }

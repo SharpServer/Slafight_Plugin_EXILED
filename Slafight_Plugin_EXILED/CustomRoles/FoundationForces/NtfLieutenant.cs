@@ -28,6 +28,7 @@ public class NtfLieutenant : CRole
     ];
     protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
+	    [AmmoType.Nato556] = 120,
         [AmmoType.Nato9] = 130,
     };
     protected override string SpawnCustomInfo => "Nine-tailed Fox Lieutenant";

@@ -18,7 +18,8 @@ public class Sculpture : CRole
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.Sculpture;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "Sculpture";
-    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfPrivate;
+    protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp173;
+    protected override RoleSpawnFlags? SpawnBaseRoleFlags => RoleSpawnFlags.AssignInventory;
     protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
     [
         new(EffectType.Slowness, 20)
@@ -40,7 +41,7 @@ public class Sculpture : CRole
     
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
-        player.Role.Set(RoleTypeId.Scp173, RoleSpawnFlags.AssignInventory);
+        TrySetPlayerPosition(player, PositionProvider.GetNtfSpawnPosition(), nameof(Sculpture));
         player.MaxHealth = 500f;
         player.Health = player.MaxHealth;
         player.MaxHumeShield = 300f;

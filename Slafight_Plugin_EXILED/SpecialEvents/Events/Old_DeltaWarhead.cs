@@ -6,7 +6,6 @@ using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features; // SpecialEvent 基底
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -25,8 +24,6 @@ public class DeltaWarheadEvent : SpecialEvent
         return false;
     }
 
-    // ===== ショートカット =====
-    private EventHandler EventHandler => EventHandler.Instance;
     // ===== 実行本体 =====
     protected override void OnExecute(int eventPid)
     {
@@ -34,9 +31,9 @@ public class DeltaWarheadEvent : SpecialEvent
             return;
 
         // Warhead 関連フラグ
-        Warhead.IsLocked = true;
-        EventHandler.DeadmanDisable = true;
-        // EventHandler.DeconCancellFlag = true; // 使うならここで
+        RoundHazardController.SetAlphaWarheadDisarmLocked(true);
+        RoundHazardController.SetDeadmanSwitchBlocked(true);
+        // RoundHazardController.DisableLightDecontamination(); // 使うならここで
 
         if (CancelIfOutdated())
             return;

@@ -202,6 +202,8 @@
         <Compile Include="API\Features\EffectedInfoTextProvider.cs" />
         <Compile Include="API\Features\EffectFakeSyncProvider.cs" />
         <Compile Include="API\Features\EventSubscriptionScope.cs" />
+        <Compile Include="API\Features\IntercomApi.cs" />
+        <Compile Include="API\Features\AnimationApi.cs" />
         <Compile Include="API\Features\FilmmakerAnimations\FilmmakerAnimationClip.cs" />
         <Compile Include="API\Features\FilmmakerAnimations\FilmmakerAnimationPlayer.cs" />
         <Compile Include="API\Features\FilmmakerAnimations\FilmmakerAnimationStorage.cs" />
@@ -254,6 +256,7 @@
         <Compile Include="API\Features\RoleTableDictionaries\Contexts\AprilRoleTableContext.cs" />
         <Compile Include="API\Features\RoleTableDictionaries\Contexts\NormalRoleTableContext.cs" />
         <Compile Include="API\Features\RoleParseHelper.cs" />
+        <Compile Include="API\Features\RoundHazardController.cs" />
         <Compile Include="API\Features\RoundVictory\Core\*.cs" />
         <Compile Include="API\Features\RoundVictory\Sources\*.cs" />
         <Compile Include="API\Features\RoleSpecificTextProvider.cs" />
@@ -314,6 +317,7 @@
         <Compile Include="Commands\DevTools\PlayerCommand.cs" />
         <Compile Include="Commands\DevTools\PlayAudioHere.cs" />
         <Compile Include="Commands\DevTools\PlayInstantSurfaceBombing.cs" />
+        <Compile Include="Commands\DevTools\PlayWaterWarriorsFlood.cs" />
         <Compile Include="Commands\DevTools\QueueCommand.cs" />
         <Compile Include="Commands\DevTools\RestartCommand.cs" />
         <Compile Include="Commands\DevTools\RunEvent.cs" />
@@ -325,6 +329,7 @@
         <Compile Include="Commands\DevTools\StatusCommand.cs" />
         <Compile Include="CustomEffects\CustomStatusEffectsRegistry.cs" />
         <Compile Include="CustomEffects\DamageBoost.cs" />
+        <Compile Include="CustomEffects\FloodDrowning.cs" />
         <Compile Include="CustomEffects\NaturalHeal.cs" />
         <Compile Include="CustomEffects\VisualTraumatized.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerBroken.cs" />
@@ -438,7 +443,6 @@
         <Compile Include="CustomMaps\Features\Sinkhole.cs" />
         <Compile Include="CustomMaps\Features\TerminalRift.cs" />
         <Compile Include="CustomMaps\Features\TerminalTrain.cs" />
-        <Compile Include="CustomMaps\Features\VentControl.cs" />
         <Compile Include="CustomMaps\Features\WarheadDoorLockdown.cs" />
         <Compile Include="CustomMaps\Features\WarheadBoomEffectHandler.cs" />
         <Compile Include="CustomMaps\Features\WarheadBoomEffectUtil.cs" />
@@ -458,6 +462,7 @@
         <Compile Include="CustomMaps\ObjectPrefabs\Vent.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\WarheadBoomEffect.cs" />
         <Compile Include="CustomMaps\Bridges\TriggerPointRegistry.cs" />
+        <Compile Include="CustomMaps\ObjectPrefabs\WaterTentacle.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosIntruder.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosPenal.cs" />
         <Compile Include="CustomRoles\ChaosInsurgency\ChaosCommando.cs" />

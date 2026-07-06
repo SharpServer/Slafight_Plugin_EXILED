@@ -11,7 +11,6 @@ using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.Hints;
 using Slafight_Plugin_EXILED.MainHandlers;
 using UnityEngine;
-using EventHandler = Slafight_Plugin_EXILED.MainHandlers.EventHandler;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -24,14 +23,13 @@ public class FacilityTermination : SpecialEvent
 
     private CoroutineHandle _mainCoroutine;
 
-    private static EventHandler EventHandler => EventHandler.Instance;
     // ===== エントリーポイント =====
 
     protected override void OnExecute(int eventPid)
     {
-        Warhead.IsLocked = true;
-        EventHandler.DeadmanDisable = true;
-        EventHandler.DeconCancellFlag = true;
+        RoundHazardController.SetAlphaWarheadDisarmLocked(true);
+        RoundHazardController.SetDeadmanSwitchBlocked(true);
+        RoundHazardController.DisableLightDecontamination();
 
         SpawnContextRegistry.SetActive("FacilityTerminationCustom");
 

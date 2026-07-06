@@ -15,15 +15,15 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
 /// <summary>
-/// SCP-035 の触手。見た目は以前の Tentacle schematic を使い、衝突は不可視 NPC 側で受ける。
+/// WaterWarriorsの触手。衝突は不可視 NPC 側で受ける。
 /// NPC の体力を削り切ると破壊できる（無敵ではない）。NPC の CustomInfo に体力を表示する。
 /// </summary>
-public class Tentacle : ObjectPrefab
+public class WaterTentacle : ObjectPrefab
 {
     private static readonly HashSet<int> TentacleNpcIds = [];
     private static bool _eventsRegistered;
 
-    private const string TentacleSchematicName = "Tentacle";
+    private const string TentacleSchematicName = "WaterTentacle";
     private const float SpawnAnimationDuration = 1f;
     private const float DestroyAnimationDuration = 1.05f;
     private const float IdleAnimationRefreshInterval = 5f;
@@ -33,7 +33,7 @@ public class Tentacle : ObjectPrefab
     // ===== 調整パラメータ（マップから Option としても上書き可能）=====
 
     /// <summary>触手の最大体力。これを削り切ると破壊される。</summary>
-    public float MaxHealth { get; set; } = 1000f;
+    public float MaxHealth { get; set; } = 5000f;
 
     /// <summary>NPC 側の当たり判定の高さ（m）。</summary>
     public float ColumnHeight { get; set; } = 2f;
@@ -42,16 +42,16 @@ public class Tentacle : ObjectPrefab
     public float BaseThickness { get; set; } = 0.12f;
 
     /// <summary>攻撃判定の半径（m）。</summary>
-    public float AttackRange { get; set; } = 1.85f;
+    public float AttackRange { get; set; } = 3.85f;
 
     /// <summary>1 回の攻撃ダメージ。</summary>
-    public float AttackDamage { get; set; } = 35f;
+    public float AttackDamage { get; set; } = 75f;
 
     /// <summary>攻撃の間隔（秒）。</summary>
-    public float AttackInterval { get; set; } = 2.5f;
+    public float AttackInterval { get; set; } = 1f;
 
     /// <summary>攻撃アニメーションから idle へ戻すまでの時間（秒）。</summary>
-    public float StrikeDuration { get; set; } = 0.83f;
+    public float StrikeDuration { get; set; } = 0.23f;
 
     public override bool FollowMarkerTransform => false;
 
@@ -258,7 +258,7 @@ public class Tentacle : ObjectPrefab
         float nearestSqr = AttackRange * AttackRange;
         foreach (Player player in Player.List)
         {
-            if (player == null || !player.IsSafePlayer() || !player.IsAlive || player.GetTeam() == CTeam.SCPs)
+            if (player == null || !player.IsSafePlayer() || !player.IsAlive || player.GetTeam() == CTeam.Warriors)
                 continue;
 
             Vector3 delta = player.Position - Position;

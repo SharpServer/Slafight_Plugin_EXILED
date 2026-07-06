@@ -284,6 +284,8 @@ public static class RoundEndDefinitions
 /// </summary>
 public static class RoundEndExecutor
 {
+    private const string IntercomOwner = nameof(RoundEndExecutor);
+
     /// <summary>
     /// チームと特殊理由から定義を解決し、ラウンドを終了します。
     /// </summary>
@@ -353,7 +355,7 @@ public static class RoundEndExecutor
             player.ShowHint(definition.VictoryHint, definition.HintDuration);
 
             if (definition.OverrideIntercom)
-                Intercom.TrySetOverride(player, true);
+                IntercomApi.SetOverride(player, true, IntercomOwner);
         }
     }
 

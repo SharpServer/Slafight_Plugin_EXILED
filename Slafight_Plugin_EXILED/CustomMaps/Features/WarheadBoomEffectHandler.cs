@@ -19,49 +19,111 @@ public static class WarheadBoomEffectHandler
     public static void Register()
     {
         Exiled.Events.Handlers.Warhead.Starting += InvokeCoroutine;
+        Exiled.Events.Handlers.Warhead.Detonating += OnDetonating;
         Exiled.Events.Handlers.Warhead.Detonated += OnDetonated;
     }
 
     public static void Unregister()
     {
         Exiled.Events.Handlers.Warhead.Starting -= InvokeCoroutine;
+        Exiled.Events.Handlers.Warhead.Detonating -= OnDetonating;
         Exiled.Events.Handlers.Warhead.Detonated -= OnDetonated;
         CleanupRunningEffects();
     }
     private static CoroutineHandle _handle;
+    private static CoroutineHandle _postDetonationHandle;
 
     public static bool IsBooming = false;
+    private static bool _postDetonationEffectsApplied;
+
+    private static void OnDetonating(DetonatingEventArgs ev)
+    {
+        if (!ev.IsAllowed) return;
+
+        _postDetonationEffectsApplied = false;
+        Timing.KillCoroutines(_postDetonationHandle);
+        _postDetonationHandle = Timing.RunCoroutine(PostDetonationFallbackCoroutine());
+    }
 
     private static void OnDetonated()
+        => ApplyPostDetonationEffects("Warhead.Detonated");
+
+    private static IEnumerator<float> PostDetonationFallbackCoroutine()
     {
+        yield return 0f;
+
+        float deadline = Time.realtimeSinceStartup + 2f;
+        while (!Round.IsLobby && Time.realtimeSinceStartup <= deadline)
+        {
+            if (Warhead.IsDetonated || AlphaWarheadController.Singleton?.AlreadyDetonated == true)
+            {
+                ApplyPostDetonationEffects("Warhead.Detonating fallback");
+                yield break;
+            }
+
+            yield return Timing.WaitForSeconds(0.05f);
+        }
+    }
+
+    private static void ApplyPostDetonationEffects(string source)
+    {
+        if (_postDetonationEffectsApplied) return;
+        _postDetonationEffectsApplied = true;
+
+        Log.Debug($"[WarheadBoomEffectHandler] Applying post-detonation effects from {source}.");
         CleanupExtraHandles();
         IsBooming = false;
         if (Round.IsLobby) return;
-        foreach (var player in Player.List)
+
+        foreach (var player in new List<Player>(Player.List))
         {
             if (player == null || !player.IsAlive) continue;
-            if (player.Position.y <= 265f)
+
+            try
             {
-                player.Kill(DamageType.Warhead);
+                if (player.Position.y <= 265f)
+                    player.Kill(DamageType.Warhead);
+            }
+            catch (System.Exception ex)
+            {
+                Log.Warn($"[WarheadBoomEffectHandler] Failed to kill {player.Nickname} after detonation: {ex}");
             }
         }
         
-        foreach (var player in Player.List)
+        foreach (var player in new List<Player>(Player.List))
         {
-            if (player is null || player.IsDead) continue;
-            player.EnableEffect<Concussed>(255, 10f);
+            if (player is null || !player.IsAlive) continue;
+
+            try
+            {
+                if (!player.EnableEffect(EffectType.Concussed, 255, 10f))
+                    Log.Debug($"[WarheadBoomEffectHandler] Concussed was not accepted for {player.Nickname}.");
+            }
+            catch (System.Exception ex)
+            {
+                Log.Warn($"[WarheadBoomEffectHandler] Failed to apply Concussed to {player.Nickname}: {ex}");
+            }
         }
 
-        foreach (var door in Door.List)
+        foreach (var door in new List<Door>(Door.List))
         {
             if (door is null || !door.IsElevator) continue;
-            door.Lock(DoorLockType.NoPower);
+
+            try
+            {
+                door.Lock(DoorLockType.NoPower);
+            }
+            catch (System.Exception ex)
+            {
+                Log.Warn($"[WarheadBoomEffectHandler] Failed to lock elevator door {door.Name}: {ex}");
+            }
         }
     }
 
     private static void InvokeCoroutine(StartingEventArgs ev)
     {
         if (!ev.IsAllowed) return;
+        _postDetonationEffectsApplied = false;
         foreach (var player in Player.List)
         {
             if (player == null) continue;
@@ -201,10 +263,13 @@ public static class WarheadBoomEffectHandler
     private static void CleanupRunningEffects()
     {
         Timing.KillCoroutines(_handle);
+        Timing.KillCoroutines(_postDetonationHandle);
         _handle = default;
+        _postDetonationHandle = default;
         CleanupExtraHandles();
         WarheadBoomEffectUtil.StopAllEffects();
         IsBooming = false;
+        _postDetonationEffectsApplied = false;
     }
 
     private static void CleanupExtraHandles()
