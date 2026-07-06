@@ -7,6 +7,11 @@ using Exiled.API.Features.Pickups;
 using Exiled.API.Interfaces.Keycards;
 using UnityEngine;
 
+using ItemHandlers = Exiled.Events.Handlers.Item;
+using PlayerHandlers = Exiled.Events.Handlers.Player;
+using ItemEvents = Exiled.Events.EventArgs.Item;
+using PlayerEvents = Exiled.Events.EventArgs.Player;
+
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
@@ -72,6 +77,32 @@ public abstract class CItemKeycard : CItem
 
     // ==== CItem hooks ====
 
+    public override void RegisterEvents()
+    {
+        ItemHandlers.KeycardInteracting += OnAnyKeycardInteracting;
+        PlayerHandlers.InteractingDoor += OnAnyInteractingDoor;
+        PlayerHandlers.UnlockingGenerator += OnAnyUnlockingGenerator;
+        PlayerHandlers.OpeningGenerator += OnAnyOpeningGenerator;
+        PlayerHandlers.ClosingGenerator += OnAnyClosingGenerator;
+        PlayerHandlers.ActivatingGenerator += OnAnyActivatingGenerator;
+        PlayerHandlers.StoppingGenerator += OnAnyStoppingGenerator;
+
+        base.RegisterEvents();
+    }
+
+    public override void UnregisterEvents()
+    {
+        ItemHandlers.KeycardInteracting -= OnAnyKeycardInteracting;
+        PlayerHandlers.InteractingDoor -= OnAnyInteractingDoor;
+        PlayerHandlers.UnlockingGenerator -= OnAnyUnlockingGenerator;
+        PlayerHandlers.OpeningGenerator -= OnAnyOpeningGenerator;
+        PlayerHandlers.ClosingGenerator -= OnAnyClosingGenerator;
+        PlayerHandlers.ActivatingGenerator -= OnAnyActivatingGenerator;
+        PlayerHandlers.StoppingGenerator -= OnAnyStoppingGenerator;
+
+        base.UnregisterEvents();
+    }
+
     /// <summary>
     /// Spawn 経路: <see cref="Item.Create"/> で先に Item を作り、Keycard カスタマイズを
     /// 焼き込んでから同 Serial の Pickup に変換する。これによりカスタマイズが
@@ -135,5 +166,84 @@ public abstract class CItemKeycard : CItem
 
         if (ck is IRankKeycard rank)
             rank.Rank = Rank;
+    }
+
+    // ==== Keycard interaction hooks ====
+
+    /// <summary>
+    /// 床や投げられた Keycard が Door に接触したとき。
+    /// </summary>
+    protected virtual void OnKeycardInteracting(ItemEvents.KeycardInteractingEventArgs ev) { }
+
+    /// <summary>
+    /// この Keycard を手に持って Door を操作したとき。
+    /// </summary>
+    protected virtual void OnInteractingDoor(PlayerEvents.InteractingDoorEventArgs ev) { }
+
+    /// <summary>
+    /// この Keycard を手に持って Generator のロックを解除しようとしたとき。
+    /// </summary>
+    protected virtual void OnUnlockingGenerator(PlayerEvents.UnlockingGeneratorEventArgs ev) { }
+
+    /// <summary>
+    /// この Keycard を手に持って Generator の扉を開けようとしたとき。
+    /// </summary>
+    protected virtual void OnOpeningGenerator(PlayerEvents.OpeningGeneratorEventArgs ev) { }
+
+    /// <summary>
+    /// この Keycard を手に持って Generator の扉を閉じようとしたとき。
+    /// </summary>
+    protected virtual void OnClosingGenerator(PlayerEvents.ClosingGeneratorEventArgs ev) { }
+
+    /// <summary>
+    /// この Keycard を手に持って Generator を起動しようとしたとき。
+    /// </summary>
+    protected virtual void OnActivatingGenerator(PlayerEvents.ActivatingGeneratorEventArgs ev) { }
+
+    /// <summary>
+    /// この Keycard を手に持って Generator を停止しようとしたとき。
+    /// </summary>
+    protected virtual void OnStoppingGenerator(PlayerEvents.StoppingGeneratorEventArgs ev) { }
+
+    private void OnAnyKeycardInteracting(ItemEvents.KeycardInteractingEventArgs ev)
+    {
+        if (!Check(ev.KeycardPickup)) return;
+        OnKeycardInteracting(ev);
+    }
+
+    private void OnAnyInteractingDoor(PlayerEvents.InteractingDoorEventArgs ev)
+    {
+        if (!CheckHeld(ev.Player)) return;
+        OnInteractingDoor(ev);
+    }
+
+    private void OnAnyUnlockingGenerator(PlayerEvents.UnlockingGeneratorEventArgs ev)
+    {
+        if (!CheckHeld(ev.Player)) return;
+        OnUnlockingGenerator(ev);
+    }
+
+    private void OnAnyOpeningGenerator(PlayerEvents.OpeningGeneratorEventArgs ev)
+    {
+        if (!CheckHeld(ev.Player)) return;
+        OnOpeningGenerator(ev);
+    }
+
+    private void OnAnyClosingGenerator(PlayerEvents.ClosingGeneratorEventArgs ev)
+    {
+        if (!CheckHeld(ev.Player)) return;
+        OnClosingGenerator(ev);
+    }
+
+    private void OnAnyActivatingGenerator(PlayerEvents.ActivatingGeneratorEventArgs ev)
+    {
+        if (!CheckHeld(ev.Player)) return;
+        OnActivatingGenerator(ev);
+    }
+
+    private void OnAnyStoppingGenerator(PlayerEvents.StoppingGeneratorEventArgs ev)
+    {
+        if (!CheckHeld(ev.Player)) return;
+        OnStoppingGenerator(ev);
     }
 }

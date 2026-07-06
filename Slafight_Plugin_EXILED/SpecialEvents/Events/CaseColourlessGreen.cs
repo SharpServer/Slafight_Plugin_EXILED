@@ -1,9 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.API.Features.Doors;
+using Exiled.Events.EventArgs.Map;
 using MEC;
+using Mirror;
 using PlayerRoles;
+using ProjectMER.Features;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
@@ -34,20 +39,109 @@ public class CaseColourlessGreen : SpecialEvent
     {
         Timing.KillCoroutines(_handle);
         _handle = Timing.RunCoroutine(Coroutine());
-        SetupBomb();
+        SetupMaps();
         RoleAssign();
     }
 
-    private static void SetupBomb()
+    public override void RegisterEvents()
     {
-        new AntiMemeBomb(){Position = StaticUtils.GetWorldFromRoomLocal(RoomType.LczClassDSpawn, new Vector3(-25.32238f, 0f, 0f), Vector3.zero).worldPosition}.Create();
+        Exiled.Events.Handlers.Map.GeneratorActivating += OnGenerating;
+        base.RegisterEvents();
+    }
+
+    public override void UnregisterEvents()
+    {
+        Exiled.Events.Handlers.Map.GeneratorActivating -= OnGenerating;
+        base.UnregisterEvents();
+    }
+
+    private void SetupMaps()
+    {
+        if (IsCanceled()) return;
+        RoundHazardController.DisableLightDecontamination();
+        RoundHazardController.SetAlphaWarheadDisarmLocked(true);
+        RoundHazardController.SetDeadmanSwitchBlocked(true);
+        new AntiMemeBomb {Position = StaticUtils.GetWorldFromRoomLocal(RoomType.LczClassDSpawn, new Vector3(-25.32238f, 0f, 0f), Vector3.zero).worldPosition}.Create();
+        foreach (var generator in Generator.List)
+        {
+            if (generator is null) continue;
+            NetworkServer.Destroy(generator.GameObject);
+        }
+        
+        MapUtils.LoadMap("ccg");
+        SetDoorState(ZoneType.Entrance, true);
+        SetDoorState(ZoneType.HeavyContainment, true);
+        SetDoorState(ZoneType.LightContainment, true);
+    }
+
+    private void SetDoorState(ZoneType zoneType, bool isLock)
+    {
+        if (IsCanceled()) return;
+        switch (zoneType)
+        {
+            case ZoneType.Entrance:
+                SetLockState(Door.Get(DoorType.CheckpointEzHczA), isLock);
+                SetLockState(Door.Get(DoorType.CheckpointEzHczB), isLock);
+                SetLockState(Door.Get(DoorType.CheckpointGateA), isLock);
+                SetLockState(Door.Get(DoorType.CheckpointGateB), isLock);
+                break;
+            case ZoneType.HeavyContainment:
+                SetLockState(Door.Get(DoorType.CheckpointLczA), isLock);
+                SetLockState(Door.Get(DoorType.CheckpointLczB), isLock);
+                break;
+            case ZoneType.LightContainment:
+            {
+                var list = Door.Get(x => x.Rooms.Any(room => room.Type is RoomType.LczClassDSpawn)).ToList();
+                foreach (var door in list)
+                {
+                    if (door is null) continue;
+                    SetLockState(door, isLock);
+                }
+                break;
+            }
+        }
+    }
+
+    private void SetLockState(Door? door, bool isLock)
+    {
+        if (IsCanceled()) return;
+        if (isLock)
+        {
+            door?.IsOpen = false;
+            door?.Lock(DoorLockType.AdminCommand);
+        }
+        else
+        {
+            door?.IsOpen = true;
+            door?.Unlock();
+        }
+    }
+
+    private void OnGenerating(GeneratorActivatingEventArgs ev)
+    {
+        if (IsCanceled()) return;
+        switch (ev.Generator?.Room.Zone)
+        {
+            case ZoneType.Entrance:
+                SetDoorState(ZoneType.Entrance, false);
+                Exiled.API.Features.Cassie.MessageTranslated("Opened Heavy Containment Zone Checkpoint. Please go there immediately. . . . .", "重度収容区画とのチェックポイントが解放されました。<split>直ちに向かってください",true);
+                break;
+            case ZoneType.HeavyContainment:
+                SetDoorState(ZoneType.HeavyContainment, false);
+                Exiled.API.Features.Cassie.MessageTranslated("Opened Light Containment Zone Checkpoint. Please go there immediately. . . . .", "軽度収容区画とのチェックポイントが解放されました。<split>直ちに向かってください",true);
+                break;
+            case ZoneType.LightContainment:
+                SetDoorState(ZoneType.LightContainment, false);
+                Exiled.API.Features.Cassie.MessageTranslated("Opened Anti- Me mu contained Room. Please go there immediately. . . . .", "反ミーム爆弾部屋(Dクラス収容房)が解放されました。<split>直ちに向かい、起爆させてください！！！！！",true);
+                break;
+        }
     }
 
     private static void RoleAssign()
     {
         Timing.CallDelayed(1.5f, () =>
         {
-            var candidates = Player.List.Where(p => p is not null).Shuffle().ToList();
+            var candidates = Player.List.Where(p => p.IsSafePlayer()).Shuffle().ToList();
 
             var scp3125 = candidates[0];
             var ara = candidates[1];
@@ -61,10 +155,8 @@ public class CaseColourlessGreen : SpecialEvent
             var marionetteRole = CRoleTypeId.FifthistMarionette;
             var marionetteChance = 0.4f; // 40% で Marionette、60% で Scientist
 
-            for (int i = 0; i < remaining.Count; i++)
+            foreach (var p in remaining)
             {
-                var p = remaining[i];
-    
                 // ランダムで 40% の場合 Marionette、60% の場合 Scientist
                 var roleToAssign = UnityEngine.Random.value < marionetteChance ? marionetteRole : scientistRole;
     
@@ -78,7 +170,7 @@ public class CaseColourlessGreen : SpecialEvent
         yield return Timing.WaitForSeconds(5f);
         while (true)
         {
-            if (CancelIfOutdated() || Player.List.Where(p => p.GetCustomRole() is CRoleTypeId.Scp3125).ToList().Count <= 0) yield break;
+            if (IsCanceled() || Player.List.Where(p => p.GetCustomRole() is CRoleTypeId.Scp3125).ToList().Count <= 0) yield break;
             Player.List.Where(p => p?.Role.Type is RoleTypeId.Spectator && p.GetCustomRole() is CRoleTypeId.None).ToList().ForEach(p =>
             {
                 p.SetRole(CRoleTypeId.FifthistMarionette);

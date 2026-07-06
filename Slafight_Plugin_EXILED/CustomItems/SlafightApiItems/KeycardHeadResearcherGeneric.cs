@@ -1,4 +1,5 @@
 using Exiled.API.Enums;
+using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 
@@ -8,7 +9,7 @@ public class KeycardHeadResearcherGeneric : CItemKeycard
 {
     public override string DisplayName => "主席研究員キーカード";
     public override string Description => "サイト-02の高位な有数の科学者にしか配布されないキーカード。\n" +
-                                          "様々なものにアクセスできる。";
+                                          "様々なものにアクセスできる。\n<color=yellow>発電機の権限を無視して開けられる</color>";
     protected override string UniqueKey => "KeycardHeadResearcherGeneric";
     protected override string KeycardLabel => "HEAD RESEARCHER";
     protected override Color32? KeycardLabelColor => new Color32(238, 246, 255, 255);
@@ -27,4 +28,10 @@ public class KeycardHeadResearcherGeneric : CItemKeycard
 
     protected override bool PickupLightEnabled => true;
     protected override Color PickupLightColor => new(0.45f, 0.65f, 1f);
+
+    protected override void OnUnlockingGenerator(UnlockingGeneratorEventArgs ev)
+    {
+        ev.IsAllowed = true;
+        base.OnUnlockingGenerator(ev);
+    }
 }
