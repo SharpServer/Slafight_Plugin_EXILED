@@ -26,6 +26,11 @@ public static class RoundEndReasons
     public const string CandyWarriorWin = "CANDY_WIN";
 
     /// <summary>
+    /// 水の戦士達の勝利。
+    /// </summary>
+    public const string WaterWarriorWin = "WATER_WIN";
+
+    /// <summary>
     /// FacilityTermination で人類側が勝利した場合。
     /// </summary>
     public const string SavedHumanity = "SavedHumanity";

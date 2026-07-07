@@ -261,6 +261,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
                         SpecialEventType.NuclearAttack,
                         SpecialEventType.SnowWarriorsAttack,
                         SpecialEventType.CandyWarriorsAttack,
+                        SpecialEventType.WaterWarriorsRaid,
                         SpecialEventType.FacilityTermination,
                         SpecialEventType.SergeyMakarovReturns
                     ];

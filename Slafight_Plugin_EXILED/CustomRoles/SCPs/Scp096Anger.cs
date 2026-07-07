@@ -7,11 +7,13 @@ using Exiled.API.Features.Doors;
 using Exiled.API.Features.Roles;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp096;
+using Exiled.Events.EventArgs.Warhead;
 using JetBrains.Annotations;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
@@ -92,6 +94,8 @@ public class Scp096Anger : CRole
         Exiled.Events.Handlers.Scp096.AddingTarget += OnTargetAdded;
         Exiled.Events.Handlers.Scp096.RemovingTarget += OnRemovingTarget;
         Exiled.Events.Handlers.Scp096.CalmingDown += OnCalming;
+        Exiled.Events.Handlers.Warhead.Detonating += OnVanillaWarheadDetonating;
+        OmegaWarhead.OmegaWarheadDetonating += OnMassCasualtyImminent;
 
         base.RegisterEvents();
     }
@@ -104,6 +108,8 @@ public class Scp096Anger : CRole
         Exiled.Events.Handlers.Scp096.AddingTarget -= OnTargetAdded;
         Exiled.Events.Handlers.Scp096.RemovingTarget -= OnRemovingTarget;
         Exiled.Events.Handlers.Scp096.CalmingDown -= OnCalming;
+        Exiled.Events.Handlers.Warhead.Detonating -= OnVanillaWarheadDetonating;
+        OmegaWarhead.OmegaWarheadDetonating -= OnMassCasualtyImminent;
 
         foreach (Player player in _sessions.Keys.ToArray())
             CleanupPlayer(player);
@@ -735,6 +741,23 @@ public class Scp096Anger : CRole
             player.DisableEffect(EffectType.Invigorated);
         }
     }
+
+    /*
+     * OMEGA WARHEAD / 通常のALPHA WARHEADは爆発時に生存者を同一フレームで
+     * 一斉Killする。その瞬間にChamber Guard(Npc.Spawnで生成したFacilityGuardRole)が
+     * 破棄処理中だと、観戦者側のSpectatableListManagerが所有者なしのロールを
+     * 参照して例外を吐き続ける(FacilityGuardRole(Clone) does not have an owner)。
+     * 実際の一斉死亡より先にNPCを破棄し、破棄が完了する猶予を確保する。
+     */
+    private static void OnVanillaWarheadDetonating(DetonatingEventArgs ev)
+    {
+        if (!ev.IsAllowed)
+            return;
+
+        DestroyChamberGuards();
+    }
+
+    private static void OnMassCasualtyImminent() => DestroyChamberGuards();
 
     private static void DestroyChamberGuards()
     {

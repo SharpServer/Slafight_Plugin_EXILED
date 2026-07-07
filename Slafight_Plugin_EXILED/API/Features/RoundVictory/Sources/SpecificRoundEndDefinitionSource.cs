@@ -35,6 +35,12 @@ public sealed class SpecificRoundEndDefinitionSource : RoundEndDefinitionSource
             specificReason: RoundEndReasons.CandyWarriorWin);
 
         yield return RoundEndDefinition.Custom(
+            "WaterWarriorWin",
+            CTeam.Warriors,
+            "<b><size=80><color=#00ffff>水の戦士達</color>の勝利</size></b>",
+            specificReason: RoundEndReasons.WaterWarriorWin);
+
+        yield return RoundEndDefinition.Custom(
             "DanteWin",
             CTeam.Others,
             "<b><size=80><color=#ff1a1a>DANTE</color>の勝利</size></b>",

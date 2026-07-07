@@ -29,5 +29,14 @@ public sealed class SeasonalWarriorVictoryDefinitionSource : RoundVictoryDefinit
             specificReason: RoundEndReasons.CandyWarriorWin,
             requiresVanillaEndLock: true,
             isEnabled: context => context.Season is SeasonTypeId.April or SeasonTypeId.Halloween).ToGroup();
+
+        yield return RoundVictoryRule.ForCustomRoles(
+            CTeam.Warriors,
+            priority: 20,
+            customRoles: [CRoleTypeId.WaterWarrior],
+            debugName: "WaterWarriorWin",
+            specificReason: RoundEndReasons.WaterWarriorWin,
+            requiresVanillaEndLock: true,
+            isEnabled: context => context.Season == SeasonTypeId.Summer).ToGroup();
     }
 }
