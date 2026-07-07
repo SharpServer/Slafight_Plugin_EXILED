@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.EventArgs.Scp939;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -34,7 +35,9 @@ public class Scp682Role : CRole
         new(EffectType.FocusedVision),
         new(EffectType.NightVision, 255)
     ];
-    
+
+    public override bool CanUseProximityChat => true;
+
     private static readonly Dictionary<Player, float> SpeedLevels = new();
     
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
@@ -44,7 +47,7 @@ public class Scp682Role : CRole
         player.HumeShieldRegenerationMultiplier = 13.5f;
 
         SpeedLevels[player] = 1f;
-        player.SetScale(new Vector3(0.7f, 0.65f, 1.2f));
+        player.SetScale(new Vector3(0.7f, 0.75f, 1.2f));
         
         Timing.RunCoroutine(WaitAndTeleport(player));
         Timing.RunCoroutine(Coroutine(player));
@@ -150,6 +153,56 @@ public class Scp682Role : CRole
     {
         CleanupPlayer(ev.Player);
         base.OnRoleLeft(ev);
+    }
+
+    public override void RegisterEvents()
+    {
+        Exiled.Events.Handlers.Scp939.PlacingAmnesticCloud += OnAmnesia;
+        Exiled.Events.Handlers.Scp939.PlacingMimicPoint += OnMimic;
+        Exiled.Events.Handlers.Scp939.PlayingFootstep += OnPF;
+        Exiled.Events.Handlers.Scp939.PlayingSound += OnPS;
+        Exiled.Events.Handlers.Scp939.PlayingVoice += OnPV;
+        base.RegisterEvents();
+    }
+
+    public override void UnregisterEvents()
+    {
+        Exiled.Events.Handlers.Scp939.PlacingAmnesticCloud -= OnAmnesia;
+        Exiled.Events.Handlers.Scp939.PlacingMimicPoint -= OnMimic;
+        Exiled.Events.Handlers.Scp939.PlayingFootstep -= OnPF;
+        Exiled.Events.Handlers.Scp939.PlayingSound -= OnPS;
+        Exiled.Events.Handlers.Scp939.PlayingVoice -= OnPV;
+        base.UnregisterEvents();
+    }
+
+    private void OnAmnesia(PlacingAmnesticCloudEventArgs ev)
+    {
+        if (!Check(ev.Player)) return;
+        ev.IsAllowed = false;
+    }
+
+    private void OnMimic(PlacingMimicPointEventArgs ev)
+    {
+        if (!Check(ev.Player)) return;
+        ev.IsAllowed = false;
+    }
+
+    private void OnPF(PlayingFootstepEventArgs ev)
+    {
+        if (!Check(ev.Player)) return;
+        ev.IsAllowed = false;
+    }
+    
+    private void OnPS(PlayingSoundEventArgs ev)
+    {
+        if (!Check(ev.Player)) return;
+        ev.IsAllowed = false;
+    }
+
+    private void OnPV(PlayingVoiceEventArgs ev)
+    {
+        if (!Check(ev.Player)) return;
+        ev.IsAllowed = false;
     }
 
     private static void CleanupPlayer(Player player)
