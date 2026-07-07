@@ -30,6 +30,28 @@ public static class LinqExtensions
 
 public class SpecialEventsHandler : IBootstrapHandler, IDisposable
 {
+    private const int DefaultEventWeight = 10;
+
+    private static readonly IReadOnlyDictionary<SpecialEventType, int> EventWeights =
+        new Dictionary<SpecialEventType, int>
+        {
+            [SpecialEventType.OmegaWarhead] = 5,
+            [SpecialEventType.EndlessCry] = 7,
+            [SpecialEventType.Scp1509BattleField] = 6,
+            [SpecialEventType.FifthistsRaid] = 10,
+            [SpecialEventType.NuclearAttack] = 10,
+            [SpecialEventType.ClassicEvent] = 0,
+            [SpecialEventType.OperationBlackout] = 0,
+            [SpecialEventType.SnowWarriorsAttack] = 10,
+            [SpecialEventType.FacilityTermination] = 4,
+            [SpecialEventType.RevolverBattles] = 0,
+            [SpecialEventType.SergeyMakarovReturns] = 66,
+            [SpecialEventType.SpeedUpEvent] = 6,
+            [SpecialEventType.DailyFoundation] = 0,
+            [SpecialEventType.CandyWarriorsAttack] = 10,
+            [SpecialEventType.CaseColourlessGreen] = 10,
+        };
+
     public static SpecialEventsHandler Instance { get; private set; }
     public static void Register()
     {
@@ -244,13 +266,11 @@ public class SpecialEventsHandler : IBootstrapHandler, IDisposable
             return;
         }
 
-        var weights = Plugin.Singleton.Config.EventWeights;
-
         // 重み付きプールを構築（重み0のイベントは除外）
         var pool = new List<SpecialEventType>();
         foreach (var ev in allowedEvents)
         {
-            int w = weights.GetWeight(ev);
+            int w = GetEventWeight(ev);
             for (int i = 0; i < w; i++)
                 pool.Add(ev);
         }
@@ -263,6 +283,14 @@ public class SpecialEventsHandler : IBootstrapHandler, IDisposable
         }
 
         SelectedEvent = pool[Random.Range(0, pool.Count)];
+    }
+
+    private static int GetEventWeight(SpecialEventType type)
+    {
+        if (!EventWeights.TryGetValue(type, out int weight))
+            return DefaultEventWeight;
+
+        return Math.Max(0, weight);
     }
 
     /// <summary>

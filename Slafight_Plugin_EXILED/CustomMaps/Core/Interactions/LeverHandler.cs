@@ -4,6 +4,7 @@ using System.Linq;
 using Exiled.API.Features;
 using Exiled.API.Features.Roles;
 using MEC;
+using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
@@ -59,7 +60,7 @@ public class LeverHandler : IBootstrapHandler, IDisposable
         {
             if (ev.TurnedOn) return;
             ev.Lever.CanInteract = false;
-            foreach (var player in Player.List.Where(p => p?.GetCustomRole() is CRoleTypeId.Scp079).ToList())
+            foreach (var player in Player.List.Where(p => p is not null && p.IsVanillaOrCustom(RoleTypeId.Scp079, CRoleTypeId.Scp079)).ToList())
             {
                 if (player?.Role is Scp079Role role)
                 {

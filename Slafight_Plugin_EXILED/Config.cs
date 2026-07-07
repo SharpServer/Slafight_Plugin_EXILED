@@ -1,7 +1,6 @@
 using System;
 using System.ComponentModel;
 using System.IO;
-using Slafight_Plugin_EXILED.SpecialEvents;
 
 namespace Slafight_Plugin_EXILED;
 
@@ -35,9 +34,6 @@ public class Config : IConfig
 
     [Description("SpecialEvent（ゲーム中に低確率で発生するイベント）の有効/無効を設定します")]
     public bool EventAllowed { get; set; } = true;
-
-    [Description("各SpecialEventの抽選重みを設定します。値が大きいほど発生しやすくなります")]
-    public SpecialEventWeightContext EventWeights { get; set; } = new();
 
     [Description("Omega Warhead が爆発するまでの時間（秒）")]
     public float OwBoomTime { get; set; } = 160f;

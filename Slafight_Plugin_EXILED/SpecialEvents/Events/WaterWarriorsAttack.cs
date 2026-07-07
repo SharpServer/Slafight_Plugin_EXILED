@@ -35,8 +35,8 @@ public class WaterWarriorsRaidEvent : SpecialEvent
 
     private const string FloodSongFileName = "flood_facility.ogg";
     private const float StabilizationWindowSeconds = 1000f;
-    private const float TentacleBreakElapsedSeconds = 143f;
-    private const float SurfaceGroundReachElapsedSeconds = TentacleBreakElapsedSeconds + 55f;
+    private const float TentacleBreakElapsedSeconds = 163f;
+    private const float SurfaceGroundReachElapsedSeconds = TentacleBreakElapsedSeconds + 35f;
     private const float FinalFloodSurgeSeconds = 5f;
     private const float FloodPhaseSeconds = SurfaceGroundReachElapsedSeconds + FinalFloodSurgeSeconds;
     private const float SurfaceGroundTopY = 290f;
@@ -240,14 +240,13 @@ public class WaterWarriorsRaidEvent : SpecialEvent
             {
                 tentaclesDestroyed = true;
                 DestroyEscapeTentacles();
+                Exiled.API.Features.Cassie.MessageTranslated("Attention, Were Successfully Destroyed Exit Gates It.",
+                    "通達。脱出口をふさいでいた触手の破壊に成功しました。<split>時間は一刻一刻と迫ってきています。早急に脱出してください！",false);
             }
 
             elapsed += Time.deltaTime;
             yield return 0f;
         }
-
-        Exiled.API.Features.Cassie.MessageTranslated("Attention, Were Successfully Destroyed Exit Gates It.",
-            "通達。脱出口をふさいでいた触手の破壊に成功しました。<split>時間は一刻一刻と迫ってきています。早急に脱出してください！",false);
 
         ApplyFloodProgress(floodInDss, startScale, startPosition, bottomY, startTopY, FloodPhaseSeconds);
         FloodVolumeState finalVolume = FloodVolumeState.FromPrimitive(floodInDss);

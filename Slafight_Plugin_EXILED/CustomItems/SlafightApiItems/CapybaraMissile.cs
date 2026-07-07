@@ -5,6 +5,7 @@ using Exiled.API.Features;
 using Exiled.API.Features.Toys;
 using Exiled.Events.EventArgs.Player;
 using MEC;
+using PlayerStatsSystem;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 
@@ -23,6 +24,12 @@ public class CapybaraMissile : CItemWeapon
 
     protected override bool PickupLightEnabled => true;
     protected override Color PickupLightColor => Color.white;
+
+    protected override void OnHurtingOthers(HurtingEventArgs ev)
+    {
+        if (ev.DamageHandler.Base is FirearmDamageHandler)
+            base.OnHurtingOthers(ev);
+    }
 
     protected override void OnShot(ShotEventArgs ev)
     {
