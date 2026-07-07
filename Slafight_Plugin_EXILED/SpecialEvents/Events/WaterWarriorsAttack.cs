@@ -4,8 +4,10 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Toys;
 using MEC;
+using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.CustomEffects;
 using Slafight_Plugin_EXILED.CustomMaps;
@@ -26,11 +28,13 @@ public class WaterWarriorsRaidEvent : SpecialEvent
     private Primitive? _activeFloodInDss;
     private readonly List<Primitive> _activeFloodSurfaces = [];
     private readonly List<WaterParticleState> _activeWaterParticles = [];
+    private readonly Dictionary<Room, List<RoomWaterParticleState>> _activeRoomWaterParticles = [];
     private readonly List<WaterTentacle> _activeTentacles = [];
     private readonly Dictionary<Room, Color> _originalFloodRoomColors = [];
     private BossBar? _floodCountdownBar;
     private SpeakerApi.Playback? _floodSongPlayback;
     private float _nextFloodVisualUpdateTime;
+    private float _nextRoomParticleUpdateTime;
     private float _nextRoomTintUpdateTime;
 
     private const string FloodSongFileName = "flood_facility.ogg";
@@ -41,18 +45,29 @@ public class WaterWarriorsRaidEvent : SpecialEvent
     private const float FloodPhaseSeconds = SurfaceGroundReachElapsedSeconds + FinalFloodSurgeSeconds;
     private const float SurfaceGroundTopY = 290f;
     private const float SurfaceFloodTopY = 325f;
-    private const float FinalFloodHorizontalScale = 865f;
+    private const float FinalFloodHorizontalScale = 1040f;
     private const int UnderwaterParticleCount = 72;
+    private const int RoomWaterParticleCount = 3;
     private const float FloodVisualUpdateInterval = 0.2f;
+    private const float RoomParticleUpdateInterval = 0.35f;
+    private const float RoomParticleStartDepth = 1.5f;
+    private const float RoomParticleStartTintStrength = 0.12f;
+    private const float RoomParticleHorizontalSpread = 4.2f;
+    private const float RoomParticleMinLocalY = 0.8f;
+    private const float RoomParticleMaxLocalY = 4.2f;
+    private const float RoomParticleLowerPadding = 0.25f;
+    private const float RoomParticleSurfacePadding = 0.25f;
+    private const float RoomFloodProbeLocalY = 1.2f;
+    private const float RoomTintEllipsoidFeather = 0.32f;
+    private const float PlayerFloodProbeHeight = 0.9f;
     private const float RoomTintUpdateInterval = 0.5f;
-    private const float RoomTintLeadHeight = 4f;
     private const float RoomTintFullDepth = 35f;
-    private const float RoomTintHorizontalLead = 8f;
-    private const float RoomTintHorizontalFullDepth = 24f;
     private static readonly Vector3 InitialFloodScale = new Vector3(6.5f, 8f, 6.5f);
     private static readonly Color FloodBodyColor = new(0.0f, 0.95f, 1f, 0.28f);
     private static readonly Color FloodSurfaceColor = new(0.2f, 0.95f, 1f, 0.48f);
     private static readonly Color FloodParticleColor = new(0.72f, 1f, 1f, 0.55f);
+    private static readonly Color RoomBubbleColor = new(0.74f, 1f, 1f, 0.5f);
+    private static readonly Color RoomMicrobeColor = new(0.28f, 1f, 0.78f, 0.46f);
     private static readonly Color FloodRoomShallowColor = new(0.15f, 0.92f, 1f, 1f);
     private static readonly Color FloodRoomDeepColor = new(0.0f, 0.22f, 0.48f, 1f);
 
@@ -97,7 +112,7 @@ public class WaterWarriorsRaidEvent : SpecialEvent
             return false;
         }
 
-        floodInDss = Primitive.Create(dssRoom.WorldPosition(Vector3.up), scale: InitialFloodScale);
+        floodInDss = Primitive.Create(PrimitiveType.Sphere, position: dssRoom.WorldPosition(Vector3.up), scale: InitialFloodScale);
         _activeFloodInDss = floodInDss;
         floodInDss.Collidable = false;
         floodInDss.Color = FloodBodyColor;
@@ -232,6 +247,8 @@ public class WaterWarriorsRaidEvent : SpecialEvent
             FloodVolumeState volume = FloodVolumeState.FromPrimitive(floodInDss);
             UpdateFloodVisuals(volume);
             UpdateFloodRoomColors(volume, force: false);
+            UpdateSubmergedRoomParticles(volume);
+            ApplyFloodDrowningToSubmergedPlayers(volume);
 
             float remainingSeconds = Mathf.Max(0f, FloodPhaseSeconds - elapsed);
             UpdateFloodCountdownBar(elapsed, remainingSeconds);
@@ -240,6 +257,8 @@ public class WaterWarriorsRaidEvent : SpecialEvent
             {
                 tentaclesDestroyed = true;
                 DestroyEscapeTentacles();
+                EvacuationRoundEndState.Begin();
+                EscapeHandler.AddEscapeOverride(p => new EscapeHandler.EscapeTargetRole { Vanilla = RoleTypeId.Spectator });
                 Exiled.API.Features.Cassie.MessageTranslated("Attention, Were Successfully Destroyed Exit Gates It.",
                     "通達。脱出口をふさいでいた触手の破壊に成功しました。<split>時間は一刻一刻と迫ってきています。早急に脱出してください！",false);
             }
@@ -252,6 +271,7 @@ public class WaterWarriorsRaidEvent : SpecialEvent
         FloodVolumeState finalVolume = FloodVolumeState.FromPrimitive(floodInDss);
         UpdateFloodVisuals(finalVolume, force: true);
         UpdateFloodRoomColors(finalVolume, force: true);
+        UpdateSubmergedRoomParticles(finalVolume, force: true);
         UpdateFloodCountdownBar(FloodPhaseSeconds, 0f);
         DestroyEscapeTentacles();
         StopFloodSong();
@@ -259,16 +279,7 @@ public class WaterWarriorsRaidEvent : SpecialEvent
         _floodCountdownBar?.Hide();
         _floodCountdownBar = null;
 
-        foreach (var player in Player.List)
-        {
-            if (player == null || !player.IsSafePlayer()|| !player.IsAlive)
-                continue;
-
-            if (IsWaterWarrior(player))
-                continue;
-
-            player.EnableEffect<FloodDrowning>(255);
-        }
+        ApplyFloodDrowningToAllPlayers();
     }
 
     private IEnumerator<float> WaitWithCancellation(float seconds, Primitive? floodVisual = null)
@@ -280,7 +291,11 @@ public class WaterWarriorsRaidEvent : SpecialEvent
                 yield break;
 
             if (floodVisual != null)
-                UpdateFloodVisuals(FloodVolumeState.FromPrimitive(floodVisual));
+            {
+                FloodVolumeState volume = FloodVolumeState.FromPrimitive(floodVisual);
+                UpdateFloodVisuals(volume);
+                ApplyFloodDrowningToSubmergedPlayers(volume);
+            }
 
             float step = Mathf.Min(floodVisual == null ? 1f : FloodVisualUpdateInterval, seconds - elapsed);
             elapsed += step;
@@ -299,7 +314,7 @@ public class WaterWarriorsRaidEvent : SpecialEvent
                 var tentacle = new WaterTentacle();
                 tentacle.Create();
                 var offset = new Vector3(UnityEngine.Random.Range(0f, 0.15f), 0f, UnityEngine.Random.Range(0f, 0.15f));
-                tentacle.Position = point + offset + Vector3.down * 0.25f;
+                tentacle.Position = point + offset + Vector3.down * 0.45f;
                 _activeTentacles.Add(tentacle);
             }
         }
@@ -461,21 +476,32 @@ public class WaterWarriorsRaidEvent : SpecialEvent
     private void UpdateWaterParticles(FloodVolumeState volume)
     {
         float visualSeconds = Time.time;
-        float radius = volume.HorizontalScale * 0.48f;
         float usableHeight = Mathf.Max(1f, volume.Height - 1.6f);
 
         foreach (WaterParticleState state in _activeWaterParticles)
         {
             Primitive particle = state.Primitive;
-            float driftRadius = Mathf.Max(0.5f, volume.HorizontalScale * state.DriftRadiusFactor);
+            float driftRadius = Mathf.Max(0.25f, volume.HorizontalScale * state.DriftRadiusFactor);
             float orbit = visualSeconds * state.OrbitSpeed + state.Phase;
-            float x = state.NormalizedHorizontalOffset.x * radius + Mathf.Cos(orbit) * driftRadius;
-            float z = state.NormalizedHorizontalOffset.y * radius + Mathf.Sin(orbit * 0.73f) * driftRadius;
             float y = volume.BottomY + 0.8f + state.VerticalFactor * usableHeight;
             y += Mathf.Sin(visualSeconds * state.BobSpeed + state.Phase) * Mathf.Min(1.4f, usableHeight * 0.22f);
             y = Mathf.Clamp(y, volume.BottomY + 0.45f, volume.TopY - 0.65f);
 
-            particle.Position = new Vector3(volume.Center.x + x, y, volume.Center.z + z);
+            float vertical = Mathf.Clamp((y - volume.Center.y) / Mathf.Max(0.001f, volume.HalfExtents.y), -0.96f, 0.96f);
+            float horizontalSlice = Mathf.Sqrt(Mathf.Max(0f, 1f - vertical * vertical));
+            float x = state.NormalizedHorizontalOffset.x * volume.HalfExtents.x * horizontalSlice * 0.92f + Mathf.Cos(orbit) * driftRadius;
+            float z = state.NormalizedHorizontalOffset.y * volume.HalfExtents.z * horizontalSlice * 0.92f + Mathf.Sin(orbit * 0.73f) * driftRadius;
+            Vector3 position = new(volume.Center.x + x, y, volume.Center.z + z);
+
+            if (!volume.ContainsPoint(position))
+            {
+                position = new Vector3(
+                    volume.Center.x + state.NormalizedHorizontalOffset.x * volume.HalfExtents.x * horizontalSlice * 0.88f,
+                    y,
+                    volume.Center.z + state.NormalizedHorizontalOffset.y * volume.HalfExtents.z * horizontalSlice * 0.88f);
+            }
+
+            particle.Position = position;
             particle.Rotation = Quaternion.Euler(
                 visualSeconds * state.RotationSpeed,
                 visualSeconds * (state.RotationSpeed * 0.7f) + state.Phase * Mathf.Rad2Deg,
@@ -492,25 +518,17 @@ public class WaterWarriorsRaidEvent : SpecialEvent
 
         foreach (Room room in Room.List)
         {
-            if (room == null || room.Zone is ZoneType.Unspecified or ZoneType.Pocket)
+            if (!CanFloodAffectRoom(room))
                 continue;
 
-            float horizontalDistance = Vector2.Distance(
-                new Vector2(volume.Center.x, volume.Center.z),
-                new Vector2(room.Position.x, room.Position.z));
-            float horizontalDepth = volume.HorizontalScale * 0.5f - horizontalDistance;
-            float reachStrength = Mathf.Clamp01((horizontalDepth + RoomTintHorizontalLead) / RoomTintHorizontalFullDepth);
-            if (reachStrength <= 0f)
-                continue;
-
-            float depth = volume.TopY - room.Position.y;
-            float tintStrength = Mathf.Clamp01((depth + RoomTintLeadHeight) / RoomTintFullDepth) * reachStrength;
+            float tintStrength = GetRoomFloodTintStrength(room, volume);
             if (tintStrength <= 0f)
                 continue;
 
             if (!_originalFloodRoomColors.ContainsKey(room))
                 _originalFloodRoomColors[room] = room.Color;
 
+            float depth = GetRoomFloodDepth(room, volume);
             float deepStrength = Mathf.Clamp01(depth / RoomTintFullDepth);
             Color targetWaterColor = Color.Lerp(FloodRoomShallowColor, FloodRoomDeepColor, deepStrength);
             Color originalColor = _originalFloodRoomColors[room];
@@ -520,6 +538,209 @@ public class WaterWarriorsRaidEvent : SpecialEvent
             room.AreLightsOff = false;
             room.Color = roomColor;
         }
+    }
+
+    private void UpdateSubmergedRoomParticles(FloodVolumeState volume, bool force = false)
+    {
+        if (!force && Time.time < _nextRoomParticleUpdateTime)
+            return;
+
+        _nextRoomParticleUpdateTime = Time.time + RoomParticleUpdateInterval;
+
+        foreach (Room room in Room.List)
+        {
+            if (!ShouldRenderSubmergedRoomParticles(room, volume))
+                continue;
+
+            EnsureSubmergedRoomParticles(room);
+        }
+
+        foreach (KeyValuePair<Room, List<RoomWaterParticleState>> entry in _activeRoomWaterParticles.ToList())
+        {
+            Room room = entry.Key;
+            List<RoomWaterParticleState> particles = entry.Value;
+
+            if (!ShouldRenderSubmergedRoomParticles(room, volume))
+            {
+                DestroyRoomParticles(particles);
+                _activeRoomWaterParticles.Remove(room);
+                continue;
+            }
+
+            UpdateRoomParticles(room, particles, volume);
+        }
+    }
+
+    private void EnsureSubmergedRoomParticles(Room room)
+    {
+        if (!_activeRoomWaterParticles.TryGetValue(room, out List<RoomWaterParticleState> particles))
+        {
+            particles = [];
+            _activeRoomWaterParticles[room] = particles;
+        }
+
+        while (particles.Count < RoomWaterParticleCount)
+            particles.Add(CreateRoomWaterParticleState(room, particles.Count));
+    }
+
+    private RoomWaterParticleState CreateRoomWaterParticleState(Room room, int index)
+    {
+        bool isMicrobe = index % 3 == 0;
+        float size = UnityEngine.Random.Range(0.1f, 0.24f);
+        Vector3 scale = isMicrobe
+            ? new Vector3(size * 0.45f, size * UnityEngine.Random.Range(1.55f, 2.25f), size * 0.45f)
+            : Vector3.one * size;
+
+        Color color = isMicrobe ? RoomMicrobeColor : RoomBubbleColor;
+        color.a = UnityEngine.Random.Range(0.34f, 0.62f);
+
+        Vector3 localAnchor = new(
+            UnityEngine.Random.Range(-RoomParticleHorizontalSpread, RoomParticleHorizontalSpread),
+            RoomParticleMinLocalY,
+            UnityEngine.Random.Range(-RoomParticleHorizontalSpread, RoomParticleHorizontalSpread));
+
+        Primitive particle = Primitive.Create(
+            isMicrobe ? PrimitiveType.Capsule : PrimitiveType.Sphere,
+            RoomLocalToWorld(room, localAnchor),
+            UnityEngine.Random.rotation.eulerAngles,
+            scale,
+            true,
+            color);
+
+        particle.Collidable = false;
+        particle.MovementSmoothing = 60;
+
+        return new RoomWaterParticleState
+        {
+            Primitive = particle,
+            LocalAnchor = localAnchor,
+            LocalTopY = UnityEngine.Random.Range(2.4f, RoomParticleMaxLocalY),
+            DriftRadius = UnityEngine.Random.Range(0.12f, 0.55f),
+            RiseSpeed = UnityEngine.Random.Range(0.04f, 0.12f),
+            OrbitSpeed = UnityEngine.Random.Range(0.25f, 0.85f),
+            BobSpeed = UnityEngine.Random.Range(0.9f, 1.8f),
+            Phase = UnityEngine.Random.Range(0f, Mathf.PI * 2f),
+            RotationSpeed = UnityEngine.Random.Range(22f, 115f),
+        };
+    }
+
+    private static void UpdateRoomParticles(Room room, List<RoomWaterParticleState> particles, FloodVolumeState volume)
+    {
+        float visualSeconds = Time.time;
+        float waterLocalTop = Mathf.Clamp(
+            RoomFloodProbeLocalY + GetRoomFloodDepth(room, volume) - 0.35f,
+            RoomParticleMinLocalY + 0.15f,
+            RoomParticleMaxLocalY);
+
+        foreach (RoomWaterParticleState state in particles)
+        {
+            float localTopY = Mathf.Clamp(waterLocalTop, RoomParticleMinLocalY + 0.15f, state.LocalTopY);
+            float rise = Mathf.Repeat(visualSeconds * state.RiseSpeed + state.Phase, 1f);
+            float orbit = visualSeconds * state.OrbitSpeed + state.Phase;
+
+            Vector3 local = state.LocalAnchor;
+            local.x += Mathf.Cos(orbit) * state.DriftRadius;
+            local.y = Mathf.Lerp(RoomParticleMinLocalY, localTopY, rise)
+                + Mathf.Sin(visualSeconds * state.BobSpeed + state.Phase) * 0.08f;
+            local.z += Mathf.Sin(orbit * 0.77f) * state.DriftRadius;
+
+            Vector3 worldPosition = RoomLocalToWorld(room, local);
+            if (!volume.TryGetVerticalBoundsAtPoint(worldPosition, out float lowerY, out float upperY) ||
+                upperY - lowerY <= RoomParticleLowerPadding + RoomParticleSurfacePadding)
+            {
+                state.Primitive.Visible = false;
+                continue;
+            }
+
+            worldPosition.y = Mathf.Clamp(
+                worldPosition.y,
+                lowerY + RoomParticleLowerPadding,
+                upperY - RoomParticleSurfacePadding);
+
+            bool isInsideFlood = volume.ContainsPoint(worldPosition);
+            state.Primitive.Visible = isInsideFlood;
+            if (!isInsideFlood)
+                continue;
+
+            state.Primitive.Position = worldPosition;
+            state.Primitive.Rotation = Quaternion.Euler(
+                visualSeconds * state.RotationSpeed + state.Phase * Mathf.Rad2Deg,
+                visualSeconds * state.RotationSpeed * 0.65f,
+                visualSeconds * state.RotationSpeed * 0.35f);
+        }
+    }
+
+    private static bool ShouldRenderSubmergedRoomParticles(Room room, FloodVolumeState volume)
+    {
+        return CanFloodAffectRoom(room) &&
+               GetRoomFloodDepth(room, volume) >= RoomParticleStartDepth &&
+               GetRoomFloodTintStrength(room, volume) >= RoomParticleStartTintStrength;
+    }
+
+    private static bool CanFloodAffectRoom(Room? room)
+    {
+        return room != null && room.Zone != ZoneType.Unspecified && room.Zone != ZoneType.Pocket;
+    }
+
+    private static float GetRoomFloodDepth(Room room, FloodVolumeState volume)
+    {
+        return Mathf.Max(0f, volume.GetVerticalDepthAtPoint(GetRoomFloodProbePosition(room)));
+    }
+
+    private static float GetRoomFloodTintStrength(Room room, FloodVolumeState volume)
+    {
+        return volume.GetContainmentStrength(GetRoomFloodProbePosition(room), RoomTintEllipsoidFeather);
+    }
+
+    private static Vector3 GetRoomFloodProbePosition(Room room)
+    {
+        return RoomLocalToWorld(room, new Vector3(0f, RoomFloodProbeLocalY, 0f));
+    }
+
+    private static Vector3 RoomLocalToWorld(Room room, Vector3 localPosition)
+    {
+        return room.Position + room.Rotation * localPosition;
+    }
+
+    private static void ApplyFloodDrowningToSubmergedPlayers(FloodVolumeState volume)
+    {
+        foreach (Player player in Player.List)
+        {
+            if (!CanFloodDrown(player))
+                continue;
+
+            if (!volume.ContainsPoint(GetPlayerFloodProbePosition(player)))
+                continue;
+
+            ApplyFloodDrowning(player);
+        }
+    }
+
+    private static void ApplyFloodDrowningToAllPlayers()
+    {
+        foreach (Player player in Player.List)
+        {
+            if (CanFloodDrown(player))
+                ApplyFloodDrowning(player);
+        }
+    }
+
+    private static bool CanFloodDrown(Player? player)
+    {
+        return player != null && player.IsSafePlayer() && player.IsAlive && !IsWaterWarrior(player);
+    }
+
+    private static void ApplyFloodDrowning(Player player)
+    {
+        if (player.IsEffectActive<FloodDrowning>())
+            return;
+
+        player.EnableEffect<FloodDrowning>(FloodDrowning.DefaultIntensity);
+    }
+
+    private static Vector3 GetPlayerFloodProbePosition(Player player)
+    {
+        return player.Position + Vector3.up * PlayerFloodProbeHeight;
     }
 
     private void HandleFacilityStabilized()
@@ -562,6 +783,20 @@ public class WaterWarriorsRaidEvent : SpecialEvent
             SafeDestroyPrimitive(particleState.Primitive);
 
         _activeWaterParticles.Clear();
+
+        foreach (List<RoomWaterParticleState> particles in _activeRoomWaterParticles.Values.ToList())
+            DestroyRoomParticles(particles);
+
+        _activeRoomWaterParticles.Clear();
+        _nextRoomParticleUpdateTime = 0f;
+    }
+
+    private static void DestroyRoomParticles(List<RoomWaterParticleState> particles)
+    {
+        foreach (RoomWaterParticleState particleState in particles.ToList())
+            SafeDestroyPrimitive(particleState.Primitive);
+
+        particles.Clear();
     }
 
     private void RestoreFloodRoomColors()
@@ -614,6 +849,7 @@ public class WaterWarriorsRaidEvent : SpecialEvent
         public FloodVolumeState(Vector3 center, Vector3 scale)
         {
             Center = center;
+            HalfExtents = scale * 0.5f;
             Height = scale.y;
             BottomY = center.y - Height * 0.5f;
             TopY = center.y + Height * 0.5f;
@@ -622,11 +858,66 @@ public class WaterWarriorsRaidEvent : SpecialEvent
         }
 
         public Vector3 Center { get; }
+        public Vector3 HalfExtents { get; }
         public float Height { get; }
         public float BottomY { get; }
         public float TopY { get; }
         public float HorizontalScale { get; }
         public Vector3 SurfacePosition { get; }
+
+        public bool ContainsPoint(Vector3 point)
+        {
+            return GetNormalizedDistanceSqr(point) <= 1f;
+        }
+
+        public float GetContainmentStrength(Vector3 point, float edgeFeather)
+        {
+            float distanceSqr = GetNormalizedDistanceSqr(point);
+            if (distanceSqr >= 1f)
+                return 0f;
+
+            return Mathf.Clamp01((1f - distanceSqr) / Mathf.Max(0.001f, edgeFeather));
+        }
+
+        public float GetVerticalDepthAtPoint(Vector3 point)
+        {
+            return TryGetVerticalBoundsAtPoint(point, out _, out float upperY)
+                ? upperY - point.y
+                : -1f;
+        }
+
+        public bool TryGetVerticalBoundsAtPoint(Vector3 point, out float lowerY, out float upperY)
+        {
+            float horizontalDistanceSqr = GetHorizontalNormalizedDistanceSqr(point);
+            if (horizontalDistanceSqr > 1f)
+            {
+                lowerY = 0f;
+                upperY = 0f;
+                return false;
+            }
+
+            float verticalOffset = HalfExtents.y * Mathf.Sqrt(Mathf.Max(0f, 1f - horizontalDistanceSqr));
+            lowerY = Center.y - verticalOffset;
+            upperY = Center.y + verticalOffset;
+            return true;
+        }
+
+        private float GetNormalizedDistanceSqr(Vector3 point)
+        {
+            Vector3 offset = point - Center;
+            float x = offset.x / Mathf.Max(0.001f, HalfExtents.x);
+            float y = offset.y / Mathf.Max(0.001f, HalfExtents.y);
+            float z = offset.z / Mathf.Max(0.001f, HalfExtents.z);
+            return x * x + y * y + z * z;
+        }
+
+        private float GetHorizontalNormalizedDistanceSqr(Vector3 point)
+        {
+            Vector3 offset = point - Center;
+            float x = offset.x / Mathf.Max(0.001f, HalfExtents.x);
+            float z = offset.z / Mathf.Max(0.001f, HalfExtents.z);
+            return x * x + z * z;
+        }
 
         public static FloodVolumeState FromPrimitive(Primitive primitive)
         {
@@ -640,6 +931,19 @@ public class WaterWarriorsRaidEvent : SpecialEvent
         public Vector2 NormalizedHorizontalOffset { get; set; }
         public float VerticalFactor { get; set; }
         public float DriftRadiusFactor { get; set; }
+        public float OrbitSpeed { get; set; }
+        public float BobSpeed { get; set; }
+        public float Phase { get; set; }
+        public float RotationSpeed { get; set; }
+    }
+
+    private sealed class RoomWaterParticleState
+    {
+        public Primitive Primitive { get; set; } = null!;
+        public Vector3 LocalAnchor { get; set; }
+        public float LocalTopY { get; set; }
+        public float DriftRadius { get; set; }
+        public float RiseSpeed { get; set; }
         public float OrbitSpeed { get; set; }
         public float BobSpeed { get; set; }
         public float Phase { get; set; }

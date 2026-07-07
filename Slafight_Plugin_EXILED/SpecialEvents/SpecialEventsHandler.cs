@@ -483,7 +483,9 @@ public class SpecialEventsHandler : IBootstrapHandler, IDisposable
                 SpecialEventType.Scp1509BattleField or
                 SpecialEventType.SnowWarriorsAttack or
                 SpecialEventType.CaseColourlessGreen or
-                SpecialEventType.FacilityTermination => false,
+                SpecialEventType.FacilityTermination or 
+                SpecialEventType.WaterWarriorsRaid or 
+                SpecialEventType.CandyWarriorsAttack => false,
             _ => true
         };
 #pragma warning restore CS0618

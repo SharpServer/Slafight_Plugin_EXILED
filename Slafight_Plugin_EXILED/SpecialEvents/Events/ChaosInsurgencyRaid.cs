@@ -32,10 +32,6 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
     // ===== 内部状態 =====
     private bool _teslaDisabled = false;
     // ===== 実行エントリポイント =====
-    public override bool IsReadyToExecute()
-    {
-        return MapFlags.GetSeason() == SeasonTypeId.None;
-    }
 
     protected override void OnExecute(int eventPID)
     {

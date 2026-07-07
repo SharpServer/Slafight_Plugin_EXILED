@@ -40,7 +40,6 @@ public class Scp3125Role : CRole
         player.Health = maxHealth;
         player.EnableEffect(EffectType.Slowness, 30);
 
-        player.AddAbility<MemeWaveAbility>();
         var playerId = player.Id;
         Timing.CallDelayed(RoleSpawnTimings.Scp3125Startup, () =>
         {

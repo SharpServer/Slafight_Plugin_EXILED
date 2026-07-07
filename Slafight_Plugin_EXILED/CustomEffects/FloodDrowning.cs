@@ -16,11 +16,11 @@ public class FloodDrowning : CustomTickingEffectBase, ICustomDisplayName
     private const float DamagePerTick = 28f;
     private const float FinishingDamage = 5000f;
     private const float VisualRefreshDuration = 1.1f;
-    private const string DeathText = "制御不能なDSS-08の水流に押し潰され溺死した";
+    private const string DeathText = "溺死した";
 
     public bool CanBeDisplayed => true;
     public string DisplayName => "Flood Drowning";
-    public override EffectClassification Classification => EffectClassification.Technical;
+    public override EffectClassification Classification => EffectClassification.Negative;
     public override float TickRate => 0.35f;
 
     public override void Enabled()
