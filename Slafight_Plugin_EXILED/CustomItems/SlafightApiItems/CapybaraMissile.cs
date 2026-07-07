@@ -77,7 +77,7 @@ public class CapybaraMissile : CItemWeapon
                 {
                     try
                     {
-                        player.Hurt(pushPlayer, 999f, DamageType.Unknown);
+                        player.Hurt(pushPlayer, 2f, DamageType.Unknown);
                         pushPlayer?.ShowHitMarker();
                     }
                     catch (Exception ex)

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
+using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features.Common;
@@ -448,6 +449,40 @@ public static class RoundVictoryDefinitions
                opposingTeams.Count == 1;
     }
 
+    internal static bool HasOnlyAraOrunAgainstCaseColourlessGreenFifthists(IReadOnlyList<Player> players)
+    {
+        bool araOrunAlive = false;
+        bool fifthistAlive = false;
+
+        foreach (var player in players)
+        {
+            if (!IsAliveRoundPlayer(player))
+                continue;
+
+            if (IsAraOrunPlayer(player))
+            {
+                araOrunAlive = true;
+                continue;
+            }
+
+            if (IsCaseColourlessGreenFifthist(player))
+            {
+                fifthistAlive = true;
+                continue;
+            }
+
+            return false;
+        }
+
+        return araOrunAlive && fifthistAlive;
+    }
+
+    private static bool IsCaseColourlessGreenFifthist(Player player)
+    {
+        return GetVictoryTeam(player) == CTeam.Fifthists ||
+               player.GetCustomRole() is CRoleTypeId.Scp3125 or CRoleTypeId.FifthistMarionette;
+    }
+
     internal static bool IsScp079Player(Player player)
     {
         return IsAliveRoundPlayer(player) &&
@@ -484,7 +519,7 @@ public static class RoundVictoryDefinitions
 
     internal static void ExecuteAraOrunKill()
     {
-        var terminated = TerminatePlayers(IsAraOrunPlayer, "Terminated by Fifthists");
+        var terminated = TerminatePlayers(IsAraOrunPlayer, "Terminated by Fifthists", true);
 
         if (terminated == 0)
             return;
@@ -494,7 +529,7 @@ public static class RoundVictoryDefinitions
             $"<color=yellow>アラ・オルン</color>は<color={CTeam.Fifthists.GetTeamColor()}>SCP-3125</color>により終了されました。");
     }
 
-    private static int TerminatePlayers(Func<Player, bool> selector, string reason)
+    private static int TerminatePlayers(Func<Player, bool> selector, string reason, bool ensureSpectator = false)
     {
         var targets = Player.List
             .Where(player => player != null && selector(player))
@@ -502,10 +537,37 @@ public static class RoundVictoryDefinitions
 
         foreach (var target in targets)
         {
-            target.Kill(reason);
+            try
+            {
+                target.Kill(reason);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"[RoundVictory] Failed to kill {target.Nickname}: {ex.Message}");
+                if (ensureSpectator)
+                    ForceSpectatorIfStillSelected(target.Id, selector);
+                continue;
+            }
+
+            if (ensureSpectator)
+                EnsureSpectatorIfStillSelected(target.Id, selector);
         }
 
         return targets.Count;
+    }
+
+    private static void EnsureSpectatorIfStillSelected(int playerId, Func<Player, bool> selector)
+    {
+        Timing.CallDelayed(0.25f, () => ForceSpectatorIfStillSelected(playerId, selector));
+    }
+
+    private static void ForceSpectatorIfStillSelected(int playerId, Func<Player, bool> selector)
+    {
+        var player = Player.Get(playerId);
+        if (player == null || player.ReferenceHub == null || !selector(player))
+            return;
+
+        player.Role.Set(RoleTypeId.Spectator, RoleSpawnFlags.All);
     }
 }
 

@@ -56,6 +56,7 @@ public class Plugin : Plugin<Config>
         WearsHandler.Register();
         HIDTurretObject.RegisterEvents();
         Tentacle.RegisterEvents();
+        WaterTentacle.RegisterEvents();
         KillCounter.Register();
         CRole.RegisterAllEvents();
         CItem.RegisterAllItems();
@@ -128,6 +129,7 @@ public class Plugin : Plugin<Config>
         WearsHandler.Unregister();
         HIDTurretObject.UnregisterEvents();
         Tentacle.UnregisterEvents();
+        WaterTentacle.UnregisterEvents();
         CRole.UnregisterAllEvents();
         CItem.UnregisterAllItems();
         Scp914ProcessorFix.Unregister();

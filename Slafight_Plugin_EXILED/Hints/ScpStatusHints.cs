@@ -191,8 +191,8 @@ public class ScpStatusHints : IBootstrapHandler
 
     private static bool IsScpStatusMember(Player player)
     {
-        return player.GetTeam() == CTeam.SCPs &&
-               player.GetCustomRole() is not CRoleTypeId.Scp3005 &&
+        return (player.GetTeam() == CTeam.SCPs ||
+                player.GetCustomRole() == CRoleTypeId.Scp3005) &&
                !CRole.IsTeamNpc(player) && player.IsSafePlayer();
     }
 

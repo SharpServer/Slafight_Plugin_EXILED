@@ -213,6 +213,7 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
             player.IsBypassModeEnabled = false;
             player.ClearCustomInfo();
             player.DisableAllEffects();
+            Intercom.TrySetOverride(player, false);
         });
 
         RunCleanup("player state", () => player.Clear());

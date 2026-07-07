@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
-using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.API.Features.RoundVictory.Sources;
 
@@ -25,10 +24,7 @@ public sealed class DefaultRoundVictoryDefinitionSource : RoundVictoryDefinition
         yield return new RoundVictoryCondition(
             CTeam.FoundationForces,
             "AraOrunDeath",
-            context => RoundVictoryDefinitions.HasOnlyTargetRoleOnSideAgainstSingleOpposingTeam(
-                context.AlivePlayers,
-                player => !RoundVictoryDefinitions.GetVictoryTeam(player).IsGoI(),
-                RoundVictoryDefinitions.IsAraOrunPlayer),
+            context => RoundVictoryDefinitions.HasOnlyAraOrunAgainstCaseColourlessGreenFifthists(context.AlivePlayers),
             RoundVictoryDefinitions.ExecuteAraOrunKill,
             context => context.ActiveEvent is SpecialEventType.CaseColourlessGreen,
             isForEnd: false);

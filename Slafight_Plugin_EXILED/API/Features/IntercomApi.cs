@@ -365,12 +365,14 @@ public static class IntercomApi
 
         owner = NormalizeOwner(owner);
 
+        bool wasOverriddenBeforeApi = ExiledIntercom.HasOverride(player!);
+
         if (!ExiledIntercom.TrySetOverride(player!, true))
             return false;
 
         if (!OverrideOwnersByPlayer.TryGetValue(player!.Id, out var state))
         {
-            state = new PlayerOverrideState(ExiledIntercom.HasOverride(player));
+            state = new PlayerOverrideState(wasOverriddenBeforeApi);
             OverrideOwnersByPlayer[player.Id] = state;
         }
 

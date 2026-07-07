@@ -69,6 +69,11 @@ public class CaseColourlessGreen : SpecialEvent
         }
         
         MapUtils.LoadMap("ccg");
+        foreach (var generator in Generator.List)
+        {
+            if (generator is null) continue;
+            generator.ActivationTime = 20f;
+        }
         SetDoorState(ZoneType.Entrance, true);
         SetDoorState(ZoneType.HeavyContainment, true);
         SetDoorState(ZoneType.LightContainment, true);

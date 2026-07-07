@@ -105,6 +105,7 @@ public class WaterTentacle : ObjectPrefab
         if (_eventsRegistered)
             return;
 
+        Exiled.Events.Handlers.Scp096.AddingTarget += OnScp096AddingTarget;
         Exiled.Events.Handlers.Player.SpawningRagdoll += OnSpawningRagdoll;
         _eventsRegistered = true;
     }
@@ -114,6 +115,7 @@ public class WaterTentacle : ObjectPrefab
         if (!_eventsRegistered)
             return;
 
+        Exiled.Events.Handlers.Scp096.AddingTarget -= OnScp096AddingTarget;
         Exiled.Events.Handlers.Player.SpawningRagdoll -= OnSpawningRagdoll;
         TentacleNpcIds.Clear();
         _eventsRegistered = false;
@@ -390,6 +392,12 @@ public class WaterTentacle : ObjectPrefab
     private static void OnSpawningRagdoll(Exiled.Events.EventArgs.Player.SpawningRagdollEventArgs ev)
     {
         if (ev?.Player != null && TentacleNpcIds.Contains(ev.Player.Id))
+            ev.IsAllowed = false;
+    }
+
+    private static void OnScp096AddingTarget(Exiled.Events.EventArgs.Scp096.AddingTargetEventArgs ev)
+    {
+        if (ev?.Target != null && TentacleNpcIds.Contains(ev.Target.Id))
             ev.IsAllowed = false;
     }
 }
