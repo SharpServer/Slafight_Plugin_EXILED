@@ -14,14 +14,21 @@ namespace Slafight_Plugin_EXILED.MainHandlers;
 /// <see cref="ModerationBridge"/> 経由で Discord Bot 側へ通知する。
 /// RAの "ban" コマンドは Kick(duration=0)/Ban(duration&gt;0) 双方とも内部的に BanPlayer.BanUser を経由するため、
 /// Exiled の Kicked/Banned イベントをフックすれば ModeratorUtil 経由・RAコンソール経由の両方を捕捉できる
-/// (デコンパイルで確認済み)。ただし post イベントの Kicked には実行者情報が乗らないため、
-/// pre イベントの Kicking (実行者を含む) で一時的に対応付けてから Kicked 発火時に合成する。
+/// (デコンパイルで確認済み)。
+/// 注意: 実際の Ban (duration&gt;0) でも BanUser の最後で ServerConsole.Disconnect が直接呼ばれるため、
+/// Banned に加えて Kicked も必ず発火する(デコンパイルで確認済み)。そのままだと同じ操作が
+/// Ban通知とKick通知の二重で飛んでしまうため、Banned側で対象を記録して Kicked側で抑制する。
+/// Kicked(post) には実行者情報が無いため、Kicking(pre, 実行者を含む) を一時対応付けて合成する
+/// (実際のKick=duration=0はこの経路のみを通り、Bannedは発火しない)。
 /// Warn は既存フレームワークにイベントが無いため、実行者が確定している ModeratorUtil 側から直接通知する。
 /// </summary>
 public static class ModerationEventsHandler
 {
     // Kicking(pre) で捕捉した実行者を Kicked(post) 発火まで一時保持する。Key: 対象のUserId
     private static readonly Dictionary<string, Player> PendingKickIssuers = new();
+
+    // Banned で処理済みの対象。直後に付随して発火する Kicked を二重通知しないための抑制用。Key: 対象のUserId
+    private static readonly HashSet<string> SuppressNextKick = new();
 
     public static void Register()
     {
@@ -44,12 +51,14 @@ public static class ModerationEventsHandler
         Exiled.Events.Handlers.Player.Kicked -= OnKicked;
         Exiled.Events.Handlers.Player.Banned -= OnBanned;
         PendingKickIssuers.Clear();
+        SuppressNextKick.Clear();
     }
 
     private static void OnRestartingRound()
     {
-        // Kicking が発火してもキャンセルされ Kicked が来なかった場合の取りこぼし掃除
+        // Kicking/Banned が発火しても対になるイベントが来なかった場合の取りこぼし掃除
         PendingKickIssuers.Clear();
+        SuppressNextKick.Clear();
     }
 
     private static void OnKicking(KickingEventArgs ev)
@@ -62,16 +71,23 @@ public static class ModerationEventsHandler
     {
         if (!ev.Player.IsSafePlayer()) return;
 
-        Player issuer = null;
-        if (PendingKickIssuers.TryGetValue(ev.Player.UserId, out issuer))
+        // 直前の Banned 通知に付随する強制切断なので、Kick として二重通知しない
+        if (SuppressNextKick.Remove(ev.Player.UserId))
+        {
             PendingKickIssuers.Remove(ev.Player.UserId);
+            return;
+        }
 
-        bool hasIssuer = issuer != null && !issuer.IsHost;
+        Player issuer = null;
+        PendingKickIssuers.TryGetValue(ev.Player.UserId, out issuer);
+        PendingKickIssuers.Remove(ev.Player.UserId);
+
+        var (actorName, actorId) = FormatActor(issuer);
 
         ModerationBridge.Send("kick", new
         {
-            actor = hasIssuer ? issuer.Nickname : "サーバーコンソール",
-            actorId = hasIssuer ? issuer.UserId : null,
+            actor = actorName,
+            actorId,
             target = ev.Player.Nickname,
             targetId = ev.Player.UserId,
             reason = ev.Reason,
@@ -82,8 +98,10 @@ public static class ModerationEventsHandler
     {
         if (!ev.Target.IsSafePlayer()) return;
 
+        // この直後に必ず Kicked (強制切断) も発火するため、そちらは無視させる
+        SuppressNextKick.Add(ev.Target.UserId);
+
         var details = ev.Details;
-        string issuer = details?.Issuer;
         string reason = details?.Reason ?? string.Empty;
         string durationLabel = "無期限";
 
@@ -97,9 +115,14 @@ public static class ModerationEventsHandler
                 : $"{span.TotalHours:0.#}時間";
         }
 
+        // ev.Player は Banned イベントでは "実行者" を指す (Target が対象)。
+        // Details.Issuer の文字列パースより、Exiled が解決済みの Player を使う方がシンプルで確実。
+        var (actorName, actorId) = FormatActor(ev.Player);
+
         ModerationBridge.Send("ban", new
         {
-            actor = issuer,
+            actor = actorName,
+            actorId,
             target = ev.Target.Nickname,
             targetId = ev.Target.UserId,
             duration = durationLabel,
@@ -107,6 +130,14 @@ public static class ModerationEventsHandler
             banType = ev.Type.ToString(),
             forced = ev.IsForced,
         });
+    }
+
+    private static (string Name, string Id) FormatActor(Player issuer)
+    {
+        if (issuer == null || issuer.IsHost)
+            return ("サーバーコンソール", null);
+
+        return (issuer.Nickname, issuer.UserId);
     }
 
     private static void OnReportingCheater(ReportingCheaterEventArgs ev)
