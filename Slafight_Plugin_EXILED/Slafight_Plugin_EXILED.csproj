@@ -239,6 +239,7 @@
         <Compile Include="API\Features\SpeakerApi.cs" />
         <Compile Include="API\Features\VoiceRecordingApi.cs" />
         <Compile Include="API\Features\CRole.cs" />
+        <Compile Include="API\Features\ModerationBridge.cs" />
         <Compile Include="API\Features\CRoleRuntime.cs" />
         <Compile Include="API\Features\CRoom.cs" />
         <Compile Include="API\Features\Common\DefinitionSourceLoader.cs" />
@@ -591,6 +592,7 @@
         <Compile Include="MainHandlers\SpawnSystem.cs" />
         <Compile Include="MainHandlers\SpecificFlagsHandler.cs" />
         <Compile Include="MainHandlers\WearsHandler.cs" />
+        <Compile Include="MainHandlers\ModerationEventsHandler.cs" />
         <Compile Include="CustomMaps\Core\DoorAccess\SpecialDoorAccessController.cs" />
         <Compile Include="CustomMaps\Core\DoorAccess\SpecialDoorAccessRule.cs" />
         <Compile Include="CustomMaps\Core\FemurBreaker\FemurBreakerController.cs" />

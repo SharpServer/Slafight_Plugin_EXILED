@@ -41,4 +41,12 @@ public class Config : IConfig
     [Description("Delta Warhead が爆発するまでの時間（秒）")]
     public float DwBoomTime { get; set; } = 100f;
 
+    [Description("Discord Bot連携(bot.py)のFlask APIエンドポイント。通常は変更不要")]
+    public string DiscordBotApiUrl { get; set; } = "http://localhost:5000";
+
+    [Description("Discord Bot連携(bot.py)のAPI認証用共有シークレット。bot.py側のAPI_SECRETと同じ値を設定してください。" +
+                 "このリポジトリはGitHubで公開しているため、シークレットをソースコードに直書きせずここで設定します。" +
+                 "空のままだとBot側で401拒否され、人数送信・モデレーション通知が届きません。")]
+    public string DiscordBotApiSecret { get; set; } = string.Empty;
+
 }

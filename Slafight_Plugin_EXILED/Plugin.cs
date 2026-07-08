@@ -29,6 +29,8 @@ using Exiled.API.Features;
 public class Plugin : Plugin<Config>
 {
     public static Plugin Singleton { get; set; } = null!;
+    public const string ServerName = "シャープ鯖";
+
     private CancellationTokenSource _playerCountCts;
     private static readonly HttpClient HttpClient = new()
     {
@@ -78,7 +80,8 @@ public class Plugin : Plugin<Config>
         Communications.Register();
         Scp914Changes.Register();
         Scp513.Register();
-            
+        ModerationEventsHandler.Register();
+
         AutoHandlerBootstrapRegister.Register();
         ServerSpecificsHandler.Register();
         CustomShieldState.RegisterEvents();
@@ -91,6 +94,12 @@ public class Plugin : Plugin<Config>
             
         HarmonyInstance = new Harmony($"{Name}.{DateTime.UtcNow.Ticks}");
         HarmonyInstance.PatchAll();
+
+        if (string.IsNullOrEmpty(Config.DiscordBotApiSecret))
+        {
+            Log.Warn($"[{Name}] Config.DiscordBotApiSecret が未設定です。Discord Bot連携(人数送信・モデレーション通知)はBot側に401拒否され動作しません。" +
+                     $"設定ファイルで bot.py の API_SECRET と同じ値を設定してください。");
+        }
 
         // ここから差し替え
         _playerCountCts?.Cancel();                     // 念のため前回のを殺す
@@ -150,6 +159,7 @@ public class Plugin : Plugin<Config>
         Communications.Unregister();
         Scp914Changes.Unregister();
         Scp513.Unregister();
+        ModerationEventsHandler.Unregister();
         OmegaWarhead.Shutdown();
         
         AutoHandlerBootstrapRegister.Unregister();
@@ -198,14 +208,21 @@ public class Plugin : Plugin<Config>
         {
             var data = new
             {
-                server = "シャープ鯖",
+                server = ServerName,
                 count = count,
                 timestamp = DateTime.UtcNow
             };
 
             string json = JsonSerializer.Serialize(data);
-            using var content = new StringContent(json, Encoding.UTF8, "application/json");
-            await HttpClient.PostAsync("http://localhost:5000/playercount", content);
+            string url = $"{Config.DiscordBotApiUrl.TrimEnd('/')}/playercount";
+
+            using var request = new HttpRequestMessage(HttpMethod.Post, url)
+            {
+                Content = new StringContent(json, Encoding.UTF8, "application/json")
+            };
+            request.Headers.Add("X-Api-Key", Config.DiscordBotApiSecret ?? string.Empty);
+
+            await HttpClient.SendAsync(request);
         }
         catch (TaskCanceledException tce)
         {

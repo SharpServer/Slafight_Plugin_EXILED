@@ -255,6 +255,16 @@ public class ModeratorUtil : CItemWeapon
         };
 
         target.Broadcast(6, $"<color=red><b>Moderator Warning</b></color>\n{message}");
+
+        ModerationBridge.Send("warn", new
+        {
+            actor = actor.Nickname,
+            actorId = actor.UserId,
+            target = target.Nickname,
+            targetId = target.UserId,
+            message,
+        });
+
         return $"{target.Nickname} に警告を送信しました。";
     }
 
@@ -269,6 +279,16 @@ public class ModeratorUtil : CItemWeapon
         };
 
         target.Kick(reason, actor);
+
+        ModerationBridge.Send("kick", new
+        {
+            actor = actor.Nickname,
+            actorId = actor.UserId,
+            target = target.Nickname,
+            targetId = target.UserId,
+            reason,
+        });
+
         return $"{target.Nickname} を Kick しました。理由: {reason}";
     }
 
@@ -297,6 +317,16 @@ public class ModeratorUtil : CItemWeapon
             return PermanentlyIpBanTarget(actor, target);
 
         target.Ban(duration, $"Moderator action ({label})", actor);
+
+        ModerationBridge.Send("ban", new
+        {
+            actor = actor.Nickname,
+            actorId = actor.UserId,
+            target = target.Nickname,
+            targetId = target.UserId,
+            duration = label,
+        });
+
         return $"{target.Nickname} を {label} Ban しました。";
     }
 
@@ -321,6 +351,16 @@ public class ModeratorUtil : CItemWeapon
             return $"{target.Nickname} の無期限IP BAN登録に失敗しました。";
 
         target.Kick(reason, actor);
+
+        ModerationBridge.Send("ban", new
+        {
+            actor = actor.Nickname,
+            actorId = actor.UserId,
+            target = target.Nickname,
+            targetId = target.UserId,
+            duration = "無期限（IP BAN）",
+        });
+
         return $"{target.Nickname} を無期限IP BANしました。";
     }
 

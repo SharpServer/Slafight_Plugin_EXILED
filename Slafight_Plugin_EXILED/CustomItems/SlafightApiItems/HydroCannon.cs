@@ -35,7 +35,7 @@ public class HydroCannon : CItemWeapon
     protected override string UniqueKey => "HydroCannon";
     protected override ItemType BaseItem => ItemType.GunFRMG0;
 
-    protected override float   Damage       => 22f;
+    protected override float   Damage       => 18f;
     protected override byte    MagazineSize => 60;
     protected override Vector3 Scale        => new(1.05f, 1f, 1.3f);
 

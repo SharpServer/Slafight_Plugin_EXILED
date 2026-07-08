@@ -45,7 +45,7 @@ public class WaterWarrior : CRole
         player.Position = PositionProvider.GetChaosSpawnPosition();
         RoleSchematicWears.WearWarrior(player, CRoleTypeId.WaterWarrior, "WaterWarriorsModel", Color.black);
 
-        const int maxHealth = 1000;
+        const int maxHealth = 500;
 
         player.MaxHealth = maxHealth;
         player.Health = maxHealth;

@@ -158,7 +158,7 @@ public class CaseColourlessGreen : SpecialEvent
             var remaining = candidates.Skip(2).ToList();
             var scientistRole = CRoleTypeId.AntiMemeDivisionScientist;
             var marionetteRole = CRoleTypeId.FifthistMarionette;
-            var marionetteChance = 0.4f; // 40% で Marionette、60% で Scientist
+            var marionetteChance = 0.2f; // 40% で Marionette、60% で Scientist
 
             foreach (var p in remaining)
             {

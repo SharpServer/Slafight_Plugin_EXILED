@@ -39,7 +39,7 @@ public class WaterWarriorsRaidEvent : SpecialEvent
 
     private const string FloodSongFileName = "flood_facility.ogg";
     private const float StabilizationWindowSeconds = 1000f;
-    private const float TentacleBreakElapsedSeconds = 163f;
+    private const float TentacleBreakElapsedSeconds = 158f;
     private const float SurfaceGroundReachElapsedSeconds = TentacleBreakElapsedSeconds + 35f;
     private const float FinalFloodSurgeSeconds = 5f;
     private const float FloodPhaseSeconds = SurfaceGroundReachElapsedSeconds + FinalFloodSurgeSeconds;
@@ -144,7 +144,7 @@ public class WaterWarriorsRaidEvent : SpecialEvent
             player.SetRole(CRoleTypeId.WaterWarrior);
 
         IntercomApi.Timeout();
-        IntercomApi.SetUnavailable("WATER_WARRIORS_ATTACK", "<size=24><color=red>ERROR: SYSTEM IS NOW FLOODING WATER</color></size>");
+        IntercomApi.SetUnavailable("WATER_WARRIORS_ATTACK", "<size=52><color=red>ERROR: SYSTEM IS NOW FLOODING WATER</color></size>");
 
         Exiled.API.Features.Cassie.MessageTranslated("$PITCH_1 Attention, All personnel. Unknown Anomaly found in Surface Gate A . Please Check $PITCH_.7 .g2 .g2 .g3 .g3 .g3",
             "全職員に通達。不明な物体が地上ゲートAにて確認されました。直ちに<split>[ノイズ音]",true);
