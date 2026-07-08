@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Server;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -12,16 +14,22 @@ namespace Slafight_Plugin_EXILED.MainHandlers;
 /// <see cref="ModerationBridge"/> 経由で Discord Bot 側へ通知する。
 /// RAの "ban" コマンドは Kick(duration=0)/Ban(duration&gt;0) 双方とも内部的に BanPlayer.BanUser を経由するため、
 /// Exiled の Kicked/Banned イベントをフックすれば ModeratorUtil 経由・RAコンソール経由の両方を捕捉できる
-/// (デコンパイルで確認済み)。ただし Kicked イベントには実行者情報が乗らないため target/reason のみ通知する。
+/// (デコンパイルで確認済み)。ただし post イベントの Kicked には実行者情報が乗らないため、
+/// pre イベントの Kicking (実行者を含む) で一時的に対応付けてから Kicked 発火時に合成する。
 /// Warn は既存フレームワークにイベントが無いため、実行者が確定している ModeratorUtil 側から直接通知する。
 /// </summary>
 public static class ModerationEventsHandler
 {
+    // Kicking(pre) で捕捉した実行者を Kicked(post) 発火まで一時保持する。Key: 対象のUserId
+    private static readonly Dictionary<string, Player> PendingKickIssuers = new();
+
     public static void Register()
     {
         Exiled.Events.Handlers.Server.ReportingCheater += OnReportingCheater;
         Exiled.Events.Handlers.Server.LocalReporting += OnLocalReporting;
+        Exiled.Events.Handlers.Server.RestartingRound += OnRestartingRound;
         Exiled.Events.Handlers.Player.Dying += OnDying;
+        Exiled.Events.Handlers.Player.Kicking += OnKicking;
         Exiled.Events.Handlers.Player.Kicked += OnKicked;
         Exiled.Events.Handlers.Player.Banned += OnBanned;
     }
@@ -30,17 +38,40 @@ public static class ModerationEventsHandler
     {
         Exiled.Events.Handlers.Server.ReportingCheater -= OnReportingCheater;
         Exiled.Events.Handlers.Server.LocalReporting -= OnLocalReporting;
+        Exiled.Events.Handlers.Server.RestartingRound -= OnRestartingRound;
         Exiled.Events.Handlers.Player.Dying -= OnDying;
+        Exiled.Events.Handlers.Player.Kicking -= OnKicking;
         Exiled.Events.Handlers.Player.Kicked -= OnKicked;
         Exiled.Events.Handlers.Player.Banned -= OnBanned;
+        PendingKickIssuers.Clear();
+    }
+
+    private static void OnRestartingRound()
+    {
+        // Kicking が発火してもキャンセルされ Kicked が来なかった場合の取りこぼし掃除
+        PendingKickIssuers.Clear();
+    }
+
+    private static void OnKicking(KickingEventArgs ev)
+    {
+        if (ev.Target == null) return;
+        PendingKickIssuers[ev.Target.UserId] = ev.Player;
     }
 
     private static void OnKicked(KickedEventArgs ev)
     {
         if (!ev.Player.IsSafePlayer()) return;
 
+        Player issuer = null;
+        if (PendingKickIssuers.TryGetValue(ev.Player.UserId, out issuer))
+            PendingKickIssuers.Remove(ev.Player.UserId);
+
+        bool hasIssuer = issuer != null && !issuer.IsHost;
+
         ModerationBridge.Send("kick", new
         {
+            actor = hasIssuer ? issuer.Nickname : "サーバーコンソール",
+            actorId = hasIssuer ? issuer.UserId : null,
             target = ev.Player.Nickname,
             targetId = ev.Player.UserId,
             reason = ev.Reason,
