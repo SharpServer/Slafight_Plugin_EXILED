@@ -449,7 +449,7 @@ public static class RoundVictoryDefinitions
                opposingTeams.Count == 1;
     }
 
-    internal static bool HasOnlyAraOrunAgainstCaseColourlessGreenFifthists(IReadOnlyList<Player> players)
+    internal static bool HasAraOrunWithoutAntiMemeDepartment(IReadOnlyList<Player> players)
     {
         bool araOrunAlive = false;
         bool fifthistAlive = false;
@@ -471,7 +471,8 @@ public static class RoundVictoryDefinitions
                 continue;
             }
 
-            return false;
+            if (IsAntiMemeDepartmentPlayer(player))
+                return false;
         }
 
         return araOrunAlive && fifthistAlive;
@@ -481,6 +482,11 @@ public static class RoundVictoryDefinitions
     {
         return GetVictoryTeam(player) == CTeam.Fifthists ||
                player.GetCustomRole() is CRoleTypeId.Scp3125 or CRoleTypeId.FifthistMarionette;
+    }
+
+    private static bool IsAntiMemeDepartmentPlayer(Player player)
+    {
+        return player.GetCustomRole() is CRoleTypeId.MarionWheeler or CRoleTypeId.AntiMemeDivisionScientist;
     }
 
     internal static bool IsScp079Player(Player player)

@@ -14,7 +14,8 @@ public class AraOrun : CRole
     protected override string RoleName { get; set; } = "アラ・オルン";
 
     protected override string Description { get; set; } = "貴方はミームで構成された機動部隊、アラ・オルンだ。\n" +
-                                                          "下層を目指すマリオンを<color=cyan>サポート</color>し、SCP-3125とその傀儡を<color=red>食い止めよ</color>！";
+                                                          "下層を目指す反ミーム部門職員を<color=cyan>サポート</color>し\n" +
+                                                          "SCP-3125とその傀儡を<color=red>食い止めよ</color>！";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.AraOrun;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "AraOrun";

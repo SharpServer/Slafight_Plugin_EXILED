@@ -24,7 +24,7 @@ public sealed class DefaultRoundVictoryDefinitionSource : RoundVictoryDefinition
         yield return new RoundVictoryCondition(
             CTeam.FoundationForces,
             "AraOrunDeath",
-            context => RoundVictoryDefinitions.HasOnlyAraOrunAgainstCaseColourlessGreenFifthists(context.AlivePlayers),
+            context => RoundVictoryDefinitions.HasAraOrunWithoutAntiMemeDepartment(context.AlivePlayers),
             RoundVictoryDefinitions.ExecuteAraOrunKill,
             context => context.ActiveEvent is SpecialEventType.CaseColourlessGreen,
             isForEnd: false);

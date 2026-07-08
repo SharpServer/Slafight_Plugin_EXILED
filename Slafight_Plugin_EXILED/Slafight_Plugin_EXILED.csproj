@@ -642,6 +642,7 @@
         <Compile Include="Patches\NpcEffectCleanupPatch.cs" />
         <Compile Include="Patches\PlayerRoleManagerRoleSyncPatch.cs" />
         <Compile Include="Patches\Scp1344NvgBlindnessPatch.cs" />
+        <Compile Include="Patches\ScpCrossFactionCombatPatch.cs" />
         <Compile Include="Patches\Scp049InitiativeSensePatch.cs" />
         <Compile Include="Patches\Scp914ProcessorFix.cs" />
         <Compile Include="Patches\VisualTraumatizedPatch.cs" />

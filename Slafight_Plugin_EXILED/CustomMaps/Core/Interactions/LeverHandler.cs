@@ -18,6 +18,7 @@ public class LeverHandler : IBootstrapHandler, IDisposable
     private static LeverHandler _instance;
 
     private readonly EventSubscriptionScope _subscriptions = new();
+    private readonly Dictionary<string, Action<InteractableLeverTogglingEventArgs>> _tagTogglingHandlers = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Action<InteractableLeverToggledEventArgs>> _tagHandlers = new(StringComparer.OrdinalIgnoreCase);
     private bool _disposed;
 
@@ -39,6 +40,9 @@ public class LeverHandler : IBootstrapHandler, IDisposable
     {
         RegisterTagHandlers();
         _subscriptions.Add(
+            () => InteractableLever.Toggling += OnLeverToggling,
+            () => InteractableLever.Toggling -= OnLeverToggling);
+        _subscriptions.Add(
             () => InteractableLever.Toggled += OnLeverToggled,
             () => InteractableLever.Toggled -= OnLeverToggled);
     }
@@ -50,6 +54,7 @@ public class LeverHandler : IBootstrapHandler, IDisposable
 
         _disposed = true;
         _subscriptions.Dispose();
+        _tagTogglingHandlers.Clear();
         _tagHandlers.Clear();
         GC.SuppressFinalize(this);
     }
@@ -86,6 +91,33 @@ public class LeverHandler : IBootstrapHandler, IDisposable
             throw new ArgumentException("Tag cannot be empty.", nameof(tag));
 
         _tagHandlers[tag.Trim()] = handler ?? throw new ArgumentNullException(nameof(handler));
+    }
+
+    private void RegisterTagTogglingHandler(string tag, Action<InteractableLeverTogglingEventArgs> handler)
+    {
+        if (string.IsNullOrWhiteSpace(tag))
+            throw new ArgumentException("Tag cannot be empty.", nameof(tag));
+
+        _tagTogglingHandlers[tag.Trim()] = handler ?? throw new ArgumentNullException(nameof(handler));
+    }
+
+    private void OnLeverToggling(object? sender, InteractableLeverTogglingEventArgs ev)
+    {
+        string tag = ev.Tag?.Trim() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(tag))
+            return;
+
+        if (!_tagTogglingHandlers.TryGetValue(tag, out var handler))
+            return;
+
+        try
+        {
+            handler(ev);
+        }
+        catch (Exception e)
+        {
+            Log.Error($"[LeverHandler] Toggling handler failed for tag '{tag}': {e}");
+        }
     }
 
     private void OnLeverToggled(object? sender, InteractableLeverToggledEventArgs ev)

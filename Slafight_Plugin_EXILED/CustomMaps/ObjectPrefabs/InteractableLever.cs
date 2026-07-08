@@ -9,6 +9,35 @@ using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
+public class InteractableLeverTogglingEventArgs : EventArgs
+{
+    public InteractableLeverTogglingEventArgs(
+        InteractableLever lever,
+        Player player,
+        PlayerSearchedToyEventArgs sourceEventArgs,
+        bool previousIsOn,
+        bool isOn,
+        bool isAllowed = true)
+    {
+        Lever = lever;
+        Player = player;
+        SourceEventArgs = sourceEventArgs;
+        PreviousIsOn = previousIsOn;
+        IsOn = isOn;
+        IsAllowed = isAllowed;
+    }
+
+    public InteractableLever Lever { get; }
+    public Player Player { get; }
+    public PlayerSearchedToyEventArgs SourceEventArgs { get; }
+    public bool PreviousIsOn { get; }
+    public bool IsOn { get; set; }
+    public bool IsAllowed { get; set; }
+    public bool TurnedOn => !PreviousIsOn && IsOn;
+    public bool TurnedOff => PreviousIsOn && !IsOn;
+    public string Tag => Lever.Tag;
+}
+
 public class InteractableLeverToggledEventArgs : EventArgs
 {
     public InteractableLeverToggledEventArgs(
@@ -37,6 +66,7 @@ public class InteractableLeverToggledEventArgs : EventArgs
 
 public class InteractableLever : ObjectPrefab
 {
+    public static event EventHandler<InteractableLeverTogglingEventArgs>? Toggling;
     public static event EventHandler<InteractableLeverToggledEventArgs>? Toggled;
 
     protected override string SchematicName => "InteractableLever";
@@ -86,7 +116,13 @@ public class InteractableLever : ObjectPrefab
             return;
 
         bool previousIsOn = IsOn;
-        IsOn = !IsOn;
+        var togglingEventArgs = new InteractableLeverTogglingEventArgs(this, player, ev, previousIsOn, !previousIsOn, CanInteract);
+        Toggling?.Invoke(this, togglingEventArgs);
+
+        if (!togglingEventArgs.IsAllowed || togglingEventArgs.IsOn == previousIsOn)
+            return;
+
+        IsOn = togglingEventArgs.IsOn;
         SpeakerApi.Play("LeverFlip.ogg", GetSoundId(ev), Schematic.Position, true, isSpatial: false, maxDistance: 10f, minDistance: 0.1f);
         Toggled?.Invoke(this, new InteractableLeverToggledEventArgs(this, player, ev, previousIsOn, IsOn));
     }
