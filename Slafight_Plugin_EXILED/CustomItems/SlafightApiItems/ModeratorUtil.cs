@@ -278,16 +278,8 @@ public class ModeratorUtil : CItemWeapon
             _ => "AFK / No response",
         };
 
+        // Discord通知は Exiled の Kicked イベント経由 (ModerationEventsHandler) でグローバルに送信される。
         target.Kick(reason, actor);
-
-        ModerationBridge.Send("kick", new
-        {
-            actor = actor.Nickname,
-            actorId = actor.UserId,
-            target = target.Nickname,
-            targetId = target.UserId,
-            reason,
-        });
 
         return $"{target.Nickname} を Kick しました。理由: {reason}";
     }
@@ -316,16 +308,8 @@ public class ModeratorUtil : CItemWeapon
         if (option == BanOptionNames.Length - 1)
             return PermanentlyIpBanTarget(actor, target);
 
+        // Discord通知は Exiled の Banned イベント経由 (ModerationEventsHandler) でグローバルに送信される。
         target.Ban(duration, $"Moderator action ({label})", actor);
-
-        ModerationBridge.Send("ban", new
-        {
-            actor = actor.Nickname,
-            actorId = actor.UserId,
-            target = target.Nickname,
-            targetId = target.UserId,
-            duration = label,
-        });
 
         return $"{target.Nickname} を {label} Ban しました。";
     }
@@ -350,6 +334,8 @@ public class ModeratorUtil : CItemWeapon
         if (!issued)
             return $"{target.Nickname} の無期限IP BAN登録に失敗しました。";
 
+        // BanHandler.IssueBan は BanPlayer.BanUser を経由しないため Banned イベントが発火しない。
+        // ここで直接通知する（直後の Kick() 呼び出しで Kicked イベント経由の通知も別途飛ぶが許容する）。
         target.Kick(reason, actor);
 
         ModerationBridge.Send("ban", new
