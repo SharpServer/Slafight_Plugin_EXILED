@@ -37,7 +37,7 @@ public static class ModerationEventsHandler
 
     private static void OnKicked(KickedEventArgs ev)
     {
-        if (ev.Player == null) return;
+        if (!ev.Player.IsSafePlayer()) return;
 
         ModerationBridge.Send("kick", new
         {
@@ -49,7 +49,7 @@ public static class ModerationEventsHandler
 
     private static void OnBanned(BannedEventArgs ev)
     {
-        if (ev.Target == null) return;
+        if (!ev.Target.IsSafePlayer()) return;
 
         var details = ev.Details;
         string issuer = details?.Issuer;
@@ -80,7 +80,7 @@ public static class ModerationEventsHandler
 
     private static void OnReportingCheater(ReportingCheaterEventArgs ev)
     {
-        if (ev.Player == null || ev.Target == null) return;
+        if (!ev.Player.IsSafePlayer() || !ev.Target.IsSafePlayer()) return;
 
         ModerationBridge.Send("report_cheater", new
         {
@@ -94,7 +94,7 @@ public static class ModerationEventsHandler
 
     private static void OnLocalReporting(LocalReportingEventArgs ev)
     {
-        if (ev.Player == null || ev.Target == null) return;
+        if (!ev.Player.IsSafePlayer() || !ev.Target.IsSafePlayer()) return;
 
         ModerationBridge.Send("report_local", new
         {
@@ -110,7 +110,7 @@ public static class ModerationEventsHandler
     {
         var attacker = ev.Attacker;
         var victim = ev.Player;
-        if (attacker == null || victim == null || attacker == victim) return;
+        if (!attacker.IsSafePlayer() || !victim.IsSafePlayer() || attacker == victim) return;
 
         var attackerTeam = attacker.GetTeam();
         var victimTeam = victim.GetTeam();
