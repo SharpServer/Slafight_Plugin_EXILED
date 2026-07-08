@@ -28,7 +28,7 @@ public class PdxWatcher : CRole
     ];
     protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
-        [AmmoType.Nato9] = 130,
+        [AmmoType.Nato556] = 130,
     };
     protected override string SpawnCustomInfo => $"<color={ServerColors.Carmine}>Pandra's Box Watcher</color>";
 
