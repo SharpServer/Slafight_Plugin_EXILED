@@ -6,6 +6,7 @@ using PlayerRoles;
 using PlayerStatsSystem;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomEffects;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
@@ -224,6 +225,7 @@ public class SuspiciousTablet : CItemUsable
             }
 
             RestorePosition(restoredPlayer, pending.RespawnPosition);
+            restoredPlayer.EnableEffect<VisualTraumatized>(255);
             pending.Ragdoll.Destroy();
         }
         finally
