@@ -1,5 +1,6 @@
 using CameraShaking;
 using Exiled.API.Features.Items;
+using InventorySystem.Items.Firearms.Attachments;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
@@ -18,6 +19,12 @@ public class GunRevolverX : CItemWeapon
     protected override bool PickupLightEnabled => true;
     protected override Color PickupLightColor => ColorExtensions.ParseHtmlToColor("#5fd647");
     protected override string? PickupSchematicName => "Alienisolation_Revolver";
+    protected override AttachmentName[] Attachments =>
+    [
+        AttachmentName.None
+    ];
+    protected override bool AllowAttachmentChanges => false;
+
     protected override void CustomizeItem(Item item)
     {
         if (item is Firearm firearm)
