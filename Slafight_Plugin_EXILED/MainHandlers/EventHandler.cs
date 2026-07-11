@@ -7,7 +7,6 @@ using Exiled.API.Features;
 using Exiled.API.Features.Doors;
 using Exiled.API.Features.Pickups;
 using Exiled.Events.EventArgs.Player;
-using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Extension;
 using InventorySystem.Items.Usables.Scp330;
 using MEC;
@@ -25,7 +24,6 @@ using PlayerHandler = Exiled.Events.Handlers.Player;
 using Room = Exiled.API.Features.Room;
 using ServerHandler = Exiled.Events.Handlers.Server;
 using Slafight_Plugin_EXILED.API.Interface;
-using HsmHint = HintServiceMeow.Core.Models.Hints.Hint;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 

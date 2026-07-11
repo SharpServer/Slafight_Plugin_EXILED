@@ -6,16 +6,13 @@ using CustomPlayerEffects;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
-using Mirror;
 using PlayerRoles;
 using ProjectMER.Features.Objects;
-using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
-using VoiceChat.Networking;
 using Object = UnityEngine.Object;
 
 namespace Slafight_Plugin_EXILED.Changes;

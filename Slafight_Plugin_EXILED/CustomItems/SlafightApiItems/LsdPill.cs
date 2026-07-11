@@ -1,14 +1,11 @@
 using System.Collections.Generic;
 using System.Text;
 using CustomPlayerEffects;
-using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Extension;
 using MEC;
-using PlayerStatsSystem;
-using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.Entities;
 using Slafight_Plugin_EXILED.CustomMaps.Features;

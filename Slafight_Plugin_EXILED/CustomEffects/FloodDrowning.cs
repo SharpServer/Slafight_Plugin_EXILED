@@ -1,10 +1,8 @@
 using CustomPlayerEffects;
 using Exiled.API.Enums;
-using Exiled.API.Features;
 using Mirror;
 using RemoteAdmin.Interfaces;
 using Slafight_Plugin_EXILED.API.Features;
-using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomEffects;
 

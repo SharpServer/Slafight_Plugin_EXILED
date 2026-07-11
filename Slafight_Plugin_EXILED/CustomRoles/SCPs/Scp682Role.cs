@@ -32,7 +32,7 @@ public class Scp682Role : CRole
     protected override string SpawnCustomInfo => "SCP-682";
     protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
     [
-        new(EffectType.FocusedVision),
+        new(EffectType.FocusedVision, 255),
         new(EffectType.NightVision, 255)
     ];
 

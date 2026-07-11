@@ -1,22 +1,7 @@
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using AdminToys;
-using Exiled.API.Enums;
-using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
-using LabApi.Features.Wrappers;
 using MEC;
-using PlayerRoles;
-using ProjectMER.Features;
-using ProjectMER.Features.Objects;
-using ProjectMER.Features.Serializable;
-using ProjectMER.Features.Serializable.Schematics;
-using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.Extensions;
-using UnityEngine;
-using Object = UnityEngine.Object;
 using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
