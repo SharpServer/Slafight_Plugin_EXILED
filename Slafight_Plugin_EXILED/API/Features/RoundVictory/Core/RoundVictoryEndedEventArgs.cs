@@ -7,6 +7,7 @@ using GameCore;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features.Teams.Profiles;
+using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 
@@ -156,6 +157,7 @@ public sealed class RoundVictoryEndedEventArgs : EventArgs
             .Where(player => player != null &&
                              player.IsAlive &&
                              player.Role.Type != RoleTypeId.Spectator &&
+                             player.IsSafePlayer() &&
                              !CRole.IsTeamNpc(player))
             .ToList();
     }

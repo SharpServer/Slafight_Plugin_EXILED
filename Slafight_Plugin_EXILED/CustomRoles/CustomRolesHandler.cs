@@ -133,6 +133,7 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
         return player != null &&
                player.IsAlive &&
                player.Role.Type != RoleTypeId.Spectator &&
+               player.IsSafePlayer() &&
                !CRole.IsTeamNpc(player);
     }
 

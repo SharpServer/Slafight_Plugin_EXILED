@@ -414,16 +414,16 @@ public static class RoundVictoryDefinitions
         return player.GetTeam();
     }
 
-    internal static bool HasOnlyTargetRoleOnSideAgainstSingleOpposingTeam(
-        IReadOnlyList<Player> players,
+    internal static bool HasOnlyTargetRoleOnSideAgainstSingleOpposingGroup(
+        RoundVictoryContext context,
         Func<Player, bool> isSideMember,
         Func<Player, bool> isTargetRole)
     {
         int sidePlayerCount = 0;
         int targetRoleCount = 0;
-        HashSet<CTeam> opposingTeams = [];
+        List<Player> opposingPlayers = [];
 
-        foreach (var player in players)
+        foreach (var player in context.AlivePlayers)
         {
             if (!IsAliveRoundPlayer(player))
                 continue;
@@ -441,12 +441,27 @@ public static class RoundVictoryDefinitions
                 return false;
             }
 
-            opposingTeams.Add(GetVictoryTeam(player));
+            opposingPlayers.Add(player);
         }
 
-        return sidePlayerCount > 0 &&
-               targetRoleCount == sidePlayerCount &&
-               opposingTeams.Count == 1;
+        if (sidePlayerCount == 0 || targetRoleCount != sidePlayerCount)
+            return false;
+
+        // 敵勢力は生の CTeam ではなく勝利グループ単位で数える。
+        // カオス+D級 や MTF+警備+科学者 のような同一勝利グループの混成を 1 勢力として扱い、
+        // EvaluateGroupDominance と同じ所属解決(CanRun → Priority 順 → 最初に一致)を使う。
+        var groups = GetGroups(context)
+            .Where(group => group.CanRun(context))
+            .OrderBy(group => group.Priority)
+            .ToList();
+
+        var opposingGroupCount = opposingPlayers
+            .Select(player => groups.FirstOrDefault(group => group.IncludesPlayer(player)))
+            .Where(group => group != null)
+            .Distinct()
+            .Count();
+
+        return opposingGroupCount == 1;
     }
 
     internal static bool HasAraOrunWithoutAntiMemeDepartment(IReadOnlyList<Player> players)
@@ -507,6 +522,7 @@ public static class RoundVictoryDefinitions
         return player != null &&
                player.IsAlive &&
                player.Role.Type != RoleTypeId.Spectator &&
+               player.IsSafePlayer() &&
                !CRole.IsTeamNpc(player);
     }
 

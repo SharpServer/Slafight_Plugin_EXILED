@@ -14,8 +14,8 @@ public sealed class DefaultRoundVictoryDefinitionSource : RoundVictoryDefinition
         yield return new RoundVictoryCondition(
             CTeam.SCPs,
             "AIWin",
-            context => RoundVictoryDefinitions.HasOnlyTargetRoleOnSideAgainstSingleOpposingTeam(
-                context.AlivePlayers,
+            context => RoundVictoryDefinitions.HasOnlyTargetRoleOnSideAgainstSingleOpposingGroup(
+                context,
                 player => RoundVictoryDefinitions.GetVictoryTeam(player) == CTeam.SCPs,
                 RoundVictoryDefinitions.IsScp079Player),
             RoundVictoryDefinitions.ExecuteAIKill,
