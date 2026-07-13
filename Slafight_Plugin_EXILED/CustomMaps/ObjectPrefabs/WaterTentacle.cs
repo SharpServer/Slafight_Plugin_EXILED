@@ -146,6 +146,7 @@ public class WaterTentacle : ObjectPrefab
         }
 
         TentacleNpcIds.Add(_npc.Id);
+        InternalNpcRegistry.Register(_npc, InternalNpcCategory.Tentacle);
         _npc.HideNpcFromClientPlayerList("Tentacle:spawn");
 
         // ロール適用が遅延するため、完了を待ってから NPC を設定する。
@@ -337,6 +338,7 @@ public class WaterTentacle : ObjectPrefab
 
             _npc = null;
             TentacleNpcIds.Remove(npcId);
+            InternalNpcRegistry.Unregister(npcId);
         }
 
         SchematicObject? schematic = _schematicObject;

@@ -140,6 +140,7 @@ public class Plugin : Plugin<Config>
         Tentacle.UnregisterEvents();
         WaterTentacle.UnregisterEvents();
         CRole.UnregisterAllEvents();
+        InternalNpcRegistry.Clear();
         CItem.UnregisterAllItems();
         Scp914ProcessorFix.Unregister();
         AbilityBase.UnregisterEvents();

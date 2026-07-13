@@ -240,6 +240,7 @@
         <Compile Include="API\Features\SpeakerApi.cs" />
         <Compile Include="API\Features\VoiceRecordingApi.cs" />
         <Compile Include="API\Features\CRole.cs" />
+        <Compile Include="API\Features\InternalNpcRegistry.cs" />
         <Compile Include="API\Features\ModerationBridge.cs" />
         <Compile Include="API\Features\CRoleRuntime.cs" />
         <Compile Include="API\Features\CRoom.cs" />
@@ -640,7 +641,7 @@
         <Compile Include="Hints\ScpStatusHints.cs" />
         <Compile Include="Hints\StatusHintChannel.cs" />
         <Compile Include="Patches\CandyPatch.cs" />
-        <Compile Include="Patches\DenySpectatingTurretNpcPatch.cs" />
+        <Compile Include="Patches\DenySpectatingManagedNpcPatch.cs" />
         <Compile Include="Patches\DummyActionContextPatch.cs" />
         <Compile Include="Patches\NpcEffectCleanupPatch.cs" />
         <Compile Include="Patches\PlayerRoleManagerRoleSyncPatch.cs" />

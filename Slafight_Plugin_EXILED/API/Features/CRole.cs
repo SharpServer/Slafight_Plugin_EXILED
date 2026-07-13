@@ -1365,6 +1365,7 @@ public abstract class CRole
             });
 
             TeamNpcs[player.Id] = new TeamNpcInfo(npc.Id, UniqueRoleKey);
+            InternalNpcRegistry.Register(npc, InternalNpcCategory.TeamNpc);
         }
         catch (Exception e)
         {
@@ -1391,6 +1392,7 @@ public abstract class CRole
         }
 
         TeamNpcs.Remove(player.Id);
+        InternalNpcRegistry.Unregister(info.NpcId);
     }
 
     private static void CleanupTeamNpcs(string uniqueRole)
@@ -1415,6 +1417,7 @@ public abstract class CRole
             }
 
             TeamNpcs.Remove(kvp.Key);
+            InternalNpcRegistry.Unregister(kvp.Value.NpcId);
         }
     }
 
@@ -1434,6 +1437,8 @@ public abstract class CRole
                     Log.Warn($"CleanupAllTeamNpcs: failed to destroy NPC {kvp.Value.NpcId}: {e.Message}");
                 }
             }
+
+            InternalNpcRegistry.Unregister(kvp.Value.NpcId);
         }
 
         TeamNpcs.Clear();

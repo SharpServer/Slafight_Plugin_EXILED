@@ -1,7 +1,6 @@
 using Exiled.API.Enums;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Enums;
-using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.API.Features;
@@ -198,7 +197,7 @@ public static class CassieHelper
     {
         if (ev.DamageHandler?.Type is not DamageType.MicroHid)
             return false;
-        return ev.Attacker != null && HIDTurretObject.PublicTurretNpcIds.Contains(ev.Attacker.Id);
+        return ev.Attacker != null && InternalNpcRegistry.IsCategory(ev.Attacker.Id, InternalNpcCategory.HidTurret);
     }
 }
 

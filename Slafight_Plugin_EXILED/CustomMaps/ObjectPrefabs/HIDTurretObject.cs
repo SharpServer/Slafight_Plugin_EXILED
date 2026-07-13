@@ -38,8 +38,6 @@ public class HIDTurretObject : ObjectPrefab
     private const float ReserveNpcDepth = 100f;
     private const float PendingRoleChangeTimeout = Npc.SpawnSetRoleDelay + 1f;
 
-    public static HashSet<int> PublicTurretNpcIds => TurretNpcIds;
-
     /// <summary>
     /// Turret中心からターゲットを捕捉する最大距離。
     /// </summary>
@@ -172,7 +170,11 @@ public class HIDTurretObject : ObjectPrefab
             int npcId = state.Npc.Id;
             state.Npc.Destroy();
             PendingTurretRoleChanges.Remove(npcId);
-            Timing.CallDelayed(NpcEffectCleanupState.DestroyDelay + 0.1f, () => TurretNpcIds.Remove(npcId));
+            Timing.CallDelayed(NpcEffectCleanupState.DestroyDelay + 0.1f, () =>
+            {
+                TurretNpcIds.Remove(npcId);
+                InternalNpcRegistry.Unregister(npcId);
+            });
         }
 
         _npcs.Clear();
@@ -479,6 +481,7 @@ public class HIDTurretObject : ObjectPrefab
             int capturedIndex = index;
             _npcs.Add(state);
             TurretNpcIds.Add(npc.Id);
+            InternalNpcRegistry.Register(npc, InternalNpcCategory.HidTurret);
             AllowNextTurretRoleChange(npc.Id, RoleTypeId.Tutorial);
             npc.HideNpcFromClientPlayerList($"HIDTurret:{index}:spawn");
             ScheduleDelayed(Npc.SpawnSetRoleDelay + 0.1f, () =>

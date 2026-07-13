@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
 using PlayerRoles;
@@ -9,6 +10,11 @@ namespace Slafight_Plugin_EXILED.Extensions;
 
 public static class PlayerExtensions
 {
+    public static IReadOnlyCollection<Player> ConnectedList(this Player player)
+    {
+        return Player.List.Where(p => p.IsSafePlayer()).ToList();
+    }
+    
     public static void SetRole(this Player player, RoleTypeId roleTypeId,
         RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
     {
