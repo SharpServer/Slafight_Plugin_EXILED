@@ -14,6 +14,7 @@ using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.Extensions; // SpecialEvent 基底クラス
 using UnityEngine;
+using SpawnSystem = Slafight_Plugin_EXILED.MainHandlers.SpawnSystem;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -36,6 +37,9 @@ public class CaseColourlessGreen : SpecialEvent
     // ===== 実行本体 =====
     protected override void OnExecute(int eventPid)
     {
+        // このイベントは反ミーム部門と第五陣営だけで進行させ、通常の増援ウェーブを止める。
+        SpawnSystem.Disable = true;
+
         Timing.KillCoroutines(_handle);
         _handle = Timing.RunCoroutine(Coroutine());
         SetupMaps();

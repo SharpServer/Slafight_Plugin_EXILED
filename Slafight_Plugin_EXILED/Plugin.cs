@@ -13,6 +13,7 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Features.FilmmakerAnimations;
 using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 using Slafight_Plugin_EXILED.Changes;
+using Slafight_Plugin_EXILED.Commands.DevTools;
 using Slafight_Plugin_EXILED.CustomEffects;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Entities;
@@ -47,6 +48,8 @@ public class Plugin : Plugin<Config>
     public override void OnEnabled()
     {
         Singleton = this;
+        FfmpegAudioDecoder.Initialize();
+        YtDlpApi.Initialize();
         PlayerSpeakerManager.RegisterEvents();
         ProximityChat.Handler.RegisterEvents();
         WaypointChunkStreamer.RegisterEvents();
@@ -113,6 +116,7 @@ public class Plugin : Plugin<Config>
 
     public override void OnDisabled()
     {
+        PlayAudioHere.CancelAllPending();
         Singleton = null!;
         try
         {

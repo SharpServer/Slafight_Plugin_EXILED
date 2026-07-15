@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using Exiled.API.Features;
 using MEC;
-using NVorbis;
 using UnityEngine;
 using VoiceChat;
 using VoiceChat.Networking;
@@ -15,7 +14,6 @@ namespace Slafight_Plugin_EXILED.API.Features;
 
 public static class SpeakerApi
 {
-    private const int TargetSampleRate = VoiceChatSettings.SampleRate;
     private const int PacketSize = VoiceChatSettings.PacketSizePerChannel;
     private const float MinimumAudibleDistance = 1f;
     private static readonly Dictionary<string, CachedClip> ClipCache = new(StringComparer.OrdinalIgnoreCase);
@@ -278,10 +276,7 @@ public static class SpeakerApi
         if (!File.Exists(fullPath))
             throw new FileNotFoundException($"Audio file not found: {fullPath}", fullPath);
 
-        using var reader = new VorbisReader(fullPath);
-        var samples = new float[reader.TotalSamples * reader.Channels];
-        reader.ReadSamples(samples, 0, samples.Length);
-        ClipCache[clipName] = new CachedClip(clipName, ConvertToMono48k(samples, reader.SampleRate, reader.Channels));
+        ClipCache[clipName] = new CachedClip(clipName, FfmpegAudioDecoder.DecodeToMono48k(fullPath));
     }
 
     public static bool Stop(Playback playback)
@@ -770,38 +765,4 @@ public static class SpeakerApi
         => PlaybacksByName.Values.SelectMany(p => p).Any(p => p.ControllerId == controllerId) ||
            LivePlaybacksByName.Values.SelectMany(p => p).Any(p => p.ControllerId == controllerId);
 
-    private static float[] ConvertToMono48k(float[]? input, int sampleRate, int channels)
-    {
-        if (input == null || input.Length == 0)
-            return [];
-
-        channels = Math.Max(1, channels);
-        int frameCount = input.Length / channels;
-        var mono = new float[frameCount];
-        for (int frame = 0; frame < frameCount; frame++)
-        {
-            float sample = 0f;
-            int offset = frame * channels;
-            for (int channel = 0; channel < channels; channel++)
-                sample += input[offset + channel];
-
-            mono[frame] = sample / channels;
-        }
-
-        if (sampleRate <= 0 || sampleRate == TargetSampleRate)
-            return mono;
-
-        int outputLength = Mathf.Max(1, Mathf.RoundToInt(mono.Length * (TargetSampleRate / (float)sampleRate)));
-        var output = new float[outputLength];
-        float ratio = (mono.Length - 1) / (float)Math.Max(1, outputLength - 1);
-        for (int i = 0; i < outputLength; i++)
-        {
-            float source = i * ratio;
-            int left = Mathf.FloorToInt(source);
-            int right = Mathf.Min(left + 1, mono.Length - 1);
-            output[i] = Mathf.Lerp(mono[left], mono[right], source - left);
-        }
-
-        return output;
-    }
 }

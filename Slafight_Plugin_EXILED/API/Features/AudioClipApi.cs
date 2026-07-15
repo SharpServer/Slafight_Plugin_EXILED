@@ -4,7 +4,6 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using Exiled.API.Features;
-using NVorbis;
 using UnityEngine;
 using VoiceChat;
 
@@ -133,7 +132,7 @@ public static class AudioClipApi
         if (!File.Exists(fullPath))
             throw new FileNotFoundException($"Audio file not found: {fullPath}", fullPath);
 
-        var clip = CreateFromVorbisFile(fullPath, clipName);
+        var clip = CreateFromAudioFile(fullPath, clipName);
         ClipCache[clipName] = clip;
         return clip;
     }
@@ -151,40 +150,10 @@ public static class AudioClipApi
         return clip;
     }
 
-    private static object CreateFromVorbisFile(string fullPath, string clipName)
+    private static object CreateFromAudioFile(string fullPath, string clipName)
     {
-        Log.Info($"[AudioClipApi] CreateFromVorbisFile path={fullPath}, clipName={clipName}");
-
-        using var reader = new VorbisReader(fullPath);
-
-        int channels = Math.Max(1, reader.Channels);
-        int sampleRate = reader.SampleRate;
-
-        long totalSamplesLong = reader.TotalSamples * channels;
-        int totalSamples;
-        try
-        {
-            totalSamples = checked((int)totalSamplesLong);
-        }
-        catch (OverflowException)
-        {
-            throw new InvalidOperationException($"Audio file is too large: {fullPath} (TotalSamples*channels={totalSamplesLong})");
-        }
-
-        Log.Info($"[AudioClipApi] Vorbis: channels={channels}, sampleRate={sampleRate}, totalSamples={totalSamples}");
-
-        var allSamples = new float[totalSamples];
-        var read = reader.ReadSamples(allSamples, 0, allSamples.Length);
-        Log.Info($"[AudioClipApi] Vorbis: read={read}, bufferLen={allSamples.Length}");
-
-        if (read <= 0)
-            throw new InvalidOperationException($"Failed to read audio samples: {fullPath}");
-
-        if (read < allSamples.Length)
-            Array.Resize(ref allSamples, read);
-
-        var mono = ConvertToMono48k(allSamples, sampleRate, channels);
-        Log.Info($"[AudioClipApi] ConvertToMono48k: monoLen={mono.Length}, targetSampleRate={TargetSampleRate}");
+        Log.Info($"[AudioClipApi] Decoding with ffmpeg: path={fullPath}, clipName={clipName}");
+        var mono = FfmpegAudioDecoder.DecodeToMono48k(fullPath);
 
         if (mono.Length == 0)
             throw new InvalidOperationException($"Converted audio is empty: {fullPath}");
@@ -240,35 +209,7 @@ public static class AudioClipApi
         if (!File.Exists(fullPath))
             throw new FileNotFoundException($"Audio file not found: {fullPath}", fullPath);
 
-        using var reader = new VorbisReader(fullPath);
-
-        int channels = Math.Max(1, reader.Channels);
-        int sampleRate = reader.SampleRate;
-
-        long totalSamplesLong = reader.TotalSamples * channels;
-        int totalSamples;
-        try
-        {
-            totalSamples = checked((int)totalSamplesLong);
-        }
-        catch (OverflowException)
-        {
-            throw new InvalidOperationException($"Audio file is too large: {fullPath} (TotalSamples*channels={totalSamplesLong})");
-        }
-
-        Log.Info($"[AudioClipApi] GetSamplesFromFile Vorbis: channels={channels}, sampleRate={sampleRate}, totalSamples={totalSamples}");
-
-        var allSamples = new float[totalSamples];
-        var read = reader.ReadSamples(allSamples, 0, allSamples.Length);
-        Log.Info($"[AudioClipApi] GetSamplesFromFile read={read}, bufferLen={allSamples.Length}");
-
-        if (read <= 0)
-            throw new InvalidOperationException($"Failed to read audio samples: {fullPath}");
-
-        if (read < allSamples.Length)
-            Array.Resize(ref allSamples, read);
-
-        return ConvertToMono48k(allSamples, sampleRate, channels);
+        return FfmpegAudioDecoder.DecodeToMono48k(fullPath);
     }
 
     public static float[] GetSamplesFromClip(object clip)
@@ -296,40 +237,4 @@ public static class AudioClipApi
         return data;
     }
 
-    private static float[] ConvertToMono48k(float[]? input, int sampleRate, int channels)
-    {
-        if (input == null || input.Length == 0)
-            return [];
-
-        channels = Math.Max(1, channels);
-        int frameCount = input.Length / channels;
-        var mono = new float[frameCount];
-
-        for (int frame = 0; frame < frameCount; frame++)
-        {
-            float sample = 0f;
-            int offset = frame * channels;
-            for (int channel = 0; channel < channels; channel++)
-                sample += input[offset + channel];
-
-            mono[frame] = sample / channels;
-        }
-
-        if (sampleRate <= 0 || sampleRate == TargetSampleRate)
-            return mono;
-
-        int outputLength = Math.Max(1, Mathf.RoundToInt(mono.Length * (TargetSampleRate / (float)sampleRate)));
-        var output = new float[outputLength];
-        float ratio = (mono.Length - 1) / (float)Math.Max(1, outputLength - 1);
-
-        for (int i = 0; i < outputLength; i++)
-        {
-            float source = i * ratio;
-            int left = Mathf.FloorToInt(source);
-            int right = Math.Min(left + 1, mono.Length - 1);
-            output[i] = Mathf.Lerp(mono[left], mono[right], source - left);
-        }
-
-        return output;
-    }
 }
