@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using Exiled.API.Features;
@@ -268,14 +267,8 @@ public static class YtDlpApi
         try
         {
             Log.Info($"[YtDlpApi] yt-dlp was not found. Downloading it to {Paths.Dependencies}...");
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072;
-
-            string checksums;
-            using (var client = new WebClient())
-            {
-                checksums = client.DownloadString(ReleaseBaseUrl + "SHA2-256SUMS");
-                client.DownloadFile(ReleaseBaseUrl + assetName, temporaryPath);
-            }
+            var checksums = MediaToolDownloadApi.DownloadString(ReleaseBaseUrl + "SHA2-256SUMS");
+            MediaToolDownloadApi.DownloadFile(ReleaseBaseUrl + assetName, temporaryPath);
 
             var expectedChecksum = ParseChecksum(checksums, assetName);
             VerifySha256(temporaryPath, expectedChecksum);

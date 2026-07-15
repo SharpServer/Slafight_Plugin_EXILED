@@ -194,6 +194,7 @@
         <Compile Include="API\Features\AudioClipApi.cs" />
         <Compile Include="API\Features\FfmpegAudioDecoder.cs" />
         <Compile Include="API\Features\MediaProcessingApi.cs" />
+        <Compile Include="API\Features\MediaToolDownloadApi.cs" />
         <Compile Include="API\Features\YtDlpApi.cs" />
         <Compile Include="API\Features\CassieHelper.cs" />
         <Compile Include="API\Features\CustomEffectBase.cs" />

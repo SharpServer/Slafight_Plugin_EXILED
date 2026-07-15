@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using Exiled.API.Features;
@@ -230,14 +229,8 @@ public static class FfmpegAudioDecoder
         try
         {
             Log.Info($"[FfmpegAudioDecoder] ffmpeg was not found. Downloading it to {Paths.Dependencies}...");
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072; // TLS 1.2 on older Mono/.NET Framework.
-
-            string expectedChecksum;
-            using (var client = new WebClient())
-            {
-                expectedChecksum = client.DownloadString(WindowsChecksumUrl).Trim();
-                client.DownloadFile(WindowsDownloadUrl, archivePath);
-            }
+            var expectedChecksum = MediaToolDownloadApi.DownloadString(WindowsChecksumUrl).Trim();
+            MediaToolDownloadApi.DownloadFile(WindowsDownloadUrl, archivePath);
 
             VerifySha256(archivePath, expectedChecksum);
 
@@ -274,14 +267,8 @@ public static class FfmpegAudioDecoder
         try
         {
             Log.Info($"[FfmpegAudioDecoder] ffmpeg was not found. Downloading Linux build to {Paths.Dependencies}...");
-            ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072;
-
-            string checksums;
-            using (var client = new WebClient())
-            {
-                checksums = client.DownloadString(LinuxReleaseBaseUrl + LinuxChecksumFileName);
-                client.DownloadFile(LinuxReleaseBaseUrl + LinuxAssetName, archivePath);
-            }
+            var checksums = MediaToolDownloadApi.DownloadString(LinuxReleaseBaseUrl + LinuxChecksumFileName);
+            MediaToolDownloadApi.DownloadFile(LinuxReleaseBaseUrl + LinuxAssetName, archivePath);
 
             VerifySha256(archivePath, ParseChecksum(checksums, LinuxAssetName));
             Directory.CreateDirectory(extractionDirectory);
