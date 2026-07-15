@@ -27,6 +27,7 @@ public static class YtDlpApi
 
     private static readonly object InstallLock = new();
     private static string? ConfiguredCacheDirectory;
+    private static bool IsValidated;
 
     public static string ExecutablePath =>
         Path.Combine(Paths.Dependencies, IsWindows ? "yt-dlp.exe" : "yt-dlp");
@@ -48,24 +49,79 @@ public static class YtDlpApi
 
     public static void EnsureAvailable()
     {
-        if (File.Exists(ExecutablePath))
+        if (IsValidated && File.Exists(ExecutablePath))
             return;
 
         lock (InstallLock)
         {
-            if (File.Exists(ExecutablePath))
+            if (IsValidated && File.Exists(ExecutablePath))
                 return;
 
             Directory.CreateDirectory(Paths.Dependencies);
+            if (File.Exists(ExecutablePath))
+            {
+                EnsureUnixExecutablePermission();
+                if (TryValidateExecutable(out _))
+                {
+                    IsValidated = true;
+                    return;
+                }
+
+                Log.Warn($"[YtDlpApi] Existing yt-dlp is not executable and will be replaced: {ExecutablePath}");
+                File.Delete(ExecutablePath);
+            }
+
             var systemExecutable = FindOnPath(IsWindows ? "yt-dlp.exe" : "yt-dlp");
             if (systemExecutable != null)
             {
                 File.Copy(systemExecutable, ExecutablePath, overwrite: false);
                 EnsureUnixExecutablePermission();
-                return;
+            }
+            else
+            {
+                DownloadReleaseBinary();
             }
 
-            DownloadReleaseBinary();
+            if (!TryValidateExecutable(out var validationError))
+            {
+                TryDelete(ExecutablePath);
+                throw new InvalidOperationException($"The installed yt-dlp executable could not be started: {validationError}");
+            }
+
+            IsValidated = true;
+        }
+    }
+
+    private static bool TryValidateExecutable(out string error)
+    {
+        try
+        {
+            using var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = ExecutablePath,
+                Arguments = "--no-config --version",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            });
+            if (process == null)
+            {
+                error = "Process.Start returned null.";
+                return false;
+            }
+
+            var standardOutput = process.StandardOutput.ReadToEndAsync();
+            var standardError = process.StandardError.ReadToEndAsync();
+            process.WaitForExit();
+            standardOutput.GetAwaiter().GetResult();
+            error = standardError.GetAwaiter().GetResult().Trim();
+            return process.ExitCode == 0;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            return false;
         }
     }
 

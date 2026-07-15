@@ -48,8 +48,7 @@ public class Plugin : Plugin<Config>
     public override void OnEnabled()
     {
         Singleton = this;
-        FfmpegAudioDecoder.Initialize();
-        YtDlpApi.Initialize();
+        InitializeMediaTools();
         PlayerSpeakerManager.RegisterEvents();
         ProximityChat.Handler.RegisterEvents();
         WaypointChunkStreamer.RegisterEvents();
@@ -112,6 +111,27 @@ public class Plugin : Plugin<Config>
 
         base.OnEnabled();
 
+    }
+
+    private static void InitializeMediaTools()
+    {
+        try
+        {
+            FfmpegAudioDecoder.Initialize();
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"[MediaTools] ffmpeg initialization failed. Audio/video features will retry on use, but the plugin will continue loading: {ex}");
+        }
+
+        try
+        {
+            YtDlpApi.Initialize();
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"[MediaTools] yt-dlp initialization failed. URL media features will retry on use, but the plugin will continue loading: {ex}");
+        }
     }
 
     public override void OnDisabled()

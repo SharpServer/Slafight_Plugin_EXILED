@@ -20,8 +20,13 @@ public static class FfmpegAudioDecoder
     private const string WindowsDownloadUrl =
         "https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip";
     private const string WindowsChecksumUrl = WindowsDownloadUrl + ".sha256";
+    private const string LinuxReleaseBaseUrl =
+        "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/";
+    private const string LinuxAssetName = "ffmpeg-master-latest-linux64-gpl.tar.xz";
+    private const string LinuxChecksumFileName = "checksums.sha256";
 
     private static readonly object InstallLock = new();
+    private static bool IsValidated;
 
     public static string ExecutablePath =>
         Path.Combine(Paths.Dependencies, IsWindows ? "ffmpeg.exe" : "ffmpeg");
@@ -111,32 +116,83 @@ public static class FfmpegAudioDecoder
 
     private static void EnsureInstalled()
     {
-        if (File.Exists(ExecutablePath))
+        if (IsValidated && File.Exists(ExecutablePath))
             return;
 
         lock (InstallLock)
         {
-            if (File.Exists(ExecutablePath))
+            if (IsValidated && File.Exists(ExecutablePath))
                 return;
 
             Directory.CreateDirectory(Paths.Dependencies);
+
+            if (File.Exists(ExecutablePath))
+            {
+                EnsureUnixExecutablePermission();
+                if (TryValidateExecutable(out _))
+                {
+                    IsValidated = true;
+                    return;
+                }
+
+                Log.Warn($"[FfmpegAudioDecoder] Existing ffmpeg is not executable and will be replaced: {ExecutablePath}");
+                File.Delete(ExecutablePath);
+            }
 
             var systemExecutable = FindOnPath(IsWindows ? "ffmpeg.exe" : "ffmpeg");
             if (systemExecutable != null)
             {
                 File.Copy(systemExecutable, ExecutablePath, overwrite: false);
                 EnsureUnixExecutablePermission();
-                return;
             }
+            else if (IsWindows)
+                DownloadWindowsBuild();
+            else if (Environment.OSVersion.Platform == PlatformID.Unix)
+                DownloadLinuxBuild();
+            else
+                throw new PlatformNotSupportedException(
+                    $"Automatic ffmpeg installation is not supported on {Environment.OSVersion.Platform}.");
 
-            if (!IsWindows)
+            if (!TryValidateExecutable(out var validationError))
             {
-                throw new FileNotFoundException(
-                    $"ffmpeg was not found. Install ffmpeg or place it at: {ExecutablePath}",
-                    ExecutablePath);
+                TryDelete(ExecutablePath);
+                throw new InvalidOperationException($"The installed ffmpeg executable could not be started: {validationError}");
             }
 
-            DownloadWindowsBuild();
+            IsValidated = true;
+        }
+    }
+
+    private static bool TryValidateExecutable(out string error)
+    {
+        try
+        {
+            using var process = Process.Start(new ProcessStartInfo
+            {
+                FileName = ExecutablePath,
+                Arguments = "-version",
+                UseShellExecute = false,
+                CreateNoWindow = true,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+            });
+            if (process == null)
+            {
+                error = "Process.Start returned null.";
+                return false;
+            }
+
+            var standardOutput = process.StandardOutput.ReadToEndAsync();
+            var standardError = process.StandardError.ReadToEndAsync();
+            process.WaitForExit();
+            standardOutput.GetAwaiter().GetResult();
+            error = standardError.GetAwaiter().GetResult().Trim();
+            return process.ExitCode == 0;
+        }
+        catch (Exception ex)
+        {
+            error = ex.Message;
+            return false;
         }
     }
 
@@ -209,6 +265,76 @@ public static class FfmpegAudioDecoder
         }
     }
 
+    private static void DownloadLinuxBuild()
+    {
+        var archivePath = Path.Combine(Paths.Dependencies, $"ffmpeg-{Guid.NewGuid():N}.tar.xz");
+        var extractionDirectory = Path.Combine(Paths.Dependencies, $"ffmpeg-extract-{Guid.NewGuid():N}");
+        var temporaryExecutable = ExecutablePath + $".{Guid.NewGuid():N}.tmp";
+
+        try
+        {
+            Log.Info($"[FfmpegAudioDecoder] ffmpeg was not found. Downloading Linux build to {Paths.Dependencies}...");
+            ServicePointManager.SecurityProtocol |= (SecurityProtocolType)3072;
+
+            string checksums;
+            using (var client = new WebClient())
+            {
+                checksums = client.DownloadString(LinuxReleaseBaseUrl + LinuxChecksumFileName);
+                client.DownloadFile(LinuxReleaseBaseUrl + LinuxAssetName, archivePath);
+            }
+
+            VerifySha256(archivePath, ParseChecksum(checksums, LinuxAssetName));
+            Directory.CreateDirectory(extractionDirectory);
+            ExtractTarXz(archivePath, extractionDirectory);
+
+            var extractedExecutable = Directory
+                .EnumerateFiles(extractionDirectory, "ffmpeg", SearchOption.AllDirectories)
+                .FirstOrDefault();
+            if (extractedExecutable == null)
+                throw new InvalidDataException("The downloaded Linux ffmpeg archive does not contain an ffmpeg executable.");
+
+            File.Copy(extractedExecutable, temporaryExecutable, overwrite: false);
+            File.Move(temporaryExecutable, ExecutablePath);
+            EnsureUnixExecutablePermission();
+            Log.Info($"[FfmpegAudioDecoder] Installed Linux ffmpeg at {ExecutablePath}");
+        }
+        finally
+        {
+            TryDelete(archivePath);
+            TryDelete(temporaryExecutable);
+            TryDeleteDirectory(extractionDirectory);
+        }
+    }
+
+    private static void ExtractTarXz(string archivePath, string destinationDirectory)
+    {
+        var tarExecutable = FindOnPath("tar") ??
+                            (File.Exists("/bin/tar") ? "/bin/tar" : null) ??
+                            (File.Exists("/usr/bin/tar") ? "/usr/bin/tar" : null);
+        if (tarExecutable == null)
+            throw new FileNotFoundException("tar is required to extract the downloaded Linux ffmpeg build.");
+
+        var startInfo = new ProcessStartInfo
+        {
+            FileName = tarExecutable,
+            Arguments = $"-xJf \"{EscapeArgument(archivePath)}\" -C \"{EscapeArgument(destinationDirectory)}\"",
+            UseShellExecute = false,
+            CreateNoWindow = true,
+            RedirectStandardOutput = true,
+            RedirectStandardError = true,
+        };
+
+        using var process = Process.Start(startInfo) ??
+                            throw new InvalidOperationException("Failed to start tar for ffmpeg extraction.");
+        var standardOutput = process.StandardOutput.ReadToEndAsync();
+        var standardError = process.StandardError.ReadToEndAsync();
+        process.WaitForExit();
+        standardOutput.GetAwaiter().GetResult();
+        var error = standardError.GetAwaiter().GetResult();
+        if (process.ExitCode != 0)
+            throw new InvalidOperationException($"Failed to extract Linux ffmpeg build: {error.Trim()}");
+    }
+
     private static void EnsureUnixExecutablePermission()
     {
         if (IsWindows)
@@ -239,12 +365,37 @@ public static class FfmpegAudioDecoder
             throw new InvalidDataException("The downloaded ffmpeg archive failed SHA-256 verification.");
     }
 
+    private static string ParseChecksum(string checksums, string assetName)
+    {
+        foreach (var line in checksums.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+        {
+            var parts = line.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length >= 2 && parts[1].TrimStart('*').Equals(assetName, StringComparison.Ordinal))
+                return parts[0];
+        }
+
+        throw new InvalidDataException($"ffmpeg checksum manifest does not contain {assetName}.");
+    }
+
     private static void TryDelete(string path)
     {
         try
         {
             if (File.Exists(path))
                 File.Delete(path);
+        }
+        catch
+        {
+            // Best effort cleanup only.
+        }
+    }
+
+    private static void TryDeleteDirectory(string path)
+    {
+        try
+        {
+            if (Directory.Exists(path))
+                Directory.Delete(path, recursive: true);
         }
         catch
         {
