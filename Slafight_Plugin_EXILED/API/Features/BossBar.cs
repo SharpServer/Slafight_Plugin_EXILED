@@ -34,7 +34,6 @@ public sealed class BossBar
     private static CoroutineHandle _refreshHandle;
     private static long _nextShowOrder;
 
-    private bool _isShown;
     private long _showOrder;
 
     /// <summary>見出し（ボス名）。</summary>
@@ -95,7 +94,7 @@ public sealed class BossBar
     public Func<Player, bool>? Viewers { get; set; }
 
     /// <summary>表示中か。</summary>
-    public bool IsShown => _isShown;
+    public bool IsShown { get; private set; }
 
     /// <summary>対象プレイヤーの Health/MaxHealth を自動追跡する。</summary>
     public BossBar TrackPlayer(Player player, bool show = false, bool hideWhenUnavailable = true)
@@ -124,9 +123,9 @@ public sealed class BossBar
     {
         lock (SyncRoot)
         {
-            if (!_isShown)
+            if (!IsShown)
             {
-                _isShown = true;
+                IsShown = true;
                 _showOrder = ++_nextShowOrder;
                 ShownBars.Add(this);
             }
@@ -151,9 +150,9 @@ public sealed class BossBar
         bool hasRemainingBars;
         lock (SyncRoot)
         {
-            if (_isShown)
+            if (IsShown)
             {
-                _isShown = false;
+                IsShown = false;
                 ShownBars.Remove(this);
             }
 
@@ -183,7 +182,7 @@ public sealed class BossBar
         lock (SyncRoot)
         {
             foreach (BossBar bar in ShownBars)
-                bar._isShown = false;
+                bar.IsShown = false;
 
             ShownBars.Clear();
             if (_refreshHandle.IsRunning)
@@ -289,7 +288,7 @@ public sealed class BossBar
         lock (SyncRoot)
         {
             return ShownBars
-                .Where(bar => bar._isShown)
+                .Where(bar => bar.IsShown)
                 .OrderBy(bar => bar.DisplayOrder)
                 .ThenBy(bar => bar._showOrder)
                 .ToList();

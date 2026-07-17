@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Exiled.API.Enums;
 using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
 using MEC;
@@ -19,15 +20,24 @@ public class UsefulDoorButton : ObjectPrefab
 {
     public const string CentralSchematicName = "UsefulDoorButton";
     public const string InteractableKey = "Interactable";
+    private static readonly string[] KeycardSubtypeKeys =
+    {
+        "Containment 1",
+        "Containment 2",
+        "Containment 3",
+        "Armory 1",
+        "Armory 2",
+        "Armory 3",
+        "Administration 1",
+        "Administration 2",
+        "Administration 3",
+    };
     private UDoorButtonModelType _modelType = UDoorButtonModelType.Standard;
-    private bool _useModelTypeDefaults = true;
     private string _customModelKey = string.Empty;
     private string _targetTag = string.Empty;
     private bool _enabled = true;
     private bool _isSetup;
-    private UDoorButtonState _state = UDoorButtonState.Close;
     private int _stateRevision;
-    private int _successfulActivationCount;
     private InteractableHandle? _interactable;
     private CoroutineHandle _resetHandle;
     private SpeakerApi.Playback _idlePlayback;
@@ -54,11 +64,7 @@ public class UsefulDoorButton : ObjectPrefab
     }
 
     /// <summary>When enabled, changing ModelType applies that type's animation/audio defaults.</summary>
-    public bool UseModelTypeDefaults
-    {
-        get => _useModelTypeDefaults;
-        set => _useModelTypeDefaults = value;
-    }
+    public bool UseModelTypeDefaults { get; set; } = true;
 
     /// <summary>Exact ObjectPrefabSchematicInfo key used when ModelType is Custom.</summary>
     public string CustomModelKey
@@ -115,10 +121,10 @@ public class UsefulDoorButton : ObjectPrefab
     }
 
     /// <summary>Runtime-only successful button activation count.</summary>
-    public int SuccessfulActivationCount => _successfulActivationCount;
+    public int SuccessfulActivationCount { get; private set; }
 
     /// <summary>Currently visible child state inside the selected model parent.</summary>
-    public UDoorButtonState State => _state;
+    public UDoorButtonState State { get; private set; } = UDoorButtonState.Close;
 
     public string SuccessAnimation { get; set; } = string.Empty;
     public string FailAnimation { get; set; } = string.Empty;
@@ -209,13 +215,14 @@ public class UsefulDoorButton : ObjectPrefab
     {
         if (!Enabled)
             return UDoorInteractionResult.Disabled;
-        if (MaxSuccessfulButtonActivations > 0 && _successfulActivationCount >= MaxSuccessfulButtonActivations)
+        if (MaxSuccessfulButtonActivations > 0 && SuccessfulActivationCount >= MaxSuccessfulButtonActivations)
             return UDoorInteractionResult.LimitReached;
 
         string tag = string.IsNullOrWhiteSpace(TargetTag) ? Tag : TargetTag;
         UsefulDoor[] targets = UDoor.GetDoors(tag).ToArray();
         if (targets.Length == 0)
         {
+            ShowFailureFeedback(UDoorButtonState.Failed);
             PlayFeedback(false);
             return UDoorInteractionResult.NoTarget;
         }
@@ -254,14 +261,15 @@ public class UsefulDoorButton : ObjectPrefab
             if (firstFailure == UDoorInteractionResult.Transitioning)
                 return firstFailure;
 
-            if (firstFailure is UDoorInteractionResult.Locked or UDoorInteractionResult.PermissionDenied)
-                ShowLockedFeedback();
+            ShowFailureFeedback(firstFailure == UDoorInteractionResult.Locked
+                ? UDoorButtonState.Locked
+                : UDoorButtonState.Failed);
 
             PlayFeedback(false);
             return firstFailure;
         }
 
-        _successfulActivationCount++;
+        SuccessfulActivationCount++;
         PlayFeedback(true);
         return UDoorInteractionResult.Success;
     }
@@ -273,8 +281,8 @@ public class UsefulDoorButton : ObjectPrefab
     public void SetDoorState(UDoorButtonState state)
     {
         _stateRevision++;
-        _state = state;
-        ApplyStateVisibility();
+        State = state;
+        ApplyModelVisibility();
     }
 
     public void SynchronizeStateFromTargets()
@@ -294,10 +302,10 @@ public class UsefulDoorButton : ObjectPrefab
     private string GetEffectiveTargetTag()
         => string.IsNullOrWhiteSpace(TargetTag) ? Tag : TargetTag;
 
-    private void ShowLockedFeedback()
+    private void ShowFailureFeedback(UDoorButtonState state)
     {
         int revision = ++_stateRevision;
-        _state = UDoorButtonState.Locked;
+        State = state;
         ApplyStateVisibility();
 
         if (ResetAnimationDelay <= 0f)
@@ -435,6 +443,7 @@ public class UsefulDoorButton : ObjectPrefab
         if (!_isSetup || Schematic == null)
             return;
 
+        UDoorButtonModelType effectiveModelType = GetEffectiveModelType();
         bool selectedFound = false;
         foreach (string key in ManagedBlockKeys)
         {
@@ -445,7 +454,7 @@ public class UsefulDoorButton : ObjectPrefab
                 continue;
 
             bool selected = isBuiltInModel
-                ? ModelType != UDoorButtonModelType.Custom && ModelType == blockType
+                ? effectiveModelType != UDoorButtonModelType.Custom && effectiveModelType == blockType
                 : ModelType == UDoorButtonModelType.Custom;
             SetBlockSpawned(key, selected);
             selectedFound |= selected;
@@ -462,7 +471,9 @@ public class UsefulDoorButton : ObjectPrefab
         if (!_isSetup || Schematic == null)
             return;
 
-        string parentKey = GetSelectedModelKey();
+        ApplyKeycardSubtypeVisibility();
+
+        string parentKey = GetSelectedStateParentKey();
         if (string.IsNullOrWhiteSpace(parentKey))
             return;
 
@@ -481,8 +492,65 @@ public class UsefulDoorButton : ObjectPrefab
         }
     }
 
+    private void ApplyKeycardSubtypeVisibility()
+    {
+        if (!_isSetup || Schematic == null || GetEffectiveModelType() != UDoorButtonModelType.Keycard)
+            return;
+
+        string selectedSubtype = GetSelectedKeycardSubtypeKey();
+        foreach (string subtypeKey in KeycardSubtypeKeys)
+        {
+            SetChildBlockSpawned(
+                UDoorButtonModelType.Keycard.ToString(),
+                subtypeKey,
+                string.Equals(subtypeKey, selectedSubtype, StringComparison.OrdinalIgnoreCase));
+        }
+    }
+
+    private string GetSelectedStateParentKey()
+    {
+        if (GetEffectiveModelType() != UDoorButtonModelType.Keycard)
+            return GetSelectedModelKey();
+
+        string subtypeKey = GetSelectedKeycardSubtypeKey();
+        return string.IsNullOrWhiteSpace(subtypeKey)
+            ? UDoorButtonModelType.Keycard.ToString()
+            : subtypeKey;
+    }
+
+    private string GetSelectedKeycardSubtypeKey()
+    {
+        KeycardPermissions permissions = KeycardPermissions.None;
+        foreach (UsefulDoor door in UDoor.GetDoors(GetEffectiveTargetTag()))
+        {
+            if (door != null)
+                permissions |= door.KeycardPermissions;
+        }
+
+        if (permissions == KeycardPermissions.None)
+            return string.Empty;
+
+        KeycardAccessLevels levels = KeycardAccessLevels.FromPermissions(permissions);
+        int highestLevel = Math.Max(levels.Containment, Math.Max(levels.Armory, levels.Administration));
+
+        // Equal levels prefer Administration, then Armory, then Containment.
+        if (levels.Administration == highestLevel)
+            return $"Administration {highestLevel}";
+        if (levels.Armory == highestLevel)
+            return $"Armory {highestLevel}";
+        if (levels.Containment == highestLevel)
+            return $"Containment {highestLevel}";
+
+        return string.Empty;
+    }
+
+    private UDoorButtonModelType GetEffectiveModelType()
+        => ModelType == UDoorButtonModelType.Keycard && string.IsNullOrWhiteSpace(GetSelectedKeycardSubtypeKey())
+            ? UDoorButtonModelType.Standard
+            : ModelType;
+
     private string GetSelectedModelKey()
-        => ModelType == UDoorButtonModelType.Custom ? CustomModelKey : ModelType.ToString();
+        => ModelType == UDoorButtonModelType.Custom ? CustomModelKey : GetEffectiveModelType().ToString();
 
     private static bool TryGetBuiltInModelType(string key, out UDoorButtonModelType type)
         => Enum.TryParse(key, true, out type) &&

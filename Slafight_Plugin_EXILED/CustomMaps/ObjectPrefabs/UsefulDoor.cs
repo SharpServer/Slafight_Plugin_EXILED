@@ -25,13 +25,10 @@ public class UsefulDoor : ObjectPrefab
     private static readonly Vector3 InteractableBaseScale = Vector3.one + Vector3.up * 2f - new Vector3(-0.8f, 0f, -0.8f);
 
     private UDoorModelType _modelType = UDoorModelType.Alpha;
-    private bool _useModelTypeDefaults = true;
     private string _customModelKey = string.Empty;
     private bool _isOpen;
     private bool _isSetup;
-    private bool _isTransitioning;
     private int _buttonStateRevision;
-    private int _successfulInteractionCount;
     private InteractableHandle? _interactable;
     private SpeakerApi.Playback _idlePlayback;
 
@@ -57,11 +54,7 @@ public class UsefulDoor : ObjectPrefab
     }
 
     /// <summary>When enabled, changing ModelType applies that type's animation/audio defaults.</summary>
-    public bool UseModelTypeDefaults
-    {
-        get => _useModelTypeDefaults;
-        set => _useModelTypeDefaults = value;
-    }
+    public bool UseModelTypeDefaults { get; set; } = true;
 
     /// <summary>Exact ObjectPrefabSchematicInfo key used when ModelType is Custom.</summary>
     public string CustomModelKey
@@ -152,10 +145,10 @@ public class UsefulDoor : ObjectPrefab
     public int MaxSuccessfulInteractions { get; set; }
 
     /// <summary>Runtime-only successful interaction count.</summary>
-    public int SuccessfulInteractionCount => _successfulInteractionCount;
+    public int SuccessfulInteractionCount { get; private set; }
 
     /// <summary>Open/Close animation is running and further interactions are ignored.</summary>
-    public bool IsTransitioning => _isTransitioning;
+    public bool IsTransitioning { get; private set; }
 
     public string ClosedIdleAnimation { get; set; } = "idle";
     public string OpenAnimation { get; set; } = "opening";
@@ -164,6 +157,7 @@ public class UsefulDoor : ObjectPrefab
 
     public string OpenAudio { get; set; } = "DoorOpen2.ogg";
     public string CloseAudio { get; set; } = "DoorClose2.ogg";
+    public string FailAudio { get; set; } = string.Empty;
     public string IdleAudio { get; set; } = string.Empty;
     public string OpenSound
     {
@@ -215,6 +209,7 @@ public class UsefulDoor : ObjectPrefab
         CloseAnimation = "closing";
         OpenAudio = "DoorOpen2.ogg";
         CloseAudio = "DoorClose2.ogg";
+        FailAudio = string.Empty;
         IdleAudio = string.Empty;
         AudioSpatial = true;
         AudioVolume = 1f;
@@ -276,7 +271,7 @@ public class UsefulDoor : ObjectPrefab
             return Finish(context, UDoorInteractionResult.Locked);
         if (IsTransitioning)
             return Finish(context, UDoorInteractionResult.Transitioning);
-        if (MaxSuccessfulInteractions > 0 && _successfulInteractionCount >= MaxSuccessfulInteractions)
+        if (MaxSuccessfulInteractions > 0 && SuccessfulInteractionCount >= MaxSuccessfulInteractions)
             return Finish(context, UDoorInteractionResult.LimitReached);
 
         UDoorAction action = ResolveAction(context.RequestedAction);
@@ -299,7 +294,7 @@ public class UsefulDoor : ObjectPrefab
         context.Player?.PlayKeycardInteractSound(true);
         bool nextOpen = action == UDoorAction.Open;
         _isOpen = nextOpen;
-        _successfulInteractionCount++;
+        SuccessfulInteractionCount++;
         ApplyVisualState(nextOpen, playAction: true);
         return Finish(context, UDoorInteractionResult.Success);
     }
@@ -317,9 +312,12 @@ public class UsefulDoor : ObjectPrefab
         };
     }
 
-    private static UDoorInteractionResult Finish(UDoorInteractionContext context, UDoorInteractionResult result)
+    private UDoorInteractionResult Finish(UDoorInteractionContext context, UDoorInteractionResult result)
     {
         context.Result = result;
+        if (result != UDoorInteractionResult.Success)
+            PlayActionAudio(FailAudio);
+
         UDoor.RaiseAfter(context);
         return result;
     }
@@ -369,26 +367,26 @@ public class UsefulDoor : ObjectPrefab
         int revision = ++_buttonStateRevision;
         if (Locked)
         {
-            _isTransitioning = false;
+            IsTransitioning = false;
             PublishLinkedButtonState(UDoorButtonState.Locked);
             return;
         }
 
         if (!transitioning)
         {
-            _isTransitioning = false;
+            IsTransitioning = false;
             PublishLinkedButtonState(isOpen ? UDoorButtonState.Open : UDoorButtonState.Close);
             return;
         }
 
-        _isTransitioning = true;
+        IsTransitioning = true;
         PublishLinkedButtonState(isOpen ? UDoorButtonState.Opening : UDoorButtonState.Closing);
         ScheduleAfterAnimatorState(animator, stateName, ButtonStateTransitionDuration, () =>
         {
             if (revision != _buttonStateRevision)
                 return;
 
-            _isTransitioning = false;
+            IsTransitioning = false;
             PublishLinkedButtonState(Locked ? UDoorButtonState.Locked : GetStableButtonState());
         });
     }
@@ -533,7 +531,7 @@ public class UsefulDoor : ObjectPrefab
     protected override void OnDestroy()
     {
         _buttonStateRevision++;
-        _isTransitioning = false;
+        IsTransitioning = false;
         StopIdleAudio();
         _interactable = null;
         _isSetup = false;

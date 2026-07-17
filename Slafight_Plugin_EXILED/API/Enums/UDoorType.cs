@@ -88,6 +88,7 @@ public enum UDoorButtonState
     Closing,
     Close,
     Locked,
+    Failed,
 }
 
 /// <summary>How a button dispatches to its target doors.</summary>

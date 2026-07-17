@@ -13,7 +13,6 @@ public class AuthDoor : ObjectPrefab
 
     private static readonly Vector3 InteractableLocalOffset = Vector3.up * 0.75f;
     private static readonly Vector3 InteractableBaseScale = Vector3.one + Vector3.up * 2f - new Vector3(-0.8f, 0f, -0.8f);
-    private bool _isTransitioning;
     private int _transitionRevision;
 
     public KeycardPermissions KeycardPermissions { get; set; } = KeycardPermissions.None;
@@ -28,7 +27,7 @@ public class AuthDoor : ObjectPrefab
     /// <summary>Animatorを取得できない場合に使用する遷移時間。</summary>
     public float TransitionDuration { get; set; } = 1f;
 
-    public bool IsTransitioning => _isTransitioning;
+    public bool IsTransitioning { get; private set; }
 
     public bool IsOpen
     {
@@ -109,18 +108,18 @@ public class AuthDoor : ObjectPrefab
     private void BeginTransition(Animator? animator, string stateName)
     {
         int revision = ++_transitionRevision;
-        _isTransitioning = true;
+        IsTransitioning = true;
         ScheduleAfterAnimatorState(animator, stateName, TransitionDuration, () =>
         {
             if (revision == _transitionRevision)
-                _isTransitioning = false;
+                IsTransitioning = false;
         });
     }
 
     protected override void OnDestroy()
     {
         _transitionRevision++;
-        _isTransitioning = false;
+        IsTransitioning = false;
     }
 
     // KeycardPermissions / RequireAllPermissions / CanClose / IsOpen は

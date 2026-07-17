@@ -13,23 +13,22 @@ public static class RoleTableContextRegistry
     private const string DefaultContextName = NormalRoleTableContext.ContextName;
 
     private static readonly Dictionary<string, RoleTableContext> Contexts = new();
-    private static string _activeContextName = DefaultContextName;
 
     static RoleTableContextRegistry()
     {
         RegisterDefaults();
     }
 
-    public static string ActiveContextName => _activeContextName;
+    public static string ActiveContextName { get; private set; } = DefaultContextName;
 
     public static RoleTableContext ActiveContext
     {
         get
         {
-            if (Contexts.TryGetValue(_activeContextName, out var context))
+            if (Contexts.TryGetValue(ActiveContextName, out var context))
                 return context;
 
-            Log.Warn($"RoleTableContextRegistry: Active context '{_activeContextName}' not found. Fallback to '{DefaultContextName}'.");
+            Log.Warn($"RoleTableContextRegistry: Active context '{ActiveContextName}' not found. Fallback to '{DefaultContextName}'.");
             return Contexts[DefaultContextName];
         }
     }
@@ -56,18 +55,18 @@ public static class RoleTableContextRegistry
         if (!Contexts.ContainsKey(name))
         {
             Log.Warn($"RoleTableContextRegistry: Unknown context '{name}'. Fallback to '{DefaultContextName}'.");
-            _activeContextName = DefaultContextName;
+            ActiveContextName = DefaultContextName;
             return;
         }
 
-        _activeContextName = name;
+        ActiveContextName = name;
     }
 
     public static void Clear()
     {
         Contexts.Clear();
         RegisterDefaults();
-        _activeContextName = DefaultContextName;
+        ActiveContextName = DefaultContextName;
     }
 
     private static void RegisterDefaults()

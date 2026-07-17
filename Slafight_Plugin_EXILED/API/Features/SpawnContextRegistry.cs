@@ -10,18 +10,17 @@ namespace Slafight_Plugin_EXILED.API.Features;
 public static class SpawnContextRegistry
 {
     private static readonly Dictionary<string, SpawnContext> Contexts = new();
-    private static string _activeContextName = "Default";
 
-    public static string ActiveContextName => _activeContextName;
+    public static string ActiveContextName { get; private set; } = "Default";
 
     public static SpawnContext ActiveContext
     {
         get
         {
-            if (Contexts.TryGetValue(_activeContextName, out var ctx))
+            if (Contexts.TryGetValue(ActiveContextName, out var ctx))
                 return ctx;
 
-            Log.Warn($"SpawnContextRegistry: Active context '{_activeContextName}' not found.");
+            Log.Warn($"SpawnContextRegistry: Active context '{ActiveContextName}' not found.");
             return null;
         }
     }
@@ -60,13 +59,13 @@ public static class SpawnContextRegistry
             return;
         }
 
-        _activeContextName = name;
+        ActiveContextName = name;
         Log.Info($"SpawnContextRegistry: Active context switched to '{name}'");
     }
 
     public static void Clear()
     {
         Contexts.Clear();
-        _activeContextName = "Default";
+        ActiveContextName = "Default";
     }
 }

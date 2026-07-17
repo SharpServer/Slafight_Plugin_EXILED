@@ -25,18 +25,17 @@ public static class WaypointChunkStreamer
     private static readonly List<ChunkKey> RemovalBuffer = new();
 
     private static CoroutineHandle _streamingCoroutine;
-    private static float _chunkSize;
-    private static float _preloadDistance;
-    private static float _gcDelay;
     private static bool _registered;
-    private static bool _acceptingCoverage;
     private static float _lastCapacityWarning;
 
-    public static bool IsConfigured => _acceptingCoverage;
+    public static bool IsConfigured { get; private set; }
+
     public static int ActiveChunkCount => ActiveChunks.Count;
-    public static float ChunkSize => _chunkSize;
-    public static float PreloadDistance => _preloadDistance;
-    public static float GcDelay => _gcDelay;
+    public static float ChunkSize { get; private set; }
+
+    public static float PreloadDistance { get; private set; }
+
+    public static float GcDelay { get; private set; }
 
     public static void RegisterEvents()
     {
@@ -93,10 +92,10 @@ public static class WaypointChunkStreamer
 
         ClearImmediately();
 
-        _chunkSize = chunkSize;
-        _preloadDistance = preloadDistance;
-        _gcDelay = gcDelay;
-        _acceptingCoverage = true;
+        ChunkSize = chunkSize;
+        PreloadDistance = preloadDistance;
+        GcDelay = gcDelay;
+        IsConfigured = true;
         EnsureCoroutine();
 
         foreach (Player player in Player.List)
@@ -123,13 +122,13 @@ public static class WaypointChunkStreamer
 
     public static void Stop()
     {
-        _acceptingCoverage = false;
+        IsConfigured = false;
         EnsureCoroutine();
     }
 
     public static int EnsureCoverage(Vector3 position)
     {
-        if (!_acceptingCoverage || !IsFinite(position))
+        if (!IsConfigured || !IsFinite(position))
             return 0;
 
         RequiredChunks.Clear();
@@ -154,17 +153,17 @@ public static class WaypointChunkStreamer
 
     public static string GetStatus()
     {
-        string state = _acceptingCoverage ? "streaming" : ActiveChunks.Count > 0 ? "draining" : "stopped";
+        string state = IsConfigured ? "streaming" : ActiveChunks.Count > 0 ? "draining" : "stopped";
         return
             $"Waypoint stream: {state}\n" +
             $"Active chunks: {ActiveChunks.Count}\n" +
             "Bounds: global\n" +
-            $"Chunk={_chunkSize:0.##}m, preload={_preloadDistance:0.##}m, GC={_gcDelay:0.##}s";
+            $"Chunk={ChunkSize:0.##}m, preload={PreloadDistance:0.##}m, GC={GcDelay:0.##}s";
     }
 
     private static IEnumerator<float> StreamingLoop()
     {
-        while (_acceptingCoverage || ActiveChunks.Count > 0)
+        while (IsConfigured || ActiveChunks.Count > 0)
         {
             UpdateStreaming();
             yield return Timing.WaitForSeconds(UpdateInterval);
@@ -177,7 +176,7 @@ public static class WaypointChunkStreamer
     {
         RequiredChunks.Clear();
 
-        if (_acceptingCoverage)
+        if (IsConfigured)
         {
             foreach (Player player in Player.List)
             {
@@ -205,7 +204,7 @@ public static class WaypointChunkStreamer
         {
             ActiveChunk active = pair.Value;
             if (RequiredChunks.Contains(pair.Key) ||
-                now - active.LastNeededAt < _gcDelay ||
+                now - active.LastNeededAt < GcDelay ||
                 IsWaypointReferenced(active.Waypoint.WaypointId))
             {
                 continue;
@@ -246,7 +245,7 @@ public static class WaypointChunkStreamer
         }
 
         Vector3 center = GetChunkCenter(key);
-        float boundsSize = Mathf.Min(255.9961f, _chunkSize + _preloadDistance * 2f);
+        float boundsSize = Mathf.Min(255.9961f, ChunkSize + PreloadDistance * 2f);
         Waypoint waypoint = null;
         try
         {
@@ -286,8 +285,8 @@ public static class WaypointChunkStreamer
         if (!IsFinite(position))
             return;
 
-        Vector3 low = position - Vector3.one * _preloadDistance;
-        Vector3 high = position + Vector3.one * _preloadDistance;
+        Vector3 low = position - Vector3.one * PreloadDistance;
+        Vector3 high = position + Vector3.one * PreloadDistance;
         Vector3Int first = GetChunkIndex(low);
         Vector3Int last = GetChunkIndex(high);
 
@@ -306,7 +305,7 @@ public static class WaypointChunkStreamer
     }
 
     private static int GetChunkIndex(float coordinate)
-        => Mathf.FloorToInt(coordinate / _chunkSize);
+        => Mathf.FloorToInt(coordinate / ChunkSize);
 
     private static Vector3 GetChunkCenter(ChunkKey key)
     {
@@ -317,7 +316,7 @@ public static class WaypointChunkStreamer
     }
 
     private static float GetChunkCenter(int index)
-        => (index + 0.5f) * _chunkSize;
+        => (index + 0.5f) * ChunkSize;
 
     private static bool ShouldTrack(Player player)
     {
@@ -373,13 +372,13 @@ public static class WaypointChunkStreamer
 
     private static void EnsureCoroutine()
     {
-        if (!_streamingCoroutine.IsRunning && (_acceptingCoverage || ActiveChunks.Count > 0))
+        if (!_streamingCoroutine.IsRunning && (IsConfigured || ActiveChunks.Count > 0))
             _streamingCoroutine = Timing.RunCoroutine(StreamingLoop());
     }
 
     private static void ClearImmediately()
     {
-        _acceptingCoverage = false;
+        IsConfigured = false;
 
         if (_streamingCoroutine.IsRunning)
             Timing.KillCoroutines(_streamingCoroutine);

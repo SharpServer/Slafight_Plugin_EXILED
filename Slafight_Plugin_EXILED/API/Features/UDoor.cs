@@ -53,28 +53,27 @@ public sealed class UDoorInteractionContext
 /// </summary>
 public sealed class UDoorSet : IReadOnlyDictionary<UDoorObjectType, IReadOnlyList<ObjectPrefab>>
 {
-    private readonly IReadOnlyList<UsefulDoor> _doors;
-    private readonly IReadOnlyList<UsefulDoorButton> _buttons;
-
     internal UDoorSet(string tag, IEnumerable<ObjectPrefab> prefabs)
     {
         Tag = tag?.Trim() ?? string.Empty;
-        _doors = prefabs.OfType<UsefulDoor>().ToArray();
-        _buttons = prefabs.OfType<UsefulDoorButton>().ToArray();
+        Door = prefabs.OfType<UsefulDoor>().ToArray();
+        Button = prefabs.OfType<UsefulDoorButton>().ToArray();
     }
 
     public string Tag { get; }
     public UDoorType? Type => UDoor.TryParseType(Tag, out UDoorType type) ? type : null;
-    public IReadOnlyList<UsefulDoor> Door => _doors;
-    public IReadOnlyList<UsefulDoorButton> Button => _buttons;
-    public IReadOnlyList<UsefulDoor> Doors => _doors;
-    public IReadOnlyList<UsefulDoorButton> Buttons => _buttons;
+    public IReadOnlyList<UsefulDoor> Door { get; }
+
+    public IReadOnlyList<UsefulDoorButton> Button { get; }
+
+    public IReadOnlyList<UsefulDoor> Doors => Door;
+    public IReadOnlyList<UsefulDoorButton> Buttons => Button;
 
     public IReadOnlyList<ObjectPrefab> this[UDoorObjectType key]
         => key switch
         {
-            UDoorObjectType.Door => _doors.Cast<ObjectPrefab>().ToArray(),
-            UDoorObjectType.Button => _buttons.Cast<ObjectPrefab>().ToArray(),
+            UDoorObjectType.Door => Door.Cast<ObjectPrefab>().ToArray(),
+            UDoorObjectType.Button => Button.Cast<ObjectPrefab>().ToArray(),
             _ => Array.Empty<ObjectPrefab>(),
         };
 

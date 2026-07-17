@@ -36,7 +36,6 @@ public abstract class ObjectPrefab : IObjectPrefab
     private Vector3 _scale = Vector3.one;
     private string _objectInstanceID = string.Empty;
     private string _tag = string.Empty;
-    private SchematicObject? _managedSchematic;
 
     // Destroy 冪等化用
     private bool _isDestroyed;
@@ -104,7 +103,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     /// この Prefab が管理しているスキマティック。
     /// <see cref="SchematicName"/> を宣言していれば Create 時に自動でスポーンされる。
     /// </summary>
-    public SchematicObject? Schematic => _managedSchematic;
+    public SchematicObject? Schematic { get; private set; }
 
     /// <summary>この Prefab が管理している Interactable のハンドル一覧。</summary>
     public IReadOnlyList<InteractableHandle> Interactables => _interactables;
@@ -210,13 +209,13 @@ public abstract class ObjectPrefab : IObjectPrefab
     protected SchematicObject? SpawnManagedSchematic(string schematicName, bool applyScale = true)
     {
         DestroyManagedSchematic();
-        _managedSchematic = ObjectSpawner.SpawnSchematic(schematicName, Position, Rotation);
-        if (_managedSchematic != null && applyScale)
-            _managedSchematic.Scale = Scale;
+        Schematic = ObjectSpawner.SpawnSchematic(schematicName, Position, Rotation);
+        if (Schematic != null && applyScale)
+            Schematic.Scale = Scale;
 
         AdoptSchematicBlocks();
         SyncManagedObjects();
-        return _managedSchematic;
+        return Schematic;
     }
 
     protected void SetManagedSchematic(SchematicObject? schematic, bool destroyPrevious = true, bool applyScale = true)
@@ -224,9 +223,9 @@ public abstract class ObjectPrefab : IObjectPrefab
         if (destroyPrevious)
             DestroyManagedSchematic();
 
-        _managedSchematic = schematic;
-        if (_managedSchematic != null && applyScale)
-            _managedSchematic.Scale = Scale;
+        Schematic = schematic;
+        if (Schematic != null && applyScale)
+            Schematic.Scale = Scale;
 
         AdoptSchematicBlocks();
         SyncManagedObjects();
@@ -236,8 +235,8 @@ public abstract class ObjectPrefab : IObjectPrefab
     {
         ReleaseAdoptedBlocks();
 
-        var schematic = _managedSchematic;
-        _managedSchematic = null;
+        var schematic = Schematic;
+        Schematic = null;
 
         if (schematic == null)
             return;
@@ -262,10 +261,10 @@ public abstract class ObjectPrefab : IObjectPrefab
     {
         ReleaseAdoptedBlocks();
 
-        if (_managedSchematic == null)
+        if (Schematic == null)
             return;
 
-        foreach (SchematicBlock block in _managedSchematic.GetPrefabManagedBlocks())
+        foreach (SchematicBlock block in Schematic.GetPrefabManagedBlocks())
         {
             string key = block.ObjectPrefabKey;
             _managedBlocks[key] = block;
@@ -320,7 +319,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     /// </summary>
     public T? GetBlockComponent<T>(string keyOrName) where T : UnityEngine.Component
     {
-        SchematicBlock? block = GetBlock(keyOrName) ?? _managedSchematic?.FindBlock(keyOrName);
+        SchematicBlock? block = GetBlock(keyOrName) ?? Schematic?.FindBlock(keyOrName);
         return block != null && block.TryGetComponent(out T component) ? component : null;
     }
 
@@ -331,7 +330,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     /// </summary>
     protected bool DestroyBlock(string keyOrName)
     {
-        SchematicBlock? block = GetBlock(keyOrName) ?? _managedSchematic?.FindBlock(keyOrName, allowPartial: false);
+        SchematicBlock? block = GetBlock(keyOrName) ?? Schematic?.FindBlock(keyOrName, allowPartial: false);
         if (block == null)
             return false;
 
@@ -368,7 +367,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     /// </summary>
     protected bool SetBlockSpawned(string keyOrName, bool spawned)
     {
-        SchematicBlock? block = GetBlock(keyOrName) ?? _managedSchematic?.FindBlock(keyOrName, allowPartial: false);
+        SchematicBlock? block = GetBlock(keyOrName) ?? Schematic?.FindBlock(keyOrName, allowPartial: false);
         if (block == null)
             return false;
 
@@ -381,7 +380,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     /// </summary>
     protected bool SetChildBlockSpawned(string parentKeyOrName, string childName, bool spawned)
     {
-        SchematicBlock? parent = GetBlock(parentKeyOrName) ?? _managedSchematic?.FindBlock(parentKeyOrName, allowPartial: false);
+        SchematicBlock? parent = GetBlock(parentKeyOrName) ?? Schematic?.FindBlock(parentKeyOrName, allowPartial: false);
         if (parent == null || string.IsNullOrWhiteSpace(childName))
             return false;
 
@@ -606,15 +605,15 @@ public abstract class ObjectPrefab : IObjectPrefab
         if (_isDestroyed)
             return;
 
-        if (_managedSchematic != null)
+        if (Schematic != null)
         {
-            _managedSchematic.Position = Position;
-            _managedSchematic.Rotation = Rotation;
-            _managedSchematic.Scale = Scale;
+            Schematic.Position = Position;
+            Schematic.Rotation = Rotation;
+            Schematic.Scale = Scale;
         }
 
-        var sourcePosition = _managedSchematic?.Position ?? Position;
-        var sourceRotation = _managedSchematic?.Rotation ?? Rotation;
+        var sourcePosition = Schematic?.Position ?? Position;
+        var sourceRotation = Schematic?.Rotation ?? Rotation;
 
         foreach (var handle in _interactables)
         {

@@ -14,9 +14,6 @@ public sealed class RoundHazardController : IBootstrapHandler, IDisposable
     private const string DefaultDecontaminationCancelMessage = "除染は取り消されました";
 
     private static RoundHazardController _instance;
-    private static bool _deadmanSwitchBlocked;
-    private static bool _lightDecontaminationBlocked;
-    private static bool _lightDecontaminationControllerDisableRequested;
     private static string _lightDecontaminationCancelMessage = DefaultDecontaminationCancelMessage;
     private static DecontaminationSnapshot? _decontaminationSnapshot;
 
@@ -34,12 +31,11 @@ public sealed class RoundHazardController : IBootstrapHandler, IDisposable
             () => MapHandler.Decontaminating -= OnDecontaminating);
     }
 
-    public static bool IsDeadmanSwitchBlocked => _deadmanSwitchBlocked;
+    public static bool IsDeadmanSwitchBlocked { get; private set; }
 
-    public static bool IsLightDecontaminationBlocked => _lightDecontaminationBlocked;
+    public static bool IsLightDecontaminationBlocked { get; private set; }
 
-    public static bool IsLightDecontaminationControllerDisableRequested =>
-        _lightDecontaminationControllerDisableRequested;
+    public static bool IsLightDecontaminationControllerDisableRequested { get; private set; }
 
     public static void Register()
     {
@@ -78,18 +74,18 @@ public sealed class RoundHazardController : IBootstrapHandler, IDisposable
 
     public static void SetDeadmanSwitchBlocked(bool blocked)
     {
-        _deadmanSwitchBlocked = blocked;
+        IsDeadmanSwitchBlocked = blocked;
     }
 
     public static void BlockLightDecontamination()
     {
-        _lightDecontaminationBlocked = true;
+        IsLightDecontaminationBlocked = true;
     }
 
     public static void DisableLightDecontamination(string cancelMessage = DefaultDecontaminationCancelMessage)
     {
-        _lightDecontaminationBlocked = true;
-        _lightDecontaminationControllerDisableRequested = true;
+        IsLightDecontaminationBlocked = true;
+        IsLightDecontaminationControllerDisableRequested = true;
         _lightDecontaminationCancelMessage = string.IsNullOrWhiteSpace(cancelMessage)
             ? DefaultDecontaminationCancelMessage
             : cancelMessage;
@@ -99,22 +95,22 @@ public sealed class RoundHazardController : IBootstrapHandler, IDisposable
 
     public static void EnableLightDecontamination()
     {
-        _lightDecontaminationBlocked = false;
-        _lightDecontaminationControllerDisableRequested = false;
+        IsLightDecontaminationBlocked = false;
+        IsLightDecontaminationControllerDisableRequested = false;
         _lightDecontaminationCancelMessage = DefaultDecontaminationCancelMessage;
         TryRestoreLightDecontaminationController();
     }
 
     public static void ResetRoundState()
     {
-        _deadmanSwitchBlocked = false;
+        IsDeadmanSwitchBlocked = false;
         EnableLightDecontamination();
         SetAlphaWarheadDisarmLocked(false);
     }
 
     private static void OnDeadmanSwitchInitiating(DeadmanSwitchInitiatingEventArgs ev)
     {
-        if (!_deadmanSwitchBlocked)
+        if (!IsDeadmanSwitchBlocked)
             return;
 
         ev.IsAllowed = false;
@@ -123,10 +119,10 @@ public sealed class RoundHazardController : IBootstrapHandler, IDisposable
 
     private static void OnDecontaminating(DecontaminatingEventArgs ev)
     {
-        if (_lightDecontaminationControllerDisableRequested)
+        if (IsLightDecontaminationControllerDisableRequested)
             TryDisableLightDecontaminationController();
 
-        if (!_lightDecontaminationBlocked)
+        if (!IsLightDecontaminationBlocked)
             return;
 
         ev.IsAllowed = false;

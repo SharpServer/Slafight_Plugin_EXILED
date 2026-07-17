@@ -15,25 +15,23 @@ namespace Slafight_Plugin_EXILED.CustomMaps.Core.Interactions;
 
 public class LeverHandler : IBootstrapHandler, IDisposable
 {
-    private static LeverHandler _instance;
-
     private readonly EventSubscriptionScope _subscriptions = new();
     private readonly Dictionary<string, Action<InteractableLeverTogglingEventArgs>> _tagTogglingHandlers = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<string, Action<InteractableLeverToggledEventArgs>> _tagHandlers = new(StringComparer.OrdinalIgnoreCase);
     private bool _disposed;
 
-    public static LeverHandler Instance => _instance;
+    public static LeverHandler Instance { get; private set; }
 
     public static void Register()
     {
         Unregister();
-        _instance = new LeverHandler();
+        Instance = new LeverHandler();
     }
 
     public static void Unregister()
     {
-        _instance?.Dispose();
-        _instance = null;
+        Instance?.Dispose();
+        Instance = null;
     }
 
     private LeverHandler()
