@@ -6,7 +6,7 @@ namespace Slafight_Plugin_EXILED.API.Enums;
 /// </summary>
 public enum UDoorType
 {
-    AaaDoor,
+    LczSurveillance,
 }
 
 /// <summary>Object kinds contained in a UDoor set.</summary>

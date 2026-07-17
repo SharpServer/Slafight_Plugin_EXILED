@@ -81,6 +81,11 @@ public class LeverHandler : IBootstrapHandler, IDisposable
                 SpeakerApi.Play("LeverFlip.ogg", ev.Lever.GetSoundId(ev.SourceEventArgs), ev.Lever.Position, true, isSpatial: false, maxDistance: 10f, minDistance: 0.1f);
             });
         });
+        RegisterTagHandler("HczMaintenance_LeverSurveillance", ev =>
+        {
+            ev.Lever.CanInteract = false;
+            UDoor.Get(UDoorType.LczSurveillance).Door.FirstOrDefault()?.IsOpen = true;
+        });
     }
 
     private void RegisterTagHandler(string tag, Action<InteractableLeverToggledEventArgs> handler)
