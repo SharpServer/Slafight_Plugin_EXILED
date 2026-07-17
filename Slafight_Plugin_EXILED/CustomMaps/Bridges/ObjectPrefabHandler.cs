@@ -23,6 +23,7 @@ public class ObjectPrefabHandler : SlafightLabApiHandler, IBootstrapHandler
     {
         subscriptions.Add(() => PlayerEvents.SearchingToy += OnSearchingToy, () => PlayerEvents.SearchingToy -= OnSearchingToy);
         subscriptions.Add(() => PlayerEvents.SearchedToy += OnSearchedToy, () => PlayerEvents.SearchedToy -= OnSearchedToy);
+        subscriptions.Add(() => PlayerEvents.InteractedToy += OnInteractedToy, () => PlayerEvents.InteractedToy -= OnInteractedToy);
         subscriptions.Add(() => ServerEvents.RoundStarted += OnRoundStarted, () => ServerEvents.RoundStarted -= OnRoundStarted);
         subscriptions.Add(() => ServerEvents.RoundRestarted += OnRoundRestarting, () => ServerEvents.RoundRestarted -= OnRoundRestarting);
     }
@@ -35,8 +36,8 @@ public class ObjectPrefabHandler : SlafightLabApiHandler, IBootstrapHandler
 
         if (ObjectPrefabInteractionRouter.TryRoute(ev.Interactable, out var handle))
         {
-            handle.RaiseSearching(player, ev);
-            handle.Owner.InvokeToySearchingNearby(ev);
+            handle.RaiseInteracting(player, ev);
+            handle.Owner.InvokeToyInteractingNearby(ev);
             return;
         }
 
@@ -44,11 +45,25 @@ public class ObjectPrefabHandler : SlafightLabApiHandler, IBootstrapHandler
         foreach (var prefab in InstanceManager.GetAll())
         {
             if (prefab != null && prefab.MatchesSearchRadius(toyPos))
-                prefab.InvokeToySearchingNearby(ev);
+                prefab.InvokeToyInteractingNearby(ev);
         }
     }
 
     private static void OnSearchedToy(PlayerSearchedToyEventArgs ev)
+        => DispatchInteracted(ev);
+
+    private static void OnInteractedToy(PlayerInteractedToyEventArgs ev)
+    {
+        if (ev.Player?.ReferenceHub == null || ev.Interactable?.Base == null)
+            return;
+
+        DispatchInteracted(new PlayerSearchedToyEventArgs(ev.Player.ReferenceHub, ev.Interactable.Base));
+    }
+
+    /// <summary>
+    /// Duration 付きの SearchedToy と Duration 0 の InteractedToy を同じ完了イベントとして配送する。
+    /// </summary>
+    private static void DispatchInteracted(PlayerSearchedToyEventArgs ev)
     {
         var player = Player.Get(ev.Player);
         if (player == null)
@@ -56,8 +71,8 @@ public class ObjectPrefabHandler : SlafightLabApiHandler, IBootstrapHandler
 
         if (ObjectPrefabInteractionRouter.TryRoute(ev.Interactable, out var handle))
         {
-            handle.RaiseSearched(player, ev);
-            handle.Owner.InvokeToySearchedNearby(ev);
+            handle.RaiseInteracted(player, ev);
+            handle.Owner.InvokeToyInteractedNearby(ev);
             return;
         }
 
@@ -65,7 +80,7 @@ public class ObjectPrefabHandler : SlafightLabApiHandler, IBootstrapHandler
         foreach (var prefab in InstanceManager.GetAll())
         {
             if (prefab != null && prefab.MatchesSearchRadius(toyPos))
-                prefab.InvokeToySearchedNearby(ev);
+                prefab.InvokeToyInteractedNearby(ev);
         }
     }
 

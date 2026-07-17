@@ -415,7 +415,7 @@ public abstract class ObjectPrefab : IObjectPrefab
 
     /// <summary>
     /// managed Interactable を 1 つ生成して登録する。
-    /// 返り値のハンドルで Searching / Searched を購読できる。
+    /// 返り値のハンドルで Interacting / Interacted を購読できる。
     /// 位置・スケールは Prefab（Schematic があればその transform）に自動追従する。
     /// </summary>
     protected InteractableHandle AddInteractable(
@@ -953,15 +953,15 @@ public abstract class ObjectPrefab : IObjectPrefab
     }
 
     // Invoke Prefab Events.
-    protected virtual void OnToySearchingNearby(PlayerSearchingToyEventArgs eventArgs) { }
+    protected virtual void OnToyInteractingNearby(PlayerSearchingToyEventArgs eventArgs) { }
 
-    public void InvokeToySearchingNearby(PlayerSearchingToyEventArgs eventArgs)
-        => OnToySearchingNearby(eventArgs);
+    public void InvokeToyInteractingNearby(PlayerSearchingToyEventArgs eventArgs)
+        => OnToyInteractingNearby(eventArgs);
     
-    protected virtual void OnToySearchedNearby(PlayerSearchedToyEventArgs eventArgs) { }
+    protected virtual void OnToyInteractedNearby(PlayerSearchedToyEventArgs eventArgs) { }
 
-    public void InvokeToySearchedNearby(PlayerSearchedToyEventArgs eventArgs)
-        => OnToySearchedNearby(eventArgs);
+    public void InvokeToyInteractedNearby(PlayerSearchedToyEventArgs eventArgs)
+        => OnToyInteractedNearby(eventArgs);
     
     protected virtual void OnRoundStarted() { }
     public void InvokeRoundStarted()

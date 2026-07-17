@@ -15,7 +15,7 @@ public class Vent : ObjectPrefab
     {
         AddInteractable(duration: 1.5f);
     }
-    protected override void OnToySearchedNearby(PlayerSearchedToyEventArgs ev)
+    protected override void OnToyInteractedNearby(PlayerSearchedToyEventArgs ev)
     {
         var player = Player.Get(ev.Player);
         if (Schematic == null)

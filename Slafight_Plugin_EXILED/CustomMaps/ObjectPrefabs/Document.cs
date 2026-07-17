@@ -79,7 +79,7 @@ public class Document : ObjectPrefab
         AddInteractable(duration: _interactionDuration, scale: Vector3.one * 0.75f);
     }
 
-    protected override void OnToySearchedNearby(PlayerSearchedToyEventArgs? ev)
+    protected override void OnToyInteractedNearby(PlayerSearchedToyEventArgs? ev)
     {
         if (ev?.Player == null)
             return;

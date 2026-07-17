@@ -10,7 +10,7 @@ namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
 /// ObjectPrefab が管理する 1 つの Interactable。
-/// Searching / Searched はこの Interactable が対象のときだけ発火する
+/// Interacting / Interacted はこの Interactable が対象のときだけ発火する
 /// （プレイヤーは Exiled 解決済みで渡される）。
 /// </summary>
 public sealed class InteractableHandle
@@ -61,25 +61,25 @@ public sealed class InteractableHandle
     /// <summary>Prefab の Scale と乗算される基本スケール。</summary>
     public Vector3 BaseScale { get; set; }
 
-    /// <summary>false にすると Searching が自動でキャンセルされる。</summary>
+    /// <summary>false にすると Interacting が自動でキャンセルされる。</summary>
     public bool Enabled { get; set; } = true;
 
     /// <summary>この Interactable の長押し開始時。</summary>
-    public event Action<ExiledPlayer, PlayerSearchingToyEventArgs>? Searching;
+    public event Action<ExiledPlayer, PlayerSearchingToyEventArgs>? Interacting;
 
-    /// <summary>この Interactable の長押し完了時。</summary>
-    public event Action<ExiledPlayer, PlayerSearchedToyEventArgs>? Searched;
+    /// <summary>この Interactable の操作完了時。InteractionDuration が 0 の即時操作も含む。</summary>
+    public event Action<ExiledPlayer, PlayerSearchedToyEventArgs>? Interacted;
 
-    internal void RaiseSearching(ExiledPlayer player, PlayerSearchingToyEventArgs ev)
+    internal void RaiseInteracting(ExiledPlayer player, PlayerSearchingToyEventArgs ev)
     {
         if (!Enabled)
             ev.IsAllowed = false;
 
-        Searching?.Invoke(player, ev);
+        Interacting?.Invoke(player, ev);
     }
 
-    internal void RaiseSearched(ExiledPlayer player, PlayerSearchedToyEventArgs ev)
-        => Searched?.Invoke(player, ev);
+    internal void RaiseInteracted(ExiledPlayer player, PlayerSearchedToyEventArgs ev)
+        => Interacted?.Invoke(player, ev);
 }
 
 /// <summary>

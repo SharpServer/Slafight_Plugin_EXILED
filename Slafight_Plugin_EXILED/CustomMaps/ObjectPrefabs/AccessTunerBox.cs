@@ -126,7 +126,7 @@ public class AccessTunerBox : ObjectPrefab
         if (handle == null)
             return;
 
-        handle.Searched += (player, _) =>
+        handle.Interacted += (player, _) =>
         {
             if (!handle.Enabled)
                 return;
@@ -150,7 +150,7 @@ public class AccessTunerBox : ObjectPrefab
         if (handle == null)
             return;
 
-        handle.Searched += (player, _) =>
+        handle.Interacted += (player, _) =>
         {
             if (!handle.Enabled)
                 return;

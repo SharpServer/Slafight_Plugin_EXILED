@@ -14,7 +14,7 @@ public class AntiMemeBomb : ObjectPrefab
         AddInteractable(duration: 5f, offset: Vector3.up * 2.05f, scale: Vector3.one * 3f);
     }
 
-    protected override void OnToySearchedNearby(PlayerSearchedToyEventArgs ev)
+    protected override void OnToyInteractedNearby(PlayerSearchedToyEventArgs ev)
     {
         foreach (var p in Player.List)
         {

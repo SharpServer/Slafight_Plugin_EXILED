@@ -319,18 +319,18 @@ public class UsefulDoor : ObjectPrefab
     {
         _interactable = GetInteractable(InteractableKey) ??
                         AddInteractable(duration: 0.1f, offset: InteractableLocalOffset, scale: InteractableBaseScale);
-        _interactable.Searching += OnSearching;
-        _interactable.Searched += OnSearched;
+        _interactable.Interacting += OnInteracting;
+        _interactable.Interacted += OnInteracted;
         UpdateInteractable();
     }
 
-    private void OnSearching(Player player, PlayerSearchingToyEventArgs eventArgs)
+    private void OnInteracting(Player player, PlayerSearchingToyEventArgs eventArgs)
     {
         if (!Enabled || Locked)
             eventArgs.IsAllowed = false;
     }
 
-    private void OnSearched(Player player, PlayerSearchedToyEventArgs eventArgs)
+    private void OnInteracted(Player player, PlayerSearchedToyEventArgs eventArgs)
     {
         TryInteract(new UDoorInteractionContext(this, player, UDoorInteractionSource.Direct, UDoorAction.Toggle, null, eventArgs));
     }

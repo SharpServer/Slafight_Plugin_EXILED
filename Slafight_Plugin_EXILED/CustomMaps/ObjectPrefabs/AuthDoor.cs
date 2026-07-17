@@ -46,7 +46,7 @@ public class AuthDoor : ObjectPrefab
 
     // ===== Interaction =====
 
-    protected override void OnToySearchedNearby(PlayerSearchedToyEventArgs ev)
+    protected override void OnToyInteractedNearby(PlayerSearchedToyEventArgs ev)
     {
         var player = Player.Get(ev.Player);
         if (player == null)

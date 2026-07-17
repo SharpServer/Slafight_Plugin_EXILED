@@ -85,8 +85,8 @@ public class InteractableLever : ObjectPrefab
         if (Schematic == null) return;
 
         var handle = AddInteractable(duration: 0.05f, scale: Vector3.one * 0.25f);
-        handle.Searching += OnLeverSearching;
-        handle.Searched += OnLeverSearched;
+        handle.Interacting += OnLeverInteracting;
+        handle.Interacted += OnLeverInteracted;
 
         AnimationLever(IsOn);
     }
@@ -102,12 +102,12 @@ public class InteractableLever : ObjectPrefab
         Schematic.AnimationController.Play(animState);
     }
 
-    private void OnLeverSearching(Player player, PlayerSearchingToyEventArgs ev)
+    private void OnLeverInteracting(Player player, PlayerSearchingToyEventArgs ev)
     {
         if (!CanInteract) ev.IsAllowed = false;
     }
 
-    private void OnLeverSearched(Player player, PlayerSearchedToyEventArgs ev)
+    private void OnLeverInteracted(Player player, PlayerSearchedToyEventArgs ev)
     {
         if (Schematic == null)
             return;

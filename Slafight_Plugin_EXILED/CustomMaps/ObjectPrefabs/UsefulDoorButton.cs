@@ -314,18 +314,18 @@ public class UsefulDoorButton : ObjectPrefab
     {
         _interactable = GetInteractable(InteractableKey) ??
                         AddInteractable(duration: 0.1f, scale: Vector3.one * 0.75f);
-        _interactable.Searching += OnSearching;
-        _interactable.Searched += OnSearched;
+        _interactable.Interacting += OnInteracting;
+        _interactable.Interacted += OnInteracted;
         UpdateInteractable();
     }
 
-    private void OnSearching(Player player, PlayerSearchingToyEventArgs eventArgs)
+    private void OnInteracting(Player player, PlayerSearchingToyEventArgs eventArgs)
     {
         if (!Enabled)
             eventArgs.IsAllowed = false;
     }
 
-    private void OnSearched(Player player, PlayerSearchedToyEventArgs eventArgs)
+    private void OnInteracted(Player player, PlayerSearchedToyEventArgs eventArgs)
         => TryInteract(player, eventArgs);
 
     private void UpdateInteractable()

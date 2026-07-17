@@ -51,7 +51,7 @@ public class Trashbox : ObjectPrefab
         Secret
     }
 
-    protected override void OnToySearchedNearby(PlayerSearchedToyEventArgs ev)
+    protected override void OnToyInteractedNearby(PlayerSearchedToyEventArgs ev)
     {
         var player = Player.Get(ev.Player);
         if (player == null)
