@@ -183,6 +183,7 @@
         <Compile Include="API\Enums\SeasonTypeId.cs" />
         <Compile Include="API\Enums\SpecificFlagType.cs" />
         <Compile Include="API\Enums\TaskType.cs" />
+        <Compile Include="API\Enums\UDoorType.cs" />
         <Compile Include="API\Features\AbilityBase.cs" />
         <Compile Include="API\Features\AbilityLocalisation.cs" />
         <Compile Include="API\Features\AbilityOption.cs" />
@@ -250,6 +251,7 @@
         <Compile Include="API\Features\CItemNvg.cs" />
         <Compile Include="API\Features\ObjectPrefab.cs" />
         <Compile Include="API\Features\ObjectPrefabInteraction.cs" />
+        <Compile Include="API\Features\UDoor.cs" />
         <Compile Include="API\Features\ObjectPrefabOption.cs" />
         <Compile Include="API\Features\ObjectPrefabRegistry.cs" />
         <Compile Include="API\Features\PrefabSaveData.cs" />
@@ -464,6 +466,8 @@
         <Compile Include="CustomMaps\ObjectPrefabs\Document.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\AuthDoor.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\InteractableLever.cs" />
+        <Compile Include="CustomMaps\ObjectPrefabs\UsefulDoor.cs" />
+        <Compile Include="CustomMaps\ObjectPrefabs\UsefulDoorButton.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\PhysicsSchematicObject.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Tentacle.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Trashbox.cs" />

@@ -118,10 +118,28 @@ public static class SpeakerApi
         if (string.IsNullOrWhiteSpace(audioPlayerName))
             throw new ArgumentException("Audio player name cannot be empty.", nameof(audioPlayerName));
 
-        var speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, volume, listeners);
-        var playback = new LivePlayback(audioPlayerName, speaker, speaker.ControllerId);
-        AddLivePlayback(playback);
-        return playback;
+        LabSpeakerToy? speaker = null;
+        var playback = default(LivePlayback);
+        try
+        {
+            speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, volume, listeners);
+            playback = new LivePlayback(audioPlayerName, speaker, speaker.ControllerId);
+            AddLivePlayback(playback);
+            return playback;
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[SpeakerApi] CreateLiveSpeaker failed for {audioPlayerName}: {ex.Message}");
+            if (speaker != null)
+            {
+                var failedPlayback = playback.ControllerId == 0
+                    ? new LivePlayback(audioPlayerName, speaker, speaker.ControllerId)
+                    : playback;
+                DestroyLiveSpeaker(failedPlayback);
+            }
+
+            return default;
+        }
     }
 
     public static Playback Play(
@@ -188,23 +206,42 @@ public static class SpeakerApi
             throw new ArgumentException("Audio player name cannot be empty.", nameof(audioPlayerName));
 
         clipName ??= fileName;
-        if (loadClip || !ClipCache.ContainsKey(clipName))
-            LoadClip(fileName, clipName);
+        if ((loadClip || !ClipCache.ContainsKey(clipName)) && !TryLoadClipCore(fileName, clipName))
+            return default;
 
         if (!ClipCache.TryGetValue(clipName, out var clip))
-            throw new InvalidOperationException($"Audio clip is not loaded: {clipName}");
-
-        var speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, volume, listeners);
-        speaker.Play(clip.Samples, queue: false, loop);
-        var playback = new Playback(audioPlayerName, clipName, speaker, speaker.ControllerId);
-        AddPlayback(playback);
-
-        if (destroyOnEnd && !loop)
         {
-            Timing.CallDelayed(clip.Duration + 0.75f, () => Stop(playback));
+            Log.Warn($"[SpeakerApi] Audio clip is not loaded: {clipName}");
+            return default;
         }
 
-        return playback;
+        LabSpeakerToy? speaker = null;
+        var playback = default(Playback);
+        try
+        {
+            speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, volume, listeners);
+            speaker.Play(clip.Samples, queue: false, loop);
+            playback = new Playback(audioPlayerName, clipName, speaker, speaker.ControllerId);
+            AddPlayback(playback);
+
+            if (destroyOnEnd && !loop)
+                Timing.CallDelayed(clip.Duration + 0.75f, () => Stop(playback));
+
+            return playback;
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[SpeakerApi] Play failed for {audioPlayerName}/{clipName}: {ex.Message}");
+            if (speaker != null)
+            {
+                var failedPlayback = playback.ControllerId == 0
+                    ? new Playback(audioPlayerName, clipName, speaker, speaker.ControllerId)
+                    : playback;
+                Stop(failedPlayback);
+            }
+
+            return default;
+        }
     }
 
     public static Playback PlaySamples(
@@ -240,18 +277,36 @@ public static class SpeakerApi
                 (existingListeners == null || existingListeners(player));
         }
 
-        var speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, volume, listeners);
-        speaker.Play(samples, queue: false, loop);
-        var playback = new Playback(audioPlayerName, audioPlayerName, speaker, speaker.ControllerId);
-        AddPlayback(playback);
-
-        if (destroyOnEnd && !loop)
+        LabSpeakerToy? speaker = null;
+        var playback = default(Playback);
+        try
         {
-            float duration = samples.Length * VoiceChatSettings.SampleToDuartionRate;
-            Timing.CallDelayed(duration + 0.75f, () => Stop(playback));
-        }
+            speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, volume, listeners);
+            speaker.Play(samples, queue: false, loop);
+            playback = new Playback(audioPlayerName, audioPlayerName, speaker, speaker.ControllerId);
+            AddPlayback(playback);
 
-        return playback;
+            if (destroyOnEnd && !loop)
+            {
+                float duration = samples.Length * VoiceChatSettings.SampleToDuartionRate;
+                Timing.CallDelayed(duration + 0.75f, () => Stop(playback));
+            }
+
+            return playback;
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[SpeakerApi] PlaySamples failed for {audioPlayerName}: {ex.Message}");
+            if (speaker != null)
+            {
+                var failedPlayback = playback.ControllerId == 0
+                    ? new Playback(audioPlayerName, audioPlayerName, speaker, speaker.ControllerId)
+                    : playback;
+                Stop(failedPlayback);
+            }
+
+            return default;
+        }
     }
 
     /// <summary>プリロード済みクリップの再生時間(秒)。未ロードなら 0。</summary>
@@ -269,14 +324,47 @@ public static class SpeakerApi
             throw new ArgumentException("Audio file name cannot be empty.", nameof(fileName));
 
         clipName ??= fileName;
+        TryLoadClipCore(fileName, clipName);
+    }
+
+    public static bool TryLoadClip(string fileName, string? clipName = null)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+            return false;
+
+        clipName ??= fileName;
+        return TryLoadClipCore(fileName, clipName);
+    }
+
+    private static bool TryLoadClipCore(string fileName, string clipName)
+    {
         if (ClipCache.ContainsKey(clipName))
-            return;
+            return true;
 
-        var fullPath = Path.Combine(AudioDirectory, fileName);
-        if (!File.Exists(fullPath))
-            throw new FileNotFoundException($"Audio file not found: {fullPath}", fullPath);
+        try
+        {
+            var fullPath = Path.Combine(AudioDirectory, fileName);
+            if (!File.Exists(fullPath))
+            {
+                Log.Warn($"[SpeakerApi] Audio file not found: {fullPath}");
+                return false;
+            }
 
-        ClipCache[clipName] = new CachedClip(clipName, FfmpegAudioDecoder.DecodeToMono48k(fullPath));
+            var samples = FfmpegAudioDecoder.DecodeToMono48k(fullPath);
+            if (samples == null || samples.Length == 0)
+            {
+                Log.Warn($"[SpeakerApi] Audio file produced no samples: {fullPath}");
+                return false;
+            }
+
+            ClipCache[clipName] = new CachedClip(clipName, samples);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[SpeakerApi] Failed to load audio clip '{fileName}' as '{clipName}': {ex.Message}");
+            return false;
+        }
     }
 
     public static bool Stop(Playback playback)
@@ -439,7 +527,14 @@ public static class SpeakerApi
         if (!playback.IsValid)
             return;
 
-        SetTransform(playback.Speaker, position, parent);
+        try
+        {
+            SetTransform(playback.Speaker, position, parent);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[SpeakerApi] SetTransform failed for {playback.AudioPlayerName}/{playback.ControllerId}: {ex.Message}");
+        }
     }
 
     public static void SetTransform(LivePlayback playback, Vector3 position, Transform? parent = null)
@@ -447,31 +542,74 @@ public static class SpeakerApi
         if (!playback.IsValid)
             return;
 
-        SetTransform(playback.Speaker, position, parent);
+        try
+        {
+            SetTransform(playback.Speaker, position, parent);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[SpeakerApi] SetTransform failed for {playback.AudioPlayerName}/{playback.ControllerId}: {ex.Message}");
+        }
     }
 
     public static void SetVolume(Playback playback, float volume)
     {
         if (playback.IsValid)
-            SetVolume(playback.Speaker, volume);
+        {
+            try
+            {
+                SetVolume(playback.Speaker, volume);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"[SpeakerApi] SetVolume failed for {playback.AudioPlayerName}/{playback.ControllerId}: {ex.Message}");
+            }
+        }
     }
 
     public static void SetVolume(LivePlayback playback, float volume)
     {
         if (playback.IsValid)
-            SetVolume(playback.Speaker, volume);
+        {
+            try
+            {
+                SetVolume(playback.Speaker, volume);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"[SpeakerApi] SetVolume failed for {playback.AudioPlayerName}/{playback.ControllerId}: {ex.Message}");
+            }
+        }
     }
 
     public static void SetListeners(Playback playback, Predicate<Player>? listeners)
     {
         if (playback.IsValid)
-            ApplyListeners(playback.Speaker, listeners);
+        {
+            try
+            {
+                ApplyListeners(playback.Speaker, listeners);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"[SpeakerApi] SetListeners failed for {playback.AudioPlayerName}/{playback.ControllerId}: {ex.Message}");
+            }
+        }
     }
 
     public static void SetListeners(LivePlayback playback, Predicate<Player>? listeners)
     {
         if (playback.IsValid)
-            ApplyListeners(playback.Speaker, listeners);
+        {
+            try
+            {
+                ApplyListeners(playback.Speaker, listeners);
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"[SpeakerApi] SetListeners failed for {playback.AudioPlayerName}/{playback.ControllerId}: {ex.Message}");
+            }
+        }
     }
 
     public static bool DestroyLiveSpeaker(LivePlayback playback)
@@ -519,19 +657,26 @@ public static class SpeakerApi
         int sent = 0;
         foreach (var target in targets)
         {
-            if (target?.connectionToClient == null)
-                continue;
-
-            var validPlayers = playback.Speaker.ValidPlayers;
-            if (validPlayers != null)
+            try
             {
-                var labPlayer = LabApi.Features.Wrappers.Player.Get(target);
-                if (labPlayer == null || !validPlayers(labPlayer))
+                if (target?.connectionToClient == null)
                     continue;
-            }
 
-            target.connectionToClient.Send(audioMessage);
-            sent++;
+                var validPlayers = playback.Speaker.ValidPlayers;
+                if (validPlayers != null)
+                {
+                    var labPlayer = LabApi.Features.Wrappers.Player.Get(target);
+                    if (labPlayer == null || !validPlayers(labPlayer))
+                        continue;
+                }
+
+                target.connectionToClient.Send(audioMessage);
+                sent++;
+            }
+            catch (Exception ex)
+            {
+                Log.Warn($"[SpeakerApi] SendAudioFrame failed for controller {playback.ControllerId}: {ex.Message}");
+            }
         }
 
         return sent;

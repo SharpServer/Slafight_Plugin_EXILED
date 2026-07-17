@@ -125,16 +125,34 @@ public static class PlayerSpeakerManager
 
         speakerName ??= purpose;
 
-        speaker = SpeakerApi.CreateLiveSpeaker(
-            $"PlayerSpeaker_{playerId}_{purpose}",
-            player.Position,
-            null,
-            speakerName: speakerName,
-            isSpatial: isSpatial,
-            maxDistance: maxDistance,
-            minDistance: minDistance,
-            volume: volume,
-            listeners: listeners);
+        try
+        {
+            speaker = SpeakerApi.CreateLiveSpeaker(
+                $"PlayerSpeaker_{playerId}_{purpose}",
+                player.Position,
+                null,
+                speakerName: speakerName,
+                isSpatial: isSpatial,
+                maxDistance: maxDistance,
+                minDistance: minDistance,
+                volume: volume,
+                listeners: listeners);
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"[PlayerSpeakerManager] GetOrCreateSpeaker[{purpose}]: failed to create speaker for {player.Nickname}: {ex}");
+            if (dict.Count == 0)
+                Speakers.Remove(playerId);
+            return default;
+        }
+
+        if (!speaker.IsValid)
+        {
+            Log.Warn($"[PlayerSpeakerManager] GetOrCreateSpeaker[{purpose}]: speaker creation returned an invalid speaker for {player.Nickname}.");
+            if (dict.Count == 0)
+                Speakers.Remove(playerId);
+            return default;
+        }
 
         dict[purpose] = speaker;
 
@@ -154,7 +172,20 @@ public static class PlayerSpeakerManager
         }
 
         // 用途ごとに追従させるかは呼び出し側で決めたいなら引数を足してもOK
-        followDict[purpose] = Timing.RunCoroutine(FollowPlayerCoroutine(playerId, speaker, purpose));
+        try
+        {
+            followDict[purpose] = Timing.RunCoroutine(FollowPlayerCoroutine(playerId, speaker, purpose));
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"[PlayerSpeakerManager] GetOrCreateSpeaker[{purpose}]: failed to start follow coroutine for {player.Nickname}: {ex}");
+            followDict.Remove(purpose);
+            if (followDict.Count == 0)
+                FollowCoroutines.Remove(playerId);
+            DestroySpeaker(playerId, purpose);
+            return default;
+        }
+
         Log.Debug($"[PlayerSpeakerManager] GetOrCreateSpeaker[{purpose}]: started follow coroutine for {player.Nickname}");
 
         return speaker;
@@ -560,28 +591,43 @@ public static class PlayerSpeakerManager
         Stop(player.Id, purpose);
 
         var audioPlayerName = $"PlayerAudio_{player.Id}_{purpose}";
-        var playback = loop
-            ? SpeakerApi.PlayLoop(
-                fileName,
-                audioPlayerName,
-                player.Position,
-                player.Transform,
-                isSpatial,
-                maxDistance,
-                minDistance,
-                volume: volume,
-                listeners: listeners)
-            : SpeakerApi.Play(
-                fileName,
-                audioPlayerName,
-                player.Position,
-                destroyOnEnd: true,
-                parent: player.Transform,
-                isSpatial,
-                maxDistance,
-                minDistance,
-                volume: volume,
-                listeners: listeners);
+        SpeakerApi.Playback playback;
+        try
+        {
+            playback = loop
+                ? SpeakerApi.PlayLoop(
+                    fileName,
+                    audioPlayerName,
+                    player.Position,
+                    player.Transform,
+                    isSpatial,
+                    maxDistance,
+                    minDistance,
+                    volume: volume,
+                    listeners: listeners)
+                : SpeakerApi.Play(
+                    fileName,
+                    audioPlayerName,
+                    player.Position,
+                    destroyOnEnd: true,
+                    parent: player.Transform,
+                    isSpatial,
+                    maxDistance,
+                    minDistance,
+                    volume: volume,
+                    listeners: listeners);
+        }
+        catch (Exception ex)
+        {
+            Log.Error($"[PlayerSpeakerManager] PlayManaged[{purpose}]: failed for {player.Nickname}: {ex}");
+            return default;
+        }
+
+        if (!playback.IsValid)
+        {
+            Log.Warn($"[PlayerSpeakerManager] PlayManaged[{purpose}]: playback creation failed for {player.Nickname}.");
+            return default;
+        }
 
         if (!Playbacks.TryGetValue(player.Id, out var dict))
         {

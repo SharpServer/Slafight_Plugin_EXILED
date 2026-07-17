@@ -113,6 +113,11 @@ public abstract class ObjectPrefab : IObjectPrefab
     public bool HasInteractables => _interactables.Count > 0;
 
     /// <summary>
+    /// Schematic 内で ObjectPrefabSchematicInfo により採用されたキーのスナップショット。
+    /// </summary>
+    public IReadOnlyCollection<string> ManagedBlockKeys => _managedBlocks.Keys.ToArray();
+
+    /// <summary>
     /// 宣言すると Create 時に自動でスキマティックをスポーンする。
     /// null / 空文字なら何もスポーンしない（動的に切り替える場合は getter で分岐してよい）。
     /// </summary>
@@ -366,6 +371,29 @@ public abstract class ObjectPrefab : IObjectPrefab
         SchematicBlock? block = GetBlock(keyOrName) ?? _managedSchematic?.FindBlock(keyOrName, allowPartial: false);
         if (block == null)
             return false;
+
+        return SetBlockSpawned(block, spawned);
+    }
+
+    /// <summary>
+    /// ObjectPrefabSchematicInfo で採用した親ブロック配下から、名前が完全一致する子ブロックを探して
+    /// ネットワーク可視状態を切り替える。
+    /// </summary>
+    protected bool SetChildBlockSpawned(string parentKeyOrName, string childName, bool spawned)
+    {
+        SchematicBlock? parent = GetBlock(parentKeyOrName) ?? _managedSchematic?.FindBlock(parentKeyOrName, allowPartial: false);
+        if (parent == null || string.IsNullOrWhiteSpace(childName))
+            return false;
+
+        SchematicBlock? child = parent.GetComponentsInChildren<SchematicBlock>(true)
+            .FirstOrDefault(candidate =>
+                candidate != parent &&
+                string.Equals(candidate.name, childName, StringComparison.OrdinalIgnoreCase));
+        return child != null && SetBlockSpawned(child, spawned);
+    }
+
+    private static bool SetBlockSpawned(SchematicBlock block, bool spawned)
+    {
 
         foreach (NetworkIdentity identity in block.GetComponentsInChildren<NetworkIdentity>(true))
         {
