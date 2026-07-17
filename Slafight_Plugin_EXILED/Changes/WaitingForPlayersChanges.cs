@@ -37,6 +37,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
     private const string RoundStartOutroAudioPlayerPrefix = "WaitingForPlayers_RoundStartOutro_";
 
     private const float RoundStartTriggerRemainingTime = 1f;
+    private const int MinimumPlayersToStart = 2;
     private static readonly Vector3 RoundStartMovePosition = new(247.15f, 199.30f, -63.33f);
     private static readonly Vector3 RoundStartFadeEndPosition = new(247.15f, 199.30f, -63.64f);
     private static readonly Quaternion RoundStartRotation = Quaternion.Euler(0f, 180f, 0f);
@@ -66,6 +67,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         KillRoundStartResumeCallback();
         Round.IsLobbyLocked = false;
         _roundStartTransitionTriggered = false;
+        _minimumPlayersLobbyLockActive = false;
     }
 
     /// <summary>
@@ -86,6 +88,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
     private static TextToy? _nextEventText;
     private static TextToy? _remainingTimeText;
     private static bool _roundStartTransitionTriggered;
+    private static bool _minimumPlayersLobbyLockActive;
 
     private static void OnWaitingForPlayers()
     {
@@ -95,7 +98,8 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         StopAllWaitingMusic();
         StopAllRoundStartOutros();
         _roundStartTransitionTriggered = false;
-        Round.IsLobbyLocked = false; // 前ラウンドの演出が異常終了した場合の保険
+        _minimumPlayersLobbyLockActive = true;
+        Round.IsLobbyLocked = true;
         KillRoundStartTransitionCoroutines();
         KillRoundStartResumeCallback();
         _handle = Timing.RunCoroutine(Coroutine());
@@ -259,6 +263,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         StopAllRoundStartOutros();
         Round.IsLobbyLocked = false;
         _roundStartTransitionTriggered = false;
+        _minimumPlayersLobbyLockActive = false;
 
         Timing.CallDelayed(2f, () =>
         {
@@ -405,6 +410,23 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         while (true)
         {
             if (!Round.IsLobby) yield break;
+
+            if (!_roundStartTransitionTriggered)
+            {
+                bool shouldLockForMinimumPlayers =
+                    PlayerExtensions.ConnectedList().Count < MinimumPlayersToStart;
+
+                if (shouldLockForMinimumPlayers)
+                {
+                    _minimumPlayersLobbyLockActive = true;
+                    Round.IsLobbyLocked = true;
+                }
+                else if (_minimumPlayersLobbyLockActive)
+                {
+                    _minimumPlayersLobbyLockActive = false;
+                    Round.IsLobbyLocked = false;
+                }
+            }
 
             // Timer は人数不足でカウントダウン未開始のとき -2 になるため、0 より大きい実カウントダウン中のみ判定する
             if (!_roundStartTransitionTriggered

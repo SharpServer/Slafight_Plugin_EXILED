@@ -10,7 +10,7 @@ namespace Slafight_Plugin_EXILED.Extensions;
 
 public static class PlayerExtensions
 {
-    public static IReadOnlyCollection<Player> ConnectedList(this Player player)
+    public static IReadOnlyCollection<Player> ConnectedList()
     {
         return Player.List.Where(p => p.IsSafePlayer()).ToList();
     }
