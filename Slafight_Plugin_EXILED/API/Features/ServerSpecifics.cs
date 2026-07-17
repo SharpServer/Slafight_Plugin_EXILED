@@ -46,14 +46,15 @@ public abstract class ServerSpecifics
 
     // このリストの並び順が SS UI の並び順であり、そのまま SettingId になります。
     // 新しい設定を挟む時はここへ追加/移動するだけで、公開 SettingId も自動で追従します。
-    private static readonly List<SettingDefinition> SettingDefinitions = new()
-    {
+    private static readonly List<SettingDefinition> SettingDefinitions =
+    [
         new SettingDefinition(
             SettingKey.Header,
             id => new SSGroupHeader(
                 id,
                 "シャープ鯖 Server Specifics",
                 hint: "シャープ鯖の個人設定です。")),
+
 
         new SettingDefinition(
             SettingKey.Banner,
@@ -64,12 +65,14 @@ public abstract class ServerSpecifics
                 null,
                 TextAlignmentOptions.Center)),
 
+
         new SettingDefinition(
             SettingKey.CommunicationGroup,
             id => new SSGroupHeader(
                 id,
                 "VC / RP",
                 hint: "会話とRP表示に関する設定です。")),
+
 
         new SettingDefinition(
             SettingKey.ProximityChatKeybind,
@@ -81,6 +84,7 @@ public abstract class ServerSpecifics
                 false,
                 hint: "一部の利用可能ロールで、近接チャットを使用するのに必要です。Vを推奨します。")),
 
+
         new SettingDefinition(
             SettingKey.RpName,
             id => new SSPlaintextSetting(
@@ -90,12 +94,14 @@ public abstract class ServerSpecifics
                 20,
                 hint: "RPのキャラ名です。設定した名前の後に本当の名前が表示されます。")),
 
+
         new SettingDefinition(
             SettingKey.AbilityGroup,
             id => new SSGroupHeader(
                 id,
                 "アビリティ操作",
                 hint: "HUD の Ability 表示に対応する操作キーです。")),
+
 
         new SettingDefinition(
             SettingKey.AbilityUseKeybind,
@@ -107,6 +113,7 @@ public abstract class ServerSpecifics
                 false,
                 hint: "HUDの Ability に表示されている選択中アビリティを発動します。左Altを推奨します。")),
 
+
         new SettingDefinition(
             SettingKey.AbilitySwitchKeybind,
             id => new SSKeybindSetting(
@@ -116,6 +123,7 @@ public abstract class ServerSpecifics
                 true,
                 false,
                 hint: "HUDに Ability 1/2 のように表示されている場合、次のアビリティへ切り替えます。中マウスボタンを推奨します。")),
+
 
         new SettingDefinition(
             SettingKey.AbilityOptionPreviousKeybind,
@@ -127,6 +135,7 @@ public abstract class ServerSpecifics
                 false,
                 hint: "選択中アビリティに複数のオプションがある場合、前のオプションへ切り替えます。左矢印キーを推奨します。")),
 
+
         new SettingDefinition(
             SettingKey.AbilityOptionNextKeybind,
             id => new SSKeybindSetting(
@@ -137,12 +146,14 @@ public abstract class ServerSpecifics
                 false,
                 hint: "選択中アビリティに複数のオプションがある場合、次のオプションへ切り替えます。右矢印キーを推奨します。")),
 
+
         new SettingDefinition(
             SettingKey.ItemGroup,
             id => new SSGroupHeader(
                 id,
                 "アイテム / 緊急操作",
                 hint: "特殊アイテム操作と緊急用の入力です。")),
+
 
         new SettingDefinition(
             SettingKey.ItemModeSwitchKeybind,
@@ -154,6 +165,7 @@ public abstract class ServerSpecifics
                 false,
                 hint: "Hybridアイテムのモードを切り替えます。Gを推奨します。")),
 
+
         new SettingDefinition(
             SettingKey.SuicideButtonKeybind,
             id => new SSKeybindSetting(
@@ -164,12 +176,14 @@ public abstract class ServerSpecifics
                 false,
                 hint: "銃器や近接武器を所持しているときに自分に向けて攻撃します。Kを推奨します。")),
 
+
         new SettingDefinition(
             SettingKey.DisplayGroup,
             id => new SSGroupHeader(
                 id,
                 "表示 / アクセシビリティ",
                 hint: "表示時間や見やすさに関する設定です。")),
+
 
         new SettingDefinition(
             SettingKey.DocumentHintDuration,
@@ -184,6 +198,7 @@ public abstract class ServerSpecifics
                 "{0}秒",
                 hint: "Documentを調べた時に内容を表示する秒数です。")),
 
+
         new SettingDefinition(
             SettingKey.AccessibilityMode,
             id => new SSTwoButtonsSetting(
@@ -194,12 +209,14 @@ public abstract class ServerSpecifics
                 false,
                 hint: "一部のモデルを見やすい表示へ切り替えます。")),
 
+
         new SettingDefinition(
             SettingKey.SpecialGroup,
             id => new SSGroupHeader(
                 id,
                 "特殊 / 管理者",
                 hint: "特殊な入力と管理者向け設定です。")),
+
 
         new SettingDefinition(
             SettingKey.SecretPasscode,
@@ -210,6 +227,7 @@ public abstract class ServerSpecifics
                 5,
                 hint: "特別な場面で必要となるかもしれません・・・")),
 
+
         new SettingDefinition(
             SettingKey.DebugMode,
             id => new SSTwoButtonsSetting(
@@ -218,7 +236,7 @@ public abstract class ServerSpecifics
                 "ON",
                 "OFF",
                 true))
-    };
+    ];
 
     private static readonly Dictionary<SettingKey, int> SettingIds = BuildSettingIds();
 

@@ -21,8 +21,8 @@ public static class WaypointChunkStreamer
     private const int ReservedWaypointSlots = 8;
 
     private static readonly Dictionary<ChunkKey, ActiveChunk> ActiveChunks = new();
-    private static readonly HashSet<ChunkKey> RequiredChunks = new();
-    private static readonly List<ChunkKey> RemovalBuffer = new();
+    private static readonly HashSet<ChunkKey> RequiredChunks = [];
+    private static readonly List<ChunkKey> RemovalBuffer = [];
 
     private static CoroutineHandle _streamingCoroutine;
     private static bool _registered;

@@ -171,7 +171,7 @@ public static class Scp096CrossFactionHitPatch
             return;
 
         Scp096HitResult extraResult = Scp096HitResult.None;
-        HashSet<uint> processedTargets = new();
+        HashSet<uint> processedTargets = [];
 
         for (int i = 0; i < count && i < Scp096HitHandler.Hits.Length; i++)
         {

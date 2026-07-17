@@ -159,7 +159,7 @@ public static class YtDlpApi
             $"--print after_move:filepath \"{EscapeArgument(url)}\"");
 
         var outputPath = result.StandardOutput
-            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
             .Select(line => line.Trim())
             .LastOrDefault(File.Exists);
 
@@ -199,7 +199,7 @@ public static class YtDlpApi
                 "--no-config --no-playlist --no-progress --no-warnings " +
                 $"-f \"{format}\" --get-url \"{EscapeArgument(url)}\"")
             .StandardOutput
-            .Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries)
+            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
             .Select(line => line.Trim())
             .Where(IsSupportedUrl)
             .ToArray();
@@ -284,7 +284,7 @@ public static class YtDlpApi
 
     private static string ParseChecksum(string checksums, string assetName)
     {
-        foreach (var line in checksums.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+        foreach (var line in checksums.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
         {
             var parts = line.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length >= 2 && parts[1].TrimStart('*').Equals(assetName, StringComparison.Ordinal))

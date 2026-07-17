@@ -30,7 +30,7 @@ namespace Slafight_Plugin_EXILED.API.Features;
 public sealed class BossBar
 {
     private static readonly object SyncRoot = new();
-    private static readonly List<BossBar> ShownBars = new();
+    private static readonly List<BossBar> ShownBars = [];
     private static CoroutineHandle _refreshHandle;
     private static long _nextShowOrder;
 

@@ -28,7 +28,7 @@ public static class ModerationEventsHandler
     private static readonly Dictionary<string, Player> PendingKickIssuers = new();
 
     // Banned で処理済みの対象。直後に付随して発火する Kicked を二重通知しないための抑制用。Key: 対象のUserId
-    private static readonly HashSet<string> SuppressNextKick = new();
+    private static readonly HashSet<string> SuppressNextKick = [];
 
     public static void Register()
     {

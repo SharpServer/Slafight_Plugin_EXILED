@@ -75,7 +75,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
     /// FirstRolesHandler.SetupRandomRoles は IsRoleUnassigned() (Spectator/None) しか拾わないため、
     /// ここに集めて合流させる。
     /// </summary>
-    public static readonly HashSet<Player> TutorialWaitingPlayers = new();
+    public static readonly HashSet<Player> TutorialWaitingPlayers = [];
 
     // プレイヤーごとのロビー BGM(finalflash.ogg)の再生管理
     private static readonly Dictionary<int, SpeakerApi.Playback> WaitingMusicPlaybacks = new();
@@ -83,7 +83,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
 
     private static CoroutineHandle _handle;
     private static CoroutineHandle _roundStartResumeHandle;
-    private static readonly List<CoroutineHandle> _roundStartTransitionHandles = new();
+    private static readonly List<CoroutineHandle> _roundStartTransitionHandles = [];
     private static TextToy? _playerCountText;
     private static TextToy? _nextEventText;
     private static TextToy? _remainingTimeText;

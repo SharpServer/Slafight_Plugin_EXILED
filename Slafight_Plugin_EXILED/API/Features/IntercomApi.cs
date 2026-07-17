@@ -52,8 +52,8 @@ public sealed class IntercomStatus
     public string DisplayText { get; init; } = string.Empty;
     public IntercomControlFlags ControlFlags { get; init; }
     public IntercomAvailabilityFlags AvailabilityFlags { get; init; }
-    public IReadOnlyCollection<string> ControlOwners { get; init; } = Array.Empty<string>();
-    public IReadOnlyCollection<string> DisplayOwners { get; init; } = Array.Empty<string>();
+    public IReadOnlyCollection<string> ControlOwners { get; init; } = [];
+    public IReadOnlyCollection<string> DisplayOwners { get; init; } = [];
 
     public bool IsAvailable => AvailabilityFlags == IntercomAvailabilityFlags.None;
 }
@@ -441,7 +441,7 @@ public static class IntercomApi
     public static IReadOnlyCollection<string> GetOverrideOwners(Player? player)
     {
         if (!IsValidPlayer(player) || !OverrideOwnersByPlayer.TryGetValue(player!.Id, out var state))
-            return Array.Empty<string>();
+            return [];
 
         return state.Owners.OrderBy(owner => owner, StringComparer.OrdinalIgnoreCase).ToArray();
     }
@@ -524,7 +524,7 @@ public static class IntercomApi
     public static IReadOnlyCollection<string> GetMuteOwners(Player? player)
     {
         if (!IsValidPlayer(player) || !MuteOwnersByPlayer.TryGetValue(player!.Id, out var state))
-            return Array.Empty<string>();
+            return [];
 
         return state.Owners.OrderBy(owner => owner, StringComparer.OrdinalIgnoreCase).ToArray();
     }

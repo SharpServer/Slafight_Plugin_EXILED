@@ -74,7 +74,7 @@ public sealed class UDoorSet : IReadOnlyDictionary<UDoorObjectType, IReadOnlyLis
         {
             UDoorObjectType.Door => Door.Cast<ObjectPrefab>().ToArray(),
             UDoorObjectType.Button => Button.Cast<ObjectPrefab>().ToArray(),
-            _ => Array.Empty<ObjectPrefab>(),
+            _ => [],
         };
 
     public IEnumerable<UDoorObjectType> Keys
@@ -104,7 +104,7 @@ public sealed class UDoorSet : IReadOnlyDictionary<UDoorObjectType, IReadOnlyLis
     {
         if (!ContainsKey(key))
         {
-            value = Array.Empty<ObjectPrefab>();
+            value = [];
             return false;
         }
 
@@ -130,7 +130,7 @@ public static class UDoor
     public static event Action<UDoorInteractionContext>? AfterInteraction;
 
     public static UDoorSet GetSet(string tag)
-        => new(tag, string.IsNullOrWhiteSpace(tag) ? Array.Empty<ObjectPrefab>() : InstanceManager.GetByTag(tag.Trim()).ToArray());
+        => new(tag, string.IsNullOrWhiteSpace(tag) ? [] : InstanceManager.GetByTag(tag.Trim()).ToArray());
 
     public static UDoorSet GetSet(UDoorType type) => GetSet(GetTag(type));
 
@@ -212,7 +212,7 @@ public static class UDoor
         Action<UsefulDoor>? configureDoor = null,
         Action<UsefulDoorButton>? configureButton = null)
     {
-        foreach (Transform transform in doorTransforms ?? Enumerable.Empty<Transform>())
+        foreach (Transform transform in doorTransforms ?? [])
         {
             if (transform == null)
                 continue;
@@ -228,7 +228,7 @@ public static class UDoor
             door.Create();
         }
 
-        foreach (Transform transform in buttonTransforms ?? Enumerable.Empty<Transform>())
+        foreach (Transform transform in buttonTransforms ?? [])
         {
             if (transform == null)
                 continue;

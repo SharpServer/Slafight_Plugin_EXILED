@@ -133,8 +133,7 @@ public class RoundHandler : IBootstrapHandler
             return;
 
         _firstTeamOverrideRegistrationId = SpawnSystem.AddNextSpawnOverrides(
-            new[]
-            {
+            [
                 new SpawnSystem.NextSpawnOverride(SpawnTypeId.SecurityTeam)
                 {
                     SourceSpawnableFaction = SpawnableFaction.NtfWave,
@@ -144,8 +143,8 @@ public class RoundHandler : IBootstrapHandler
                 {
                     SourceSpawnableFaction = SpawnableFaction.ChaosWave,
                     Priority = 1000,
-                },
-            },
+                }
+            ],
             nameof(RoundHandler));
     }
 

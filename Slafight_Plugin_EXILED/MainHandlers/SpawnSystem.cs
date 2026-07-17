@@ -203,7 +203,7 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
     private CoroutineHandle _defaultWaveResetHandle;
     public static bool Disable = false;
 
-    private static readonly List<RegisteredNextWaveOverride> PendingOverrides = new();
+    private static readonly List<RegisteredNextWaveOverride> PendingOverrides = [];
     private static long _overrideSequence;
 
     public static SpawnOverrideMode OverrideMode => PendingOverrides.Count > 0
@@ -331,7 +331,7 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
         if (rule == null)
             throw new ArgumentNullException(nameof(rule));
 
-        return AddNextSpawnOverrides(new[] { rule }, source);
+        return AddNextSpawnOverrides([rule], source);
     }
 
     public static Guid AddNextSpawnOverride(

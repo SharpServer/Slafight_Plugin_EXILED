@@ -59,7 +59,7 @@ public static class LockerFactory
 
         // ネイティブのルート抽選は初回 Update で走るため、ここで消せば間に合う
         if (clearNativeLoot)
-            baseLocker.Loot = Array.Empty<LockerLoot>();
+            baseLocker.Loot = [];
 
         if (scale.HasValue)
         {
@@ -149,7 +149,7 @@ public static class LockerExtensions
     /// まだ抽選前（スポーン直後など）なら中身が湧かなくなる。
     /// </summary>
     public static void ClearNativeLoot(this Locker locker)
-        => locker.Base.Loot = Array.Empty<LockerLoot>();
+        => locker.Base.Loot = [];
 
     /// <summary>インデックスでチャンバーを取得する（範囲外は null）。</summary>
     public static Chamber? GetChamber(this Locker locker, int index)

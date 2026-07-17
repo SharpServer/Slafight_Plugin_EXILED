@@ -22,21 +22,23 @@ public class GunRecoilRampRevolver : CItemHybrid
     protected override string UniqueKey => "GunRecoilRampRevolver";
 
     protected override List<CItemHybridMode> BuildSubModes()
-        => new()
-        {
+        =>
+        [
             new(new GunRecoilRampRevolverAllPlus(_sharedState), "All +", "全Recoilパラメータを発射ごとに+方向へ変化させる。"),
-            new(new GunRecoilRampRevolverAnimationTimePlus(_sharedState), "AnimationTime +", "AnimationTimeを発射ごとに+方向へ変化させる。"),
+            new(new GunRecoilRampRevolverAnimationTimePlus(_sharedState), "AnimationTime +",
+                "AnimationTimeを発射ごとに+方向へ変化させる。"),
             new(new GunRecoilRampRevolverZAxisPlus(_sharedState), "ZAxis +", "ZAxisを発射ごとに+方向へ変化させる。"),
             new(new GunRecoilRampRevolverFovKickPlus(_sharedState), "FovKick +", "FovKickを発射ごとに+方向へ変化させる。"),
             new(new GunRecoilRampRevolverUpKickPlus(_sharedState), "UpKick +", "UpKickを発射ごとに+方向へ変化させる。"),
             new(new GunRecoilRampRevolverSideKickPlus(_sharedState), "SideKick +", "SideKickを発射ごとに+方向へ変化させる。"),
             new(new GunRecoilRampRevolverAllMinus(_sharedState), "All -", "全Recoilパラメータを発射ごとに-方向へ変化させる。"),
-            new(new GunRecoilRampRevolverAnimationTimeMinus(_sharedState), "AnimationTime -", "AnimationTimeを発射ごとに-方向へ変化させる。"),
+            new(new GunRecoilRampRevolverAnimationTimeMinus(_sharedState), "AnimationTime -",
+                "AnimationTimeを発射ごとに-方向へ変化させる。"),
             new(new GunRecoilRampRevolverZAxisMinus(_sharedState), "ZAxis -", "ZAxisを発射ごとに-方向へ変化させる。"),
             new(new GunRecoilRampRevolverFovKickMinus(_sharedState), "FovKick -", "FovKickを発射ごとに-方向へ変化させる。"),
             new(new GunRecoilRampRevolverUpKickMinus(_sharedState), "UpKick -", "UpKickを発射ごとに-方向へ変化させる。"),
-            new(new GunRecoilRampRevolverSideKickMinus(_sharedState), "SideKick -", "SideKickを発射ごとに-方向へ変化させる。"),
-        };
+            new(new GunRecoilRampRevolverSideKickMinus(_sharedState), "SideKick -", "SideKickを発射ごとに-方向へ変化させる。")
+        ];
 }
 
 public class GunRecoilRampRevolverAllPlus : GunRecoilRampRevolverModeBase

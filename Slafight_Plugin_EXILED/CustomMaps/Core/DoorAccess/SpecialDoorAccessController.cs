@@ -16,7 +16,7 @@ namespace Slafight_Plugin_EXILED.CustomMaps.Core.DoorAccess;
 public sealed class SpecialDoorAccessController
 {
     private readonly Dictionary<Vector3, SpecialDoorAccessRule> RulesByDoorPosition = new();
-    private readonly HashSet<BaseBreakableDoor> _pendingForceBreaks = new();
+    private readonly HashSet<BaseBreakableDoor> _pendingForceBreaks = [];
     private readonly float _positionToleranceSq;
 
     internal SpecialDoorAccessController(float positionToleranceSq)

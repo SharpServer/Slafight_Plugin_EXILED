@@ -74,14 +74,14 @@ public class DanteEvent : SpecialEvent
 
     // 戦闘中にランダムで吐く挑発。EffectedInfo に流す。
     private static readonly string[] Taunts =
-    {
+    [
         "そのちっぽけな鉛で、業火が消せるとでも?",
         "熱いだろう? これが地獄の入口だ。",
         "まだ立っているのか。見上げた根性だ ── だが無駄だ。",
         "逃げ場などない。地上ごと焼べてやろう。",
         "踊れ、踊れ。炎が貴様らを抱くまで。",
-        "私の名を、灰になる前に覚えておけ。",
-    };
+        "私の名を、灰になる前に覚えておけ。"
+    ];
 
     // ===== ランタイム状態 =====
     private Npc? _boss;
@@ -94,10 +94,10 @@ public class DanteEvent : SpecialEvent
         TitleColor = "#ff1a1a",
         BarColor = "#ff3333",
     };
-    private readonly List<Primitive[]> _tentacles = new(); // 各要素 = 1 本の触手（節キューブの配列）
-    private readonly List<SlimePuddle> _puddles = new();    // 酸の沼
-    private readonly List<Npc> _weakPoints = new();         // 中央触手の弱点 NPC
-    private readonly List<Primitive[]> _weakLinks = new();  // 各弱点へ伸びる触手リンク（節キューブ）
+    private readonly List<Primitive[]> _tentacles = []; // 各要素 = 1 本の触手（節キューブの配列）
+    private readonly List<SlimePuddle> _puddles = [];    // 酸の沼
+    private readonly List<Npc> _weakPoints = [];         // 中央触手の弱点 NPC
+    private readonly List<Primitive[]> _weakLinks = [];  // 各弱点へ伸びる触手リンク（節キューブ）
     private CoroutineHandle _waves;                         // 部隊 Wave コルーチン
     private int _wavesSpawned;
     private bool _invulnerable;                             // 中央触手が残っている間はコア無敵

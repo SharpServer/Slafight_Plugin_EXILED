@@ -16,7 +16,7 @@ public abstract class CustomEffectBase : StatusEffectBase
     /// <see cref="RegisterEvent"/> で登録された購読解除アクション。
     /// エフェクト無効化 / 破棄時に自動実行される。
     /// </summary>
-    private readonly List<Action> _eventCleanup = new();
+    private readonly List<Action> _eventCleanup = [];
 
     public override void Enabled()
     {

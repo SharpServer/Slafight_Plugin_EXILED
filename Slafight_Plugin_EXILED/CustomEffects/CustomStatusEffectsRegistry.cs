@@ -15,7 +15,7 @@ namespace Slafight_Plugin_EXILED.CustomEffects;
 /// </summary>
 public static class CustomStatusEffectsRegistry
 {
-    private static readonly HashSet<Type> RegisteredTypes = new();
+    private static readonly HashSet<Type> RegisteredTypes = [];
     private static bool _sceneHooked;
 
     /// <summary>
@@ -150,7 +150,7 @@ public static class CustomStatusEffectsRegistry
         catch (Exception ex)
         {
             Log.Error($"[CustomStatusEffectRegistry] Failed to read types from {assembly.FullName}: {ex}");
-            return Array.Empty<Type>();
+            return [];
         }
     }
 
@@ -263,11 +263,11 @@ public static class CustomStatusEffectsRegistry
 
         try
         {
-            StatusEffectBase[] allEffects = controller.AllEffects ?? Array.Empty<StatusEffectBase>();
+            StatusEffectBase[] allEffects = controller.AllEffects ?? [];
 
             if (!allEffects.Any(e => e != null && e.GetType() == effectType))
             {
-                controller.AllEffects = allEffects.Concat(new[] { effect }).ToArray();
+                controller.AllEffects = allEffects.Concat([effect]).ToArray();
                 allEffects = controller.AllEffects;
             }
 
@@ -323,7 +323,7 @@ public static class CustomStatusEffectsRegistry
                     if (array.Any(e => e != null && e.GetType() == effectType))
                         continue;
 
-                    StatusEffectBase[] newArray = array.Concat(new[] { effect }).ToArray();
+                    StatusEffectBase[] newArray = array.Concat([effect]).ToArray();
                     field.SetValue(controller, newArray);
                 }
             }

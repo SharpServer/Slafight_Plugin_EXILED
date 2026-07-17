@@ -21,7 +21,7 @@ public class UsefulDoorButton : ObjectPrefab
     public const string CentralSchematicName = "UsefulDoorButton";
     public const string InteractableKey = "Interactable";
     private static readonly string[] KeycardSubtypeKeys =
-    {
+    [
         "Containment 1",
         "Containment 2",
         "Containment 3",
@@ -30,8 +30,8 @@ public class UsefulDoorButton : ObjectPrefab
         "Armory 3",
         "Administration 1",
         "Administration 2",
-        "Administration 3",
-    };
+        "Administration 3"
+    ];
     private UDoorButtonModelType _modelType = UDoorButtonModelType.Standard;
     private string _customModelKey = string.Empty;
     private string _targetTag = string.Empty;

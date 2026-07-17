@@ -39,11 +39,11 @@ public sealed class DummyActionProvider : MonoBehaviour, IRootDummyActionProvide
     private sealed class Category
     {
         public string Name = DefaultCategory;
-        public readonly List<ActionEntry> Actions = new();
+        public readonly List<ActionEntry> Actions = [];
     }
 
     // 挿入順を保持するためListで管理する。
-    private readonly List<Category> _categories = new();
+    private readonly List<Category> _categories = [];
 
     /// <inheritdoc/>
     public bool DummyActionsDirty { get; set; } = true;
@@ -97,13 +97,13 @@ public sealed class DummyActionProvider : MonoBehaviour, IRootDummyActionProvide
         {
             var selected = DummyActionInvocation.SelectedDummies;
             if (selected == null || selected.Count == 0)
-                selected = new[] { target };
+                selected = [target];
 
             context = new DummyActionContext(DummyActionInvocation.Sender, target, selected, isRemoteAdminInvocation: true);
         }
         else
         {
-            context = new DummyActionContext(null, target, new[] { target }, isRemoteAdminInvocation: false);
+            context = new DummyActionContext(null, target, [target], isRemoteAdminInvocation: false);
         }
 
         try

@@ -55,7 +55,7 @@ internal static class DummyActionInvocation
     public static Player? Sender { get; private set; }
 
     /// <summary>現在のコマンドで選択されていたDummy一覧。</summary>
-    public static IReadOnlyList<Npc> SelectedDummies { get; private set; } = System.Array.Empty<Npc>();
+    public static IReadOnlyList<Npc> SelectedDummies { get; private set; } = [];
 
     public static void Set(Player? sender, IReadOnlyList<Npc> selectedDummies)
     {
@@ -68,6 +68,6 @@ internal static class DummyActionInvocation
     {
         Active = false;
         Sender = null;
-        SelectedDummies = System.Array.Empty<Npc>();
+        SelectedDummies = [];
     }
 }

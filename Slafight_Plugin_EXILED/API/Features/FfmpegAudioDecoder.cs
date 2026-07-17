@@ -354,7 +354,7 @@ public static class FfmpegAudioDecoder
 
     private static string ParseChecksum(string checksums, string assetName)
     {
-        foreach (var line in checksums.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries))
+        foreach (var line in checksums.Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries))
         {
             var parts = line.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
             if (parts.Length >= 2 && parts[1].TrimStart('*').Equals(assetName, StringComparison.Ordinal))

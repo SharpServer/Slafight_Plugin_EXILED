@@ -1107,7 +1107,7 @@ public static class InstanceManager
         Type? referenceType = null)
     {
         if (string.IsNullOrWhiteSpace(tag))
-            return Enumerable.Empty<ObjectPrefab>();
+            return [];
 
         if (searchMode != ObjectPrefabTagSearchMode.All)
         {
