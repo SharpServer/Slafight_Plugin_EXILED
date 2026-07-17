@@ -502,6 +502,94 @@ public abstract class ObjectPrefab : IObjectPrefab
         return handle;
     }
 
+    /// <summary>
+    /// Animatorが指定ステートへ入り、normalizedTimeが1以上になるか別ステートへ遷移するまで監視する。
+    /// Animatorを取得できない、またはステートへ入れない場合のみfallbackDurationを使用する。
+    /// </summary>
+    protected CoroutineHandle ScheduleAfterAnimatorState(
+        Animator? animator,
+        string stateName,
+        float fallbackDuration,
+        Action callback,
+        float maxWaitSeconds = 30f)
+    {
+        if (callback == null)
+            throw new ArgumentNullException(nameof(callback));
+
+        CoroutineHandle handle = default;
+        handle = Timing.RunCoroutine(WaitForAnimatorState(
+            animator,
+            stateName?.Trim() ?? string.Empty,
+            Math.Max(0f, fallbackDuration),
+            Math.Max(0.5f, maxWaitSeconds),
+            () =>
+            {
+                _scheduledCallbacks.Remove(handle);
+                callback();
+            }));
+        _scheduledCallbacks.Add(handle);
+        return handle;
+    }
+
+    private IEnumerator<float> WaitForAnimatorState(
+        Animator? animator,
+        string stateName,
+        float fallbackDuration,
+        float maxWaitSeconds,
+        Action callback)
+    {
+        const float PollInterval = 0.02f;
+        const float StateEntryTimeout = 0.5f;
+        float elapsed = 0f;
+        bool enteredState = false;
+        bool useFallback = animator == null || string.IsNullOrWhiteSpace(stateName);
+
+        // Animator.Playの反映を待ってから現在ステートを取得する。
+        yield return Timing.WaitForOneFrame;
+
+        while (!useFallback && elapsed < maxWaitSeconds)
+        {
+            yield return Timing.WaitForSeconds(PollInterval);
+            elapsed += PollInterval;
+
+            if (_isDestroyed || string.IsNullOrEmpty(ObjectInstanceID) || InstanceManager.Get(ObjectInstanceID) != this)
+                yield break;
+
+            if (animator == null)
+            {
+                useFallback = !enteredState;
+                break;
+            }
+
+            AnimatorStateInfo state = animator.GetCurrentAnimatorStateInfo(0);
+            if (state.IsName(stateName))
+            {
+                enteredState = true;
+                if (state.normalizedTime >= 1f && !animator.IsInTransition(0))
+                    break;
+            }
+            else if (enteredState)
+            {
+                break;
+            }
+            else if (elapsed >= StateEntryTimeout)
+            {
+                useFallback = true;
+                break;
+            }
+        }
+
+        if (useFallback)
+        {
+            float remainingFallback = Math.Max(0f, fallbackDuration - elapsed);
+            if (remainingFallback > 0f)
+                yield return Timing.WaitForSeconds(remainingFallback);
+        }
+
+        if (!_isDestroyed && !string.IsNullOrEmpty(ObjectInstanceID) && InstanceManager.Get(ObjectInstanceID) == this)
+            callback();
+    }
+
     private void KillScheduledCallbacks()
     {
         foreach (var handle in _scheduledCallbacks)

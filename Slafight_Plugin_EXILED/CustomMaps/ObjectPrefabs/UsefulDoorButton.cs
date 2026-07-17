@@ -251,6 +251,9 @@ public class UsefulDoorButton : ObjectPrefab
 
         if (!succeeded)
         {
+            if (firstFailure == UDoorInteractionResult.Transitioning)
+                return firstFailure;
+
             if (firstFailure is UDoorInteractionResult.Locked or UDoorInteractionResult.PermissionDenied)
                 ShowLockedFeedback();
 

@@ -13,6 +13,8 @@ public class AuthDoor : ObjectPrefab
 
     private static readonly Vector3 InteractableLocalOffset = Vector3.up * 0.75f;
     private static readonly Vector3 InteractableBaseScale = Vector3.one + Vector3.up * 2f - new Vector3(-0.8f, 0f, -0.8f);
+    private bool _isTransitioning;
+    private int _transitionRevision;
 
     public KeycardPermissions KeycardPermissions { get; set; } = KeycardPermissions.None;
     public bool RequireAllPermissions { get; set; } = true;
@@ -23,11 +25,19 @@ public class AuthDoor : ObjectPrefab
     /// </summary>
     public bool CanClose { get; set; } = false;
 
+    /// <summary>Animatorを取得できない場合に使用する遷移時間。</summary>
+    public float TransitionDuration { get; set; } = 1f;
+
+    public bool IsTransitioning => _isTransitioning;
+
     public bool IsOpen
     {
         get => _isOpen;
         set
         {
+            if (_isOpen == value)
+                return;
+
             _isOpen = value;
             if (!string.IsNullOrEmpty(ObjectInstanceID))
                 SwitchDoor(value);
@@ -38,10 +48,10 @@ public class AuthDoor : ObjectPrefab
 
     protected override void OnSetup()
     {
-        AddInteractable(duration: 0.1f, offset: InteractableLocalOffset, scale: InteractableBaseScale);
+        AddInteractable(duration: 0f, offset: InteractableLocalOffset, scale: InteractableBaseScale);
 
         // IsOpen=true → OpenIdle(door2) / IsOpen=false → CloseIdle(door0)
-        Schematic?.AnimationController.Play(IsOpen ? "door2" : "door0");
+        GetAnimator()?.Play(IsOpen ? "door2" : "door0");
     }
 
     // ===== Interaction =====
@@ -50,6 +60,9 @@ public class AuthDoor : ObjectPrefab
     {
         var player = Player.Get(ev.Player);
         if (player == null)
+            return;
+
+        if (IsTransitioning)
             return;
 
         // 開いていて閉じられない場合はスキップ
@@ -78,12 +91,36 @@ public class AuthDoor : ObjectPrefab
 
     private void SwitchDoor(bool isOpen)
     {
+        string stateName = isOpen ? "door1" : "door3";
+        Animator? animator = GetAnimator();
+        animator?.Play(stateName);
+        BeginTransition(animator, stateName);
+
         SpeakerApi.Play(isOpen ? "ElevatorOpen1.ogg" : "ElevatorClose1.ogg", "KeycardDoorOpeningSound",
             Schematic?.Position ?? Position, true);
+    }
 
-        // 開く: CloseToOpen(door1) → Animator側でOpenIdle(door2)に遷移
-        // 閉じる: OpenToClose(door3) → Animator側でCloseIdle(door0)に遷移
-        Schematic?.AnimationController.Play(isOpen ? "door1" : "door3");
+    private Animator? GetAnimator()
+    {
+        var animators = Schematic?.AnimationController.Animators;
+        return animators is { Count: 1 } ? animators[0] : null;
+    }
+
+    private void BeginTransition(Animator? animator, string stateName)
+    {
+        int revision = ++_transitionRevision;
+        _isTransitioning = true;
+        ScheduleAfterAnimatorState(animator, stateName, TransitionDuration, () =>
+        {
+            if (revision == _transitionRevision)
+                _isTransitioning = false;
+        });
+    }
+
+    protected override void OnDestroy()
+    {
+        _transitionRevision++;
+        _isTransitioning = false;
     }
 
     // KeycardPermissions / RequireAllPermissions / CanClose / IsOpen は

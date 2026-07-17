@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
+using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
@@ -27,6 +29,7 @@ public class UsefulDoor : ObjectPrefab
     private string _customModelKey = string.Empty;
     private bool _isOpen;
     private bool _isSetup;
+    private bool _isTransitioning;
     private int _buttonStateRevision;
     private int _successfulInteractionCount;
     private InteractableHandle? _interactable;
@@ -151,6 +154,9 @@ public class UsefulDoor : ObjectPrefab
     /// <summary>Runtime-only successful interaction count.</summary>
     public int SuccessfulInteractionCount => _successfulInteractionCount;
 
+    /// <summary>Open/Close animation is running and further interactions are ignored.</summary>
+    public bool IsTransitioning => _isTransitioning;
+
     public string ClosedIdleAnimation { get; set; } = "idle";
     public string OpenAnimation { get; set; } = "opening";
     public string OpenIdleAnimation { get; set; } = "open";
@@ -179,6 +185,7 @@ public class UsefulDoor : ObjectPrefab
     public float AudioVolume { get; set; } = 1f;
     public float AudioMaxDistance { get; set; } = 10f;
     public float AudioMinDistance { get; set; } = 1f;
+    /// <summary>対象Animatorを取得できない場合に使用する遷移時間。</summary>
     public float ButtonStateTransitionDuration { get; set; } = 1f;
 
     /// <summary>
@@ -267,6 +274,8 @@ public class UsefulDoor : ObjectPrefab
             return Finish(context, UDoorInteractionResult.Disabled);
         if (Locked)
             return Finish(context, UDoorInteractionResult.Locked);
+        if (IsTransitioning)
+            return Finish(context, UDoorInteractionResult.Transitioning);
         if (MaxSuccessfulInteractions > 0 && _successfulInteractionCount >= MaxSuccessfulInteractions)
             return Finish(context, UDoorInteractionResult.LimitReached);
 
@@ -343,12 +352,11 @@ public class UsefulDoor : ObjectPrefab
 
     private void ApplyVisualState(bool isOpen, bool playAction)
     {
-        UpdateLinkedButtonState(isOpen, playAction);
-
         string animation = isOpen
             ? playAction ? OpenAnimation : OpenIdleAnimation
             : playAction ? CloseAnimation : ClosedIdleAnimation;
-        PlayAnimation(animation);
+        Animator? animator = PlayAnimation(animation);
+        UpdateLinkedButtonState(isOpen, playAction, animator, animation);
 
         if (playAction)
             PlayActionAudio(isOpen ? OpenAudio : CloseAudio);
@@ -356,33 +364,31 @@ public class UsefulDoor : ObjectPrefab
         RestartIdleAudio();
     }
 
-    private void UpdateLinkedButtonState(bool isOpen, bool transitioning)
+    private void UpdateLinkedButtonState(bool isOpen, bool transitioning, Animator? animator, string stateName)
     {
         int revision = ++_buttonStateRevision;
         if (Locked)
         {
+            _isTransitioning = false;
             PublishLinkedButtonState(UDoorButtonState.Locked);
             return;
         }
 
         if (!transitioning)
         {
+            _isTransitioning = false;
             PublishLinkedButtonState(isOpen ? UDoorButtonState.Open : UDoorButtonState.Close);
             return;
         }
 
+        _isTransitioning = true;
         PublishLinkedButtonState(isOpen ? UDoorButtonState.Opening : UDoorButtonState.Closing);
-        if (ButtonStateTransitionDuration <= 0f)
-        {
-            PublishLinkedButtonState(isOpen ? UDoorButtonState.Open : UDoorButtonState.Close);
-            return;
-        }
-
-        ScheduleDelayed(ButtonStateTransitionDuration, () =>
+        ScheduleAfterAnimatorState(animator, stateName, ButtonStateTransitionDuration, () =>
         {
             if (revision != _buttonStateRevision)
                 return;
 
+            _isTransitioning = false;
             PublishLinkedButtonState(Locked ? UDoorButtonState.Locked : GetStableButtonState());
         });
     }
@@ -393,19 +399,37 @@ public class UsefulDoor : ObjectPrefab
     private void PublishLinkedButtonState(UDoorButtonState state)
         => UDoor.NotifyLinkedButtons(this, state);
 
-    private void PlayAnimation(string? animation)
+    private Animator? PlayAnimation(string? animation)
     {
-        if (string.IsNullOrWhiteSpace(animation) || Schematic == null)
-            return;
+        Animator? animator = GetModelAnimator();
+        if (string.IsNullOrWhiteSpace(animation) || animator == null)
+            return animator;
 
         try
         {
-            Schematic.AnimationController.Play(animation.Trim());
+            animator.Play(animation.Trim());
         }
         catch (Exception e)
         {
             Log.Warn($"[UsefulDoor] Failed to play animation '{animation}': {e.Message}");
         }
+
+        return animator;
+    }
+
+    private Animator? GetModelAnimator()
+    {
+        if (Schematic == null)
+            return null;
+
+        SchematicBlock? modelRoot = GetBlock(GetSelectedModelKey());
+        if (modelRoot == null)
+            return null;
+
+        Transform root = modelRoot.transform;
+        return Schematic.AnimationController.Animators.FirstOrDefault(animator =>
+            animator != null &&
+            (animator.transform == root || animator.transform.IsChildOf(root)));
     }
 
     private void PlayActionAudio(string? audio)
@@ -509,6 +533,7 @@ public class UsefulDoor : ObjectPrefab
     protected override void OnDestroy()
     {
         _buttonStateRevision++;
+        _isTransitioning = false;
         StopIdleAudio();
         _interactable = null;
         _isSetup = false;

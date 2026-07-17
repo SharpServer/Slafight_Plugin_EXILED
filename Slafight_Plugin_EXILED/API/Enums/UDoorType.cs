@@ -47,6 +47,7 @@ public enum UDoorInteractionResult
     Cancelled,
     Disabled,
     Locked,
+    Transitioning,
     PermissionDenied,
     LimitReached,
     OneWay,
