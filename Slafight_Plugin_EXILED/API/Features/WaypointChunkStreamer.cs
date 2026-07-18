@@ -15,9 +15,9 @@ public static class WaypointChunkStreamer
 {
     public const float DefaultChunkSize = 192f;
     public const float DefaultPreloadDistance = 32f;
-    public const float DefaultGcDelay = 8f;
+    public const float DefaultGcDelay = 30f;
 
-    private const float UpdateInterval = 0.25f;
+    private const float UpdateInterval = 0.1f;
     private const int ReservedWaypointSlots = 8;
 
     private static readonly Dictionary<ChunkKey, ActiveChunk> ActiveChunks = new();
@@ -154,9 +154,16 @@ public static class WaypointChunkStreamer
     public static string GetStatus()
     {
         string state = IsConfigured ? "streaming" : ActiveChunks.Count > 0 ? "draining" : "stopped";
+        int referencedChunks = 0;
+        foreach (ActiveChunk active in ActiveChunks.Values)
+        {
+            if (IsWaypointReferenced(active.Waypoint.WaypointId))
+                referencedChunks++;
+        }
+
         return
             $"Waypoint stream: {state}\n" +
-            $"Active chunks: {ActiveChunks.Count}\n" +
+            $"Active chunks: {ActiveChunks.Count} ({referencedChunks} currently referenced)\n" +
             "Bounds: global\n" +
             $"Chunk={ChunkSize:0.##}m, preload={PreloadDistance:0.##}m, GC={GcDelay:0.##}s";
     }
@@ -203,9 +210,18 @@ public static class WaypointChunkStreamer
         foreach (KeyValuePair<ChunkKey, ActiveChunk> pair in ActiveChunks)
         {
             ActiveChunk active = pair.Value;
+            bool isReferenced = IsWaypointReferenced(active.Waypoint.WaypointId);
+            if (isReferenced)
+                active.LastReferencedAt = now;
+
+            // A client can still have movement packets in flight after it switches to a
+            // different waypoint. Delay ID reuse from both the last coverage request and
+            // the last observed reference; reusing an ID too early decodes those packets
+            // relative to a completely different chunk and causes position corrections.
+            float lastInUseAt = Mathf.Max(active.LastNeededAt, active.LastReferencedAt);
             if (RequiredChunks.Contains(pair.Key) ||
-                now - active.LastNeededAt < GcDelay ||
-                IsWaypointReferenced(active.Waypoint.WaypointId))
+                now - lastInUseAt < GcDelay ||
+                isReferenced)
             {
                 continue;
             }
@@ -413,10 +429,12 @@ public static class WaypointChunkStreamer
         {
             Waypoint = waypoint;
             LastNeededAt = lastNeededAt;
+            LastReferencedAt = lastNeededAt;
         }
 
         public Waypoint Waypoint { get; }
         public float LastNeededAt { get; set; }
+        public float LastReferencedAt { get; set; }
     }
 
     private readonly struct ChunkKey : IEquatable<ChunkKey>
