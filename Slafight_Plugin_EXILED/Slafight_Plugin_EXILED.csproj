@@ -648,6 +648,7 @@
         <Compile Include="Patches\CandyPatch.cs" />
         <Compile Include="Patches\DenySpectatingManagedNpcPatch.cs" />
         <Compile Include="Patches\DummyActionContextPatch.cs" />
+        <Compile Include="Patches\FullServerRoundStartPatch.cs" />
         <Compile Include="Patches\NpcEffectCleanupPatch.cs" />
         <Compile Include="Patches\PlayerRoleManagerRoleSyncPatch.cs" />
         <Compile Include="Patches\Scp1344NvgBlindnessPatch.cs" />

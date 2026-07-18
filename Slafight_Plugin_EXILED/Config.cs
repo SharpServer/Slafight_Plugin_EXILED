@@ -13,6 +13,9 @@ public class Config : IConfig
     [Description("デバッグログを出力するかどうか")]
     public bool Debug { get; set; } = true;
 
+    [Description("サーバーが満員になった時に待機時間を飛ばしてラウンドを自動開始する処理を無効化します")]
+    public bool DisableFullServerRoundStart { get; set; } = true;
+
     [Description("サーバーのシーズンを設定します。0=通常, 1=ハロウィン, 2=クリスマス, 3=エイプリルフール, 4=第五祭, 5=夏")]
     public int Season { get; set; } = 0;
 
