@@ -1,3 +1,4 @@
+using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
