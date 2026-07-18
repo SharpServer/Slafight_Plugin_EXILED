@@ -30,6 +30,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     private static readonly Dictionary<Type, MemberInfo[]> DeclaredOptionMembers = new();
     private readonly List<InteractableHandle> _interactables = [];
     private readonly Dictionary<string, SchematicBlock> _managedBlocks = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<SchematicBlock, Vector3> _managedBlockLocalPositions = new();
     private readonly List<CoroutineHandle> _scheduledCallbacks = [];
     private Vector3 _position = Vector3.zero;
     private Quaternion _rotation = Quaternion.identity;
@@ -298,6 +299,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     {
         RemoveInteractableCore(handle => !handle.OwnsToy, destroyToy: false);
         _managedBlocks.Clear();
+        _managedBlockLocalPositions.Clear();
     }
 
     /// <summary>
@@ -306,6 +308,36 @@ public abstract class ObjectPrefab : IObjectPrefab
     public InteractableHandle? GetInteractable(string key)
         => _interactables.FirstOrDefault(handle =>
             string.Equals(handle.Key, key, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>
+    /// 指定した managed block のサブツリーに属する Interactable を取得する。
+    /// 同名の Interactable がモデルごとに存在する場合でも transform 階層で区別する。
+    /// </summary>
+    protected InteractableHandle? GetInteractableInBlock(string blockKey, string? interactableKey = null)
+    {
+        SchematicBlock? block = GetBlock(blockKey) ?? Schematic?.FindBlock(blockKey, allowPartial: false);
+        if (block == null)
+            return null;
+
+        Transform root = block.transform;
+        return _interactables.FirstOrDefault(handle =>
+            !handle.Toy.IsDestroyed &&
+            (string.IsNullOrWhiteSpace(interactableKey) ||
+             string.Equals(handle.Key, interactableKey, StringComparison.OrdinalIgnoreCase)) &&
+            (handle.Toy.Transform == root || handle.Toy.Transform.IsChildOf(root)));
+    }
+
+    /// <summary>
+    /// 他の managed block 配下にネストされていない、Prefab 共通の Interactable を取得する。
+    /// </summary>
+    protected InteractableHandle? GetStandaloneInteractable(string key)
+        => _interactables.FirstOrDefault(handle =>
+            !handle.Toy.IsDestroyed &&
+            string.Equals(handle.Key, key, StringComparison.OrdinalIgnoreCase) &&
+            !_managedBlocks.Values.Any(block =>
+                block != null &&
+                block.transform != handle.Toy.Transform &&
+                handle.Toy.Transform.IsChildOf(block.transform)));
 
     /// <summary>
     /// ObjectPrefabSchematicInfo のキーで採用済みブロックを取得する（大文字小文字無視）。
@@ -365,11 +397,25 @@ public abstract class ObjectPrefab : IObjectPrefab
     /// ブロックサブツリーのネットワーク可視状態を UnSpawn / Spawn で切り替える。
     /// サーバー側オブジェクトは保持されるため、何度でも切り替えられる。
     /// </summary>
-    protected bool SetBlockSpawned(string keyOrName, bool spawned)
+    protected bool SetBlockSpawned(string keyOrName, bool spawned, Vector3? hiddenOffset = null)
     {
         SchematicBlock? block = GetBlock(keyOrName) ?? Schematic?.FindBlock(keyOrName, allowPartial: false);
         if (block == null)
             return false;
+
+        if (hiddenOffset.HasValue)
+        {
+            if (!_managedBlockLocalPositions.TryGetValue(block, out Vector3 originalPosition))
+            {
+                originalPosition = block.transform.localPosition;
+                _managedBlockLocalPositions[block] = originalPosition;
+            }
+
+            // UnSpawn 後もサーバー実体と Collider は残るため、非表示ブロックは遠方へ退避する。
+            block.transform.localPosition = spawned
+                ? originalPosition
+                : originalPosition + hiddenOffset.Value;
+        }
 
         return SetBlockSpawned(block, spawned);
     }
@@ -452,6 +498,27 @@ public abstract class ObjectPrefab : IObjectPrefab
 
     protected void UnregisterManagedInteractable(InteractableHandle handle, bool destroy = false)
         => RemoveInteractableCore(i => ReferenceEquals(i, handle), destroy);
+
+    /// <summary>
+    /// クライアントの照準判定は維持したまま、サーバー物理で Interactable がプレイヤーを
+    /// 押し戻さないよう Collider を無効化する。enabled は Network Sync 対象ではない。
+    /// </summary>
+    protected void DisableInteractableServerCollision(InteractableHandle handle, bool retryAfterSpawn = false)
+    {
+        void Disable()
+        {
+            if (handle?.Toy?.Base == null || handle.Toy.IsDestroyed)
+                return;
+
+            Collider collider = handle.Toy.Base._collider ?? handle.Toy.Base.GetComponent<Collider>();
+            if (collider != null)
+                collider.enabled = false;
+        }
+
+        Disable();
+        if (retryAfterSpawn)
+            ScheduleDelayed(0.1f, Disable);
+    }
 
     protected void DestroyManagedInteractables()
         => RemoveInteractableCore(_ => true, destroyToy: true);
@@ -1043,12 +1110,35 @@ public abstract class ObjectPrefab : IObjectPrefab
     protected virtual void OnToyInteractingNearby(PlayerSearchingToyEventArgs eventArgs) { }
 
     public void InvokeToyInteractingNearby(PlayerSearchingToyEventArgs eventArgs)
-        => OnToyInteractingNearby(eventArgs);
+    {
+        try
+        {
+            OnToyInteractingNearby(eventArgs);
+        }
+        catch (Exception e)
+        {
+            eventArgs.IsAllowed = false;
+            Log.Error(
+                $"[ObjectPrefab] OnToyInteractingNearby failed for {GetType().Name} " +
+                $"(InstanceID='{ObjectInstanceID}', Tag='{Tag}'): {e}");
+        }
+    }
     
     protected virtual void OnToyInteractedNearby(PlayerSearchedToyEventArgs eventArgs) { }
 
     public void InvokeToyInteractedNearby(PlayerSearchedToyEventArgs eventArgs)
-        => OnToyInteractedNearby(eventArgs);
+    {
+        try
+        {
+            OnToyInteractedNearby(eventArgs);
+        }
+        catch (Exception e)
+        {
+            Log.Error(
+                $"[ObjectPrefab] OnToyInteractedNearby failed for {GetType().Name} " +
+                $"(InstanceID='{ObjectInstanceID}', Tag='{Tag}'): {e}");
+        }
+    }
     
     protected virtual void OnRoundStarted() { }
     public void InvokeRoundStarted()

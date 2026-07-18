@@ -301,8 +301,18 @@ public static class UDoor
 
         foreach (UsefulDoorButton button in InstanceManager.GetAll().OfType<UsefulDoorButton>())
         {
-            if (button.TargetsTag(door.Tag))
-                button.SetDoorState(state);
+            try
+            {
+                if (button.TargetsTag(door.Tag))
+                    button.SetDoorState(state);
+            }
+            catch (Exception e)
+            {
+                Log.Error(
+                    $"[UDoor] Failed to update linked button " +
+                    $"(DoorInstanceID='{door.ObjectInstanceID}', ButtonInstanceID='{button.ObjectInstanceID}', " +
+                    $"Tag='{door.Tag}', State='{state}'): {e}");
+            }
         }
     }
 }

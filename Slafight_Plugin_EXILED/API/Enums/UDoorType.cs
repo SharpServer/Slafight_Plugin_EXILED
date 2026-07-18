@@ -6,6 +6,7 @@ namespace Slafight_Plugin_EXILED.API.Enums;
 /// </summary>
 public enum UDoorType
 {
+    EzEvacuationShelter,
     LczSurveillance,
 }
 
@@ -66,6 +67,7 @@ public enum UDoorInteractionResult
 public enum UDoorModelType
 {
     Alpha,
+    Gate,
     Custom,
 }
 

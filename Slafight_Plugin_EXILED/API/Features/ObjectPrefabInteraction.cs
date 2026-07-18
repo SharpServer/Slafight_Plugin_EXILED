@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using AdminToys;
+using Exiled.API.Features;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Features.Wrappers;
 using UnityEngine;
@@ -75,11 +76,42 @@ public sealed class InteractableHandle
         if (!Enabled)
             ev.IsAllowed = false;
 
-        Interacting?.Invoke(player, ev);
+        Delegate[] handlers = Interacting?.GetInvocationList() ?? [];
+        foreach (Delegate handler in handlers)
+        {
+            try
+            {
+                ((Action<ExiledPlayer, PlayerSearchingToyEventArgs>)handler)(player, ev);
+            }
+            catch (Exception e)
+            {
+                ev.IsAllowed = false;
+                Log.Error(
+                    $"[ObjectPrefab] Interacting handler failed for {Owner.GetType().Name} " +
+                    $"(InstanceID='{Owner.ObjectInstanceID}', Tag='{Owner.Tag}', Key='{Key}', " +
+                    $"Player='{player?.Nickname ?? "<unknown>"}'): {e}");
+            }
+        }
     }
 
     internal void RaiseInteracted(ExiledPlayer player, PlayerSearchedToyEventArgs ev)
-        => Interacted?.Invoke(player, ev);
+    {
+        Delegate[] handlers = Interacted?.GetInvocationList() ?? [];
+        foreach (Delegate handler in handlers)
+        {
+            try
+            {
+                ((Action<ExiledPlayer, PlayerSearchedToyEventArgs>)handler)(player, ev);
+            }
+            catch (Exception e)
+            {
+                Log.Error(
+                    $"[ObjectPrefab] Interacted handler failed for {Owner.GetType().Name} " +
+                    $"(InstanceID='{Owner.ObjectInstanceID}', Tag='{Owner.Tag}', Key='{Key}', " +
+                    $"Player='{player?.Nickname ?? "<unknown>"}'): {e}");
+            }
+        }
+    }
 }
 
 /// <summary>

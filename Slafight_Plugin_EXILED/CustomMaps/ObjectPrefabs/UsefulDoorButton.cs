@@ -20,6 +20,7 @@ public class UsefulDoorButton : ObjectPrefab
 {
     public const string CentralSchematicName = "UsefulDoorButton";
     public const string InteractableKey = "Interactable";
+    private static readonly Vector3 HiddenModelOffset = Vector3.down * 2000f;
     private static readonly string[] KeycardSubtypeKeys =
     [
         "Containment 1",
@@ -39,6 +40,7 @@ public class UsefulDoorButton : ObjectPrefab
     private bool _isSetup;
     private int _stateRevision;
     private InteractableHandle? _interactable;
+    private InteractableHandle? _fallbackInteractable;
     private CoroutineHandle _resetHandle;
     private SpeakerApi.Playback _idlePlayback;
 
@@ -80,7 +82,7 @@ public class UsefulDoorButton : ObjectPrefab
                 throw new ArgumentException($"'{normalized}' is reserved by the UsefulDoorButton central schematic.", nameof(value));
 
             if (_isSetup && !string.IsNullOrWhiteSpace(_customModelKey))
-                SetBlockSpawned(_customModelKey, false);
+                SetBlockSpawned(_customModelKey, false, HiddenModelOffset);
 
             _customModelKey = normalized;
             ApplyModelVisibility();
@@ -222,6 +224,9 @@ public class UsefulDoorButton : ObjectPrefab
         UsefulDoor[] targets = UDoor.GetDoors(tag).ToArray();
         if (targets.Length == 0)
         {
+            Log.Warn(
+                $"[UsefulDoorButton] No target doors found " +
+                $"(InstanceID='{ObjectInstanceID}', Tag='{Tag}', TargetTag='{tag}').");
             ShowFailureFeedback(UDoorButtonState.Failed);
             PlayFeedback(false);
             return UDoorInteractionResult.NoTarget;
@@ -234,13 +239,25 @@ public class UsefulDoorButton : ObjectPrefab
             if (target == null)
                 continue;
 
-            UDoorInteractionResult result = target.TryInteract(new UDoorInteractionContext(
-                target,
-                player,
-                UDoorInteractionSource.Button,
-                DoorAction,
-                this,
-                eventArgs));
+            UDoorInteractionResult result;
+            try
+            {
+                result = target.TryInteract(new UDoorInteractionContext(
+                    target,
+                    player,
+                    UDoorInteractionSource.Button,
+                    DoorAction,
+                    this,
+                    eventArgs));
+            }
+            catch (Exception e)
+            {
+                Log.Error(
+                    $"[UsefulDoorButton] Target interaction failed " +
+                    $"(ButtonInstanceID='{ObjectInstanceID}', TargetInstanceID='{target.ObjectInstanceID}', " +
+                    $"TargetTag='{tag}', Player='{player?.Nickname ?? "<unknown>"}'): {e}");
+                result = UDoorInteractionResult.Failed;
+            }
             if (result == UDoorInteractionResult.Success)
             {
                 succeeded = true;
@@ -323,10 +340,48 @@ public class UsefulDoorButton : ObjectPrefab
 
     private void SetupInteractable()
     {
-        _interactable = GetInteractable(InteractableKey) ??
-                        AddInteractable(duration: 0.1f, scale: Vector3.one * 0.75f);
-        _interactable.Interacting += OnInteracting;
-        _interactable.Interacted += OnInteracted;
+        SelectModelInteractable();
+        UpdateInteractable();
+    }
+
+    private void SelectModelInteractable()
+    {
+        InteractableHandle? selected = GetInteractableInBlock(GetSelectedStateParentKey(), InteractableKey) ??
+                                       GetInteractableInBlock(GetSelectedModelKey(), InteractableKey) ??
+                                       GetStandaloneInteractable(InteractableKey);
+        bool createdFallback = false;
+        if (selected == null)
+        {
+            if (_fallbackInteractable == null)
+            {
+                _fallbackInteractable = AddInteractable(duration: 0.1f, scale: Vector3.one * 0.75f);
+                createdFallback = true;
+            }
+
+            selected = _fallbackInteractable;
+        }
+
+        foreach (InteractableHandle handle in Interactables)
+        {
+            handle.Enabled = false;
+            DisableInteractableServerCollision(
+                handle,
+                retryAfterSpawn: createdFallback && ReferenceEquals(handle, _fallbackInteractable));
+        }
+
+        if (!ReferenceEquals(_interactable, selected))
+        {
+            if (_interactable != null)
+            {
+                _interactable.Interacting -= OnInteracting;
+                _interactable.Interacted -= OnInteracted;
+            }
+
+            _interactable = selected;
+            _interactable.Interacting += OnInteracting;
+            _interactable.Interacted += OnInteracted;
+        }
+
         UpdateInteractable();
     }
 
@@ -456,7 +511,7 @@ public class UsefulDoorButton : ObjectPrefab
             bool selected = isBuiltInModel
                 ? effectiveModelType != UDoorButtonModelType.Custom && effectiveModelType == blockType
                 : ModelType == UDoorButtonModelType.Custom;
-            SetBlockSpawned(key, selected);
+            SetBlockSpawned(key, selected, HiddenModelOffset);
             selectedFound |= selected;
         }
 
@@ -464,6 +519,7 @@ public class UsefulDoorButton : ObjectPrefab
             Log.Warn($"[UsefulDoorButton] No ObjectPrefabSchematicInfo block matched model '{GetSelectedModelKey()}'.");
 
         ApplyStateVisibility();
+        SelectModelInteractable();
     }
 
     private void ApplyStateVisibility()
@@ -576,6 +632,7 @@ public class UsefulDoorButton : ObjectPrefab
 
         StopIdleAudio();
         _interactable = null;
+        _fallbackInteractable = null;
         _isSetup = false;
     }
 

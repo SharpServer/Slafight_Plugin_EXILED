@@ -23,6 +23,7 @@ public class UsefulDoor : ObjectPrefab
     public const string InteractableKey = "Interactable";
     private static readonly Vector3 InteractableLocalOffset = Vector3.up * 0.75f;
     private static readonly Vector3 InteractableBaseScale = Vector3.one + Vector3.up * 2f - new Vector3(-0.8f, 0f, -0.8f);
+    private static readonly Vector3 HiddenModelOffset = Vector3.down * 2000f;
 
     private UDoorModelType _modelType = UDoorModelType.Alpha;
     private string _customModelKey = string.Empty;
@@ -30,6 +31,7 @@ public class UsefulDoor : ObjectPrefab
     private bool _isSetup;
     private int _buttonStateRevision;
     private InteractableHandle? _interactable;
+    private InteractableHandle? _fallbackInteractable;
     private SpeakerApi.Playback _idlePlayback;
 
     protected override string SchematicName => CentralSchematicName;
@@ -70,7 +72,7 @@ public class UsefulDoor : ObjectPrefab
                 throw new ArgumentException($"'{normalized}' is reserved by the UsefulDoor central schematic.", nameof(value));
 
             if (_isSetup && !string.IsNullOrWhiteSpace(_customModelKey))
-                SetBlockSpawned(_customModelKey, false);
+                SetBlockSpawned(_customModelKey, false, HiddenModelOffset);
 
             _customModelKey = normalized;
             ApplyModelVisibility();
@@ -192,6 +194,10 @@ public class UsefulDoor : ObjectPrefab
         switch (ModelType)
         {
             case UDoorModelType.Alpha:
+                break;
+            case UDoorModelType.Gate:
+                OpenAudio = "BigDoorOpen.ogg";
+                CloseAudio = "BigDoorClose.ogg";
                 break;
             case UDoorModelType.Custom:
                 break;
@@ -324,10 +330,50 @@ public class UsefulDoor : ObjectPrefab
 
     private void SetupInteractable()
     {
-        _interactable = GetInteractable(InteractableKey) ??
-                        AddInteractable(duration: 0.1f, offset: InteractableLocalOffset, scale: InteractableBaseScale);
-        _interactable.Interacting += OnInteracting;
-        _interactable.Interacted += OnInteracted;
+        SelectModelInteractable();
+        UpdateInteractable();
+    }
+
+    private void SelectModelInteractable()
+    {
+        InteractableHandle? selected = GetInteractableInBlock(GetSelectedModelKey(), InteractableKey) ??
+                                       GetStandaloneInteractable(InteractableKey);
+        bool createdFallback = false;
+        if (selected == null)
+        {
+            if (_fallbackInteractable == null)
+            {
+                _fallbackInteractable = AddInteractable(
+                    duration: 0.1f,
+                    offset: InteractableLocalOffset,
+                    scale: InteractableBaseScale);
+                createdFallback = true;
+            }
+
+            selected = _fallbackInteractable;
+        }
+
+        foreach (InteractableHandle handle in Interactables)
+        {
+            handle.Enabled = false;
+            DisableInteractableServerCollision(
+                handle,
+                retryAfterSpawn: createdFallback && ReferenceEquals(handle, _fallbackInteractable));
+        }
+
+        if (!ReferenceEquals(_interactable, selected))
+        {
+            if (_interactable != null)
+            {
+                _interactable.Interacting -= OnInteracting;
+                _interactable.Interacted -= OnInteracted;
+            }
+
+            _interactable = selected;
+            _interactable.Interacting += OnInteracting;
+            _interactable.Interacted += OnInteracted;
+        }
+
         UpdateInteractable();
     }
 
@@ -501,12 +547,14 @@ public class UsefulDoor : ObjectPrefab
             bool selected = isBuiltInModel
                 ? ModelType != UDoorModelType.Custom && ModelType == blockType
                 : ModelType == UDoorModelType.Custom;
-            SetBlockSpawned(key, selected);
+            SetBlockSpawned(key, selected, HiddenModelOffset);
             selectedFound |= selected;
         }
 
         if (!selectedFound)
             Log.Warn($"[UsefulDoor] No ObjectPrefabSchematicInfo block matched model '{GetSelectedModelKey()}'.");
+
+        SelectModelInteractable();
     }
 
     private string GetSelectedModelKey()
@@ -534,6 +582,7 @@ public class UsefulDoor : ObjectPrefab
         IsTransitioning = false;
         StopIdleAudio();
         _interactable = null;
+        _fallbackInteractable = null;
         _isSetup = false;
     }
 
