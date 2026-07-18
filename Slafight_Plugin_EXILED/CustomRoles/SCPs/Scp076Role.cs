@@ -46,7 +46,7 @@ public class Scp076Role : CRole
 
     protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
     [
-        new CRoleEffect<NaturalHeal>(duration: 0.25f),
+        new CRoleEffect<NaturalHeal>(),
         new(EffectType.Scp1853),
     ];
 
