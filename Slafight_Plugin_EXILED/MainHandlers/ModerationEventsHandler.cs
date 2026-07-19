@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Reflection;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Server;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Features.Attributes;
 using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
@@ -53,6 +55,11 @@ public static class ModerationEventsHandler
         PendingKickIssuers.Clear();
         SuppressNextKick.Clear();
     }
+    
+    public static ReasonAttribute GetReasonAttribute(this KickReason kickReason)
+    {
+        return typeof (KickReason).GetField(kickReason.ToString()).GetCustomAttribute<ReasonAttribute>();
+    }
 
     private static void OnRestartingRound()
     {
@@ -69,7 +76,7 @@ public static class ModerationEventsHandler
 
     private static void OnKicked(KickedEventArgs ev)
     {
-        if (!ev.Player.IsSafePlayer()) return;
+        if (!ev.Player.IsSafePlayer() || (KickReasonExtensions.TryParseKickReason(ev.Reason, out var reason) && reason is KickReason.AFK)) return;
 
         // 直前の Banned 通知に付随する強制切断なので、Kick として二重通知しない
         if (SuppressNextKick.Remove(ev.Player.UserId))
