@@ -41,15 +41,6 @@ public class Scp035Role : CRole
     protected override bool SpawnClearsInventory => true;
     protected override IReadOnlyList<object> SpawnItems => [ItemType.KeycardScientist, ItemType.Painkillers];
     protected override string SpawnCustomInfo => "<color=#C50000>SCP-035</color>";
-    protected override CRoleVoiceSettings VoiceSettings => new(
-        routes:
-        [
-            CRoleVoiceRoute.ToTeams(
-                [CTeam.SCPs],
-                VoiceRouteDecision.Direct(),
-                context => CanSpeakWithScps(context.Sender) &&
-                           context.SourceChannel != VoiceChat.VoiceChatChannel.None)
-        ]);
     protected override IReadOnlyList<SpecificFlagType> SpawnSpecificFlags =>
     [
         SpecificFlagType.SpecialWeaponsDisabled
