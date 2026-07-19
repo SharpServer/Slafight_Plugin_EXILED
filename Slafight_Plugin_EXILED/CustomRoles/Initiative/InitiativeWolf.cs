@@ -23,7 +23,7 @@ public class InitiativeWolf : CRole
     protected override CTeam Team { get; set; } = CTeam.Initiative;
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp049;
     protected override RoleSpawnFlags? SpawnBaseRoleFlags => RoleSpawnFlags.AssignInventory;
-    public override bool CanUseProximityChat => true;
+    protected override CRoleVoiceSettings VoiceSettings => CRoleVoiceSettings.WithProximity();
     protected override IReadOnlyList<CRoleEffect> SpawnEffects => 
     [
         new(EffectType.MovementBoost, 23)

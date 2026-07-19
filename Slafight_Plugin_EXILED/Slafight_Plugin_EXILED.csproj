@@ -241,6 +241,8 @@
         <Compile Include="API\Features\SpawnSystemDictionaries\UnitPacks\MtfPandrasBoxUnitPacks.cs" />
         <Compile Include="API\Features\SpeakerApi.cs" />
         <Compile Include="API\Features\VoiceRecordingApi.cs" />
+        <Compile Include="API\Features\VoiceRoutingApi.cs" />
+        <Compile Include="API\Features\CRoleVoiceSettings.cs" />
         <Compile Include="API\Features\CRole.cs" />
         <Compile Include="API\Features\InternalNpcRegistry.cs" />
         <Compile Include="API\Features\ModerationBridge.cs" />
@@ -437,6 +439,7 @@
         <Compile Include="CustomItems\SlafightApiItems\ThrowableScp244.cs" />
         <Compile Include="CustomItems\SlafightApiItems\Toolbox.cs" />
         <Compile Include="CustomItems\SlafightApiItems\ModeratorUtil.cs" />
+        <Compile Include="CustomMaps\Core\Interactions\EventInvokeMarkerHandler.cs" />
         <Compile Include="CustomMaps\Core\Interactions\LeverHandler.cs" />
         <Compile Include="CustomMaps\FacilityControlRoom.cs" />
         <Compile Include="CustomMaps\FacilityControlRoomFunction.cs" />
@@ -649,6 +652,7 @@
         <Compile Include="Patches\DenySpectatingManagedNpcPatch.cs" />
         <Compile Include="Patches\DummyActionContextPatch.cs" />
         <Compile Include="Patches\FullServerRoundStartPatch.cs" />
+        <Compile Include="Patches\InteractableToyColliderPatch.cs" />
         <Compile Include="Patches\NpcEffectCleanupPatch.cs" />
         <Compile Include="Patches\PlayerRoleManagerRoleSyncPatch.cs" />
         <Compile Include="Patches\Scp1344NvgBlindnessPatch.cs" />

@@ -21,7 +21,7 @@ public class Scp3114Role : CRole
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp3114;
     protected override float? SpawnMaxHealth => 3114f;
     protected override bool SpawnClearsInventory => true;
-    public override bool CanUseProximityChat => true;
+    protected override CRoleVoiceSettings VoiceSettings => CRoleVoiceSettings.WithProximity();
 
     public override void RegisterEvents()
     {

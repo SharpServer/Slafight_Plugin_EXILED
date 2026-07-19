@@ -50,6 +50,7 @@ public class Plugin : Plugin<Config>
         Singleton = this;
         InitializeMediaTools();
         PlayerSpeakerManager.RegisterEvents();
+        VoiceRoutingApi.RegisterEvents();
         ProximityChat.Handler.RegisterEvents();
         WaypointChunkStreamer.RegisterEvents();
         FilmmakerAnimationPlayer.RegisterEvents();
@@ -153,6 +154,7 @@ public class Plugin : Plugin<Config>
             
         PlayerSpeakerManager.UnregisterEvents();
         ProximityChat.Handler.UnregisterEvents();
+        VoiceRoutingApi.UnregisterEvents();
         WaypointChunkStreamer.UnregisterEvents();
         FilmmakerAnimationPlayer.UnregisterEvents();
 

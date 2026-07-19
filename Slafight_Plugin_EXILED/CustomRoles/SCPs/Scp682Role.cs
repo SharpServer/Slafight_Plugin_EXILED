@@ -36,7 +36,7 @@ public class Scp682Role : CRole
         new(EffectType.NightVision, 255)
     ];
 
-    public override bool CanUseProximityChat => true;
+    protected override CRoleVoiceSettings VoiceSettings => CRoleVoiceSettings.WithProximity();
 
     private static readonly Dictionary<Player, float> SpeedLevels = new();
     

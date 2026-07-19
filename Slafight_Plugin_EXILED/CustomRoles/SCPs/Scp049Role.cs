@@ -20,7 +20,7 @@ public class Scp049Role : CRole
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp049;
     protected override bool SpawnClearsInventory => true;
     protected override string SpawnCustomInfo => "SCP-049";
-    public override bool CanUseProximityChat => true;
+    protected override CRoleVoiceSettings VoiceSettings => CRoleVoiceSettings.WithProximity();
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {

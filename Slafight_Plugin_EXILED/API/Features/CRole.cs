@@ -89,6 +89,7 @@ public abstract class CRole
     private static readonly IReadOnlyList<SpecificFlagType> EmptySpecificFlags = [];
 
     private static bool _eventsSubscribed;
+    private CRoleVoiceSettings? _resolvedVoiceSettings;
 
     private readonly struct TeamNpcInfo
     {
@@ -578,6 +579,7 @@ public abstract class CRole
     protected virtual string DisplayName => RoleName;
     protected virtual RoleTypeId? TeamNpcRoleTypeId { get; set; } = null;
     protected virtual bool ClearInventoryBeforeDeath { get; set; } = false;
+    protected virtual CRoleVoiceSettings VoiceSettings => CRoleVoiceSettings.None;
 
     protected abstract CRoleTypeId CRoleTypeId { get; set; }
 
@@ -594,8 +596,9 @@ public abstract class CRole
     public string RoleDescription => Description;
     public string RoleDisplayName => DisplayName;
     public string? CustomInfo => SpawnCustomInfo;
-    public virtual bool CanUseProximityChat => false;
-    public virtual bool ProximityChatEnabledByDefault => CanUseProximityChat;
+    public CRoleVoiceSettings Voice => _resolvedVoiceSettings ??= VoiceSettings;
+    public bool CanUseProximityChat => Voice.Proximity.IsAvailable;
+    public bool ProximityChatEnabledByDefault => Voice.Proximity.EnabledByDefault;
 
     // ==== 逆引き ====
 

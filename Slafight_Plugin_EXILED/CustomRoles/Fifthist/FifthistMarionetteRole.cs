@@ -21,8 +21,7 @@ public class FifthistMarionetteRole : CRole
     protected override float? SpawnMaxHealth => 100f;
     protected override bool SpawnClearsInventory => true;
     protected override string SpawnCustomInfo => "<color=#FF0090>Fifthist Marionette</color>";
-    public override bool CanUseProximityChat => true;
-    public override bool ProximityChatEnabledByDefault => true;
+    protected override CRoleVoiceSettings VoiceSettings => CRoleVoiceSettings.WithProximity();
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {

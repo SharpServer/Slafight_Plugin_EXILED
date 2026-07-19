@@ -41,6 +41,15 @@ public class Scp035Role : CRole
     protected override bool SpawnClearsInventory => true;
     protected override IReadOnlyList<object> SpawnItems => [ItemType.KeycardScientist, ItemType.Painkillers];
     protected override string SpawnCustomInfo => "<color=#C50000>SCP-035</color>";
+    protected override CRoleVoiceSettings VoiceSettings => new(
+        routes:
+        [
+            CRoleVoiceRoute.ToTeams(
+                [CTeam.SCPs],
+                VoiceRouteDecision.Direct(),
+                context => CanSpeakWithScps(context.Sender) &&
+                           context.SourceChannel != VoiceChat.VoiceChatChannel.None)
+        ]);
     protected override IReadOnlyList<SpecificFlagType> SpawnSpecificFlags =>
     [
         SpecificFlagType.SpecialWeaponsDisabled
@@ -204,6 +213,13 @@ public class Scp035Role : CRole
             return global;
 
         return default;
+    }
+
+    public static bool CanSpeakWithScps(Player player)
+    {
+        return player != null &&
+               GlobalStates.TryGetValue(player.Id, out var state) &&
+               state.NowState is Scp035StateType.Awaken or Scp035StateType.FullyAwaken;
     }
 
     public string GetStateLoc(Scp035StateType stateType)

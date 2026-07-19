@@ -20,8 +20,7 @@ public class ZombifiedRole : CRole
     protected override float? SpawnMaxHealth => 125f;
     protected override bool SpawnClearsInventory => true;
     protected override string SpawnCustomInfo => "<color=#C50000>Zombified Subject</color>";
-    public override bool CanUseProximityChat => true;
-    public override bool ProximityChatEnabledByDefault => true;
+    protected override CRoleVoiceSettings VoiceSettings => CRoleVoiceSettings.WithProximity();
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {

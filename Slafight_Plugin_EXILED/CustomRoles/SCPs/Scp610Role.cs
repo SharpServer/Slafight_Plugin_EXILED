@@ -29,6 +29,17 @@ public class Scp610Role : CRole
     protected override bool SpawnClearsInventory => true;
     protected override IReadOnlyList<object> SpawnItems => [ItemType.SCP1509];
     protected override string SpawnCustomInfo => "<color=#C50000>SCP-610</color>";
+    protected override CRoleVoiceSettings VoiceSettings => new(
+        routes:
+        [
+            CRoleVoiceRoute.ToTeams(
+                [CTeam.SCPs],
+                VoiceRouteDecision.Direct(),
+                context => context.SourceChannel != VoiceChat.VoiceChatChannel.None),
+            CRoleVoiceRoute.All(
+                VoiceRouteDecision.Block(),
+                context => context.SourceChannel != VoiceChat.VoiceChatChannel.None)
+        ]);
     protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
     [
         new(EffectType.Fade, 255),

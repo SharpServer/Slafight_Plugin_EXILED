@@ -67,7 +67,7 @@ public class Scp076Role : CRole
     private static readonly HashSet<int> ResistancePlayerIds = [];
     // 抑制装置の起爆処理中の playerId（死因放送を専用のものへ切り替える判定に使用）
     private static readonly HashSet<int> SuppressionDetonatingIds = [];
-    private static int omegaSevenLossCheckGeneration;
+    private static int _omegaSevenLossCheckGeneration;
 
     private const string SuppressionDeviceKillReason = "抑制装置により爆発された";
 
@@ -258,11 +258,11 @@ public class Scp076Role : CRole
 
     private void ScheduleOmegaSevenLossCheck(string reason)
     {
-        int generation = ++omegaSevenLossCheckGeneration;
+        int generation = ++_omegaSevenLossCheckGeneration;
 
         Timing.CallDelayed(OmegaSevenLossCheckDelaySeconds, () =>
         {
-            if (generation != omegaSevenLossCheckGeneration)
+            if (generation != _omegaSevenLossCheckGeneration)
                 return;
 
             EnterResistanceIfOmegaSevenLost(reason);
@@ -453,6 +453,6 @@ public class Scp076Role : CRole
         KillCounts.Clear();
         ResistancePlayerIds.Clear();
         SuppressionDetonatingIds.Clear();
-        omegaSevenLossCheckGeneration++;
+        _omegaSevenLossCheckGeneration++;
     }
 }

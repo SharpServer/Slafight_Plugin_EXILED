@@ -12,7 +12,6 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using VoiceChat;
-using VoiceChat.Networking;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
 using SpectatorRole = PlayerRoles.Spectating.SpectatorRole;
 
@@ -42,18 +41,21 @@ public static class Handler
 
     public static void RegisterEvents()
     {
-        Exiled.Events.Handlers.Player.VoiceChatting += OnPlayerUsingVoiceChat;
         Exiled.Events.Handlers.Server.RestartingRound += OnRoundRestarted;
         Exiled.Events.Handlers.Player.ChangingRole += OnPlayerChangingRole;
         Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
+        VoiceRoutingApi.Register(new VoiceRouteRule(
+            "proximity.scp-chat-mirror",
+            EvaluateProximityRoute,
+            priority: 100));
     }
 
     public static void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Player.VoiceChatting -= OnPlayerUsingVoiceChat;
         Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarted;
         Exiled.Events.Handlers.Player.ChangingRole -= OnPlayerChangingRole;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
+        VoiceRoutingApi.Unregister("proximity.scp-chat-mirror");
         ClearState();
     }
 
@@ -134,7 +136,8 @@ public static class Handler
             return true;
 
         if (!string.IsNullOrEmpty(player.UniqueRole))
-            return CRole.TryGetByUniqueRole(player.UniqueRole, out var role) && role.CanUseProximityChat;
+            return CRole.TryGetByUniqueRole(player.UniqueRole, out var role) &&
+                   role.Voice.Proximity.IsAvailable;
 
         return AllowedRoleTypes.Contains(player.Role);
     }
@@ -144,7 +147,8 @@ public static class Handler
         if (player == null || string.IsNullOrEmpty(player.UniqueRole))
             return false;
 
-        return CRole.TryGetByUniqueRole(player.UniqueRole, out var role) && role.ProximityChatEnabledByDefault;
+        return CRole.TryGetByUniqueRole(player.UniqueRole, out var role) &&
+               role.Voice.Proximity.EnabledByDefault;
     }
 
     public static bool IsProximityChatForced(Player player)
@@ -177,76 +181,46 @@ public static class Handler
 
     // ====== 音声イベント ======
 
-    public static void OnPlayerUsingVoiceChat(VoiceChattingEventArgs args)
+    private static VoiceRouteDecision? EvaluateProximityRoute(VoiceRouteContext context)
     {
-        if (!IsValid(args.Player))
-            return;
+        if (!IsValid(context.Sender) || !IsValid(context.Receiver))
+            return null;
 
         PrunePlayerLists();
 
-        // Proximity チャンネルで送っている時はスルー
-        if (args.VoiceMessage.Channel == VoiceChatChannel.Proximity)
-            return;
-
         // SCP チャットだけを Proximity にミラー
-        if (args.VoiceMessage.Channel != VoiceChatChannel.ScpChat)
-            return;
+        if (context.SourceChannel != VoiceChatChannel.ScpChat)
+            return null;
 
-        if (!CanPlayerUseProximityChat(args.Player))
-            return;
+        if (!CanPlayerUseProximityChat(context.Sender))
+            return null;
 
-        if (!ContainsPlayer(ActivatedPlayers, args.Player))
-            return;
+        if (!ContainsPlayer(ActivatedPlayers, context.Sender))
+            return null;
 
-        SendProximityMessage(args.Player, args.VoiceMessage, AudioMaxDistance);
+        if (!CanReceiveProximity(context.Sender, context.Receiver, AudioMaxDistance))
+            return null;
+
+        return VoiceRouteDecision.Spatial(
+            PlayerSpeakerManager.PurposeProximity,
+            AudioMaxDistance,
+            AudioMinDistance,
+            AudioVolume,
+            suppressNative: false);
     }
 
     // ====== 近接送信処理 ======
 
-    private static void SendProximityMessage(Player speakerPlayer, VoiceMessage msg, float maxRange)
+    private static bool CanReceiveProximity(Player speakerPlayer, Player receiver, float maxRange)
     {
-        if (!IsValid(speakerPlayer) || speakerPlayer.ReferenceHub == null)
-            return;
-
-        var targets = new List<ReferenceHub>();
-        var speakerPosition = speakerPlayer.Position;
-
-        foreach (var hub in ReferenceHub.AllHubs)
+        var hub = receiver.ReferenceHub;
+        if (hub.roleManager.CurrentRole is SpectatorRole)
         {
-            if (hub == null || hub.connectionToClient == null)
-                continue;
-
             // 観戦者は「見ている対象」だけ聞ける
-            if (hub.roleManager.CurrentRole is SpectatorRole)
-            {
-                if (!speakerPlayer.ReferenceHub.IsSpectatedBy(hub))
-                    continue;
-            }
-            else
-            {
-                var dist = Vector3.Distance(speakerPosition, hub.transform.position);
-                if (dist >= maxRange)
-                    continue;
-            }
-
-            targets.Add(hub);
+            return speakerPlayer.ReferenceHub.IsSpectatedBy(hub);
         }
 
-        if (targets.Count == 0)
-            return;
-
-        // 用途キー "proximity" でスピーカーを取得
-        if (!PlayerSpeakerManager.TryGetSpeaker(
-                speakerPlayer,
-                PlayerSpeakerManager.PurposeProximity,
-                out var liveSpeaker))
-        {
-            Log.Warn($"[ProximityChat] SendProximityMessage: No proximity speaker for {speakerPlayer.Nickname}");
-            return;
-        }
-
-        // 生の Opus フレームをそのまま投げる
-        liveSpeaker.SendFrame(msg.Data, msg.DataLength, targets);
+        return Vector3.Distance(speakerPlayer.Position, hub.transform.position) < maxRange;
     }
 
     private static void AddPlayer(List<Player> players, Player player)

@@ -27,8 +27,7 @@ public class Scp3125Role : CRole
     protected override string UniqueRoleKey { get; set; } = "SCP-3125";
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.Scp106;
     protected override RoleSpawnFlags? SpawnBaseRoleFlags => RoleSpawnFlags.AssignInventory;
-    public override bool CanUseProximityChat => true;
-    public override bool ProximityChatEnabledByDefault => true;
+    protected override CRoleVoiceSettings VoiceSettings => CRoleVoiceSettings.WithProximity();
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)
     {
