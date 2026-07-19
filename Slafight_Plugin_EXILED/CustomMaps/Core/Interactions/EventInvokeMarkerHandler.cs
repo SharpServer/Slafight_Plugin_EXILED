@@ -31,7 +31,7 @@ public class EventInvokeMarkerHandler : IBootstrapHandler
                 else
                 {
                     ev.Player.EnableEffect<FogControl>(255);
-                    ev.Player.GetEffect<FogControl>()?.SetFogType(FogType.None);
+                    ev.Player.GetEffect<FogControl>()?.SetFogType(FogType.Inside);
                 }
                 break;
         }

@@ -340,6 +340,7 @@
         <Compile Include="CustomEffects\FloodDrowning.cs" />
         <Compile Include="CustomEffects\NaturalHeal.cs" />
         <Compile Include="CustomEffects\VisualTraumatized.cs" />
+        <Compile Include="CustomEffects\VisualSinkhole.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerBroken.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv1.cs" />
         <Compile Include="CustomItems\SlafightApiItems\AccessTunerLv2.cs" />
@@ -660,6 +661,7 @@
         <Compile Include="Patches\Scp049InitiativeSensePatch.cs" />
         <Compile Include="Patches\Scp914ProcessorFix.cs" />
         <Compile Include="Patches\VisualTraumatizedPatch.cs" />
+        <Compile Include="Patches\VisualSinkholePatch.cs" />
         <Compile Include="Plugin.cs" />
         <Compile Include="Properties\AssemblyInfo.cs" />
         <Compile Include="ProximityChat\ActivateHandler.cs" />

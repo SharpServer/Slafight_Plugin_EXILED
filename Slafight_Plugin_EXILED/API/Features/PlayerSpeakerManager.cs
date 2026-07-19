@@ -443,7 +443,7 @@ public static class PlayerSpeakerManager
 
     private static void OnPlayerSpawned(SpawnedEventArgs ev)
     {
-        if (ev.Player == null) return;
+        if (ev.Player == null || ev.Player.IsNPC || !ev.Player.IsSafePlayer()) return;
 
         Log.Debug($"[PlayerSpeakerManager] OnPlayerSpawned: {ev.Player.Nickname} as {ev.Player.Role} (IsAlive: {ev.Player.IsAlive})");
         var playerId = ev.Player.Id;
@@ -495,26 +495,25 @@ public static class PlayerSpeakerManager
 
     private static void OnPlayerChangingRole(ChangingRoleEventArgs ev)
     {
-        if (ev.Player != null)
-            DestroyAllForPlayer(ev.Player.Id);
+        if (ev.Player == null || ev.Player.IsNPC || !ev.Player.IsSafePlayer()) return;
+
+        DestroyAllForPlayer(ev.Player.Id);
     }
 
     private static void OnPlayerDied(DiedEventArgs ev)
     {
-        if (ev.Player != null)
-        {
-            Log.Debug($"[PlayerSpeakerManager] OnPlayerDied: {ev.Player.Nickname} died.");
-            DestroyAllForPlayer(ev.Player.Id);
-        }
+        if (ev.Player == null || ev.Player.IsNPC || !ev.Player.IsSafePlayer()) return;
+
+        Log.Debug($"[PlayerSpeakerManager] OnPlayerDied: {ev.Player.Nickname} died.");
+        DestroyAllForPlayer(ev.Player.Id);
     }
 
     private static void OnPlayerLeft(LeftEventArgs ev)
     {
-        if (ev.Player != null)
-        {
-            Log.Debug($"[PlayerSpeakerManager] OnPlayerLeft: {ev.Player.Nickname} left.");
-            DestroyAllForPlayer(ev.Player.Id);
-        }
+        if (ev.Player == null || ev.Player.IsNPC || !ev.Player.IsSafePlayer()) return;
+
+        Log.Debug($"[PlayerSpeakerManager] OnPlayerLeft: {ev.Player.Nickname} left.");
+        DestroyAllForPlayer(ev.Player.Id);
     }
 
     private static void OnRoundRestarted()
@@ -563,7 +562,8 @@ public static class PlayerSpeakerManager
         {
             return player != null
                    && player.ReferenceHub != null
-                   && player.IsNotHost();
+                   && !player.IsNPC
+                   && player.IsSafePlayer();
         }
         catch
         {
