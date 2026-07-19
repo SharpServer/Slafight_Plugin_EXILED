@@ -19,7 +19,7 @@ namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
 public class Trashbox : ObjectPrefab
 {
-    protected override string SchematicName => "trashbox";
+    protected override string SchematicName => "trashbox_obj";
 
     private readonly Dictionary<int, List<TrashboxEventType>> _triggeredEventsByPlayer = [];
     private static readonly Dictionary<int, byte> TriggeredSecretCountsByPlayer = [];
@@ -36,7 +36,12 @@ public class Trashbox : ObjectPrefab
 
     protected override void OnSetup()
     {
-        AddInteractable(duration: 3.5f, scale: Vector3.one + Vector3.up * 2f);
+        InteractableHandle handle = GetInteractable("Interactable");
+        if (handle == null) return;
+        handle.Interacted += (_, ev) =>
+        {
+            OnInteracted(ev);
+        };
     }
 
     public enum TrashboxEventType
@@ -51,7 +56,7 @@ public class Trashbox : ObjectPrefab
         Secret
     }
 
-    protected override void OnToyInteractedNearby(PlayerSearchedToyEventArgs ev)
+    private void OnInteracted(PlayerSearchedToyEventArgs ev)
     {
         var player = Player.Get(ev.Player);
         if (player == null)
