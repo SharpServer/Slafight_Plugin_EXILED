@@ -472,6 +472,7 @@
         <Compile Include="CustomMaps\ObjectPrefabs\HIDTurretObject.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\Document.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\AuthDoor.cs" />
+        <Compile Include="CustomMaps\ObjectPrefabs\ControllableLight.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\InteractableLever.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\UsefulDoor.cs" />
         <Compile Include="CustomMaps\ObjectPrefabs\UsefulDoorButton.cs" />

@@ -6,6 +6,7 @@ using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Warhead;
 using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
@@ -20,6 +21,7 @@ public static class FacilityLightHandler
     private static readonly HashSet<int> ForceNightVisionPlayers = [];
     private static readonly HashSet<CTeam> ForceNightVisionTeams = [];
     private static CoroutineHandle ForceNightVisionCoroutineHandle;
+    private static CoroutineHandle ControllableLightSetupHandle;
 
     public static void Register()
     {
@@ -38,12 +40,16 @@ public static class FacilityLightHandler
         Exiled.Events.Handlers.Warhead.Starting -= OnWarhead;
         Exiled.Events.Handlers.Warhead.Stopping -= OnStopping;
         Timing.KillCoroutines(ForceNightVisionCoroutineHandle);
+        Timing.KillCoroutines(ControllableLightSetupHandle);
+        ControllableLight.CancelReplacement();
         ClearForcedNightVision();
     }
 
     private static void OnWaitingForPlayers()
     {
         Timing.KillCoroutines(ForceNightVisionCoroutineHandle);
+        Timing.KillCoroutines(ControllableLightSetupHandle);
+        ControllableLight.CancelReplacement();
         ClearForcedNightVision();
     }
     
@@ -51,6 +57,9 @@ public static class FacilityLightHandler
     {
         ForceNightVisionCoroutineHandle = Timing.RunCoroutine(ForceNightVisionCoroutine());
         Timing.CallDelayed(0.5f, InitLight);
+        return;
+        Timing.KillCoroutines(ControllableLightSetupHandle);
+        ControllableLightSetupHandle = Timing.CallDelayed(0.75f, ControllableLight.ReplaceAll);
     }
 
     private static void InitLight()
@@ -97,12 +106,14 @@ public static class FacilityLightHandler
         ColorUtility.TryParseHtmlString("#ff1500", out var color);
         foreach (var room in Room.List)
             room.Color = color;
+        ControllableLight.SetAlarmForAll(true);
     }
 
     public static void OnStopping(StoppingEventArgs ev)
     {
         if (!ev.IsAllowed) return;
         InitLight();
+        ControllableLight.SetAlarmForAll(false);
     }
 
     private static void OnLeft(LeftEventArgs ev)

@@ -8,6 +8,7 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 using Slafight_Plugin_EXILED.SpecialEvents;
+using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using UnityEngine;
 
 using Slafight_Plugin_EXILED.API.Features;
@@ -68,6 +69,7 @@ public static class OmegaWarhead
 
         StartedPlayer = startedBy;
         IsWarheadStarted = true;
+        ControllableLight.SetOmegaAlarmForAll(true);
 
         foreach (Room room in Room.List)
             room.Color = Color.blue;
@@ -130,6 +132,7 @@ public static class OmegaWarhead
     {
         if (_warheadCoroutine.IsRunning)
             Timing.KillCoroutines(_warheadCoroutine);
+        ControllableLight.SetOmegaAlarmForAll(false);
         EvacuationRoundEndState.End();
         IsWarheadStarted = false;
         StartedPlayer = null;
