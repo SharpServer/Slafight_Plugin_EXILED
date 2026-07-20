@@ -56,9 +56,7 @@ public static class FacilityLightHandler
     private static void OnRoundStarted()
     {
         ForceNightVisionCoroutineHandle = Timing.RunCoroutine(ForceNightVisionCoroutine());
-        Timing.KillCoroutines(ControllableLightSetupHandle);
-        ControllableLightSetupHandle = Timing.CallDelayed(0.55f, ControllableLight.ReplaceAll);
-        Timing.CallDelayed(0.65f, InitLight);
+        Timing.CallDelayed(0.5f, InitLight);
     }
 
     private static void InitLight()
@@ -73,22 +71,6 @@ public static class FacilityLightHandler
         {
             if (room == null)
                 continue;
-
-            var controllable = new ControllableLight
-            {
-                Position = room.WorldPosition(Vector3.zero),
-                Rotation = room.Rotation,
-                Scale = room.transform.lossyScale,
-                Intensity = 5,
-                Range = 5,
-                NormalColor = Color.black,
-                ShadowType = LightShadows.None,
-                ShadowStrength = 0,
-                LightType = LightType.Point,
-                SpotAngle = 0,
-                InnerSpotAngle = 0,
-            };
-            controllable.Create();
 
             switch (room.Zone)
             {
