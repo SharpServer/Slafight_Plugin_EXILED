@@ -83,11 +83,15 @@ public sealed class ControllableLight : ObjectPrefab
             LightSourceToy original = originals[i];
             try
             {
+                // original.Position/.Rotation/.Scale は親 Transform からのローカル値(NetworkPosition 等)を返すため、
+                // スキマティック配下のライト（親を持つ）だとワールド座標として誤用すると位置がズレて消灯して見える。
+                // Transform 経由で実際のワールド座標を取得する。
+                Transform originalTransform = original.GameObject.transform;
                 var controllable = new ControllableLight
                 {
-                    Position = original.Position,
-                    Rotation = original.Rotation,
-                    Scale = original.Scale,
+                    Position = originalTransform.position,
+                    Rotation = originalTransform.rotation,
+                    Scale = originalTransform.lossyScale,
                     Intensity = original.Intensity,
                     Range = original.Range,
                     NormalColor = original.Color,
