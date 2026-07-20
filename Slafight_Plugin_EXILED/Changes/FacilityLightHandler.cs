@@ -74,6 +74,22 @@ public static class FacilityLightHandler
             if (room == null)
                 continue;
 
+            var controllable = new ControllableLight
+            {
+                Position = room.WorldPosition(Vector3.zero),
+                Rotation = room.Rotation,
+                Scale = room.transform.lossyScale,
+                Intensity = 5,
+                Range = 5,
+                NormalColor = Color.black,
+                ShadowType = LightShadows.None,
+                ShadowStrength = 0,
+                LightType = LightType.Point,
+                SpotAngle = 0,
+                InnerSpotAngle = 0,
+            };
+            controllable.Create();
+
             switch (room.Zone)
             {
                 case ZoneType.Surface:
