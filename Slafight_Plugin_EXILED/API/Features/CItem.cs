@@ -586,7 +586,9 @@ public virtual Pickup? Spawn(Vector3 position)
 
             var serial = pickup.Serial;
             PickupLights[serial]          = light;
-            PickupLightCoroutines[serial] = Timing.RunCoroutine(TrackPickupLight(pickup, light));
+            PickupLightCoroutines[serial] = Timing.RunCoroutine(TrackPickupLight(serial, pickup, light));
+
+            Log.Debug($"[CItem] AddPickupLight: serial={serial} ci={GetType().Name}");
 
             return light;
         }
@@ -598,12 +600,21 @@ public virtual Pickup? Spawn(Vector3 position)
     }
 
     private static IEnumerator<float> TrackPickupLight(
-        Pickup? pickup, LabApi.Features.Wrappers.LightSourceToy? light)
+        ushort serial, Pickup? pickup, LabApi.Features.Wrappers.LightSourceToy? light)
     {
         while (pickup?.Base?.gameObject != null && light?.Base?.gameObject != null)
         {
             light.Position = pickup.Position;
             yield return Timing.WaitForOneFrame;
+        }
+
+        // PickupDestroyed を取りこぼした場合のフォールバック。
+        // pickup の GameObject が消えたのに Light だけ取り残されるケースを防ぐ。
+        // 既に正規経路で破棄済みなら PickupLights に存在しないため何もしない（冪等）。
+        if (PickupLights.ContainsKey(serial))
+        {
+            Log.Debug($"[CItem] TrackPickupLight ended without PickupDestroyed cleanup: serial={serial}. Forcing light removal.");
+            DestroyPickupLightInternal(serial);
         }
     }
 
@@ -1145,7 +1156,14 @@ public virtual Pickup? Spawn(Vector3 position)
     private static void OnAnyPickupDestroyed(MapEvents.PickupDestroyedEventArgs? ev)
     {
         if (ev?.Pickup == null) return;
-        if (!SerialToItem.TryGetValue(ev.Pickup.Serial, out var ci) || ci == null) return;
+
+        if (!SerialToItem.TryGetValue(ev.Pickup.Serial, out var ci) || ci == null)
+        {
+            Log.Debug(
+                $"[CItem] PickupDestroyed(untracked): serial={ev.Pickup.Serial} " +
+                $"hasLight={PickupLights.ContainsKey(ev.Pickup.Serial)}");
+            return;
+        }
 
         try { ci.OnPickupDestroyed(ev); }
         catch (Exception ex) { Log.Error($"CItem.OnPickupDestroyed error in {ci.GetType().Name}: {ex}"); }
@@ -1156,8 +1174,13 @@ public virtual Pickup? Spawn(Vector3 position)
 
         // ライト / Schematic は Pickup が消えたら不要なので即破棄。
         ActivePickupAddedDispatches.Remove(ev.Pickup.Serial);
+        bool hadLight = PickupLights.ContainsKey(ev.Pickup.Serial);
         DestroyPickupLightInternal(ev.Pickup.Serial);
         DestroyPickupSchematicInternal(ev.Pickup.Serial);
+
+        Log.Debug(
+            $"[CItem] PickupDestroyed(tracked): serial={ev.Pickup.Serial} ci={ci.GetType().Name} " +
+            $"hadLight={hadLight} lightRemoved={!PickupLights.ContainsKey(ev.Pickup.Serial)}");
     }
 
     private static void OnAnyUpgradingPickup(Scp914Events.UpgradingPickupEventArgs? ev)

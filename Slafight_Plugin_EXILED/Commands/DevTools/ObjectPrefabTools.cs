@@ -1489,6 +1489,11 @@ public static class ObjectPrefabLoader
     /// </summary>
     public static string? LastLoadedMapName { get; private set; }
 
+    /// <summary>1フレームあたりの Prefab 生成時間バジェット（ミリ秒）。</summary>
+    public const float DefaultLoadFrameBudgetMs = 6f;
+
+    private static CoroutineHandle _staggeredLoadHandle;
+
     /// <summary>
     /// 指定マップ名のObjectPrefabマップファイルを読み込み、
     /// RoomType + Local座標 + MaxRooms に従ってPrefabをスポーンします。
@@ -1496,6 +1501,7 @@ public static class ObjectPrefabLoader
     /// </summary>
     public static int LoadMap(string mapName)
     {
+        KillStaggeredLoad();
         LastLoadedMapName = mapName;
         var cfg = ObjectPrefabConfig.Load(mapName);
         ClearSaveablePrefabs();
@@ -1503,64 +1509,151 @@ public static class ObjectPrefabLoader
 
         foreach (var data in cfg.Prefabs)
         {
-            if (!ObjectPrefabRegistry.TryResolve(data.PrefabType, out var type, out string error))
-            {
-                Log.Warn($"[ObjectPrefabLoader] {error}");
+            if (!TryGetSpawnTargets(data, out var type, out var rooms, out int maxRooms))
                 continue;
-            }
-
-            var roomsOfType = Room.List
-                .Where(r => r.Type == data.RoomType)
-                .ToList();
-
-            if (!roomsOfType.Any())
-            {
-                Log.Warn($"[ObjectPrefabLoader] No rooms of type {data.RoomType} found for prefab '{data.PrefabType}'.");
-                continue;
-            }
-
-            int maxRoomsFromData = data.MaxRooms;
-            if (maxRoomsFromData <= 0)
-                maxRoomsFromData = roomsOfType.Count;
-
-            int maxRooms = Mathf.Min(maxRoomsFromData, roomsOfType.Count);
-
-            roomsOfType = roomsOfType.OrderBy(_ => UnityEngine.Random.value).ToList();
 
             for (int i = 0; i < maxRooms; i++)
             {
-                var room = roomsOfType[i];
-
-                Quaternion roomRot = room.Rotation;
-                Vector3 worldPos = room.Position + roomRot * data.LocalPosition;
-                Quaternion worldRot = roomRot * Quaternion.Euler(data.LocalRotationEuler);
-
-                var prefab = (ObjectPrefab)Activator.CreateInstance(type)!;
-                prefab.Position = worldPos;
-                prefab.Rotation = worldRot;
-                prefab.Scale = data.Scale;
-                prefab.AutoDestroyEnabled = data.AutoDestroyEnabled;
-                prefab.AutoDestroyTime = data.AutoDestroyTime;
-                prefab.MaxRooms = data.MaxRooms <= 0 ? 1 : data.MaxRooms;
-                prefab.Tag = data.Tag ?? string.Empty;
-
-                if (string.IsNullOrWhiteSpace(prefab.Tag) &&
-                    data.Options != null &&
-                    data.Options.TryGetValue("Tag", out string legacyTag))
-                {
-                    prefab.Tag = legacyTag;
-                }
-
-                if (data.Options != null && data.Options.Count > 0)
-                    prefab.ApplyOptions(data.Options);
-
-                prefab.Create();
-                totalSpawned++;
+                if (TrySpawnPrefab(type, data, rooms[i]))
+                    totalSpawned++;
             }
         }
 
         Log.Info($"[ObjectPrefabLoader] Loaded map '{mapName}' ({totalSpawned} prefabs spawned).");
         return totalSpawned;
+    }
+
+    /// <summary>
+    /// <see cref="LoadMap"/> の分散実行版。1フレームの処理時間が
+    /// <paramref name="frameBudgetMs"/> を超えたら残りを次フレームへ持ち越し、
+    /// ラウンド開始時のフレームストール（Heartbeat 引っかかり）を避ける。
+    /// </summary>
+    public static CoroutineHandle LoadMapStaggered(string mapName, float frameBudgetMs = DefaultLoadFrameBudgetMs)
+    {
+        KillStaggeredLoad();
+        _staggeredLoadHandle = Timing.RunCoroutine(LoadMapCoroutine(mapName, frameBudgetMs));
+        return _staggeredLoadHandle;
+    }
+
+    private static IEnumerator<float> LoadMapCoroutine(string mapName, float frameBudgetMs)
+    {
+        LastLoadedMapName = mapName;
+        var cfg = ObjectPrefabConfig.Load(mapName);
+        ClearSaveablePrefabs();
+        int totalSpawned = 0;
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+
+        Log.Debug($"[ObjectPrefabLoader] LoadMapCoroutine start. map='{mapName}' prefabs={cfg.Prefabs.Count}");
+
+        foreach (var data in cfg.Prefabs)
+        {
+            if (!TryGetSpawnTargets(data, out var type, out var rooms, out int maxRooms))
+                continue;
+
+            for (int i = 0; i < maxRooms; i++)
+            {
+                var prefabStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                bool spawned = TrySpawnPrefab(type, data, rooms[i]);
+                prefabStopwatch.Stop();
+
+                if (spawned)
+                    totalSpawned++;
+
+                if (prefabStopwatch.Elapsed.TotalMilliseconds >= 20d)
+                {
+                    Log.Warn(
+                        $"[ObjectPrefabLoader] TrySpawnPrefab slow: type='{data.PrefabType}' " +
+                        $"took={prefabStopwatch.Elapsed.TotalMilliseconds:F1}ms");
+                }
+
+                if (stopwatch.Elapsed.TotalMilliseconds >= frameBudgetMs)
+                {
+                    yield return Timing.WaitForOneFrame;
+                    stopwatch.Restart();
+                }
+            }
+        }
+
+        Log.Info($"[ObjectPrefabLoader] Loaded map '{mapName}' ({totalSpawned} prefabs spawned, staggered).");
+    }
+
+    private static void KillStaggeredLoad()
+    {
+        if (_staggeredLoadHandle.IsRunning)
+            Timing.KillCoroutines(_staggeredLoadHandle);
+        _staggeredLoadHandle = default;
+    }
+
+    private static bool TryGetSpawnTargets(
+        PrefabSaveData data,
+        out Type type,
+        out List<Room> rooms,
+        out int maxRooms)
+    {
+        rooms = null!;
+        maxRooms = 0;
+
+        if (!ObjectPrefabRegistry.TryResolve(data.PrefabType, out type, out string error))
+        {
+            Log.Warn($"[ObjectPrefabLoader] {error}");
+            return false;
+        }
+
+        var roomsOfType = Room.List
+            .Where(r => r.Type == data.RoomType)
+            .ToList();
+
+        if (!roomsOfType.Any())
+        {
+            Log.Warn($"[ObjectPrefabLoader] No rooms of type {data.RoomType} found for prefab '{data.PrefabType}'.");
+            return false;
+        }
+
+        int maxRoomsFromData = data.MaxRooms;
+        if (maxRoomsFromData <= 0)
+            maxRoomsFromData = roomsOfType.Count;
+
+        maxRooms = Mathf.Min(maxRoomsFromData, roomsOfType.Count);
+        rooms = roomsOfType.OrderBy(_ => UnityEngine.Random.value).ToList();
+        return true;
+    }
+
+    // 1つの Prefab の失敗でマップロード全体を中断させない
+    private static bool TrySpawnPrefab(Type type, PrefabSaveData data, Room room)
+    {
+        try
+        {
+            Quaternion roomRot = room.Rotation;
+            Vector3 worldPos = room.Position + roomRot * data.LocalPosition;
+            Quaternion worldRot = roomRot * Quaternion.Euler(data.LocalRotationEuler);
+
+            var prefab = (ObjectPrefab)Activator.CreateInstance(type)!;
+            prefab.Position = worldPos;
+            prefab.Rotation = worldRot;
+            prefab.Scale = data.Scale;
+            prefab.AutoDestroyEnabled = data.AutoDestroyEnabled;
+            prefab.AutoDestroyTime = data.AutoDestroyTime;
+            prefab.MaxRooms = data.MaxRooms <= 0 ? 1 : data.MaxRooms;
+            prefab.Tag = data.Tag ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(prefab.Tag) &&
+                data.Options != null &&
+                data.Options.TryGetValue("Tag", out string legacyTag))
+            {
+                prefab.Tag = legacyTag;
+            }
+
+            if (data.Options != null && data.Options.Count > 0)
+                prefab.ApplyOptions(data.Options);
+
+            prefab.Create();
+            return true;
+        }
+        catch (Exception e)
+        {
+            Log.Error($"[ObjectPrefabLoader] Failed to spawn prefab '{data.PrefabType}': {e}");
+            return false;
+        }
     }
 
     private static void ClearSaveablePrefabs()

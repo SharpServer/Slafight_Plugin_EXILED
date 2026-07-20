@@ -57,7 +57,6 @@ public static class FacilityLightHandler
     {
         ForceNightVisionCoroutineHandle = Timing.RunCoroutine(ForceNightVisionCoroutine());
         Timing.CallDelayed(0.5f, InitLight);
-        return;
         Timing.KillCoroutines(ControllableLightSetupHandle);
         ControllableLightSetupHandle = Timing.CallDelayed(0.75f, ControllableLight.ReplaceAll);
     }

@@ -21,10 +21,24 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
 {
     private static SchematicObjectPrefabBridge _instance;
 
+    /// <summary>1フレームあたりの Bind 処理時間バジェット（ミリ秒）。</summary>
+    private const float BindFrameBudgetMs = 4f;
+
+    /// <summary>Interactable のネットワークスポーンをスキマティック構築と同フレームにしないための猶予。</summary>
+    private const float BindReadyDelaySeconds = 0.1f;
+
+    // System / mscorlib の型フォワーディング衝突で Queue<T> が使えない環境のため List<T> で FIFO を実装する。
+    private static readonly List<(SchematicObjectPrefabObject Marker, float ReadyAt)> PendingBinds = new();
+    private static CoroutineHandle _bindCoroutineHandle;
+
     public static void Register() => _instance = LabApiHandlerRegistry.Register(_instance);
 
     public static void Unregister()
     {
+        if (_bindCoroutineHandle.IsRunning)
+            Timing.KillCoroutines(_bindCoroutineHandle);
+        PendingBinds.Clear();
+
         MarkerPrefabFollower.ReleaseAll();
         LabApiHandlerRegistry.Unregister(ref _instance);
     }
@@ -41,12 +55,58 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
 
     private static void OnMarkerSpawned(SchematicObjectPrefabObject marker)
     {
-        // Interactable のネットワークスポーンをスキマティック構築と同フレームにしないための猶予。
-        Timing.CallDelayed(0.1f, () =>
+        PendingBinds.Add((marker, Time.time + BindReadyDelaySeconds));
+
+        if (!_bindCoroutineHandle.IsRunning)
+            _bindCoroutineHandle = Timing.RunCoroutine(ProcessBindQueue());
+    }
+
+    /// <summary>
+    /// キュー済みマーカーを猶予秒数の経過後、1フレームあたりの処理時間バジェット内で順次 Bind する。
+    /// ラウンド開始直後など大量のマーカーが一斉スポーンした場合でも、
+    /// スキマティック生成などの重い処理を複数フレームへ分散し、フレームストールを避ける。
+    /// </summary>
+    private static IEnumerator<float> ProcessBindQueue()
+    {
+        Log.Debug($"[SchematicObjectPrefabBridge] ProcessBindQueue start. pending={PendingBinds.Count}");
+        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        int processed = 0;
+
+        while (PendingBinds.Count > 0)
         {
+            var (marker, readyAt) = PendingBinds[0];
+
+            if (Time.time < readyAt)
+            {
+                yield return Timing.WaitForOneFrame;
+                continue;
+            }
+
+            PendingBinds.RemoveAt(0);
+
             if (marker != null)
+            {
+                var markerStopwatch = System.Diagnostics.Stopwatch.StartNew();
                 BindMarker(marker);
-        });
+                markerStopwatch.Stop();
+                if (markerStopwatch.Elapsed.TotalMilliseconds >= 20d)
+                {
+                    Log.Warn(
+                        $"[SchematicObjectPrefabBridge] BindMarker slow: type={marker.PrefabType} " +
+                        $"took={markerStopwatch.Elapsed.TotalMilliseconds:F1}ms");
+                }
+            }
+
+            processed++;
+
+            if (stopwatch.Elapsed.TotalMilliseconds >= BindFrameBudgetMs)
+            {
+                yield return Timing.WaitForOneFrame;
+                stopwatch.Restart();
+            }
+        }
+
+        Log.Debug($"[SchematicObjectPrefabBridge] ProcessBindQueue done. processed={processed}");
     }
 
     /// <summary>

@@ -42,6 +42,7 @@ internal sealed class RoundStartupCoordinator : IDisposable
 
     public void StartRound()
     {
+        Log.Debug("[RoundStartupCoordinator] StartRound begin");
         StopWarheadEffects();
         StopCoroutines();
         var generation = ++_startupGeneration;
@@ -49,6 +50,7 @@ internal sealed class RoundStartupCoordinator : IDisposable
         LoadBaseMapAndFeatures(generation);
         LoadSeasonMap();
         SetCandyState(generation);
+        Log.Debug("[RoundStartupCoordinator] StartRound synchronous part done");
 
         Timing.CallDelayed(2.3f, () =>
         {
@@ -117,17 +119,21 @@ internal sealed class RoundStartupCoordinator : IDisposable
     {
         WarheadBoomEffectUtil.StopAllEffects();
         OmegaWarhead.Reset();
-        ObjectPrefabLoader.LoadMap("aaa");
+        // ラウンド開始フレームに18個分のスキマティック生成を集中させない
+        ObjectPrefabLoader.LoadMapStaggered("aaa");
+        Log.Debug("[RoundStartupCoordinator] LoadBaseMapAndFeatures: LoadMapStaggered dispatched");
 
         Timing.CallDelayed(2.25f, () =>
         {
             if (!IsCurrentStartup(generation))
                 return;
 
+            Log.Debug("[RoundStartupCoordinator] BindLoadedSchematics begin");
             BindLoadedSchematics();
             _femurBreaker.StartMonitoringIfReady();
             StartTrainIfReady(generation);
             SpawnAntiAntiMemeDocument();
+            Log.Debug("[RoundStartupCoordinator] BindLoadedSchematics done");
         });
     }
 
