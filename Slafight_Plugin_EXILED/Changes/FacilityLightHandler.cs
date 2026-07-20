@@ -20,8 +20,7 @@ public static class FacilityLightHandler
 
     private static readonly HashSet<int> ForceNightVisionPlayers = [];
     private static readonly HashSet<CTeam> ForceNightVisionTeams = [];
-    private static CoroutineHandle ForceNightVisionCoroutineHandle;
-    private static CoroutineHandle ControllableLightSetupHandle;
+    private static CoroutineHandle _forceNightVisionCoroutineHandle;
 
     public static void Register()
     {
@@ -39,23 +38,21 @@ public static class FacilityLightHandler
         Exiled.Events.Handlers.Player.Left -= OnLeft;
         Exiled.Events.Handlers.Warhead.Starting -= OnWarhead;
         Exiled.Events.Handlers.Warhead.Stopping -= OnStopping;
-        Timing.KillCoroutines(ForceNightVisionCoroutineHandle);
-        Timing.KillCoroutines(ControllableLightSetupHandle);
+        Timing.KillCoroutines(_forceNightVisionCoroutineHandle);
         ControllableLight.CancelReplacement();
         ClearForcedNightVision();
     }
 
     private static void OnWaitingForPlayers()
     {
-        Timing.KillCoroutines(ForceNightVisionCoroutineHandle);
-        Timing.KillCoroutines(ControllableLightSetupHandle);
+        Timing.KillCoroutines(_forceNightVisionCoroutineHandle);
         ControllableLight.CancelReplacement();
         ClearForcedNightVision();
     }
     
     private static void OnRoundStarted()
     {
-        ForceNightVisionCoroutineHandle = Timing.RunCoroutine(ForceNightVisionCoroutine());
+        _forceNightVisionCoroutineHandle = Timing.RunCoroutine(ForceNightVisionCoroutine());
         Timing.CallDelayed(0.5f, InitLight);
     }
 
