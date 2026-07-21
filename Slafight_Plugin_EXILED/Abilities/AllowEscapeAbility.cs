@@ -17,21 +17,6 @@ public class AllowEscapeAbility : AbilityBase
     protected override float DefaultCooldown => 999f;
     protected override int DefaultMaxUses => 1;
 
-    protected override bool CanActivate(Player player, out string failureReason)
-    {
-        if (!base.CanActivate(player, out failureReason))
-            return false;
-
-        if (!PDEx.PDExPlayers.Any(target =>
-                target?.ReferenceHub != null && target.IsConnected && target.IsAlive))
-        {
-            failureReason = "ポケットディメンション内に救出対象がいません。";
-            return false;
-        }
-
-        return true;
-    }
-
     protected override void ExecuteAbility(Player player)
     {
         foreach (var escapePlayer in PDEx.PDExPlayers.ToList())
