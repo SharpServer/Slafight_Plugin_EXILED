@@ -43,7 +43,7 @@ public static class PlayerVisibilitySyncProvider
             if (!IsValid(owner) || shouldHide is null)
                 return;
 
-            foreach (var viewer in Player.List.ToArray())
+            foreach (var viewer in Player.List)
             {
                 if (!IsValid(viewer) || viewer.Id == owner.Id)
                     continue;
@@ -90,7 +90,7 @@ public static class PlayerVisibilitySyncProvider
     {
         try
         {
-            foreach (var owner in Player.List.ToArray())
+            foreach (var owner in Player.List)
                 ShowToAll(owner);
         }
         catch (Exception ex)
@@ -107,7 +107,7 @@ public static class PlayerVisibilitySyncProvider
                 return;
 
             var viewerId = viewer.Id;
-            foreach (var owner in Player.List.ToArray())
+            foreach (var owner in Player.List)
             {
                 if (!IsValid(owner) || owner.Role is not FpcRole fpcRole)
                     continue;

@@ -761,7 +761,7 @@ public class Scp096Anger : CRole
 
     private static void DestroyChamberGuards()
     {
-        foreach (Npc npc in Npc.List.ToArray())
+        foreach (Npc npc in Npc.List)
         {
             if (npc.CustomName == ChamberGuardName)
                 npc.Destroy();

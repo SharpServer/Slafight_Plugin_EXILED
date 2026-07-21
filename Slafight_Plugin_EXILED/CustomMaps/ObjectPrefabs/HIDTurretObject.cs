@@ -465,31 +465,46 @@ public class HIDTurretObject : ObjectPrefab
         _activeNpcCount = newCount;
     }
 
+    /// <summary>
+    /// NPC間の生成間隔（秒）。Npc.Spawn はフレームコストが高いため、
+    /// 同一フレームに集中させず数フレームへ分散してストールを避ける。
+    /// </summary>
+    private const float NpcSpawnStaggerInterval = 0.02f;
+
     private void SpawnNpcPool()
     {
         int poolSize = Mathf.Max(1, NpcPoolSize);
-        for (int index = 0; index < poolSize; index++)
-        {
-            Npc? npc = Npc.Spawn($"H.I.D Turret", RoleTypeId.Tutorial, true, GetCenterNpcPosition());
-            if (npc == null)
-            {
-                Log.Error($"[HIDTurretObject] Failed to spawn turret NPC {index}.");
-                continue;
-            }
 
-            var state = new TurretNpcState(npc, index);
+        // 先頭NPCは同期生成し、スキマティック/NPC生成自体の致命的失敗を即座に検出する。
+        SpawnSingleNpc(0);
+
+        for (int index = 1; index < poolSize; index++)
+        {
             int capturedIndex = index;
-            _npcs.Add(state);
-            TurretNpcIds.Add(npc.Id);
-            InternalNpcRegistry.Register(npc, InternalNpcCategory.HidTurret);
-            AllowNextTurretRoleChange(npc.Id, RoleTypeId.Tutorial);
-            npc.HideNpcFromClientPlayerList($"HIDTurret:{index}:spawn");
-            ScheduleDelayed(Npc.SpawnSetRoleDelay + 0.1f, () =>
-            {
-                if (_npcs.Contains(state) && !state.IsInitialized && !TryInitializeNpc(state))
-                    Log.Error($"[HIDTurretObject] Failed to initialize turret NPC {capturedIndex}.");
-            });
+            ScheduleDelayed(capturedIndex * NpcSpawnStaggerInterval, () => SpawnSingleNpc(capturedIndex));
         }
+    }
+
+    private void SpawnSingleNpc(int index)
+    {
+        Npc? npc = Npc.Spawn($"H.I.D Turret", RoleTypeId.Tutorial, true, GetCenterNpcPosition());
+        if (npc == null)
+        {
+            Log.Error($"[HIDTurretObject] Failed to spawn turret NPC {index}.");
+            return;
+        }
+
+        var state = new TurretNpcState(npc, index);
+        _npcs.Add(state);
+        TurretNpcIds.Add(npc.Id);
+        InternalNpcRegistry.Register(npc, InternalNpcCategory.HidTurret);
+        AllowNextTurretRoleChange(npc.Id, RoleTypeId.Tutorial);
+        npc.HideNpcFromClientPlayerList($"HIDTurret:{index}:spawn");
+        ScheduleDelayed(Npc.SpawnSetRoleDelay + 0.1f, () =>
+        {
+            if (_npcs.Contains(state) && !state.IsInitialized && !TryInitializeNpc(state))
+                Log.Error($"[HIDTurretObject] Failed to initialize turret NPC {index}.");
+        });
     }
 
     private static void OnScp096AddingTarget(AddingTargetEventArgs ev)

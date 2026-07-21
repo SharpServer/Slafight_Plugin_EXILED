@@ -183,7 +183,7 @@ public static class EffectFakeSyncProvider
     {
         if (!IsValid(owner)) return;
 
-        foreach (var target in Player.List.ToArray())
+        foreach (var target in Player.List)
         {
             if (!IsValid(target)) continue;
 
@@ -239,7 +239,7 @@ public static class EffectFakeSyncProvider
 
     private static void RestoreRealStates(Player owner, EffectType effect)
     {
-        foreach (var target in Player.List.ToArray())
+        foreach (var target in Player.List)
         {
             if (!IsValid(target)) continue;
             target.SendFakeEffectTo(owner, effect, GetRealIntensity(target, effect));

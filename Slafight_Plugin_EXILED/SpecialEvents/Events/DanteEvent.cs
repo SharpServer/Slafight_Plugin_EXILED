@@ -274,7 +274,7 @@ public class DanteEvent : SpecialEvent
         // ② ボスが Dante グループに入った「後で」全員を討伐部隊（DanteSlayer）化する。
         //    こうすれば「生存勝利グループが Insurgency 1 つだけ」になる隙が生まれず、即終了しない。
         int playerCount = 0;
-        foreach (Player player in Player.List.ToList())
+        foreach (Player player in Player.List)
         {
             if (player is null || !player.IsNotHost() || player.ReferenceHub == _boss.ReferenceHub)
                 continue;

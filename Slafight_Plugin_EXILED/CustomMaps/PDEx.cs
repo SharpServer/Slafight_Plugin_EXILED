@@ -118,7 +118,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
         {
             if (!Round.InProgress) yield break;
 
-            foreach (var player in Player.List.ToList())
+            foreach (var player in Player.List)
             {
                 if (player?.ReferenceHub == null) continue;
                 if (player.Position.y >= -450f) continue;
@@ -129,7 +129,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
 
             yield return Timing.WaitForSeconds(0.1f);
 
-            foreach (var player in Player.List.ToList())
+            foreach (var player in Player.List)
             {
                 if (player?.ReferenceHub == null) continue;
                 if (!player.IsEffectActive<PocketCorroding>()) continue;
@@ -145,7 +145,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
         if (Random.Range(0, 3) == 0)
         {
             int i = 0;
-            foreach (var player in Player.List.ToList())
+            foreach (var player in Player.List)
             {
                 if (player?.ReferenceHub == null) continue;
                 if (player.GetCustomRole() == CRoleTypeId.Scp106 || (player.GetCustomRole() == CRoleTypeId.None && player.Role.Type == RoleTypeId.Scp106))
@@ -166,7 +166,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
             {
                 return;
             }
-            foreach (var player in Player.List.ToList())
+            foreach (var player in Player.List)
             {
                 if (player?.ReferenceHub == null) continue;
                 if (player.GetCustomRole() == CRoleTypeId.Scp106 || (player.GetCustomRole() == CRoleTypeId.None && player.Role.Type == RoleTypeId.Scp106))

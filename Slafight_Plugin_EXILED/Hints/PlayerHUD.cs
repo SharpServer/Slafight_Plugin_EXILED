@@ -251,7 +251,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     public void PlayerHUDMain()
     {
         // 旧仕様寄り：RoundStarted 時点で全員分 HUD 作成
-        foreach (Player player in Player.List.ToList()) // FIX: ToList()
+        foreach (Player player in Player.List) // Player.List は既にスナップショットなので再コピー不要
         {
             if (!IsPlayerValid(player)) continue;
             PlayerHUDSetup(player);
@@ -428,7 +428,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
         // 両方 null → 全員分を自分自身で同期
         if (spectator is null && spectatedTarget is null)
         {
-            foreach (Player player in Player.List.ToList()) // FIX: ToList()
+            foreach (Player player in Player.List)
             {
                 if (!IsPlayerValid(player)) continue;
                 if (player.Role?.Team == Team.Dead) continue;
@@ -607,7 +607,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
 
     public void DestroyHints()
     {
-        foreach (Player player in Player.List.ToList()) // FIX: ToList()
+        foreach (Player player in Player.List)
         {
             if (!IsPlayerValid(player)) continue; // FIX: nullガード
             try
@@ -625,7 +625,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
 
         Timing.CallDelayed(RoleSpawnTimings.HudRecreateAfterClear, () =>
         {
-            foreach (Player player in Player.List.ToList())
+            foreach (Player player in Player.List)
             {
                 if (!IsPlayerValid(player)) continue;
 
@@ -853,7 +853,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
                 continue;
             }
 
-            foreach (var player in Player.List.ToList()) // FIX: ToList()
+            foreach (var player in Player.List)
             {
                 // FIX: IsPlayerValid で一括確認
                 if (!IsPlayerValid(player)) continue;
@@ -902,7 +902,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
                 continue;
             }
 
-            foreach (var player in Player.List.ToList()) // FIX: ToList()
+            foreach (var player in Player.List)
             {
                 if (!IsPlayerValid(player)) continue; // FIX: IsPlayerValid で一括確認
 
@@ -952,7 +952,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
  
         for (;;)
         {
-            foreach (var player in Player.List.ToList())
+            foreach (var player in Player.List)
             {
                 if (!IsPlayerValid(player)) continue;
                 if (!DebugModeHandler.IsDebugMode(player)) continue;

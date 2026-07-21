@@ -289,6 +289,7 @@ public class ScpStatusHints : IBootstrapHandler
         if (!_registered)
             return;
 
+        // UpdateHint が IReadOnlyList (インデックスアクセス) を要求するため ToList() が必要。
         var players = Player.List.ToList();
         var activeKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 

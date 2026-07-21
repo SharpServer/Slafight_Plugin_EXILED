@@ -100,7 +100,7 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
     private void EnsureAll()
     {
         var text = BuildTexts();
-        foreach (var player in Player.List.ToList())
+        foreach (var player in Player.List)
             EnsureFor(player, text.timer, text.state);
     }
 
@@ -134,7 +134,7 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
 
     private void ClearAll()
     {
-        foreach (var player in Player.List.ToList())
+        foreach (var player in Player.List)
         {
             if (!IsPlayerValid(player))
                 continue;

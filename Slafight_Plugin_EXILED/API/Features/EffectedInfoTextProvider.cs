@@ -44,7 +44,7 @@ public static class EffectedInfoTextProvider
 
     public static void ClearAll()
     {
-        foreach (var player in Player.List.ToList())
+        foreach (var player in Player.List)
         {
             if (player == null || !player.IsConnected) continue;
             PlayerHUD.Instance?.HintSync(SyncType.PHUD_EffectedInfo, string.Empty, player);

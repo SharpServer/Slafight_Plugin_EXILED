@@ -57,7 +57,7 @@ public class SergeyMakarovReturns : SpecialEvent
             // Spectator変更（安全ループ + 遅延）
             Timing.CallDelayed(1f, () => {
                 Round.IsLocked = true;
-                foreach (var player in Player.List.ToList())  // ToList()でスナップショット
+                foreach (var player in Player.List)  // Player.List は既にスナップショット
                 {
                     if (player?.Role == null || player.IsSergeyMarkov()) continue;
                     player.SetRole(RoleTypeId.Spectator);

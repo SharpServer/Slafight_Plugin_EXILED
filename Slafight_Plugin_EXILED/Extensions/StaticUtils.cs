@@ -32,7 +32,7 @@ public static class StaticUtils
     /// </summary>
     public static List<Player> CandidatePlayersByCTeam(CTeam team, bool elseMode = false)
     {
-        var allPlayers = Player.List.ToList();
+        var allPlayers = Player.List;
         return elseMode
             ? allPlayers.Where(p => p != null && p.GetTeam() != team).ToList()
             : allPlayers.Where(p => p != null && p.GetTeam() == team).ToList();

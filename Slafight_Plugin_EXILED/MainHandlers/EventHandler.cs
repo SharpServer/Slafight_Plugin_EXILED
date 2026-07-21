@@ -195,7 +195,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
         PlayerVisibilitySyncProvider.ClearAll();
         EffectedInfoTextProvider.ClearAll();
         SpecificFlagsManager.ClearAll();
-        foreach (var player in Player.List.ToList().Where(IsPlayerValid))
+        foreach (var player in Player.List.Where(IsPlayerValid))
         {
             if (CanReceiveClientUi(player))
             {
