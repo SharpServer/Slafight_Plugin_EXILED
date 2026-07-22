@@ -9,6 +9,10 @@ namespace Slafight_Plugin_EXILED.API.Features;
 [Serializable]
 public class PrefabSaveData
 {
+    /// <summary>Stable ObjectPrefabRegistry key. Empty in legacy files.</summary>
+    public string PrefabKey = string.Empty;
+
+    /// <summary>Legacy class name/full name retained for backward-compatible JSON.</summary>
     public string PrefabType;
     public string Tag = string.Empty;
 

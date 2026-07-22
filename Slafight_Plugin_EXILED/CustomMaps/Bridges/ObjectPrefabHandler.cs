@@ -42,7 +42,7 @@ public class ObjectPrefabHandler : SlafightLabApiHandler, IBootstrapHandler
         }
 
         Vector3 toyPos = ev.Interactable?.Position ?? ev.Player.Position;
-        foreach (var prefab in InstanceManager.GetAll())
+        foreach (var prefab in ObjectPrefabInstances.GetRadiusCandidatesSnapshot())
         {
             if (prefab != null && prefab.MatchesSearchRadius(toyPos))
                 prefab.InvokeToyInteractingNearby(ev);
@@ -77,7 +77,7 @@ public class ObjectPrefabHandler : SlafightLabApiHandler, IBootstrapHandler
         }
 
         Vector3 toyPos = ev.Interactable?.Position ?? ev.Player.Position;
-        foreach (var prefab in InstanceManager.GetAll())
+        foreach (var prefab in ObjectPrefabInstances.GetRadiusCandidatesSnapshot())
         {
             if (prefab != null && prefab.MatchesSearchRadius(toyPos))
                 prefab.InvokeToyInteractedNearby(ev);
@@ -86,7 +86,7 @@ public class ObjectPrefabHandler : SlafightLabApiHandler, IBootstrapHandler
 
     private static void OnRoundStarted()
     {
-        foreach (var prefab in InstanceManager.GetAll())
+        foreach (var prefab in ObjectPrefabInstances.GetAllSnapshot())
         {
             prefab?.InvokeRoundStarted();
         }
@@ -94,7 +94,7 @@ public class ObjectPrefabHandler : SlafightLabApiHandler, IBootstrapHandler
 
     private static void OnRoundRestarting()
     {
-        foreach (var prefab in InstanceManager.GetAll())
+        foreach (var prefab in ObjectPrefabInstances.GetAllSnapshot())
         {
             prefab?.InvokeRoundRestarting();
         }

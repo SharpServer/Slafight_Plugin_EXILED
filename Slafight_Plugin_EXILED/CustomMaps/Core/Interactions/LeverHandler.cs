@@ -81,10 +81,15 @@ public class LeverHandler : IBootstrapHandler, IDisposable
                 SpeakerApi.Play("LeverFlip.ogg", ev.Lever.GetSoundId(ev.SourceEventArgs), ev.Lever.Position, true, isSpatial: false, maxDistance: 10f, minDistance: 0.1f);
             });
         });
-        RegisterTagHandler("HczMaintenance_LeverSurveillance", ev =>
+        RegisterTagHandler("EzShelter_GeneratorLever", ev =>
         {
             ev.Lever.CanInteract = false;
-            UDoor.Get(UDoorType.LczSurveillance).Door.FirstOrDefault()?.IsOpen = true;
+            ev.Lever.IsOn = true;
+            foreach (var light in ObjectPrefabInstances.GetByTag<ControllableLight>("EzShelter"))
+            {
+                light.IsOn = true;
+                light.Level = 100;
+            }
         });
     }
 

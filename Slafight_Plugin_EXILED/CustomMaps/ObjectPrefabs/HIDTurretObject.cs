@@ -73,7 +73,7 @@ public class HIDTurretObject : ObjectPrefab
         IsPowerEnabled ? Mathf.Max(0f, _powerEnabledUntil - Time.time) : 0f;
     public static float PowerRestartCooldownRemaining =>
         IsPowerEnabled ? 0f : Mathf.Max(0f, _powerRestartReadyAt - Time.time);
-    public static int InstanceCount => InstanceManager.GetAll().OfType<HIDTurretObject>().Count();
+    public static int InstanceCount => ObjectPrefabInstances.GetAll().OfType<HIDTurretObject>().Count();
 
     public static void RegisterEvents()
     {
@@ -127,7 +127,7 @@ public class HIDTurretObject : ObjectPrefab
         if (wasEnabled && restartCooldownSeconds > 0f)
             _powerRestartReadyAt = Time.time + restartCooldownSeconds;
 
-        foreach (HIDTurretObject turret in InstanceManager.GetAll().OfType<HIDTurretObject>().ToList())
+        foreach (HIDTurretObject turret in ObjectPrefabInstances.GetAll().OfType<HIDTurretObject>().ToList())
             turret.EnterStandby();
     }
 

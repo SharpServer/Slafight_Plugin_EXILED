@@ -37,6 +37,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     private Vector3 _scale = Vector3.one;
     private string _objectInstanceID = string.Empty;
     private string _tag = string.Empty;
+    private float _toySearchRadius;
 
     // Destroy 冪等化用
     private bool _isDestroyed;
@@ -48,7 +49,7 @@ public abstract class ObjectPrefab : IObjectPrefab
         {
             if (!string.IsNullOrEmpty(_objectInstanceID))
                 throw new InvalidOperationException("ObjectInstanceID can only be set once.");
-            _objectInstanceID = value[..Math.Min(5, value.Length)];
+            _objectInstanceID = value.Trim();
         }
     }
 
@@ -90,7 +91,16 @@ public abstract class ObjectPrefab : IObjectPrefab
     public virtual string Tag
     {
         get => _tag;
-        set => _tag = value?.Trim() ?? string.Empty;
+        set
+        {
+            string normalized = value?.Trim() ?? string.Empty;
+            if (string.Equals(_tag, normalized, StringComparison.Ordinal))
+                return;
+
+            string previous = _tag;
+            _tag = normalized;
+            ObjectPrefabInstances.NotifyTagChanged(this, previous, normalized);
+        }
     }
 
     /// <summary>
@@ -98,7 +108,18 @@ public abstract class ObjectPrefab : IObjectPrefab
     /// </summary>
     public virtual int MaxRooms { get; set; } = 1;
 
-    public virtual float ToySearchRadius { get; set; } = 0f;
+    public virtual float ToySearchRadius
+    {
+        get => _toySearchRadius;
+        set
+        {
+            if (Math.Abs(_toySearchRadius - value) < 0.0001f)
+                return;
+
+            _toySearchRadius = value;
+            ObjectPrefabInstances.NotifyRadiusChanged(this);
+        }
+    }
 
     /// <summary>
     /// この Prefab が管理しているスキマティック。
@@ -131,8 +152,8 @@ public abstract class ObjectPrefab : IObjectPrefab
     public virtual ObjectPrefab Create()
     {
         Log.Debug($"[ObjectPrefab]{GetType().Name} Create Invoked.");
-        ObjectInstanceID = InstanceManager.GenerateUniqueId();
-        InstanceManager.Register(this);
+        ObjectInstanceID = ObjectPrefabInstances.GenerateUniqueId();
+        ObjectPrefabInstances.Register(this);
         if (AutoDestroyEnabled && AutoDestroyTime > 0f)
             AutoDestroyCoroutineHandle = Timing.RunCoroutine(AutoDestroy());
 
@@ -176,7 +197,7 @@ public abstract class ObjectPrefab : IObjectPrefab
         Log.Debug($"[ObjectPrefab]{GetType().Name} Destroy Invoked.");
 
         if (!string.IsNullOrEmpty(ObjectInstanceID))
-            InstanceManager.Unregister(ObjectInstanceID);
+            ObjectPrefabInstances.Unregister(ObjectInstanceID);
 
         if (AutoDestroyCoroutineHandle.IsRunning)
             Timing.KillCoroutines(AutoDestroyCoroutineHandle);
@@ -558,7 +579,7 @@ public abstract class ObjectPrefab : IObjectPrefab
             _scheduledCallbacks.Remove(handle);
 
             // すでに Destroy 済み or インスタンス再登録済みでない場合は何もしない
-            if (_isDestroyed || string.IsNullOrEmpty(ObjectInstanceID) || InstanceManager.Get(ObjectInstanceID) != this)
+            if (_isDestroyed || string.IsNullOrEmpty(ObjectInstanceID) || ObjectPrefabInstances.Get(ObjectInstanceID) != this)
                 return;
 
             callback();
@@ -618,7 +639,7 @@ public abstract class ObjectPrefab : IObjectPrefab
             yield return Timing.WaitForSeconds(PollInterval);
             elapsed += PollInterval;
 
-            if (_isDestroyed || string.IsNullOrEmpty(ObjectInstanceID) || InstanceManager.Get(ObjectInstanceID) != this)
+            if (_isDestroyed || string.IsNullOrEmpty(ObjectInstanceID) || ObjectPrefabInstances.Get(ObjectInstanceID) != this)
                 yield break;
 
             if (animator == null)
@@ -652,7 +673,7 @@ public abstract class ObjectPrefab : IObjectPrefab
                 yield return Timing.WaitForSeconds(remainingFallback);
         }
 
-        if (!_isDestroyed && !string.IsNullOrEmpty(ObjectInstanceID) && InstanceManager.Get(ObjectInstanceID) == this)
+        if (!_isDestroyed && !string.IsNullOrEmpty(ObjectInstanceID) && ObjectPrefabInstances.Get(ObjectInstanceID) == this)
             callback();
     }
 
@@ -724,14 +745,14 @@ public abstract class ObjectPrefab : IObjectPrefab
     public IEnumerable<ObjectPrefab> GetByTag(
         string tag,
         ObjectPrefabTagSearchMode searchMode = ObjectPrefabTagSearchMode.ExactType)
-        => InstanceManager.GetByTag(tag, searchMode, GetType());
+        => ObjectPrefabInstances.GetByTag(tag, searchMode, GetType());
 
     /// <summary>
     /// このインスタンスと同じ具象型からTag検索する。
     /// </summary>
     public IEnumerable<TPrefab> GetByTag<TPrefab>(string tag, bool includeDerivedTypes = true)
         where TPrefab : ObjectPrefab
-        => InstanceManager.GetByTag<TPrefab>(tag, includeDerivedTypes);
+        => ObjectPrefabInstances.GetByTag<TPrefab>(tag, includeDerivedTypes);
 
     /// <summary>
     /// 派生Prefabで宣言されたpublic getter/setter付きプロパティと
@@ -1152,20 +1173,28 @@ public abstract class ObjectPrefab : IObjectPrefab
         => OnRoundRestarting();
 }
 
-public static class InstanceManager
+/// <summary>
+/// Runtime ObjectPrefab instance registry with stable ID, normalized tag, and
+/// radius-candidate indexes. Every query returns a safe snapshot.
+/// </summary>
+public static class ObjectPrefabInstances
 {
-    private static readonly Dictionary<string, ObjectPrefab> _instances = new();
+    private static readonly object Sync = new();
+    private static readonly Dictionary<string, ObjectPrefab> Instances = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<string, HashSet<ObjectPrefab>> ByTag =
+        new(StringComparer.OrdinalIgnoreCase);
+    private static readonly HashSet<ObjectPrefab> RadiusCandidates = new();
 
     /// <summary>
-    /// 既存インスタンスと衝突しない 5 文字の InstanceID を生成する。
+    /// 既存インスタンスと衝突しない、読みやすい 8 文字の InstanceID を生成する。
     /// </summary>
     public static string GenerateUniqueId()
     {
         string id;
         do
         {
-            id = Guid.NewGuid().ToString("N")[..5];
-        } while (_instances.ContainsKey(id));
+            id = Guid.NewGuid().ToString("N")[..8];
+        } while (Get(id) != null);
 
         return id;
     }
@@ -1175,17 +1204,75 @@ public static class InstanceManager
         if (string.IsNullOrEmpty(prefab.ObjectInstanceID))
             throw new ArgumentException("ObjectInstanceID must be set before registering.");
 
-        _instances[prefab.ObjectInstanceID] = prefab;
+        lock (Sync)
+        {
+            if (Instances.TryGetValue(prefab.ObjectInstanceID, out ObjectPrefab? existing) &&
+                !ReferenceEquals(existing, prefab))
+                throw new InvalidOperationException($"ObjectInstanceID '{prefab.ObjectInstanceID}' is already registered.");
+
+            Instances[prefab.ObjectInstanceID] = prefab;
+            AddTagIndex(prefab, prefab.Tag);
+            UpdateRadiusIndex(prefab);
+        }
     }
 
     public static void Unregister(string objectInstanceID)
     {
-        _instances.Remove(objectInstanceID);
+        if (string.IsNullOrWhiteSpace(objectInstanceID))
+            return;
+
+        lock (Sync)
+        {
+            if (!Instances.TryGetValue(objectInstanceID, out ObjectPrefab? prefab))
+                return;
+
+            Instances.Remove(objectInstanceID);
+            RemoveTagIndex(prefab, prefab.Tag);
+            RadiusCandidates.Remove(prefab);
+        }
     }
 
     public static ObjectPrefab? Get(string objectInstanceID)
     {
-        return _instances.TryGetValue(objectInstanceID, out var prefab) ? prefab : null;
+        lock (Sync)
+            return Instances.TryGetValue(objectInstanceID, out ObjectPrefab? prefab) ? prefab : null;
+    }
+
+    /// <summary>Returns all registered instances as a stable snapshot.</summary>
+    public static IReadOnlyList<ObjectPrefab> GetAllSnapshot()
+    {
+        lock (Sync)
+            return Instances.Values.ToArray();
+    }
+
+    /// <summary>Returns only instances with a positive ToySearchRadius.</summary>
+    public static IReadOnlyList<ObjectPrefab> GetRadiusCandidatesSnapshot()
+    {
+        lock (Sync)
+            return RadiusCandidates.ToArray();
+    }
+
+    internal static void NotifyTagChanged(ObjectPrefab prefab, string previousTag, string currentTag)
+    {
+        lock (Sync)
+        {
+            if (!Instances.TryGetValue(prefab.ObjectInstanceID, out ObjectPrefab? registered) ||
+                !ReferenceEquals(registered, prefab))
+                return;
+
+            RemoveTagIndex(prefab, previousTag);
+            AddTagIndex(prefab, currentTag);
+        }
+    }
+
+    internal static void NotifyRadiusChanged(ObjectPrefab prefab)
+    {
+        lock (Sync)
+        {
+            if (Instances.TryGetValue(prefab.ObjectInstanceID, out ObjectPrefab? registered) &&
+                ReferenceEquals(registered, prefab))
+                UpdateRadiusIndex(prefab);
+        }
     }
 
     public static IEnumerable<ObjectPrefab> GetByTag(string tag)
@@ -1209,11 +1296,15 @@ public static class InstanceManager
         }
 
         string normalizedTag = tag.Trim();
-        return _instances.Values
-            .Where(prefab =>
-                string.Equals(prefab.Tag, normalizedTag, StringComparison.OrdinalIgnoreCase) &&
-                MatchesSearchType(prefab.GetType(), referenceType, searchMode))
-            .ToList();
+        lock (Sync)
+        {
+            if (!ByTag.TryGetValue(normalizedTag, out HashSet<ObjectPrefab>? tagged))
+                return [];
+
+            return tagged
+                .Where(prefab => MatchesSearchType(prefab.GetType(), referenceType, searchMode))
+                .ToArray();
+        }
     }
 
     public static IEnumerable<ObjectPrefab> GetByTag(
@@ -1254,23 +1345,55 @@ public static class InstanceManager
         }
     }
 
-    public static IEnumerable<ObjectPrefab> GetAll()
-    {
-        return _instances.Values.ToList();
-    }
+    public static IReadOnlyList<ObjectPrefab> GetAll() => GetAllSnapshot();
 
     public static void ClearAll()
     {
-        foreach (var prefab in _instances.Values.ToList())
+        foreach (ObjectPrefab prefab in GetAllSnapshot())
             prefab.Destroy();
 
-        _instances.Clear();
+        lock (Sync)
+        {
+            Instances.Clear();
+            ByTag.Clear();
+            RadiusCandidates.Clear();
+        }
     }
 
     public static void DestroyAll()
     {
-        var instances = GetAll().ToList();
+        var instances = GetAllSnapshot();
         foreach (var instance in instances)
             instance.Destroy();
+    }
+
+    private static void AddTagIndex(ObjectPrefab prefab, string tag)
+    {
+        string normalized = tag?.Trim() ?? string.Empty;
+        if (normalized.Length == 0)
+            return;
+
+        if (!ByTag.TryGetValue(normalized, out HashSet<ObjectPrefab>? values))
+            ByTag[normalized] = values = new HashSet<ObjectPrefab>();
+        values.Add(prefab);
+    }
+
+    private static void RemoveTagIndex(ObjectPrefab prefab, string tag)
+    {
+        string normalized = tag?.Trim() ?? string.Empty;
+        if (normalized.Length == 0 || !ByTag.TryGetValue(normalized, out HashSet<ObjectPrefab>? values))
+            return;
+
+        values.Remove(prefab);
+        if (values.Count == 0)
+            ByTag.Remove(normalized);
+    }
+
+    private static void UpdateRadiusIndex(ObjectPrefab prefab)
+    {
+        if (prefab.ToySearchRadius > 0f)
+            RadiusCandidates.Add(prefab);
+        else
+            RadiusCandidates.Remove(prefab);
     }
 }

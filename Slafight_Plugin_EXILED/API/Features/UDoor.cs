@@ -130,7 +130,7 @@ public static class UDoor
     public static event Action<UDoorInteractionContext>? AfterInteraction;
 
     public static UDoorSet GetSet(string tag)
-        => new(tag, string.IsNullOrWhiteSpace(tag) ? [] : InstanceManager.GetByTag(tag.Trim()).ToArray());
+        => new(tag, string.IsNullOrWhiteSpace(tag) ? [] : ObjectPrefabInstances.GetByTag(tag.Trim()).ToArray());
 
     public static UDoorSet GetSet(UDoorType type) => GetSet(GetTag(type));
 
@@ -156,7 +156,7 @@ public static class UDoor
 
     public static IEnumerable<TPrefab> GetByTag<TPrefab>(string tag, bool includeDerivedTypes = true)
         where TPrefab : ObjectPrefab
-        => InstanceManager.GetByTag<TPrefab>(tag, includeDerivedTypes);
+        => ObjectPrefabInstances.GetByTag<TPrefab>(tag, includeDerivedTypes);
 
     public static IEnumerable<TPrefab> GetByTag<TPrefab>(UDoorType type, bool includeDerivedTypes = true)
         where TPrefab : ObjectPrefab
@@ -299,7 +299,7 @@ public static class UDoor
         if (door == null || string.IsNullOrWhiteSpace(door.Tag))
             return;
 
-        foreach (UsefulDoorButton button in InstanceManager.GetAll().OfType<UsefulDoorButton>())
+        foreach (UsefulDoorButton button in ObjectPrefabInstances.GetAll().OfType<UsefulDoorButton>())
         {
             try
             {

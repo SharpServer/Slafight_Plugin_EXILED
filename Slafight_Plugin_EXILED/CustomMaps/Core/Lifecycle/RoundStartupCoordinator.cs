@@ -7,7 +7,7 @@ using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Changes;
-using Slafight_Plugin_EXILED.Commands.DevTools;
+using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.Core.DoorAccess;
 using Slafight_Plugin_EXILED.CustomMaps.Core.FemurBreaker;
 using Slafight_Plugin_EXILED.CustomMaps.Core.SurfaceGate;

@@ -27,8 +27,9 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
     /// <summary>Interactable のネットワークスポーンをスキマティック構築と同フレームにしないための猶予。</summary>
     private const float BindReadyDelaySeconds = 0.1f;
 
-    // System / mscorlib の型フォワーディング衝突で Queue<T> が使えない環境のため List<T> で FIFO を実装する。
     private static readonly List<(SchematicObjectPrefabObject Marker, float ReadyAt)> PendingBinds = new();
+    private static readonly HashSet<SchematicObjectPrefabObject> PendingMarkers = new();
+    private static int _pendingBindIndex;
     private static CoroutineHandle _bindCoroutineHandle;
 
     public static void Register() => _instance = LabApiHandlerRegistry.Register(_instance);
@@ -38,6 +39,8 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
         if (_bindCoroutineHandle.IsRunning)
             Timing.KillCoroutines(_bindCoroutineHandle);
         PendingBinds.Clear();
+        PendingMarkers.Clear();
+        _pendingBindIndex = 0;
 
         MarkerPrefabFollower.ReleaseAll();
         LabApiHandlerRegistry.Unregister(ref _instance);
@@ -49,16 +52,29 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
             () => SchematicObjectPrefabObject.Spawned += OnMarkerSpawned,
             () => SchematicObjectPrefabObject.Spawned -= OnMarkerSpawned);
         subscriptions.Add(
+            () => SchematicObjectPrefabObject.Destroyed += OnMarkerDestroyed,
+            () => SchematicObjectPrefabObject.Destroyed -= OnMarkerDestroyed);
+        subscriptions.Add(
             () => ServerEvents.WaitingForPlayers += SweepUnboundMarkers,
             () => ServerEvents.WaitingForPlayers -= SweepUnboundMarkers);
     }
 
     private static void OnMarkerSpawned(SchematicObjectPrefabObject marker)
     {
+        // 同じマーカーが待機中なら重複登録しない。既に Bind 済みのマーカーからの
+        // 再通知は ProjectMER の更新経路なので、再適用するためキューへ入れる。
+        if (marker == null || !PendingMarkers.Add(marker))
+            return;
+
         PendingBinds.Add((marker, Time.time + BindReadyDelaySeconds));
 
         if (!_bindCoroutineHandle.IsRunning)
             _bindCoroutineHandle = Timing.RunCoroutine(ProcessBindQueue());
+    }
+
+    private static void OnMarkerDestroyed(SchematicObjectPrefabObject marker)
+    {
+        PendingMarkers.Remove(marker);
     }
 
     /// <summary>
@@ -72,9 +88,11 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         int processed = 0;
 
-        while (PendingBinds.Count > 0)
+        while (_pendingBindIndex < PendingBinds.Count)
         {
-            var (marker, readyAt) = PendingBinds[0];
+            var pending = PendingBinds[_pendingBindIndex];
+            var marker = pending.Marker;
+            float readyAt = pending.ReadyAt;
 
             if (Time.time < readyAt)
             {
@@ -82,7 +100,8 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
                 continue;
             }
 
-            PendingBinds.RemoveAt(0);
+            _pendingBindIndex++;
+            PendingMarkers.Remove(marker);
 
             if (marker != null)
             {
@@ -106,6 +125,8 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
             }
         }
 
+        PendingBinds.Clear();
+        _pendingBindIndex = 0;
         Log.Debug($"[SchematicObjectPrefabBridge] ProcessBindQueue done. processed={processed}");
     }
 
@@ -127,7 +148,7 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
         if (string.IsNullOrWhiteSpace(marker.PrefabType))
             return;
 
-        if (!ObjectPrefabRegistry.TryResolve(marker.PrefabType, out Type prefabType, out string error))
+        if (!ObjectPrefabRegistry.TryResolveExact(marker.PrefabType, out ObjectPrefabDescriptor descriptor, out string error))
         {
             Log.Warn($"[SchematicObjectPrefabBridge] {error}");
             return;
@@ -137,9 +158,9 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
         ObjectPrefab? existing = follower != null ? follower.Prefab : null;
 
         // 更新経路: 同じ型ならオプションと transform を再適用するだけ
-        if (existing != null && InstanceManager.Get(existing.ObjectInstanceID) == existing)
+        if (existing != null && ObjectPrefabInstances.Get(existing.ObjectInstanceID) == existing)
         {
-            if (existing.GetType() == prefabType)
+            if (existing.GetType() == descriptor.PrefabType)
             {
                 ApplyMarker(existing, marker);
                 existing.SyncManagedObjects();
@@ -149,7 +170,12 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
             existing.Destroy();
         }
 
-        var prefab = (ObjectPrefab)Activator.CreateInstance(prefabType)!;
+        if (!ObjectPrefabRegistry.TryCreate(descriptor, out ObjectPrefab prefab, out error))
+        {
+            Log.Warn($"[SchematicObjectPrefabBridge] {error}");
+            return;
+        }
+
         ApplyMarker(prefab, marker);
         prefab.IsSaveable = false;
         prefab.Create();
@@ -218,7 +244,7 @@ public sealed class MarkerPrefabFollower : MonoBehaviour
             return;
 
         // 外部から破棄された Prefab には追従しない
-        if (InstanceManager.Get(prefab.ObjectInstanceID) != prefab)
+        if (ObjectPrefabInstances.Get(prefab.ObjectInstanceID) != prefab)
         {
             Prefab = null;
             return;
