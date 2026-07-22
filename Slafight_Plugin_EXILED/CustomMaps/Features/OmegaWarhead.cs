@@ -69,7 +69,7 @@ public static class OmegaWarhead
 
         StartedPlayer = startedBy;
         IsWarheadStarted = true;
-        ControllableLight.SetOmegaAlarmForAll(true);
+        AlarmLight.SetOmegaAlarmForAll(true);
 
         foreach (Room room in Room.List)
             room.Color = Color.blue;
@@ -132,7 +132,7 @@ public static class OmegaWarhead
     {
         if (_warheadCoroutine.IsRunning)
             Timing.KillCoroutines(_warheadCoroutine);
-        ControllableLight.SetOmegaAlarmForAll(false);
+        AlarmLight.SetOmegaAlarmForAll(false);
         EvacuationRoundEndState.End();
         IsWarheadStarted = false;
         StartedPlayer = null;

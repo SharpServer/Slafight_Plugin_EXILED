@@ -39,14 +39,14 @@ public static class FacilityLightHandler
         Exiled.Events.Handlers.Warhead.Starting -= OnWarhead;
         Exiled.Events.Handlers.Warhead.Stopping -= OnStopping;
         Timing.KillCoroutines(_forceNightVisionCoroutineHandle);
-        ControllableLight.CancelReplacement();
+        AlarmLight.CancelReplacement();
         ClearForcedNightVision();
     }
 
     private static void OnWaitingForPlayers()
     {
         Timing.KillCoroutines(_forceNightVisionCoroutineHandle);
-        ControllableLight.CancelReplacement();
+        AlarmLight.CancelReplacement();
         ClearForcedNightVision();
     }
     
@@ -100,14 +100,14 @@ public static class FacilityLightHandler
         ColorUtility.TryParseHtmlString("#ff1500", out var color);
         foreach (var room in Room.List)
             room.Color = color;
-        ControllableLight.SetAlarmForAll(true);
+        AlarmLight.SetAlarmForAll(true);
     }
 
     public static void OnStopping(StoppingEventArgs ev)
     {
         if (!ev.IsAllowed) return;
         InitLight();
-        ControllableLight.SetAlarmForAll(false);
+        AlarmLight.SetAlarmForAll(false);
     }
 
     private static void OnLeft(LeftEventArgs ev)
