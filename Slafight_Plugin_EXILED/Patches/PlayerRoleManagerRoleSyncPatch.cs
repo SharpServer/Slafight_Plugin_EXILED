@@ -9,6 +9,7 @@ using MEC;
 using Mirror;
 using PlayerRoles;
 using PlayerRoles.FirstPersonControl.NetworkMessages;
+using PlayerRoles.SpawnData;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 
@@ -437,7 +438,20 @@ public static class PlayerRolesNetUtilsWriteRoleSyncInfoPackPatch
 
             if (targetRole is not (RoleTypeId.None or RoleTypeId.Destroyed or RoleTypeId.Spectator) &&
                 IsHiddenFromReceiver(receiverHub, targetHub))
+            {
+                // RoleSyncInfo.Write always serializes currentRole's IPublicSpawnDataWriter data
+                // regardless of the advertised RoleTypeId, but PlayerRoleManager.InitializeNewRole
+                // skips reading any spawn data whenever the advertised role is Spectator. Spoofing
+                // to Spectator here without also suppressing that write would leave the receiver's
+                // NetworkReader out of sync for the rest of the batched packet (manifests as
+                // "Unknown message id" kicks / unrelated OnDeserialize failures). Roles without
+                // public spawn data are unaffected, so only skip the entry when it would actually
+                // corrupt the stream.
+                if (currentRole is IPublicSpawnDataWriter)
+                    return false;
+
                 targetRole = RoleTypeId.Spectator;
+            }
 
             return targetRole is not RoleTypeId.None and not RoleTypeId.Destroyed;
         }
