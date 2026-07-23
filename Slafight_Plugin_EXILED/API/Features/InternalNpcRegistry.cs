@@ -9,6 +9,7 @@ namespace Slafight_Plugin_EXILED.API.Features;
 /// </summary>
 public enum InternalNpcCategory
 {
+    Generic,
     HidTurret,
     Tentacle,
     TeamNpc,
