@@ -81,6 +81,13 @@ public class LeverHandler : IBootstrapHandler, IDisposable
                 SpeakerApi.Play("LeverFlip.ogg", ev.Lever.GetSoundId(ev.SourceEventArgs), ev.Lever.Position, true, isSpatial: false, maxDistance: 10f, minDistance: 0.1f);
             });
         });
+        RegisterTagTogglingHandler("EzShelter_GeneratorLever", ev =>
+        {
+            if (!ShelterManager.FirstFlag || ShelterManager.LightIsOn)
+            {
+                ev.IsAllowed = false;
+            }
+        });
         RegisterTagHandler("EzShelter_GeneratorLever", ev =>
         {
             ev.Lever.CanInteract = false;
@@ -90,6 +97,8 @@ public class LeverHandler : IBootstrapHandler, IDisposable
                 light.IsOn = true;
                 light.Level = 100;
             }
+
+            ShelterManager.LightIsOn = true;
         });
     }
 

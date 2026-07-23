@@ -1,4 +1,5 @@
 using System;
+using Exiled.Events.EventArgs.Interfaces;
 using LabApi.Events.Arguments.PlayerEvents;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
@@ -6,7 +7,7 @@ using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
-public class InteractableLeverTogglingEventArgs : EventArgs
+public class InteractableLeverTogglingEventArgs : EventArgs, IDeniableEvent, IPlayerEvent
 {
     public InteractableLeverTogglingEventArgs(
         InteractableLever lever,
@@ -35,7 +36,7 @@ public class InteractableLeverTogglingEventArgs : EventArgs
     public string Tag => Lever.Tag;
 }
 
-public class InteractableLeverToggledEventArgs : EventArgs
+public class InteractableLeverToggledEventArgs : EventArgs, IPlayerEvent
 {
     public InteractableLeverToggledEventArgs(
         InteractableLever lever,

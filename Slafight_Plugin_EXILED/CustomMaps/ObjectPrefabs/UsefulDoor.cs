@@ -36,6 +36,9 @@ public class UsefulDoor : ObjectPrefab
 
     protected override string SchematicName => CentralSchematicName;
 
+    /// <summary>Logical <see cref="UDoorType"/> resolved from this door's Tag, or null if it isn't one.</summary>
+    public UDoorType? Type => UDoor.GetType(Tag);
+
     public UDoorModelType ModelType
     {
         get => _modelType;
@@ -116,11 +119,6 @@ public class UsefulDoor : ObjectPrefab
     }
 
     private bool _locked;
-    public bool IsLocked
-    {
-        get => Locked;
-        set => Locked = value;
-    }
 
     public UDoorActionPolicy ActionPolicy { get; set; } = UDoorActionPolicy.Toggle;
     public UDoorActionPolicy Action

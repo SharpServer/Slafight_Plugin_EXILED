@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
+using Exiled.Events.EventArgs.Interfaces;
 using LabApi.Events.Arguments.PlayerEvents;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
@@ -13,10 +14,10 @@ namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
 /// Mutable state passed through a UDoor interaction. Handlers may change
-/// <see cref="RequestedAction"/>, add values to <see cref="Data"/>, or cancel
-/// the operation before the target door performs its permission/state checks.
+/// <see cref="RequestedAction"/>, add values to <see cref="Data"/>, or set
+/// <see cref="IsAllowed"/> to false before the target door performs its permission/state checks.
 /// </summary>
-public sealed class UDoorInteractionContext
+public sealed class UDoorInteractionContext : IDeniableEvent
 {
     public UDoorInteractionContext(
         UsefulDoor door,
@@ -40,12 +41,10 @@ public sealed class UDoorInteractionContext
     public PlayerSearchedToyEventArgs? EventArgs { get; }
     public UDoorInteractionSource Source { get; }
     public UDoorAction RequestedAction { get; set; }
-    public bool Cancelled { get; set; }
+    public bool IsAllowed { get; set; } = true;
     public UDoorInteractionResult Result { get; set; } = UDoorInteractionResult.NoChange;
     public bool Succeeded => Result == UDoorInteractionResult.Success;
     public Dictionary<string, object?> Data { get; } = new(StringComparer.OrdinalIgnoreCase);
-
-    public void Cancel() => Cancelled = true;
 }
 
 /// <summary>
@@ -61,7 +60,7 @@ public sealed class UDoorSet : IReadOnlyDictionary<UDoorObjectType, IReadOnlyLis
     }
 
     public string Tag { get; }
-    public UDoorType? Type => UDoor.TryParseType(Tag, out UDoorType type) ? type : null;
+    public UDoorType? Type => UDoor.GetType(Tag);
     public IReadOnlyList<UsefulDoor> Door { get; }
 
     public IReadOnlyList<UsefulDoorButton> Button { get; }
@@ -188,6 +187,10 @@ public static class UDoor
         return false;
     }
 
+    /// <summary>Resolves an exact Tag into its logical <see cref="UDoorType"/>, or null if it isn't one.</summary>
+    public static UDoorType? GetType(string? tag)
+        => TryParseType(tag, out UDoorType type) ? type : null;
+
     public static bool TryParseObjectType(string? value, out UDoorObjectType type)
     {
         if (Enum.TryParse(value?.Trim(), true, out type) && Enum.IsDefined(typeof(UDoorObjectType), type))
@@ -279,7 +282,7 @@ public static class UDoor
             Log.Warn($"[UDoor] BeforeInteraction handler failed: {e.Message}");
         }
 
-        return !context.Cancelled;
+        return context.IsAllowed;
     }
 
     internal static void RaiseAfter(UDoorInteractionContext context)

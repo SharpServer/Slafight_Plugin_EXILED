@@ -46,6 +46,9 @@ public class UsefulDoorButton : ObjectPrefab
 
     protected override string SchematicName => CentralSchematicName;
 
+    /// <summary>Logical <see cref="UDoorType"/> resolved from this button's Tag, or null if it isn't one.</summary>
+    public UDoorType? Type => UDoor.GetType(Tag);
+
     public UDoorButtonModelType ModelType
     {
         get => _modelType;
