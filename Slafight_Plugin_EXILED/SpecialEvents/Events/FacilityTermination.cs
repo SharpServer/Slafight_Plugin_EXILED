@@ -269,7 +269,7 @@ public class FacilityTermination : SpecialEvent
         foreach (var player in PlayerExtensions.ConnectedList().Where(p => p.Zone == zone && p.IsAlive))
         {
             player.EnableEffect<Decontaminating>();
-            player.EnableEffect<FogControl>();
+            player.EnableEffect<FogControl>(255);
             if (player.TryGetEffect(out FogControl fogControl))
             {
                 fogControl.SetFogType(FogType.Decontamination);
