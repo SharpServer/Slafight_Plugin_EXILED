@@ -23,5 +23,7 @@ public class ShelterManager : IBootstrapHandler
         FirstFlag = false;
         LightIsOn = true;
         SpeakerApi.LoadClip("Blackout.ogg");
+        SpeakerApi.LoadClip("Elec_Idle.ogg");
+        SpeakerApi.LoadClip("PowerUp.ogg");
     }
 }

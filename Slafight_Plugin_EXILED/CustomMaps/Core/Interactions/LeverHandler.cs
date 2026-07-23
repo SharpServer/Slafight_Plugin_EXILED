@@ -97,8 +97,9 @@ public class LeverHandler : IBootstrapHandler, IDisposable
                 light.IsOn = true;
                 light.Level = 100;
             }
-
             ShelterManager.LightIsOn = true;
+            SpeakerApi.Play("PowerUp.ogg", ev.Lever.ObjectInstanceID + "_A", ev.Lever.Position, maxDistance:20f);
+            SpeakerApi.PlayLoop("Elec_Idle.ogg", ev.Lever.ObjectInstanceID + "_B", ev.Lever.Position, maxDistance:20f);
         });
     }
 

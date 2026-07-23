@@ -27,6 +27,7 @@ public class UDoorHandler : IBootstrapHandler
                 if (ShelterManager.FirstFlag && !ShelterManager.LightIsOn)
                 {
                     ctx.IsAllowed = false;
+                    ctx.Player?.ShowHint("<size=26>電力が通っていないようだ・・・</size>");
                 }
                 break;
         }
