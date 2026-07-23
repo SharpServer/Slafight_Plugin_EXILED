@@ -99,7 +99,7 @@ public class LeverHandler : IBootstrapHandler, IDisposable
             }
             ShelterManager.LightIsOn = true;
             SpeakerApi.Play("PowerUp.ogg", ev.Lever.ObjectInstanceID + "_A", ev.Lever.Position, maxDistance:20f, volume: 1.25f);
-            SpeakerApi.PlayLoop("Elec_Idle.ogg", ev.Lever.ObjectInstanceID + "_B", ev.Lever.Position, maxDistance:5f, volume: 0.35f);
+            SpeakerApi.PlayLoop("Elec_Idle.ogg", ev.Lever.ObjectInstanceID + "_B", ev.Lever.Position, maxDistance:8f, volume: 0.35f, isSpatial: true);
         });
     }
 
