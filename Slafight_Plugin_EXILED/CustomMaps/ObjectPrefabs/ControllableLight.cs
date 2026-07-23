@@ -23,6 +23,15 @@ public sealed class ControllableLight : ObjectPrefab
     private Color _currentColor = Color.black;
     private bool _isOn = true;
     private int _level = 100;
+    private Color _lightColor = Color.white;
+    private float _intensity = 1f;
+    private float _range = 10f;
+    private LightShadows _shadowType = LightShadows.None;
+    private float _shadowStrength = 1f;
+    private LightType _lightType = LightType.Point;
+    private LightShape _lightShape = LightShape.Cone;
+    private float _spotAngle = 50f;
+    private float _innerSpotAngle = 40f;
 
     public bool IsOn
     {
@@ -52,16 +61,117 @@ public sealed class ControllableLight : ObjectPrefab
         }
     }
 
-    public Color LightColor { get; set; } = Color.white;
+    public Color LightColor
+    {
+        get => _lightColor;
+        set
+        {
+            if (_lightColor == value)
+                return;
+
+            _lightColor = value;
+            BeginTransition();
+        }
+    }
+
     public float TransitionDuration { get; set; } = 1f;
-    public float Intensity { get; set; } = 1f;
-    public float Range { get; set; } = 10f;
-    public LightShadows ShadowType { get; set; } = LightShadows.None;
-    public float ShadowStrength { get; set; } = 1f;
-    public LightType LightType { get; set; } = LightType.Point;
-    public LightShape LightShape { get; set; } = LightShape.Cone;
-    public float SpotAngle { get; set; } = 50f;
-    public float InnerSpotAngle { get; set; } = 40f;
+
+    public float Intensity
+    {
+        get => _intensity;
+        set
+        {
+            _intensity = value;
+            if (_light != null)
+                _light.Intensity = value;
+        }
+    }
+
+    public float Range
+    {
+        get => _range;
+        set
+        {
+            _range = value;
+            if (_light != null)
+                _light.Range = value;
+        }
+    }
+
+    public LightShadows ShadowType
+    {
+        get => _shadowType;
+        set
+        {
+            if (_shadowType == value)
+                return;
+
+            _shadowType = value;
+            if (_light != null)
+                _light.ShadowType = value;
+        }
+    }
+
+    public float ShadowStrength
+    {
+        get => _shadowStrength;
+        set
+        {
+            _shadowStrength = value;
+            if (_light != null)
+                _light.ShadowStrength = value;
+        }
+    }
+
+    public LightType LightType
+    {
+        get => _lightType;
+        set
+        {
+            if (_lightType == value)
+                return;
+
+            _lightType = value;
+            if (_light != null)
+                _light.Type = value;
+        }
+    }
+
+    public LightShape LightShape
+    {
+        get => _lightShape;
+        set
+        {
+            if (_lightShape == value)
+                return;
+
+            _lightShape = value;
+            if (_light != null)
+                _light.Shape = value;
+        }
+    }
+
+    public float SpotAngle
+    {
+        get => _spotAngle;
+        set
+        {
+            _spotAngle = value;
+            if (_light != null)
+                _light.SpotAngle = value;
+        }
+    }
+
+    public float InnerSpotAngle
+    {
+        get => _innerSpotAngle;
+        set
+        {
+            _innerSpotAngle = value;
+            if (_light != null)
+                _light.InnerSpotAngle = value;
+        }
+    }
 
     private Color TargetColor => IsOn ? Color.Lerp(Color.black, LightColor, Level / 100f) : Color.black;
 

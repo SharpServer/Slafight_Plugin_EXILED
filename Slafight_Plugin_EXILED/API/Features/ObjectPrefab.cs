@@ -24,6 +24,29 @@ public enum ObjectPrefabTagSearchMode
     AssignableType,
 }
 
+/// <summary>
+/// <see cref="ObjectPrefab.GetOptionDefinitions"/> が返す、1つのOptionキーの静的定義。
+/// 現在値は持たない（呼び出し側が自身の保持するOptions辞書と突き合わせる）。
+/// </summary>
+public sealed class ObjectPrefabOptionDefinition
+{
+    public ObjectPrefabOptionDefinition(string name, string valueType, string? defaultValue, string? constraintDescription)
+    {
+        Name = name;
+        ValueType = valueType;
+        DefaultValue = defaultValue;
+        ConstraintDescription = constraintDescription;
+    }
+
+    public string Name { get; }
+
+    public string ValueType { get; }
+
+    public string? DefaultValue { get; }
+
+    public string? ConstraintDescription { get; }
+}
+
 public abstract class ObjectPrefab : IObjectPrefab
 {
     private static readonly Dictionary<Type, PropertyInfo[]> AutomaticOptionProperties = new();
@@ -835,6 +858,39 @@ public abstract class ObjectPrefab : IObjectPrefab
                 Log.Warn($"[ObjectPrefab]{GetType().Name} failed to apply option '{option.Key}': {e.Message}");
             }
         }
+    }
+
+    /// <summary>
+    /// このPrefab型が受け付けるOptionキーの定義一覧（名前・型・デフォルト値・制約）を返す。
+    /// ProjectMER側の問い合わせブリッジ向けの公開API。<see cref="GetDeclaredOptions"/> はprotectedのため
+    /// 内部表現（<see cref="Option"/>型）を晒さず、フラットなDTOへ変換して返す。
+    /// Create()を呼び出していない一時インスタンス（<see cref="ObjectPrefabRegistry.TryCreate"/>）に対して
+    /// 呼ぶ想定。
+    /// </summary>
+    public IReadOnlyList<ObjectPrefabOptionDefinition> GetOptionDefinitions()
+    {
+        var result = new List<ObjectPrefabOptionDefinition>();
+
+        foreach (PropertyInfo property in GetAutomaticOptionProperties())
+        {
+            TrySerializeOptionValue(property.GetValue(this), property.PropertyType, out string defaultValue);
+            result.Add(new ObjectPrefabOptionDefinition(
+                property.Name,
+                property.PropertyType.IsEnum ? property.PropertyType.Name : property.PropertyType.Name.ToLowerInvariant(),
+                defaultValue,
+                null));
+        }
+
+        foreach (KeyValuePair<string, Option> declared in GetDeclaredOptions())
+        {
+            result.Add(new ObjectPrefabOptionDefinition(
+                declared.Key,
+                "composite",
+                declared.Value.Serialize(),
+                declared.Value.Describe()));
+        }
+
+        return result;
     }
 
     /// <summary>
