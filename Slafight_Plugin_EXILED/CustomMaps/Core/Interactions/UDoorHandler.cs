@@ -44,6 +44,7 @@ public class UDoorHandler : IBootstrapHandler
                         light.Level = 0;
                     }
 
+                    SpeakerApi.Play("Blackout.ogg", "EzShelter", ctx.Door.Position, maxDistance: 20f, minDistance: 0.1f);
                     ShelterManager.FirstFlag = true;
                     ShelterManager.LightIsOn = true;
                 }
