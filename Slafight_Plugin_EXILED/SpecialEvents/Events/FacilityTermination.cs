@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
+using CustomPlayerEffects;
+using CustomRendering;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
@@ -264,8 +266,15 @@ public class FacilityTermination : SpecialEvent
         foreach (var room in Room.List.Where(r => r.Zone == zone))
             room.LockDown(-1, DoorLockType.DecontLockdown);
 
-        foreach (var player in Player.List.Where(p => p.Zone == zone && p.IsAlive))
-            player.EnableEffect(EffectType.Decontaminating);
+        foreach (var player in PlayerExtensions.ConnectedList().Where(p => p.Zone == zone && p.IsAlive))
+        {
+            player.EnableEffect<Decontaminating>();
+            player.EnableEffect<FogControl>();
+            if (player.TryGetEffect(out FogControl fogControl))
+            {
+                fogControl.SetFogType(FogType.Decontamination);
+            }
+        }
     }
 
     // FacilityTermination の勝利判定は RoundVictoryDefinitions 側で全体判定する。
