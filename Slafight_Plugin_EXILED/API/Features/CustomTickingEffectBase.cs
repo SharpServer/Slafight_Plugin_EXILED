@@ -6,17 +6,16 @@ namespace Slafight_Plugin_EXILED.API.Features;
 public abstract class CustomTickingEffectBase : TickingEffectBase
 {
     private const float MinimumTickRate = 0.01f;
-    private float _tickRate = 1f;
 
     public virtual float TickRate
     {
-        get => _tickRate;
+        get;
         set
         {
-            _tickRate = NormalizeTickRate(value);
-            ModifyTickRates(_tickRate);
+            field = NormalizeTickRate(value);
+            ModifyTickRates(field);
         }
-    }
+    } = 1f;
 
     public Player Player { get; private set; }
     

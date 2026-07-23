@@ -22,14 +22,14 @@ public class Config : IConfig
     [Description("ベータモードを有効にするかどうか")]
     public bool IsBeta { get; set; } = false;
 
-    [Description("音声ファイルのディレクトリパス。空欄の場合は EXILED/ServerContents をデフォルトとして使用します")]
-    private string _audioReferences;
+    [field: Description("音声ファイルのディレクトリパス。空欄の場合は EXILED/ServerContents をデフォルトとして使用します")]
     public string AudioReferences
     {
-        get => string.IsNullOrEmpty(_audioReferences)
-            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EXILED", "ServerContents")
-            : _audioReferences;
-        set => _audioReferences = value;
+        get => string.IsNullOrEmpty(field)
+            ? Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "EXILED",
+                "ServerContents")
+            : field;
+        set;
     }
 
     [Description("ProximityChat のスピーカー音量倍率。1.0 が通常音量、2.0 で約2倍です")]

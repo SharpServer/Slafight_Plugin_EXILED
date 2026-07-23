@@ -21,157 +21,146 @@ public sealed class ControllableLight : ObjectPrefab
     private LightSourceToy? _light;
     private CoroutineHandle _transitionHandle;
     private Color _currentColor = Color.black;
-    private bool _isOn = true;
-    private int _level = 100;
-    private Color _lightColor = Color.white;
-    private float _intensity = 1f;
-    private float _range = 10f;
-    private LightShadows _shadowType = LightShadows.None;
-    private float _shadowStrength = 1f;
-    private LightType _lightType = LightType.Point;
-    private LightShape _lightShape = LightShape.Cone;
-    private float _spotAngle = 50f;
-    private float _innerSpotAngle = 40f;
 
     public bool IsOn
     {
-        get => _isOn;
+        get;
         set
         {
-            if (_isOn == value)
+            if (field == value)
                 return;
 
-            _isOn = value;
+            field = value;
             BeginTransition();
         }
-    }
+    } = true;
 
     /// <summary>点灯度合い(0-100)。100 で <see cref="LightColor"/> そのもの、0 に近づくほど黒に寄る。</summary>
     public int Level
     {
-        get => _level;
+        get;
         set
         {
             int clamped = Mathf.Clamp(value, 0, 100);
-            if (_level == clamped)
+            if (field == clamped)
                 return;
 
-            _level = clamped;
+            field = clamped;
             BeginTransition();
         }
-    }
+    } = 100;
 
     public Color LightColor
     {
-        get => _lightColor;
+        get;
         set
         {
-            if (_lightColor == value)
+            if (field == value)
                 return;
 
-            _lightColor = value;
+            field = value;
             BeginTransition();
         }
-    }
+    } = Color.white;
 
     public float TransitionDuration { get; set; } = 1f;
 
     public float Intensity
     {
-        get => _intensity;
+        get;
         set
         {
-            _intensity = value;
+            field = value;
             if (_light != null)
                 _light.Intensity = value;
         }
-    }
+    } = 1f;
 
     public float Range
     {
-        get => _range;
+        get;
         set
         {
-            _range = value;
+            field = value;
             if (_light != null)
                 _light.Range = value;
         }
-    }
+    } = 10f;
 
     public LightShadows ShadowType
     {
-        get => _shadowType;
+        get;
         set
         {
-            if (_shadowType == value)
+            if (field == value)
                 return;
 
-            _shadowType = value;
+            field = value;
             if (_light != null)
                 _light.ShadowType = value;
         }
-    }
+    } = LightShadows.None;
 
     public float ShadowStrength
     {
-        get => _shadowStrength;
+        get;
         set
         {
-            _shadowStrength = value;
+            field = value;
             if (_light != null)
                 _light.ShadowStrength = value;
         }
-    }
+    } = 1f;
 
     public LightType LightType
     {
-        get => _lightType;
+        get;
         set
         {
-            if (_lightType == value)
+            if (field == value)
                 return;
 
-            _lightType = value;
+            field = value;
             if (_light != null)
                 _light.Type = value;
         }
-    }
+    } = LightType.Point;
 
     public LightShape LightShape
     {
-        get => _lightShape;
+        get;
         set
         {
-            if (_lightShape == value)
+            if (field == value)
                 return;
 
-            _lightShape = value;
+            field = value;
             if (_light != null)
                 _light.Shape = value;
         }
-    }
+    } = LightShape.Cone;
 
     public float SpotAngle
     {
-        get => _spotAngle;
+        get;
         set
         {
-            _spotAngle = value;
+            field = value;
             if (_light != null)
                 _light.SpotAngle = value;
         }
-    }
+    } = 50f;
 
     public float InnerSpotAngle
     {
-        get => _innerSpotAngle;
+        get;
         set
         {
-            _innerSpotAngle = value;
+            field = value;
             if (_light != null)
                 _light.InnerSpotAngle = value;
         }
-    }
+    } = 40f;
 
     private Color TargetColor => IsOn ? Color.Lerp(Color.black, LightColor, Level / 100f) : Color.black;
 

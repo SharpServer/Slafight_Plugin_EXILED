@@ -25,8 +25,6 @@ public class UsefulDoor : ObjectPrefab
     private static readonly Vector3 InteractableBaseScale = Vector3.one + Vector3.up * 2f - new Vector3(-0.8f, 0f, -0.8f);
     private static readonly Vector3 HiddenModelOffset = Vector3.down * 2000f;
 
-    private UDoorModelType _modelType = UDoorModelType.Alpha;
-    private string _customModelKey = string.Empty;
     private bool _isOpen;
     private bool _isSetup;
     private int _buttonStateRevision;
@@ -41,11 +39,11 @@ public class UsefulDoor : ObjectPrefab
 
     public UDoorModelType ModelType
     {
-        get => _modelType;
+        get;
         set
         {
-            bool changed = _modelType != value;
-            _modelType = value;
+            bool changed = field != value;
+            field = value;
             if (UseModelTypeDefaults)
                 ApplyDefaultsForModelType();
 
@@ -56,7 +54,7 @@ public class UsefulDoor : ObjectPrefab
             if (_isSetup)
                 ApplyVisualState(_isOpen, playAction: false);
         }
-    }
+    } = UDoorModelType.Alpha;
 
     /// <summary>When enabled, changing ModelType applies that type's animation/audio defaults.</summary>
     public bool UseModelTypeDefaults { get; set; } = true;
@@ -64,23 +62,24 @@ public class UsefulDoor : ObjectPrefab
     /// <summary>Exact ObjectPrefabSchematicInfo key used when ModelType is Custom.</summary>
     public string CustomModelKey
     {
-        get => _customModelKey;
+        get;
         set
         {
             string normalized = value?.Trim() ?? string.Empty;
-            if (string.Equals(_customModelKey, normalized, StringComparison.Ordinal))
+            if (string.Equals(field, normalized, StringComparison.Ordinal))
                 return;
 
             if (IsReservedModelKey(normalized))
-                throw new ArgumentException($"'{normalized}' is reserved by the UsefulDoor central schematic.", nameof(value));
+                throw new ArgumentException($"'{normalized}' is reserved by the UsefulDoor central schematic.",
+                    nameof(value));
 
-            if (_isSetup && !string.IsNullOrWhiteSpace(_customModelKey))
-                SetBlockSpawned(_customModelKey, false, HiddenModelOffset);
+            if (_isSetup && !string.IsNullOrWhiteSpace(field))
+                SetBlockSpawned(field, false, HiddenModelOffset);
 
-            _customModelKey = normalized;
+            field = normalized;
             ApplyModelVisibility();
         }
-    }
+    } = string.Empty;
 
     public KeycardPermissions KeycardPermissions { get; set; } = KeycardPermissions.None;
     public bool RequireAllPermissions { get; set; } = true;
@@ -93,32 +92,28 @@ public class UsefulDoor : ObjectPrefab
 
     public bool Enabled
     {
-        get => _enabled;
+        get;
         set
         {
-            _enabled = value;
+            field = value;
             UpdateInteractable();
         }
-    }
-
-    private bool _enabled = true;
+    } = true;
 
     public bool Locked
     {
-        get => _locked;
+        get;
         set
         {
-            if (_locked == value)
+            if (field == value)
                 return;
 
-            _locked = value;
+            field = value;
             UpdateInteractable();
             if (_isSetup)
-                PublishLinkedButtonState(_locked ? UDoorButtonState.Locked : GetStableButtonState());
+                PublishLinkedButtonState(field ? UDoorButtonState.Locked : GetStableButtonState());
         }
     }
-
-    private bool _locked;
 
     public UDoorActionPolicy ActionPolicy { get; set; } = UDoorActionPolicy.Toggle;
     public UDoorActionPolicy Action

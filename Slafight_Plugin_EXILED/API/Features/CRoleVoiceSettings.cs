@@ -92,18 +92,17 @@ public readonly struct CRoleVoiceRoute
 public readonly struct CRoleVoiceSettings
 {
     private static readonly IReadOnlyList<CRoleVoiceRoute> EmptyRoutes = [];
-    private readonly IReadOnlyList<CRoleVoiceRoute> _routes;
 
     public CRoleVoiceSettings(
         CRoleProximitySettings proximity = default,
         IReadOnlyList<CRoleVoiceRoute> routes = null)
     {
         Proximity = proximity;
-        _routes = routes;
+        Routes = routes;
     }
 
     public CRoleProximitySettings Proximity { get; }
-    public IReadOnlyList<CRoleVoiceRoute> Routes => _routes ?? EmptyRoutes;
+    public IReadOnlyList<CRoleVoiceRoute> Routes => field ?? EmptyRoutes;
 
     public static CRoleVoiceSettings None => default;
 

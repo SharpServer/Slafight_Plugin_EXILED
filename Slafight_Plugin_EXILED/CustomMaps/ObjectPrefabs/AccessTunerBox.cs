@@ -32,22 +32,21 @@ public class AccessTunerBox : ObjectPrefab
 
     private readonly HashSet<string> _consumedParts = new(StringComparer.OrdinalIgnoreCase);
     private bool _isSetup;
-    private bool _spawnAccessTuner = true;
 
     protected override string SchematicName => "AccessTunerCase";
 
     public bool SpawnAccessTuner
     {
-        get => _spawnAccessTuner;
+        get;
         set
         {
-            if (_spawnAccessTuner == value)
+            if (field == value)
                 return;
 
-            _spawnAccessTuner = value;
+            field = value;
             ApplyAllPartVisibility();
         }
-    }
+    } = true;
 
     /// <summary>AccessTuner パーツのレベル。0 = Broken、1〜3 = Lv1〜Lv3。</summary>
     public Option SpawnAccessTunerLevel { get; } = new(

@@ -1,3 +1,4 @@
+using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;
@@ -21,5 +22,6 @@ public class ShelterManager : IBootstrapHandler
     {
         FirstFlag = false;
         LightIsOn = true;
+        SpeakerApi.LoadClip("Blackout.ogg");
     }
 }

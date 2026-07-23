@@ -33,10 +33,7 @@ public class UsefulDoorButton : ObjectPrefab
         "Administration 2",
         "Administration 3"
     ];
-    private UDoorButtonModelType _modelType = UDoorButtonModelType.Standard;
-    private string _customModelKey = string.Empty;
-    private string _targetTag = string.Empty;
-    private bool _enabled = true;
+
     private bool _isSetup;
     private int _stateRevision;
     private InteractableHandle? _interactable;
@@ -51,11 +48,11 @@ public class UsefulDoorButton : ObjectPrefab
 
     public UDoorButtonModelType ModelType
     {
-        get => _modelType;
+        get;
         set
         {
-            bool changed = _modelType != value;
-            _modelType = value;
+            bool changed = field != value;
+            field = value;
             if (UseModelTypeDefaults)
                 ApplyDefaultsForModelType();
 
@@ -66,7 +63,7 @@ public class UsefulDoorButton : ObjectPrefab
             if (_isSetup)
                 ResetToIdle();
         }
-    }
+    } = UDoorButtonModelType.Standard;
 
     /// <summary>When enabled, changing ModelType applies that type's animation/audio defaults.</summary>
     public bool UseModelTypeDefaults { get; set; } = true;
@@ -74,48 +71,49 @@ public class UsefulDoorButton : ObjectPrefab
     /// <summary>Exact ObjectPrefabSchematicInfo key used when ModelType is Custom.</summary>
     public string CustomModelKey
     {
-        get => _customModelKey;
+        get;
         set
         {
             string normalized = value?.Trim() ?? string.Empty;
-            if (string.Equals(_customModelKey, normalized, StringComparison.Ordinal))
+            if (string.Equals(field, normalized, StringComparison.Ordinal))
                 return;
 
             if (IsReservedModelKey(normalized))
-                throw new ArgumentException($"'{normalized}' is reserved by the UsefulDoorButton central schematic.", nameof(value));
+                throw new ArgumentException($"'{normalized}' is reserved by the UsefulDoorButton central schematic.",
+                    nameof(value));
 
-            if (_isSetup && !string.IsNullOrWhiteSpace(_customModelKey))
-                SetBlockSpawned(_customModelKey, false, HiddenModelOffset);
+            if (_isSetup && !string.IsNullOrWhiteSpace(field))
+                SetBlockSpawned(field, false, HiddenModelOffset);
 
-            _customModelKey = normalized;
+            field = normalized;
             ApplyModelVisibility();
         }
-    }
+    } = string.Empty;
 
     /// <summary>Exact tag used to find UsefulDoor targets. Empty uses this button's Tag.</summary>
     public string TargetTag
     {
-        get => _targetTag;
+        get;
         set
         {
-            _targetTag = value?.Trim() ?? string.Empty;
+            field = value?.Trim() ?? string.Empty;
             if (_isSetup)
                 SynchronizeStateFromTargets();
         }
-    }
+    } = string.Empty;
 
     public UDoorButtonTargetMode TargetMode { get; set; } = UDoorButtonTargetMode.All;
     public UDoorAction DoorAction { get; set; } = UDoorAction.Toggle;
 
     public bool Enabled
     {
-        get => _enabled;
+        get;
         set
         {
-            _enabled = value;
+            field = value;
             UpdateInteractable();
         }
-    }
+    } = true;
 
     /// <summary>Maximum successful button activations. Zero or less means unlimited.</summary>
     public int MaxSuccessfulButtonActivations { get; set; }

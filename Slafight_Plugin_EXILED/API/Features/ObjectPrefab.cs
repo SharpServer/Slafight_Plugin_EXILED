@@ -55,76 +55,71 @@ public abstract class ObjectPrefab : IObjectPrefab
     private readonly Dictionary<string, SchematicBlock> _managedBlocks = new(StringComparer.OrdinalIgnoreCase);
     private readonly Dictionary<SchematicBlock, Vector3> _managedBlockLocalPositions = new();
     private readonly List<CoroutineHandle> _scheduledCallbacks = [];
-    private Vector3 _position = Vector3.zero;
-    private Quaternion _rotation = Quaternion.identity;
-    private Vector3 _scale = Vector3.one;
-    private string _objectInstanceID = string.Empty;
-    private string _tag = string.Empty;
-    private float _toySearchRadius;
 
     // Destroy 冪等化用
     private bool _isDestroyed;
 
     public string ObjectInstanceID
     {
-        get => _objectInstanceID;
+        get;
         set
         {
-            if (!string.IsNullOrEmpty(_objectInstanceID))
+            if (!string.IsNullOrEmpty(field))
                 throw new InvalidOperationException("ObjectInstanceID can only be set once.");
-            _objectInstanceID = value.Trim();
+            field = value.Trim();
         }
-    }
+    } = string.Empty;
 
     public virtual Vector3 Position
     {
-        get => _position;
+        get;
         set
         {
-            _position = value;
+            field = value;
             OnTransformUpdated();
         }
-    }
+    } = Vector3.zero;
 
     public virtual Quaternion Rotation
     {
-        get => _rotation;
+        get;
         set
         {
-            _rotation = value;
+            field = value;
             OnTransformUpdated();
         }
-    }
+    } = Quaternion.identity;
 
     public virtual Vector3 Scale
     {
-        get => _scale;
+        get;
         set
         {
-            _scale = value;
+            field = value;
             OnTransformUpdated();
         }
-    }
+    } = Vector3.one;
 
     public virtual bool AutoDestroyEnabled { get; set; } = false;
     public virtual float AutoDestroyTime { get; set; } = -1f;
     public virtual CoroutineHandle AutoDestroyCoroutineHandle { get; set; } = new CoroutineHandle();
     public virtual bool FollowMarkerTransform => true;
     public virtual bool IsSaveable { get; set; } = true;
+
     public virtual string Tag
     {
-        get => _tag;
+        get;
         set
         {
             string normalized = value?.Trim() ?? string.Empty;
-            if (string.Equals(_tag, normalized, StringComparison.Ordinal))
+            if (string.Equals(field, normalized, StringComparison.Ordinal))
                 return;
 
-            string previous = _tag;
-            _tag = normalized;
+            string previous = field;
+            field = normalized;
             ObjectPrefabInstances.NotifyTagChanged(this, previous, normalized);
         }
-    }
+    } = string.Empty;
 
     /// <summary>
     /// Save/Load 用の MaxRooms。デフォルト 1。
@@ -133,13 +128,13 @@ public abstract class ObjectPrefab : IObjectPrefab
 
     public virtual float ToySearchRadius
     {
-        get => _toySearchRadius;
+        get;
         set
         {
-            if (Math.Abs(_toySearchRadius - value) < 0.0001f)
+            if (Math.Abs(field - value) < 0.0001f)
                 return;
 
-            _toySearchRadius = value;
+            field = value;
             ObjectPrefabInstances.NotifyRadiusChanged(this);
         }
     }

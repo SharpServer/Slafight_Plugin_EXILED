@@ -31,18 +31,18 @@ public class AuthDoor : ObjectPrefab
 
     public bool IsOpen
     {
-        get => _isOpen;
+        get;
         set
         {
-            if (_isOpen == value)
+            if (field == value)
                 return;
 
-            _isOpen = value;
+            field = value;
             if (!string.IsNullOrEmpty(ObjectInstanceID))
                 SwitchDoor(value);
         }
-    }
-    private bool _isOpen = false;
+    } = false;
+
     // ===== Lifecycle =====
 
     protected override void OnSetup()

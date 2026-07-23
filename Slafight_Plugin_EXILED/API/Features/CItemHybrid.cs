@@ -72,8 +72,7 @@ public abstract class CItemHybrid : CItem
     // SwitchMode 実行中は Selected Hint を抑制する
     private bool _isSwitching;
 
-    private List<CItemHybridMode>? _subModes;
-    protected List<CItemHybridMode> SubModes => _subModes ??= BuildSubModes();
+    protected List<CItemHybridMode> SubModes => field ??= BuildSubModes();
 
     /// <summary>モードとして使う CItem インスタンスのリストを構築する。インデックス 0 が初期モード。</summary>
     protected abstract List<CItemHybridMode> BuildSubModes();

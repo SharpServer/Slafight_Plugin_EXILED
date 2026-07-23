@@ -45,10 +45,9 @@ public sealed class AbilityOption
 
 public abstract class OptionAbilityBase : AbilityBase
 {
-    private IReadOnlyList<AbilityOption>? _availableOptions;
     private int _selectedOptionIndex;
 
-    public IReadOnlyList<AbilityOption> AvailableOptions => _availableOptions ??= NormalizeOptions(DefineOptions());
+    public IReadOnlyList<AbilityOption> AvailableOptions => field ??= NormalizeOptions(DefineOptions());
 
     public IReadOnlyList<AbilityOption> Options => AvailableOptions;
 

@@ -11,16 +11,14 @@ public sealed class SpecialDoorAccessRule
     private const string ItemAndCodeHintMessage = "<size=24>専用のアクセス用アイテム及びコードが揃っていないようだ・・・</size>";
     private const string NoRequirementHintMessage = "<size=24>しかし、何も反応しなかった。</size>";
 
-    private string? _hintMessage;
-
     public Type? RequiredCItemType { get; set; }
 
     public string? RequiredCode { get; set; }
 
     public string HintMessage
     {
-        get => _hintMessage ?? GetDefaultHintMessage();
-        set => _hintMessage = value;
+        get => field ?? GetDefaultHintMessage();
+        set;
     }
 
     public bool CanOpen(Player player)
