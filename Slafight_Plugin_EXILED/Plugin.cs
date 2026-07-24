@@ -80,7 +80,6 @@ public class Plugin : Plugin<Config>
         MapGuardHandler.Register();
         TerminalRift.Register();
         FacilityLightHandler.Register();
-        // GateAEnding.Register(); SCRAPPED
         WarheadBoomEffectHandler.Register();
         Communications.Register();
         Scp914Changes.Register();
@@ -183,7 +182,6 @@ public class Plugin : Plugin<Config>
         MapGuardHandler.Unregister();
         TerminalRift.Unregister();
         FacilityLightHandler.Unregister();
-        // GateAEnding.Unregister(); SCRAPPED
         WarheadBoomEffectHandler.Unregister();
         Communications.Unregister();
         Scp914Changes.Unregister();
