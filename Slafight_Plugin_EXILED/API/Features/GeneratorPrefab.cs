@@ -17,7 +17,7 @@ public static class GeneratorPrefab
         
         NetworkServer.UnSpawn(obj);
         NetworkServer.Spawn(obj);
-        var component = obj?.GetComponent<NetworkIdentity>();
+        var component = obj.GetComponent<NetworkIdentity>();
         if (component is null)
         {
             Log.Error("Generator Prefab Create is failed. NetworkIdentity is null!");
