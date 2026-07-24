@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using MEC;
 using Exiled.API.Features;
+using MEC;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.API.Features;

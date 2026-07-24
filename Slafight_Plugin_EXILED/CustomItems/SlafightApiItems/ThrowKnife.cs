@@ -4,6 +4,7 @@ using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Scp1509;
+using Exiled.Events.Handlers;
 using MEC;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
@@ -11,6 +12,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
@@ -25,15 +27,15 @@ public class ThrowKnife : CItem
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Scp1509.Resurrecting += OnResurrecting;
-        Exiled.Events.Handlers.Scp1509.TriggeringAttack += OnTriggeringAttack;
+        Scp1509.Resurrecting += OnResurrecting;
+        Scp1509.TriggeringAttack += OnTriggeringAttack;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Scp1509.Resurrecting -= OnResurrecting;
-        Exiled.Events.Handlers.Scp1509.TriggeringAttack -= OnTriggeringAttack;
+        Scp1509.Resurrecting -= OnResurrecting;
+        Scp1509.TriggeringAttack -= OnTriggeringAttack;
         base.UnregisterEvents();
     }
 

@@ -9,6 +9,8 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Server = Exiled.Events.Handlers.Server;
+using Warhead = Exiled.Events.Handlers.Warhead;
 
 namespace Slafight_Plugin_EXILED.Changes;
 
@@ -24,20 +26,20 @@ public static class FacilityLightHandler
 
     public static void Register()
     {
-        Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
-        Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
+        Server.WaitingForPlayers += OnWaitingForPlayers;
+        Server.RoundStarted += OnRoundStarted;
         Exiled.Events.Handlers.Player.Left += OnLeft;
-        Exiled.Events.Handlers.Warhead.Starting += OnWarhead;
-        Exiled.Events.Handlers.Warhead.Stopping += OnStopping;
+        Warhead.Starting += OnWarhead;
+        Warhead.Stopping += OnStopping;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
-        Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
+        Server.WaitingForPlayers -= OnWaitingForPlayers;
+        Server.RoundStarted -= OnRoundStarted;
         Exiled.Events.Handlers.Player.Left -= OnLeft;
-        Exiled.Events.Handlers.Warhead.Starting -= OnWarhead;
-        Exiled.Events.Handlers.Warhead.Stopping -= OnStopping;
+        Warhead.Starting -= OnWarhead;
+        Warhead.Stopping -= OnStopping;
         Timing.KillCoroutines(_forceNightVisionCoroutineHandle);
         AlarmLight.CancelReplacement();
         ClearForcedNightVision();

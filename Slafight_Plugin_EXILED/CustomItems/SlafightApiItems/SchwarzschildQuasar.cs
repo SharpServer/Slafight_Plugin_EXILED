@@ -4,9 +4,11 @@ using Exiled.API.Enums;
 using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Item;
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using InventorySystem.Items.Jailbird;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
+using Item = Exiled.Events.Handlers.Item;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
@@ -22,19 +24,19 @@ public class SchwarzschildQuasar : CItem
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Player.Dying += OnDyingOthers;
-        Exiled.Events.Handlers.Player.ChangingItem += OnChangingOther;
-        Exiled.Events.Handlers.Item.JailbirdChangingWearState += OnJailbirdChangingPhase;
-        Exiled.Events.Handlers.Item.JailbirdChargeComplete += OnJailbirdCharged;
+        Player.Dying += OnDyingOthers;
+        Player.ChangingItem += OnChangingOther;
+        Item.JailbirdChangingWearState += OnJailbirdChangingPhase;
+        Item.JailbirdChargeComplete += OnJailbirdCharged;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Player.Dying -= OnDyingOthers;
-        Exiled.Events.Handlers.Player.ChangingItem -= OnChangingOther;
-        Exiled.Events.Handlers.Item.JailbirdChangingWearState -= OnJailbirdChangingPhase;
-        Exiled.Events.Handlers.Item.JailbirdChargeComplete -= OnJailbirdCharged;
+        Player.Dying -= OnDyingOthers;
+        Player.ChangingItem -= OnChangingOther;
+        Item.JailbirdChangingWearState -= OnJailbirdChangingPhase;
+        Item.JailbirdChargeComplete -= OnJailbirdCharged;
         base.UnregisterEvents();
     }
 
@@ -46,7 +48,7 @@ public class SchwarzschildQuasar : CItem
 
     protected override void OnAcquired(ItemAddedEventArgs ev, bool displayMessage)
     {
-        Bases.TryAdd(ev.Item.Serial, new SchwarzschildQuasarStatusBase(){Serial = ev.Item.Serial});
+        Bases.TryAdd(ev.Item.Serial, new SchwarzschildQuasarStatusBase {Serial = ev.Item.Serial});
         base.OnAcquired(ev, displayMessage);
     }
 
@@ -190,7 +192,7 @@ public enum SchwarzschildQuasarPhaseType
 }
 public class SchwarzschildQuasarStatusBase
 {
-    public Jailbird Jailbird => Item.Get(Serial).As<Jailbird>();
+    public Jailbird Jailbird => Exiled.API.Features.Items.Item.Get(Serial).As<Jailbird>();
     public ushort Serial { get; init; }
     public int UsedCount { get; set; }
     public SchwarzschildQuasarPhaseType Phase
@@ -213,10 +215,8 @@ public class SchwarzschildQuasarStatusBase
                         return SchwarzschildQuasarPhaseType.Normal;
                     }
                     // WakeUp: 0-5回 (初期)
-                    else
-                    {
-                        return SchwarzschildQuasarPhaseType.WakeUp;
-                    }
+
+                    return SchwarzschildQuasarPhaseType.WakeUp;
                 }
             }
         }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Extensions;
 using Exiled.API.Features;
@@ -15,6 +16,7 @@ using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using UnityEngine;
+using Warhead = Exiled.Events.Handlers.Warhead;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -65,7 +67,7 @@ public class Scp035Role : CRole
     {
         Exiled.Events.Handlers.Player.Handcuffing += OnHandcuffing;
         Exiled.Events.Handlers.Player.Dying += OnDyingByRole;
-        Exiled.Events.Handlers.Warhead.Starting += OnWarheadStartingGlobal;
+        Warhead.Starting += OnWarheadStartingGlobal;
         OmegaWarhead.OmegaWarheadStarting += OnOmegaWarheadStartingGlobal;
         base.RegisterEvents();
     }
@@ -74,7 +76,7 @@ public class Scp035Role : CRole
     {
         Exiled.Events.Handlers.Player.Handcuffing -= OnHandcuffing;
         Exiled.Events.Handlers.Player.Dying -= OnDyingByRole;
-        Exiled.Events.Handlers.Warhead.Starting -= OnWarheadStartingGlobal;
+        Warhead.Starting -= OnWarheadStartingGlobal;
         OmegaWarhead.OmegaWarheadStarting -= OnOmegaWarheadStartingGlobal;
         base.UnregisterEvents();
     }
@@ -234,12 +236,12 @@ public class Scp035Role : CRole
                 if (AbilityBase.HasAbility<Scp035TentacleAbility>(player))
                     player.RemoveAbility<Scp035TentacleAbility>();
                 player.ChangeAppearance(RoleTypeId.Scientist);
-                player.ShowHint($"<color=green>安定</color>状態へと移行しました！\n現在精神は比較的安定しており、人々に危害を与える必要は無いでしょう。\nアビリティ「触手」が無効化されました。\n<color=green>人々と友好的に接しましょう</color>");
+                player.ShowHint("<color=green>安定</color>状態へと移行しました！\n現在精神は比較的安定しており、人々に危害を与える必要は無いでしょう。\nアビリティ「触手」が無効化されました。\n<color=green>人々と友好的に接しましょう</color>");
                 return true;
 
             case Scp035StateType.Unstable:
                 player.EnableEffect(EffectType.Poisoned, 10);
-                player.ShowHint($"<color=yellow>不安定</color>状態へと移行しました！\n現在精神は揺れ動いており、常に回復が必要でしょう。\n腐蝕が再開しました。\n<color=yellow>人々に警告を与え、己の生存を心掛けましょう。</color>");
+                player.ShowHint("<color=yellow>不安定</color>状態へと移行しました！\n現在精神は揺れ動いており、常に回復が必要でしょう。\n腐蝕が再開しました。\n<color=yellow>人々に警告を与え、己の生存を心掛けましょう。</color>");
                 return true;
 
             case Scp035StateType.Awaken:
@@ -250,7 +252,7 @@ public class Scp035Role : CRole
                 player.EnableEffect(EffectType.BodyshotReduction, 30);
                 player.EnableEffect(EffectType.DamageReduction, 30);
                 player.ChangeAppearance(RoleTypeId.Tutorial);
-                player.ShowHint($"<color=red>発狂／覚醒</color>状態へと移行しました！\n現在精神は支配されており、己の為に全てを犠牲にする必要があるでしょう。\n腐蝕が止まり、アビリティ「触手」が使用可能になりました！\n<color=red>ためらう必要はない。出る事だけを考えるのだ。</color>");
+                player.ShowHint("<color=red>発狂／覚醒</color>状態へと移行しました！\n現在精神は支配されており、己の為に全てを犠牲にする必要があるでしょう。\n腐蝕が止まり、アビリティ「触手」が使用可能になりました！\n<color=red>ためらう必要はない。出る事だけを考えるのだ。</color>");
                 return true;
 
             case Scp035StateType.FullyAwaken:
@@ -262,7 +264,7 @@ public class Scp035Role : CRole
                 player.EnableEffect(EffectType.DamageReduction, 40);
                 player.EnableEffect(EffectType.MovementBoost, 5);
                 player.ChangeAppearance(RoleTypeId.Tutorial);
-                player.ShowHint($"<color=red><b>完全覚醒</b></color>状態へと移行しました！\n現在精神は完全に支配されており、もはや受け入れるしかないでしょう！\nアビリティ「触手」が利用可能になりました！");
+                player.ShowHint("<color=red><b>完全覚醒</b></color>状態へと移行しました！\n現在精神は完全に支配されており、もはや受け入れるしかないでしょう！\nアビリティ「触手」が利用可能になりました！");
                 return true;
             default:
                 throw new ArgumentOutOfRangeException(nameof(stateType), stateType, null);
@@ -333,7 +335,7 @@ public class Scp035Role : CRole
                 }
             }
 
-            if (!player.IsEffectActive<CustomPlayerEffects.Poisoned>() &&
+            if (!player.IsEffectActive<Poisoned>() &&
                 state.NowState == Scp035StateType.Unstable)
                 player.EnableEffect(EffectType.Poisoned, 10);
 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
@@ -194,7 +195,7 @@ public static class PlayerExtensions
 
             return true;
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Log.Warn($"[SetRole] Skipped {role}: invalid player target ({ex.Message}).");
             return false;

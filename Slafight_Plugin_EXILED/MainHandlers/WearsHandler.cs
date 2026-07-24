@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AdminToys;
 using Exiled.API.Features;
+using Exiled.API.Features.Toys;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using ProjectMER.Features;
@@ -9,6 +11,8 @@ using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Object = UnityEngine.Object;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -49,15 +53,15 @@ public static class WearsHandler
 
     public static void Register()
     {
-        Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
-        Exiled.Events.Handlers.Server.RestartingRound += OnRoundRestarting;
+        Server.RoundStarted += OnRoundStarted;
+        Server.RestartingRound += OnRoundRestarting;
         Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
-        Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarting;
+        Server.RoundStarted -= OnRoundStarted;
+        Server.RestartingRound -= OnRoundRestarting;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
 
         if (_cleanupCoroutine.IsRunning)
@@ -246,7 +250,7 @@ public static class WearsHandler
     /// </summary>
     public static void RegisterExternal(
         Player player,
-        Exiled.API.Features.Toys.AdminToy? toy,
+        AdminToy? toy,
         Vector3? offset = null,
         Transform target = null,
         Quaternion? rotationOffset = null,
@@ -272,7 +276,7 @@ public static class WearsHandler
     /// </summary>
     public static void RegisterExternal(
         Player player,
-        AdminToys.AdminToyBase toy,
+        AdminToyBase toy,
         Vector3? offset = null,
         Transform target = null,
         Quaternion? rotationOffset = null,
@@ -360,7 +364,7 @@ public static class WearsHandler
     /// </summary>
     public static void Wear(
         this Player player,
-        Exiled.API.Features.Toys.AdminToy? toy,
+        AdminToy? toy,
         Vector3? offset = null,
         Transform target = null,
         Quaternion? rotationOffset = null,
@@ -375,7 +379,7 @@ public static class WearsHandler
     /// </summary>
     public static void Wear(
         this Player player,
-        AdminToys.AdminToyBase toy,
+        AdminToyBase toy,
         Vector3? offset = null,
         Transform target = null,
         Quaternion? rotationOffset = null,
@@ -506,7 +510,7 @@ public static class WearsHandler
         Transform target = null,
         Quaternion? rotationOffset = null,
         string slot = DefaultWearSlot)
-        where TToy : Exiled.API.Features.Toys.AdminToy
+        where TToy : AdminToy
     {
         wornToy = null;
         if (toy == null)
@@ -535,8 +539,8 @@ public static class WearsHandler
     /// </summary>
     public static bool TryWear(
         this Player player,
-        AdminToys.AdminToyBase toy,
-        out AdminToys.AdminToyBase wornToy,
+        AdminToyBase toy,
+        out AdminToyBase wornToy,
         Vector3? offset = null,
         Transform target = null,
         Quaternion? rotationOffset = null,
@@ -624,7 +628,7 @@ public static class WearsHandler
     {
         var existing = gameObject.GetComponent<WearFollower>();
         if (existing != null)
-            UnityEngine.Object.Destroy(existing);
+            Object.Destroy(existing);
 
         var follower = gameObject.AddComponent<WearFollower>();
         follower.Initialize(target, offset, rotationOffset);
@@ -740,7 +744,7 @@ public static class WearsHandler
         {
             var follower = wear.GameObject != null ? wear.GameObject.GetComponent<WearFollower>() : null;
             if (follower != null)
-                UnityEngine.Object.Destroy(follower);
+                Object.Destroy(follower);
 
             wear.Destroy();
         }
@@ -759,15 +763,15 @@ public static class WearsHandler
         }
 
         if (gameObject != null)
-            UnityEngine.Object.Destroy(gameObject);
+            Object.Destroy(gameObject);
     }
 
-    private static void DestroyAdminToyBase(AdminToys.AdminToyBase toy)
+    private static void DestroyAdminToyBase(AdminToyBase toy)
     {
         if (toy == null)
             return;
 
-        var wrapper = Exiled.API.Features.Toys.AdminToy.Get(toy);
+        var wrapper = AdminToy.Get(toy);
         if (wrapper != null)
         {
             wrapper.Destroy();
@@ -775,6 +779,6 @@ public static class WearsHandler
         }
 
         if (toy.gameObject != null)
-            UnityEngine.Object.Destroy(toy.gameObject);
+            Object.Destroy(toy.gameObject);
     }
 }

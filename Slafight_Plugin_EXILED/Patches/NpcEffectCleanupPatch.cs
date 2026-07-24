@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using CustomPlayerEffects;
 using Exiled.API.Features;
@@ -42,7 +43,7 @@ public static class NpcEffectCleanupState
         {
             npc.DisableAllEffects();
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Log.Warn($"[NpcEffectCleanup] Failed to disable effects for NPC {playerId}: {ex.Message}");
         }

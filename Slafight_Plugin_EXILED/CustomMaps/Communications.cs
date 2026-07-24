@@ -11,6 +11,8 @@ using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Light = Exiled.API.Features.Toys.Light;
+using Player = Exiled.API.Features.Player;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;
 
@@ -33,20 +35,20 @@ public static class Communications
 
     public static void Register()
     {
-        Exiled.Events.Handlers.Server.RoundStarted += Setup;
+        Server.RoundStarted += Setup;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Server.RoundStarted -= Setup;
+        Server.RoundStarted -= Setup;
         Reset();
     }
 
     public static InteractableToy? InteractableToy { get; private set; }
     public static Text? TextToy { get; private set; }
     public static SchematicObject? Broadcaster { get; private set; }
-    private static SpeakerApi.Playback? _playback = null;
-    private static Light? _light = null;
+    private static SpeakerApi.Playback? _playback;
+    private static Light? _light;
     public static bool IsSecretActivated { get; private set; }
 
     public static string MonitorText
@@ -83,7 +85,7 @@ public static class Communications
         IsSecretActivated = false;
     }
 
-    private static void TryDestroy(Exiled.API.Features.Toys.AdminToy? toy)
+    private static void TryDestroy(AdminToy? toy)
     {
         if (toy == null)
             return;
@@ -195,7 +197,7 @@ public static class Communications
     {
         float elapsed = 0f;
         yield return Timing.WaitForOneFrame;
-        MonitorText = $"<size=5>[===LOG-A71-005555.5===]</size>";
+        MonitorText = "<size=5>[===LOG-A71-005555.5===]</size>";
         if (Broadcaster is null || _light is null) yield break;
         if (TextToy is not null)
         {

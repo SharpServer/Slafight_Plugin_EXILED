@@ -1,3 +1,5 @@
+using UnityEngine;
+
 namespace Slafight_Plugin_EXILED.API.Enums;
 
 public readonly struct CustomColor(byte r, byte g, byte b, byte a = 255)
@@ -6,7 +8,7 @@ public readonly struct CustomColor(byte r, byte g, byte b, byte a = 255)
     public byte G { get; } = g;
     public byte B { get; } = b;
     public byte A { get; } = a;
-    public UnityEngine.Color ToUnityColor() => new(R / 255f, G / 255f, B / 255f, A / 255f);
+    public Color ToUnityColor() => new(R / 255f, G / 255f, B / 255f, A / 255f);
 
     public static readonly CustomColor Purple = new(185, 75, 255);
     public static readonly CustomColor NinetailedBlue = new(0, 0, 180);

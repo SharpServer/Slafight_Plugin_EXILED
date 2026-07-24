@@ -33,7 +33,7 @@ public class AlphaWarheadOverride : AbilityBase
 
     protected override void ExecuteAbility(Player player)
     {
-        FacilityLightHandler.OnWarhead(new StartingEventArgs(null, false, true));
+        FacilityLightHandler.OnWarhead(new StartingEventArgs(null, false));
         Exiled.API.Features.Cassie.MessageTranslated(
             "$PITCH_0.2 .g4 .g4 BY $PITCH_0.8 BY ORDER OF FACILITY SYSTEM CONTROL, ALPHA WARHEAD FORCE OPERATION ACTIVATED. DETONATE IN T MINUS 90 SECONDS.",
             "<color=red><b>BY ORDER OF FACILITY SYSTEM CONTROL, ALPHA WARHEAD FORCE OPERATION ACTIVATED. DETONATE IN T-90 SECONDS. </b></color>");

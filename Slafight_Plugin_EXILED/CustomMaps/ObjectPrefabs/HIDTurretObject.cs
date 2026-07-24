@@ -5,6 +5,7 @@ using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp096;
+using Exiled.Events.Handlers;
 using InventorySystem.Items.MicroHID.Modules;
 using MEC;
 using PlayerRoles;
@@ -15,6 +16,8 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.Patches;
 using UnityEngine;
+using Item = Exiled.API.Features.Items.Item;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
@@ -81,7 +84,7 @@ public class HIDTurretObject : ObjectPrefab
             return;
 
         Exiled.Events.Handlers.Player.ChangingRole += OnChangingRole;
-        Exiled.Events.Handlers.Scp096.AddingTarget += OnScp096AddingTarget;
+        Scp096.AddingTarget += OnScp096AddingTarget;
         _eventsRegistered = true;
     }
 
@@ -91,7 +94,7 @@ public class HIDTurretObject : ObjectPrefab
             return;
 
         Exiled.Events.Handlers.Player.ChangingRole -= OnChangingRole;
-        Exiled.Events.Handlers.Scp096.AddingTarget -= OnScp096AddingTarget;
+        Scp096.AddingTarget -= OnScp096AddingTarget;
         ResetPowerState();
         TurretNpcIds.Clear();
         PendingTurretRoleChanges.Clear();
@@ -487,7 +490,7 @@ public class HIDTurretObject : ObjectPrefab
 
     private void SpawnSingleNpc(int index)
     {
-        Npc? npc = Npc.Spawn($"H.I.D Turret", RoleTypeId.Tutorial, true, GetCenterNpcPosition());
+        Npc? npc = Npc.Spawn("H.I.D Turret", RoleTypeId.Tutorial, true, GetCenterNpcPosition());
         if (npc == null)
         {
             Log.Error($"[HIDTurretObject] Failed to spawn turret NPC {index}.");

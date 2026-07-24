@@ -10,8 +10,8 @@ public static class CassieHelper
     public static void AnnounceNtfArrival()
     {
         Exiled.API.Features.Cassie.MessageTranslated(
-            $"MtfUnit Epsilon 11 Designated Ninetailedfox HasEntered AllRemaining",
-            $"<color=#5bc5ff>機動部隊Epsilon-11 \"九尾狐\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。",
+            "MtfUnit Epsilon 11 Designated Ninetailedfox HasEntered AllRemaining",
+            "<color=#5bc5ff>機動部隊Epsilon-11 \"九尾狐\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。",
             true);
     }
 
@@ -26,7 +26,7 @@ public static class CassieHelper
     public static void AnnounceHdArrival()
     {
         Exiled.API.Features.Cassie.MessageTranslated(
-            $"MtfUnit Nu 7 Designated Her man down HasEntered AllRemaining This Forces Work Epsilon 11 Task and operated by O5 Command . for Big Containment Breachs .",
+            "MtfUnit Nu 7 Designated Her man down HasEntered AllRemaining This Forces Work Epsilon 11 Task and operated by O5 Command . for Big Containment Breachs .",
             $"<b><color=#353535>機動部隊Nu-7 \"下される鉄槌 - ハンマーダウン\"</color></b>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。" +
             $"<split>本部隊は<color=#5bc5ff>Epsilon-11 \"九尾狐\"</color>の任務の代替として大規模な収容違反の対応の為O5評議会に招集されました。",
             true);
@@ -43,7 +43,7 @@ public static class CassieHelper
     public static void AnnounceSneArrival()
     {
         Exiled.API.Features.Cassie.MessageTranslated(
-            $"MtfUnit Eta 10 designated See no E be l HasEntered AllRemaining . This forces work for the anti- me mu termination",
+            "MtfUnit Eta 10 designated See no E be l HasEntered AllRemaining . This forces work for the anti- me mu termination",
             $"<color=#FF1493>機動部隊Eta-10 \"シー・ノー・イーヴル\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。<split>" +
             $"この部隊は反ミーム存在の終了の為に招集されました。",
             true);
@@ -116,8 +116,8 @@ public static class CassieHelper
     public static void AnnounceLastOperationArrival()
     {
         Exiled.API.Features.Cassie.MessageTranslated(
-            $"MtfUnit Alpha 0 designated Last Operation HasEntered AllRemaining .",
-            $"<color=red>機動部隊Alpha-0 \"最終指令\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。",
+            "MtfUnit Alpha 0 designated Last Operation HasEntered AllRemaining .",
+            "<color=red>機動部隊Alpha-0 \"最終指令\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。",
             true);
     }
 
@@ -149,7 +149,7 @@ public static class CassieHelper
     public static void AnnounceSecurityTeamEnter(int count)
     {
         Exiled.API.Features.Cassie.MessageTranslated(
-            $"Attention All personnel . Security Team has entered the facility .",
+            "Attention All personnel . Security Team has entered the facility .",
             $"全職員に通達。<color={CTeam.Guards.GetTeamColor()}>保安部隊</color>が施設に到着しました。",
             true);
     }

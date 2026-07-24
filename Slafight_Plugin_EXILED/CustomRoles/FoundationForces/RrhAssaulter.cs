@@ -4,6 +4,7 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
+using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces;
 
@@ -31,6 +32,6 @@ public class RrhAssaulter : CRole
     {
         [AmmoType.Nato9] = 180,
     };
-    protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
+    protected override Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
     protected override string SpawnCustomInfo => $"<color={ServerColors.Red}>Red Right Hand Assaulter</color>";
 }

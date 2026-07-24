@@ -3,12 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Enums;
-using Exiled.API.Features;
 using Exiled.Events.EventArgs.Scp079;
+using Exiled.Events.Handlers;
 using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.Extensions;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.Hints;
 
@@ -34,8 +35,8 @@ public sealed class Scp079PingHints : IBootstrapHandler, IDisposable
 
     private Scp079PingHints()
     {
-        Exiled.Events.Handlers.Scp079.Pinging += OnPinging;
-        Exiled.Events.Handlers.Server.RestartingRound += ClearAll;
+        Scp079.Pinging += OnPinging;
+        Server.RestartingRound += ClearAll;
     }
 
     public void Dispose()
@@ -44,8 +45,8 @@ public sealed class Scp079PingHints : IBootstrapHandler, IDisposable
             return;
 
         _disposed = true;
-        Exiled.Events.Handlers.Scp079.Pinging -= OnPinging;
-        Exiled.Events.Handlers.Server.RestartingRound -= ClearAll;
+        Scp079.Pinging -= OnPinging;
+        Server.RestartingRound -= ClearAll;
         ClearAll();
         GC.SuppressFinalize(this);
     }
@@ -87,8 +88,8 @@ public sealed class Scp079PingHints : IBootstrapHandler, IDisposable
 
     private static string BuildMessage(PingingEventArgs ev)
     {
-        string zone = RoomNameTranslator.TranslateZoneName(ev.Room.Zone);
-        string room = RoomNameTranslator.TranslateRoomName(ev.Room.Type);
+        string zone = ev.Room.Zone.TranslateZoneName();
+        string room = ev.Room.Type.TranslateRoomName();
         string target = ev.Type switch
         {
             PingType.Generator => "発電機",

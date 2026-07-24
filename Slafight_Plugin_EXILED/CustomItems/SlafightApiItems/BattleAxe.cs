@@ -2,10 +2,12 @@ using System.Collections.Generic;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Item;
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using MEC;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
@@ -27,13 +29,13 @@ public class BattleAxe : CItem
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Item.Swinging += OnSwinging;
+        Item.Swinging += OnSwinging;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Item.Swinging -= OnSwinging;
+        Item.Swinging -= OnSwinging;
         base.UnregisterEvents();
     }
 

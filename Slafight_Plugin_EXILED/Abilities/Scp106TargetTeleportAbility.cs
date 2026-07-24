@@ -61,8 +61,7 @@ public sealed class Scp106TargetTeleportAbility : AbilityBase
         if (scp106.UsePortal(destination, HuntRole.HuntSettings.TeleportVigorCost))
         {
             player.ShowHint(
-                $"<color=#c50000>{target.Nickname}</color>のいる部屋へ移動を開始します。",
-                3f);
+                $"<color=#c50000>{target.Nickname}</color>のいる部屋へ移動を開始します。");
         }
     }
 

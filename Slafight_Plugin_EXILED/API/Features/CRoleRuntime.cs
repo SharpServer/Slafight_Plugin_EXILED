@@ -26,7 +26,7 @@ public sealed class CRoleRuntime : IDisposable
 
     public int PlayerId { get; }
     public string UniqueRole { get; }
-    public Player? Player => Exiled.API.Features.Player.Get(PlayerId);
+    public Player? Player => Player.Get(PlayerId);
     public bool IsActive => !_disposed && _isValid(Player);
     public IReadOnlyDictionary<string, object> Values => _values;
 

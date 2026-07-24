@@ -14,6 +14,7 @@ using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
 using Object = UnityEngine.Object;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.Changes;
 
@@ -47,18 +48,18 @@ public class WaitingForPlayersChanges : IBootstrapHandler
 
     public static void Register()
     {
-        Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
+        Server.WaitingForPlayers += OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Verified += OnVerified;
         Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
-        Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
+        Server.RoundStarted += OnRoundStarted;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
+        Server.WaitingForPlayers -= OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Verified -= OnVerified;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
-        Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
+        Server.RoundStarted -= OnRoundStarted;
         ResetWaitingRoomTextRefs();
         TutorialWaitingPlayers.Clear();
         StopAllWaitingMusic();
@@ -459,7 +460,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         if (!EnsureWaitingRoomTextRefs())
             return;
 
-        _playerCountText?.TextFormat = $"<b><u>{playerCount} / {Server.MaxPlayerCount}</u></b>";
+        _playerCountText?.TextFormat = $"<b><u>{playerCount} / {Exiled.API.Features.Server.MaxPlayerCount}</u></b>";
 
         string nextEventName = SpecialEventsHandler.Instance.LocalizedEventName;
         _nextEventText?.TextFormat = $"<b><u>Next Event: {nextEventName}</u></b>";

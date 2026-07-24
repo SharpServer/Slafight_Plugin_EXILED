@@ -27,7 +27,7 @@ public class WaterWarrior : CRole
         new(EffectType.Slowness, 10)
     ];
 
-    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>()
+    protected override IReadOnlyDictionary<AmmoType, ushort> SpawnAmmo => new Dictionary<AmmoType, ushort>
     {
         [AmmoType.Nato9] = 220,
         [AmmoType.Nato556] = 220

@@ -1,4 +1,6 @@
+using System;
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features.Teams.Core;
 using Slafight_Plugin_EXILED.API.Interface;
@@ -28,20 +30,20 @@ public sealed class CTeamProfileManager : IBootstrapHandler
     }
 
     public static bool IsActive(string profileKey) =>
-        string.Equals(ActiveProfile, profileKey, System.StringComparison.Ordinal);
+        string.Equals(ActiveProfile, profileKey, StringComparison.Ordinal);
 
     public static void Register()
     {
-        Exiled.Events.Handlers.Server.WaitingForPlayers += Reset;
-        Exiled.Events.Handlers.Server.RestartingRound += Reset;
-        Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
+        Server.WaitingForPlayers += Reset;
+        Server.RestartingRound += Reset;
+        Player.Left += OnPlayerLeft;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= Reset;
-        Exiled.Events.Handlers.Server.RestartingRound -= Reset;
-        Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
+        Server.WaitingForPlayers -= Reset;
+        Server.RestartingRound -= Reset;
+        Player.Left -= OnPlayerLeft;
         Reset();
     }
 

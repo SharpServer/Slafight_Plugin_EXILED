@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
+using PlayerRoles.Voice;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
@@ -292,7 +293,7 @@ public static class VoiceRoutingApi
                 continue;
 
             var nativeChannel = args.VoiceModule == null ||
-                                hub.roleManager.CurrentRole is not PlayerRoles.Voice.IVoiceRole receiverVoiceRole
+                                hub.roleManager.CurrentRole is not IVoiceRole receiverVoiceRole
                 ? VoiceChatChannel.None
                 : receiverVoiceRole.VoiceModule.ValidateReceive(args.Player.ReferenceHub, sourceChannel);
 

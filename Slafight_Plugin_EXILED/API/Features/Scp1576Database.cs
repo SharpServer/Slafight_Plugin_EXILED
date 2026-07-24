@@ -6,6 +6,7 @@ using MEC;
 using Respawning;
 using Respawning.Waves;
 using Slafight_Plugin_EXILED.API.Interface;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -23,14 +24,14 @@ public class Scp1576DatabaseHandler : IBootstrapHandler
 {
     public static void Register()
     {
-        Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
+        Server.WaitingForPlayers += OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Scp1576TransmissionEnded += OnTransmissionEnded;
         Exiled.Events.Handlers.Player.Left += OnLeft;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
+        Server.WaitingForPlayers -= OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Scp1576TransmissionEnded -= OnTransmissionEnded;
         Exiled.Events.Handlers.Player.Left -= OnLeft;
 

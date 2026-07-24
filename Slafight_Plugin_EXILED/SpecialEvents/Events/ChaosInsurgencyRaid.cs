@@ -1,8 +1,12 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp079;
+using Exiled.Events.Handlers;
 using MEC;
 using PlayerRoles;
 using ProjectMER.Features;
@@ -13,10 +17,8 @@ using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.Extensions;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using Player = Exiled.Events.Handlers.Player;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -29,7 +31,7 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
     public override string TriggerRequirement => "5人以上のプレイヤー";
 
     // ===== 内部状態 =====
-    private bool _teslaDisabled = false;
+    private bool _teslaDisabled;
     // ===== 実行エントリポイント =====
 
     protected override void OnExecute(int eventPID)
@@ -43,14 +45,14 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Scp079.Recontaining += OnRecontained;
-        Exiled.Events.Handlers.Player.TriggeringTesla += DisableTesla;
+        Scp079.Recontaining += OnRecontained;
+        Player.TriggeringTesla += DisableTesla;
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Scp079.Recontaining -= OnRecontained;
-        Exiled.Events.Handlers.Player.TriggeringTesla -= DisableTesla;
+        Scp079.Recontaining -= OnRecontained;
+        Player.TriggeringTesla -= DisableTesla;
     }
 
     // ===== メイン処理 =====
@@ -82,16 +84,14 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
 
         Exiled.API.Features.Cassie.MessageTranslated(
             "$pitch_.8 Successfully terminated Foundations Cassie System and putted New Insurgencys Cassie System . Cassie is now under delta command",
-            "<color=#00b7eb>財団のCassieシステム</color>の<color=red>終了</color>に成功。新たな<color=#228b22>インサージェンシーのCassieシステム</color>の導入も成功。<split> Cassieは今や<b><color=#228b22>DELTA COMMAND</color></b>の手中にある。",
-            false);
+            "<color=#00b7eb>財団のCassieシステム</color>の<color=red>終了</color>に成功。新たな<color=#228b22>インサージェンシーのCassieシステム</color>の導入も成功。<split> Cassieは今や<b><color=#228b22>DELTA COMMAND</color></b>の手中にある。");
 
         yield return Timing.WaitForSeconds(45f);
         if (CancelIfOutdated()) yield break;
 
         Exiled.API.Features.Cassie.MessageTranslated(
             "$pitch_.8 First Order of Delta Command . Turn off all facilitys . Accepted .",
-            "<b><color=#228b22>DELTA COMMAND</color></b>の最初の指令：全施設の消灯 ...承認",
-            false);
+            "<b><color=#228b22>DELTA COMMAND</color></b>の最初の指令：全施設の消灯 ...承認");
 
         foreach (var room in Room.List)
             room.Color = new Color(55 / 255f, 55 / 255f, 55 / 255f);
@@ -104,8 +104,7 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
 
         Exiled.API.Features.Cassie.MessageTranslated(
             "$pitch_.8 Next Order . Turn off Tesla Gates . Accepted .",
-            "次の指令：テスラゲートの無効化 ...承認",
-            false);
+            "次の指令：テスラゲートの無効化 ...承認");
 
         _teslaDisabled = true;
 
@@ -114,13 +113,12 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
 
         Exiled.API.Features.Cassie.MessageTranslated(
             "$pitch_.8 All Insurgency Agents . Work Time .",
-            "インサージェンシーのエージェント達よ、働く時間だ。",
-            false);
+            "インサージェンシーのエージェント達よ、働く時間だ。");
 
         yield return Timing.WaitForSeconds(1000f);
         if (CancelIfOutdated()) yield break;
 
-        bool ciAlive = Player.List.Any(p => p != null && p.GetTeam() == CTeam.ChaosInsurgency);
+        bool ciAlive = Exiled.API.Features.Player.List.Any(p => p != null && p.GetTeam() == CTeam.ChaosInsurgency);
 
         if (ciAlive)
             Timing.RunCoroutine(CiSuccessCoroutine());
@@ -203,7 +201,7 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
         yield return Timing.WaitForSeconds(5f);
         if (CancelIfOutdated()) yield break;
 
-        foreach (var player in Player.List)
+        foreach (var player in Exiled.API.Features.Player.List)
         {
             if (player == null || !player.IsAlive) continue;
 

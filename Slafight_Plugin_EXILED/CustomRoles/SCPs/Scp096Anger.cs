@@ -8,6 +8,7 @@ using Exiled.API.Features.Roles;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp096;
 using Exiled.Events.EventArgs.Warhead;
+using Exiled.Events.Handlers;
 using JetBrains.Annotations;
 using MEC;
 using PlayerRoles;
@@ -16,6 +17,8 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Player = Exiled.API.Features.Player;
+using Warhead = Exiled.Events.Handlers.Warhead;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -90,11 +93,11 @@ public class Scp096Anger : CRole
     {
         Log.Info("[Scp096Anger] RegisterEvents");
 
-        Exiled.Events.Handlers.Scp096.Enraging += OnEnraging;
-        Exiled.Events.Handlers.Scp096.AddingTarget += OnTargetAdded;
-        Exiled.Events.Handlers.Scp096.RemovingTarget += OnRemovingTarget;
-        Exiled.Events.Handlers.Scp096.CalmingDown += OnCalming;
-        Exiled.Events.Handlers.Warhead.Detonating += OnVanillaWarheadDetonating;
+        Scp096.Enraging += OnEnraging;
+        Scp096.AddingTarget += OnTargetAdded;
+        Scp096.RemovingTarget += OnRemovingTarget;
+        Scp096.CalmingDown += OnCalming;
+        Warhead.Detonating += OnVanillaWarheadDetonating;
         OmegaWarhead.OmegaWarheadDetonating += OnMassCasualtyImminent;
 
         base.RegisterEvents();
@@ -104,11 +107,11 @@ public class Scp096Anger : CRole
     {
         Log.Info("[Scp096Anger] UnregisterEvents");
 
-        Exiled.Events.Handlers.Scp096.Enraging -= OnEnraging;
-        Exiled.Events.Handlers.Scp096.AddingTarget -= OnTargetAdded;
-        Exiled.Events.Handlers.Scp096.RemovingTarget -= OnRemovingTarget;
-        Exiled.Events.Handlers.Scp096.CalmingDown -= OnCalming;
-        Exiled.Events.Handlers.Warhead.Detonating -= OnVanillaWarheadDetonating;
+        Scp096.Enraging -= OnEnraging;
+        Scp096.AddingTarget -= OnTargetAdded;
+        Scp096.RemovingTarget -= OnRemovingTarget;
+        Scp096.CalmingDown -= OnCalming;
+        Warhead.Detonating -= OnVanillaWarheadDetonating;
         OmegaWarhead.OmegaWarheadDetonating -= OnMassCasualtyImminent;
 
         foreach (Player player in _sessions.Keys.ToArray())

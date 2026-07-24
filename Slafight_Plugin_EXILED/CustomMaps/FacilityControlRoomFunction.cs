@@ -1,4 +1,5 @@
 using Exiled.API.Enums;
+using Exiled.API.Features;
 using Exiled.API.Features.Items;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;
@@ -55,7 +56,7 @@ public abstract class FacilityControlRoomFunction
 public readonly struct FacilityControlRoomFunctionContext
 {
     public FacilityControlRoomFunctionContext(
-        Exiled.API.Features.Player player,
+        Player player,
         Keycard stagedKeycard,
         int executedCount)
     {
@@ -64,7 +65,7 @@ public readonly struct FacilityControlRoomFunctionContext
         ExecutedCount = executedCount;
     }
 
-    public Exiled.API.Features.Player Player { get; }
+    public Player Player { get; }
     public Keycard StagedKeycard { get; }
     public int ExecutedCount { get; }
 }

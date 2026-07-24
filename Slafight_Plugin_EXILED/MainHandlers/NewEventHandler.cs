@@ -1,12 +1,15 @@
 using System;
 using System.Collections.Generic;
+using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp079;
+using Exiled.Events.Handlers;
 using MEC;
-using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.SpecialEvents;
+using Player = Exiled.Events.Handlers.Player;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -14,25 +17,25 @@ public class NewEventHandler : IBootstrapHandler
 {
     public static void Register()
     {
-        Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
-        Exiled.Events.Handlers.Server.RestartingRound += ResetState;
-        Exiled.Events.Handlers.Scp079.Recontaining += OnOvercharged;
-        Exiled.Events.Handlers.Player.TriggeringTesla += OnTesla;
-        Exiled.Events.Handlers.Scp079.InteractingTesla += OnScp079InteractingTesla;
+        Server.WaitingForPlayers += OnWaitingForPlayers;
+        Server.RestartingRound += ResetState;
+        Scp079.Recontaining += OnOvercharged;
+        Player.TriggeringTesla += OnTesla;
+        Scp079.InteractingTesla += OnScp079InteractingTesla;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
-        Exiled.Events.Handlers.Server.RestartingRound -= ResetState;
-        Exiled.Events.Handlers.Scp079.Recontaining -= OnOvercharged;
-        Exiled.Events.Handlers.Player.TriggeringTesla -= OnTesla;
-        Exiled.Events.Handlers.Scp079.InteractingTesla -= OnScp079InteractingTesla;
+        Server.WaitingForPlayers -= OnWaitingForPlayers;
+        Server.RestartingRound -= ResetState;
+        Scp079.Recontaining -= OnOvercharged;
+        Player.TriggeringTesla -= OnTesla;
+        Scp079.InteractingTesla -= OnScp079InteractingTesla;
         ResetState();
     }
 
-    public static bool AlreadyRecovered { get; private set; } = false;
-    public static bool IsTeslaIdled = false;
+    public static bool AlreadyRecovered { get; private set; }
+    public static bool IsTeslaIdled;
 
     public static void ResetState()
     {

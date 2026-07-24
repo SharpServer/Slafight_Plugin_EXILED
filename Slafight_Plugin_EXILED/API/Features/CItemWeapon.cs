@@ -6,9 +6,11 @@ using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
 using Exiled.Events.EventArgs.Item;
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using InventorySystem.Items.Firearms.Attachments;
 using InventorySystem.Items.Firearms.Modules;
 using UnityEngine;
+using Item = Exiled.API.Features.Items.Item;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -221,16 +223,16 @@ public abstract class CItemWeapon : CItem
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Player.ReloadingWeapon += OnInternalReloading;
-        Exiled.Events.Handlers.Player.ReloadedWeapon  += OnInternalReloaded;
+        Player.ReloadingWeapon += OnInternalReloading;
+        Player.ReloadedWeapon  += OnInternalReloaded;
         Exiled.Events.Handlers.Item.ChangingAttachments += OnInternalChangingAttachments;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Player.ReloadingWeapon -= OnInternalReloading;
-        Exiled.Events.Handlers.Player.ReloadedWeapon  -= OnInternalReloaded;
+        Player.ReloadingWeapon -= OnInternalReloading;
+        Player.ReloadedWeapon  -= OnInternalReloaded;
         Exiled.Events.Handlers.Item.ChangingAttachments -= OnInternalChangingAttachments;
         base.UnregisterEvents();
     }

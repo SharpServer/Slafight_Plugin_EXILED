@@ -6,11 +6,14 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
+using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Handlers;
 using MEC;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps.FacilityControlRoomFunctions;
 using UnityEngine;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;
 
@@ -25,7 +28,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
 
     private static FacilityControlRoom _instance;
 
-    private readonly Dictionary<Exiled.API.Features.Player, FacilityControlRoomSession> _sessions = [];
+    private readonly Dictionary<Player, FacilityControlRoomSession> _sessions = [];
     private readonly Dictionary<string, int> _functionExecutionCounts = [];
     private readonly Dictionary<string, float> _functionCooldownReadyTimes = [];
 
@@ -45,9 +48,9 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
 
     protected override void RegisterEvents(EventSubscriptionScope subscriptions)
     {
-        subscriptions.Add(() => LabApi.Events.Handlers.PlayerEvents.SearchedToy += OnSearchedToy, () => LabApi.Events.Handlers.PlayerEvents.SearchedToy -= OnSearchedToy);
-        subscriptions.Add(() => LabApi.Events.Handlers.ServerEvents.RoundStarted += ResetState, () => LabApi.Events.Handlers.ServerEvents.RoundStarted -= ResetState);
-        subscriptions.Add(() => Exiled.Events.Handlers.Server.WaitingForPlayers += ResetState, () => Exiled.Events.Handlers.Server.WaitingForPlayers -= ResetState);
+        subscriptions.Add(() => PlayerEvents.SearchedToy += OnSearchedToy, () => PlayerEvents.SearchedToy -= OnSearchedToy);
+        subscriptions.Add(() => ServerEvents.RoundStarted += ResetState, () => ServerEvents.RoundStarted -= ResetState);
+        subscriptions.Add(() => Server.WaitingForPlayers += ResetState, () => Server.WaitingForPlayers -= ResetState);
         subscriptions.Add(() => Exiled.Events.Handlers.Player.DroppingItem += OnDroppingItem, () => Exiled.Events.Handlers.Player.DroppingItem -= OnDroppingItem);
         subscriptions.Add(() => Exiled.Events.Handlers.Player.ChangingItem += OnChangingItem, () => Exiled.Events.Handlers.Player.ChangingItem -= OnChangingItem);
         subscriptions.Add(() => Exiled.Events.Handlers.Player.Left += OnPlayerLeft, () => Exiled.Events.Handlers.Player.Left -= OnPlayerLeft);
@@ -72,13 +75,13 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
             EndSession(ev.Player, null);
     }
 
-    private void OnSearchedToy(LabApi.Events.Arguments.PlayerEvents.PlayerSearchedToyEventArgs ev)
+    private void OnSearchedToy(PlayerSearchedToyEventArgs ev)
     {
         var consolePosition = GetConsolePosition();
         if (ev.Interactable == null || Vector3.Distance(ev.Interactable.Position, consolePosition) >= ConsoleInteractRadius)
             return;
 
-        var player = Exiled.API.Features.Player.Get(ev.Player);
+        var player = Player.Get(ev.Player);
         if (player == null)
             return;
 
@@ -130,7 +133,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
         EndSession(ev.Player, "<size=24>制御室操作を終了しました。\nステージされたキーカードから切り替えました。</size>");
     }
 
-    private void TryStartSession(Exiled.API.Features.Player player, Vector3 consolePosition)
+    private void TryStartSession(Player player, Vector3 consolePosition)
     {
         if (player.CurrentItem is not Keycard keycard)
         {
@@ -146,7 +149,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
     }
 
     private void ExecuteSelectedFunction(
-        Exiled.API.Features.Player player,
+        Player player,
         Keycard stagedKeycard,
         FacilityControlRoomSession session)
     {
@@ -216,7 +219,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
         }
     }
 
-    private void EndSession(Exiled.API.Features.Player player, string hint)
+    private void EndSession(Player player, string hint)
     {
         if (!_sessions.TryGetValue(player, out var session))
             return;
@@ -229,7 +232,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
     }
 
     private static bool TryGetStagedKeycard(
-        Exiled.API.Features.Player player,
+        Player player,
         FacilityControlRoomSession session,
         out Keycard keycard)
     {
@@ -362,7 +365,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
     }
 
     private static void ShowFunctionHint(
-        Exiled.API.Features.Player player,
+        Player player,
         FacilityControlRoomSession session,
         string hint)
     {
@@ -388,7 +391,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
     private sealed class FacilityControlRoomSession
     {
         public FacilityControlRoomSession(
-            Exiled.API.Features.Player player,
+            Player player,
             ushort stagedItemSerial,
             Vector3 consolePosition)
         {
@@ -397,7 +400,7 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
             ConsolePosition = consolePosition;
         }
 
-        public Exiled.API.Features.Player Player { get; }
+        public Player Player { get; }
         public ushort StagedItemSerial { get; }
         public Vector3 ConsolePosition { get; }
         public int SelectedFunctionIndex { get; set; }

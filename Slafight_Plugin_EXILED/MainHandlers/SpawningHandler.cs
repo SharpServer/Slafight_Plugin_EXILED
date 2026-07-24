@@ -4,11 +4,10 @@ using Exiled.API.Features;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.Extensions;
-using UnityEngine;
-
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
+using Slafight_Plugin_EXILED.Extensions;
+using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -235,9 +234,6 @@ public class SpawningHandler : IBootstrapHandler, IDisposable
             case SpawnTypeId.GoiSnowNormal:
                 break;
             case SpawnTypeId.GoiSnowBackup:
-                break;
-
-            default:
                 break;
         }
     }

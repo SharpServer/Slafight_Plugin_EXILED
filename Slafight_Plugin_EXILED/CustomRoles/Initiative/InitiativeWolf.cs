@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using Exiled.API.Enums;
-using Exiled.API.Features;
 using Exiled.Events.EventArgs.Scp049;
+using Exiled.Events.Handlers;
 using PlayerRoles;
 using ProjectMER.Features.Extensions;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -10,6 +10,7 @@ using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.Patches;
 using UnityEngine;
 using Light = Exiled.API.Features.Toys.Light;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.Initiative;
 
@@ -31,12 +32,12 @@ public class InitiativeWolf : CRole
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Scp049.ActivatingSense += OnActivatingSense;
+        Scp049.ActivatingSense += OnActivatingSense;
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Scp049.ActivatingSense -= OnActivatingSense;
+        Scp049.ActivatingSense -= OnActivatingSense;
     }
 
     protected override void OnRoleSpawned(Player player, RoleSpawnFlags roleSpawnFlags)

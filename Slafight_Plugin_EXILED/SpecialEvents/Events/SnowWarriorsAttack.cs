@@ -12,6 +12,8 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Player = Exiled.Events.Handlers.Player;
+using Random = UnityEngine.Random;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -24,7 +26,7 @@ public class SnowWarriorsAttackEvent : SpecialEvent
     public override string TriggerRequirement => "5人以上のプレイヤー";
 
     // ===== 内部状態 =====
-    private bool _teslaDisabled = false;
+    private bool _teslaDisabled;
     // ===== 実行エントリポイント =====
     public override bool IsReadyToExecute()
     {
@@ -42,12 +44,12 @@ public class SnowWarriorsAttackEvent : SpecialEvent
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Player.TriggeringTesla += DisableTesla;
+        Player.TriggeringTesla += DisableTesla;
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Player.TriggeringTesla -= DisableTesla;
+        Player.TriggeringTesla -= DisableTesla;
     }
 
     // ===== メイン処理 =====
@@ -77,16 +79,14 @@ public class SnowWarriorsAttackEvent : SpecialEvent
 
         Exiled.API.Features.Cassie.MessageTranslated(
             "$pitch_.8 Successfully terminated Foundations Cassie System and putted New Division Cassie System . Cassie is now under us",
-            "<color=#00b7eb>財団のCassieシステム</color>の<color=red>終了</color>に成功。新たな<color=#ffffff>雪の戦士たちのCassieシステム</color>の導入も成功。<split> Cassieは今や<b><color=#ffffff>雪の帝王</color></b>の手中にある。",
-            false);
+            "<color=#00b7eb>財団のCassieシステム</color>の<color=red>終了</color>に成功。新たな<color=#ffffff>雪の戦士たちのCassieシステム</color>の導入も成功。<split> Cassieは今や<b><color=#ffffff>雪の帝王</color></b>の手中にある。");
 
         yield return Timing.WaitForSeconds(45f);
         if (CancelIfOutdated()) yield break;
 
         Exiled.API.Features.Cassie.MessageTranslated(
             "$pitch_.8 First Order . Light up all facility . Accepted .",
-            "<b><color=#ffffff>雪の帝王</color></b>の最初の指令：全施設のライトアップ ...承認",
-            false);
+            "<b><color=#ffffff>雪の帝王</color></b>の最初の指令：全施設のライトアップ ...承認");
 
         Timing.RunCoroutine(LightUpCoroutine());
 
@@ -95,8 +95,7 @@ public class SnowWarriorsAttackEvent : SpecialEvent
 
         Exiled.API.Features.Cassie.MessageTranslated(
             "$pitch_.8 Next Order . Turn off Tesla Gates . Accepted .",
-            "次の指令：テスラゲートの無効化 ...承認",
-            false);
+            "次の指令：テスラゲートの無効化 ...承認");
 
         _teslaDisabled = true;
 
@@ -105,14 +104,13 @@ public class SnowWarriorsAttackEvent : SpecialEvent
 
         Exiled.API.Features.Cassie.MessageTranslated(
             "$pitch_.8 All Division . Work Time .",
-            "戦士達よ、働く時間だ。",
-            false);
+            "戦士達よ、働く時間だ。");
 
         yield return Timing.WaitForSeconds(1000f);
         if (CancelIfOutdated()) yield break;
 
         bool snowAlive = false;
-        foreach (var player in Player.List)
+        foreach (var player in Exiled.API.Features.Player.List)
         {
             if (player != null && player.GetCustomRole() is CRoleTypeId.SnowWarrior)
             {
@@ -189,7 +187,7 @@ public class SnowWarriorsAttackEvent : SpecialEvent
         yield return Timing.WaitForSeconds(145f);
         if (CancelIfOutdated()) yield break;
 
-        foreach (var player in Player.List)
+        foreach (var player in Exiled.API.Features.Player.List)
         {
             if (player == null || !player.IsAlive) continue;
 
@@ -267,9 +265,9 @@ public class SnowWarriorsAttackEvent : SpecialEvent
             {
                 room.AreLightsOff = false;
                 room.Color = new Color32(
-                    (byte)UnityEngine.Random.Range(0, 256),
-                    (byte)UnityEngine.Random.Range(0, 256),
-                    (byte)UnityEngine.Random.Range(0, 256),
+                    (byte)Random.Range(0, 256),
+                    (byte)Random.Range(0, 256),
+                    (byte)Random.Range(0, 256),
                     255);
             }
 

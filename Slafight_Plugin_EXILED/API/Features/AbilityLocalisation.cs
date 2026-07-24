@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Exiled.API.Features;
 using Slafight_Plugin_EXILED.CustomRoles.Others.SergeyMakarov;
 
 namespace Slafight_Plugin_EXILED.API.Features;
@@ -44,7 +45,7 @@ public static class AbilityLocalization
         ["GenerateWeaponAbility"] = "呪具の錬成"
     };
 
-    public static string GetDisplayName(string key, Exiled.API.Features.Player player)
+    public static string GetDisplayName(string key, Player player)
     {
         if (player.IsSergeyMarkov())
         {

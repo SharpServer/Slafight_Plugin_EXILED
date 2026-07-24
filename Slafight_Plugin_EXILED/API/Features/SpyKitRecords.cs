@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using Exiled.API.Extensions;
 using Exiled.API.Features;
 using PlayerRoles;
+using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
+using Random = UnityEngine.Random;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -26,7 +28,7 @@ public static class SpyKitRecords
         public CRoleTypeId MorphCRoleTypeId;
         public string? MorphCustomName;
         public string? MorphCustomInfo;
-        public ProjectMER.Features.Objects.SchematicObject? MorphSchematicObject;
+        public SchematicObject? MorphSchematicObject;
         public Action<Player>? Setup;
         public Action<Player>? Cleanup;
             
@@ -45,7 +47,7 @@ public static class SpyKitRecords
 
     public static void Morph(this Player player, SpyMorphData morphData)
     {
-        PlayerSpyDatas[player.Id] = new SpyData()
+        PlayerSpyDatas[player.Id] = new SpyData
         {
             PlayerId = player.Id,
             PlayerBaseRole = player.Role.Type,
@@ -99,11 +101,11 @@ public static class SpyKitRecords
     /// </summary>
     public static void MorphTo(this Player player, string morphName)
     {
-        var data = SpyKitRecords.GetMorph(morphName);
+        var data = GetMorph(morphName);
         if (data.HasValue)
             player.Morph(data.Value);
         else
-            player.ShowHint($"<color=red>{morphName} が見つかりません</color>", 3f);
+            player.ShowHint($"<color=red>{morphName} が見つかりません</color>");
     }
 
     /// <summary>
@@ -111,8 +113,8 @@ public static class SpyKitRecords
     /// </summary>
     public static void MorphRandom(this Player player)
     {
-        var names = SpyKitRecords.GetAllMorphNames();
+        var names = GetAllMorphNames();
         if (names.Count > 0)
-            player.MorphTo(names[UnityEngine.Random.Range(0, names.Count)]);
+            player.MorphTo(names[Random.Range(0, names.Count)]);
     }
 }

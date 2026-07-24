@@ -1,6 +1,7 @@
 using System;
 using Exiled.Events.EventArgs.Player;
 using LabApi.Events.CustomHandlers;
+using LabApi.Events.Handlers;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps.Core.DoorAccess;
@@ -62,8 +63,8 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
         ServerHandler.RoundStarted += _roundStartup.StartRound;
         ServerHandler.RestartingRound += _roundStartup.StopRound;
         MapHandler.SpawningTeamVehicle += _surfaceGateBarrier.HandleTeamVehicleSpawn;
-        LabApi.Events.Handlers.PlayerEvents.SearchedToy += _toyInteractions.HandleSearchedToy;
-        LabApi.Events.Handlers.ServerEvents.DoorDamaging += _doorAccess.HandleDoorDamaging;
+        PlayerEvents.SearchedToy += _toyInteractions.HandleSearchedToy;
+        ServerEvents.DoorDamaging += _doorAccess.HandleDoorDamaging;
         PlayerHandler.InteractingDoor += _doorAccess.HandleInteraction;
         PlayerHandler.Left += HandlePlayerLeft;
         PlayerHandler.Died += HandlePlayerDied;
@@ -79,8 +80,8 @@ public class CustomMapMainHandler : CustomEventsHandler, IBootstrapHandler, IDis
         ServerHandler.RoundStarted -= _roundStartup.StartRound;
         ServerHandler.RestartingRound -= _roundStartup.StopRound;
         MapHandler.SpawningTeamVehicle -= _surfaceGateBarrier.HandleTeamVehicleSpawn;
-        LabApi.Events.Handlers.PlayerEvents.SearchedToy -= _toyInteractions.HandleSearchedToy;
-        LabApi.Events.Handlers.ServerEvents.DoorDamaging -= _doorAccess.HandleDoorDamaging;
+        PlayerEvents.SearchedToy -= _toyInteractions.HandleSearchedToy;
+        ServerEvents.DoorDamaging -= _doorAccess.HandleDoorDamaging;
         PlayerHandler.InteractingDoor -= _doorAccess.HandleInteraction;
         PlayerHandler.Left -= HandlePlayerLeft;
         PlayerHandler.Died -= HandlePlayerDied;

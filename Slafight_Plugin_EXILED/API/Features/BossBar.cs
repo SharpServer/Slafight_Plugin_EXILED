@@ -278,7 +278,7 @@ public sealed class BossBar
             string message = string.Join("\n", visibleBars.Select(bar => bar.Render()));
             ushort duration = visibleBars.Max(bar => bar.BroadcastDuration);
 
-            try { player.Broadcast(duration, message, global::Broadcast.BroadcastFlags.Normal, true); }
+            try { player.Broadcast(duration, message, Broadcast.BroadcastFlags.Normal, true); }
             catch { /* ignore */ }
         }
     }

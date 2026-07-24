@@ -206,7 +206,6 @@ public abstract class ServerSpecifics
                 "アクセシビリティモード",
                 "OFF",
                 "ON",
-                false,
                 hint: "一部のモデルを見やすい表示へ切り替えます。")),
 
 

@@ -1,6 +1,7 @@
 using System;
 using CustomPlayerEffects;
 using Exiled.API.Enums;
+using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using InventorySystem.Items.Firearms.Attachments;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -49,7 +50,7 @@ public class S41MedicalPistol : CItemWeapon
         ev.Attacker.ShowHitMarker();
     }
 
-    private static void Treat(Exiled.API.Features.Player player)
+    private static void Treat(Player player)
     {
         player.DisableEffect(EffectType.Burned);
         player.DisableEffect(EffectType.Bleeding);

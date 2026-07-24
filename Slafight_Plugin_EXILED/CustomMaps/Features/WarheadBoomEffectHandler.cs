@@ -1,38 +1,41 @@
+using System;
 using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Doors;
 using Exiled.Events.EventArgs.Warhead;
 using MEC;
+using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Light = Exiled.API.Features.Toys.Light;
+using Warhead = Exiled.Events.Handlers.Warhead;
 
-using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 
 public static class WarheadBoomEffectHandler
 {
     private static readonly List<CoroutineHandle> ExtraHandles = [];
-    private static readonly List<Exiled.API.Features.Toys.Light> ExtraLights = [];
+    private static readonly List<Light> ExtraLights = [];
 
     public static void Register()
     {
-        Exiled.Events.Handlers.Warhead.Starting += InvokeCoroutine;
-        Exiled.Events.Handlers.Warhead.Detonating += OnDetonating;
-        Exiled.Events.Handlers.Warhead.Detonated += OnDetonated;
+        Warhead.Starting += InvokeCoroutine;
+        Warhead.Detonating += OnDetonating;
+        Warhead.Detonated += OnDetonated;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Warhead.Starting -= InvokeCoroutine;
-        Exiled.Events.Handlers.Warhead.Detonating -= OnDetonating;
-        Exiled.Events.Handlers.Warhead.Detonated -= OnDetonated;
+        Warhead.Starting -= InvokeCoroutine;
+        Warhead.Detonating -= OnDetonating;
+        Warhead.Detonated -= OnDetonated;
         CleanupRunningEffects();
     }
     private static CoroutineHandle _handle;
     private static CoroutineHandle _postDetonationHandle;
 
-    public static bool IsBooming = false;
+    public static bool IsBooming;
     private static bool _postDetonationEffectsApplied;
 
     private static void OnDetonating(DetonatingEventArgs ev)
@@ -54,7 +57,7 @@ public static class WarheadBoomEffectHandler
         float deadline = Time.realtimeSinceStartup + 2f;
         while (!Round.IsLobby && Time.realtimeSinceStartup <= deadline)
         {
-            if (Warhead.IsDetonated || AlphaWarheadController.Singleton?.AlreadyDetonated == true)
+            if (Exiled.API.Features.Warhead.IsDetonated || AlphaWarheadController.Singleton?.AlreadyDetonated == true)
             {
                 ApplyPostDetonationEffects("Warhead.Detonating fallback");
                 yield break;
@@ -83,7 +86,7 @@ public static class WarheadBoomEffectHandler
                 if (player.Position.y <= 265f)
                     player.Kill(DamageType.Warhead);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Log.Warn($"[WarheadBoomEffectHandler] Failed to kill {player.Nickname} after detonation: {ex}");
             }
@@ -98,7 +101,7 @@ public static class WarheadBoomEffectHandler
                 if (!player.EnableEffect(EffectType.Concussed, 255, 10f))
                     Log.Debug($"[WarheadBoomEffectHandler] Concussed was not accepted for {player.Nickname}.");
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Log.Warn($"[WarheadBoomEffectHandler] Failed to apply Concussed to {player.Nickname}: {ex}");
             }
@@ -112,7 +115,7 @@ public static class WarheadBoomEffectHandler
             {
                 door.Lock(DoorLockType.NoPower);
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Log.Warn($"[WarheadBoomEffectHandler] Failed to lock elevator door {door.Name}: {ex}");
             }
@@ -144,12 +147,12 @@ public static class WarheadBoomEffectHandler
         yield return Timing.WaitForSeconds(0.1f);
 
         IsBooming = false;
-        float startTimer    = Warhead.DetonationTimer;
+        float startTimer    = Exiled.API.Features.Warhead.DetonationTimer;
         float startRealTime = Time.realtimeSinceStartup;
 
         while (true)
         {
-            if (!Warhead.IsInProgress || Round.IsLobby) yield break;
+            if (!Exiled.API.Features.Warhead.IsInProgress || Round.IsLobby) yield break;
 
             float elapsed            = Time.realtimeSinceStartup - startRealTime;
             float estimatedRemaining = startTimer - elapsed;
@@ -214,7 +217,7 @@ public static class WarheadBoomEffectHandler
 
         var flashColor = new Color(1f, 0.85f, 0.5f); // 白に近いオレンジ
 
-        var light = Exiled.API.Features.Toys.Light.Create(
+        var light = Light.Create(
             position: position,
             rotation: null,
             scale:    null,

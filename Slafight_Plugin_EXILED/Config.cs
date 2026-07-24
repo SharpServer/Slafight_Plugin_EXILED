@@ -1,10 +1,10 @@
 using System;
 using System.ComponentModel;
 using System.IO;
+using Exiled.API.Interfaces;
 
 namespace Slafight_Plugin_EXILED;
 
-using Exiled.API.Interfaces;
 public class Config : IConfig
 {
     [Description("プラグインの有効/無効を設定します")]

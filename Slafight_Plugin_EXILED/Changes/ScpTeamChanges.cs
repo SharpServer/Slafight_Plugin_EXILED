@@ -1,4 +1,5 @@
 using Exiled.Events.EventArgs.Scp173;
+using Exiled.Events.Handlers;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Interface;
@@ -10,12 +11,12 @@ public class ScpTeamChanges : IBootstrapHandler
 {
     public static void Register()
     {
-        Exiled.Events.Handlers.Scp173.AddingObserver += OnAddingObserver;
+        Scp173.AddingObserver += OnAddingObserver;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Scp173.AddingObserver -= OnAddingObserver;
+        Scp173.AddingObserver -= OnAddingObserver;
     }
 
     private static void OnAddingObserver(AddingObserverEventArgs ev)

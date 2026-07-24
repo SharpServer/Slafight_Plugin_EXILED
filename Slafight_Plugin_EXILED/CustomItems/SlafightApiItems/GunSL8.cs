@@ -1,4 +1,5 @@
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using InventorySystem.Items.Firearms.Attachments;
 using PlayerStatsSystem;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -37,13 +38,13 @@ public class GunSL8 : CItemWeapon
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Player.SendingGunSound += OnSound;
+        Player.SendingGunSound += OnSound;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Player.SendingGunSound -= OnSound;
+        Player.SendingGunSound -= OnSound;
         base.UnregisterEvents();
     }
 

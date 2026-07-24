@@ -1,5 +1,6 @@
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp1509;
+using Exiled.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 
@@ -19,13 +20,13 @@ public class Scp148 : CItem
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Scp1509.Resurrecting += OnResurrecting;
+        Scp1509.Resurrecting += OnResurrecting;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Scp1509.Resurrecting -= OnResurrecting;
+        Scp1509.Resurrecting -= OnResurrecting;
         base.UnregisterEvents();
     }
 

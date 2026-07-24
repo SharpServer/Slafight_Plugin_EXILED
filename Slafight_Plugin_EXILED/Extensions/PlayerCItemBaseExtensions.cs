@@ -9,7 +9,7 @@ public static class PlayerCItemBaseExtensions
 {
     public static PlayerCItemBase GetCItemBase(this Player player)
     {
-        var @base = new PlayerCItemBase(){ Player = player };
+        var @base = new PlayerCItemBase { Player = player };
         return @base;
     }
 

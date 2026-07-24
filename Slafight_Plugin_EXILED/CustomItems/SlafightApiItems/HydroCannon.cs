@@ -8,6 +8,7 @@ using MEC;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
@@ -139,7 +140,7 @@ public class HydroCannon : CItemWeapon
     {
         for (int i = 0; i < BurstCount; i++)
         {
-            var offset = UnityEngine.Random.insideUnitSphere * 0.3f;
+            var offset = Random.insideUnitSphere * 0.3f;
             var scale = Vector3.one * (0.25f + i * 0.1f);
 
             try

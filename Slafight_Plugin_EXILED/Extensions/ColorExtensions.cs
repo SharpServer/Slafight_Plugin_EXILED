@@ -1,3 +1,4 @@
+using System.Globalization;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.Extensions;
@@ -41,16 +42,16 @@ public static class ColorExtensions
 
         if (hex.Length == 6)
         {
-            r = byte.Parse(hex.Substring(0, 2), System.Globalization.NumberStyles.HexNumber);
-            g = byte.Parse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber);
-            b = byte.Parse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber);
+            r = byte.Parse(hex.Substring(0, 2), NumberStyles.HexNumber);
+            g = byte.Parse(hex.Substring(2, 2), NumberStyles.HexNumber);
+            b = byte.Parse(hex.Substring(4, 2), NumberStyles.HexNumber);
         }
         else if (hex.Length == 8)
         {
-            r = byte.Parse(hex.Substring(0, 2), System.Globalization.NumberStyles.HexNumber);
-            g = byte.Parse(hex.Substring(2, 2), System.Globalization.NumberStyles.HexNumber);
-            b = byte.Parse(hex.Substring(4, 2), System.Globalization.NumberStyles.HexNumber);
-            a = byte.Parse(hex.Substring(6, 2), System.Globalization.NumberStyles.HexNumber);
+            r = byte.Parse(hex.Substring(0, 2), NumberStyles.HexNumber);
+            g = byte.Parse(hex.Substring(2, 2), NumberStyles.HexNumber);
+            b = byte.Parse(hex.Substring(4, 2), NumberStyles.HexNumber);
+            a = byte.Parse(hex.Substring(6, 2), NumberStyles.HexNumber);
         }
         else
         {

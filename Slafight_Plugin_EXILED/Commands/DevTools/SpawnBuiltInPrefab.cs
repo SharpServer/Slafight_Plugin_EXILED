@@ -34,7 +34,7 @@ public class SpawnBuiltInPrefab : ICommand
         if (arguments.Count == 0)
         {
             var names = Enum.GetNames(typeof(PrefabType));
-            response = $"Usage: .prefab <PrefabType>\nAvailable prefabs:\n" + string.Join(", ", names);
+            response = "Usage: .prefab <PrefabType>\nAvailable prefabs:\n" + string.Join(", ", names);
             return false;
         }
 

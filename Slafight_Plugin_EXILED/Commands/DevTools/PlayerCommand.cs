@@ -2,7 +2,6 @@ using System;
 using System.Linq;
 using CommandSystem;
 using Exiled.API.Features;
-using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 
@@ -122,14 +121,14 @@ public class PlayerCommand : ICommand
 
         if (vanilla.HasValue)
         {
-            target.SetRole(vanilla.Value, RoleSpawnFlags.All);
+            target.SetRole(vanilla.Value);
             response = $"{target.Nickname} -> {vanilla.Value}";
             return true;
         }
 
         if (custom.HasValue)
         {
-            target.SetRole(custom.Value, RoleSpawnFlags.All);
+            target.SetRole(custom.Value);
             response = $"{target.Nickname} -> {custom.Value}";
             return true;
         }

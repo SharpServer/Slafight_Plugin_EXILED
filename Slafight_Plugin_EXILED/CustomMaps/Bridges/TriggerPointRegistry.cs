@@ -1,7 +1,9 @@
 using System;
 using Exiled.API.Features;
+using LabApi.Events.Handlers;
 using MEC;
 using ProjectMER.Events.Arguments;
+using ProjectMER.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
@@ -16,11 +18,11 @@ public class TriggerPointRegistry : SlafightLabApiHandler
     protected override void RegisterEvents(EventSubscriptionScope subscriptions)
     {
         subscriptions.Add(
-            () => LabApi.Events.Handlers.ServerEvents.WaitingForPlayers += OnWaitingForPlayers,
-            () => LabApi.Events.Handlers.ServerEvents.WaitingForPlayers -= OnWaitingForPlayers);
+            () => ServerEvents.WaitingForPlayers += OnWaitingForPlayers,
+            () => ServerEvents.WaitingForPlayers -= OnWaitingForPlayers);
         subscriptions.Add(
-            () => ProjectMER.Events.Handlers.Schematic.SchematicSpawned += OnSchematicSpawned,
-            () => ProjectMER.Events.Handlers.Schematic.SchematicSpawned -= OnSchematicSpawned);
+            () => Schematic.SchematicSpawned += OnSchematicSpawned,
+            () => Schematic.SchematicSpawned -= OnSchematicSpawned);
     }
 
     protected override void OnDisposed()

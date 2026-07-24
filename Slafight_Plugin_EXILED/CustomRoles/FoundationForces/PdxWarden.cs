@@ -10,7 +10,7 @@ namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces;
 public class PdxWarden : CRole
 {
     protected override string RoleName { get; set; } = $"<color={ServerColors.Carmine}><b>Pandra's Box: Warden</b></color>";
-    protected override string Description { get; set; } = $"Omega-7の監督官。\n<b>アベルを監視し、暴走時には起爆スイッチを押して制御する事。</b>";
+    protected override string Description { get; set; } = "Omega-7の監督官。\n<b>アベルを監視し、暴走時には起爆スイッチを押して制御する事。</b>";
     protected override CRoleTypeId CRoleTypeId { get; set; } = CRoleTypeId.PdxWarden;
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "PdxWarden";

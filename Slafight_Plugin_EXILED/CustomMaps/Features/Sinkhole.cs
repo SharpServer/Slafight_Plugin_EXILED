@@ -6,12 +6,12 @@ using Exiled.API.Features.Hazards;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Server = Exiled.Events.Handlers.Server;
 
-using Slafight_Plugin_EXILED.API.Interface;
-
-using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 
 public class Sinkhole : IBootstrapHandler, IDisposable
@@ -33,7 +33,7 @@ public class Sinkhole : IBootstrapHandler, IDisposable
 
     public Sinkhole()
     {
-        Exiled.Events.Handlers.Server.RoundStarted += RoundStartHole;
+        Server.RoundStarted += RoundStartHole;
         Exiled.Events.Handlers.Player.Left += OnLeft;
     }
 
@@ -43,7 +43,7 @@ public class Sinkhole : IBootstrapHandler, IDisposable
             return;
 
         _disposed = true;
-        Exiled.Events.Handlers.Server.RoundStarted -= RoundStartHole;
+        Server.RoundStarted -= RoundStartHole;
         Exiled.Events.Handlers.Player.Left -= OnLeft;
         if (_sinkholeHandle.IsRunning)
             Timing.KillCoroutines(_sinkholeHandle);

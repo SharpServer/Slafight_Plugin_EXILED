@@ -2,6 +2,7 @@ using System;
 using System.Text;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using Random = System.Random;
 
 namespace Slafight_Plugin_EXILED.Extensions;
 
@@ -72,7 +73,7 @@ public static class StringUtils
         if (string.IsNullOrEmpty(input))
             return input;
 
-        var rng = seed == 0 ? new System.Random() : new System.Random(seed);
+        var rng = seed == 0 ? new Random() : new Random(seed);
         var sb = new StringBuilder(input.Length * 20);
 
         foreach (char c in input)

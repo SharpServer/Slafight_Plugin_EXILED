@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using AdminToys;
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.Events.EventArgs.Player;
+using Exiled.Events.EventArgs.Scp096;
+using Exiled.Events.Handlers;
 using MEC;
 using PlayerRoles;
 using ProjectMER.Features;
@@ -11,6 +14,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
@@ -91,7 +95,7 @@ public class WaterTentacle : ObjectPrefab
     }
 
     private SchematicObject? _schematicObject;
-    private ProjectMER.Features.AnimationController? _animationController;
+    private AnimationController? _animationController;
     private Npc? _npc;
     private CoroutineHandle _updateHandle;
     private bool _isDestroying;
@@ -105,7 +109,7 @@ public class WaterTentacle : ObjectPrefab
         if (_eventsRegistered)
             return;
 
-        Exiled.Events.Handlers.Scp096.AddingTarget += OnScp096AddingTarget;
+        Scp096.AddingTarget += OnScp096AddingTarget;
         Exiled.Events.Handlers.Player.SpawningRagdoll += OnSpawningRagdoll;
         _eventsRegistered = true;
     }
@@ -115,7 +119,7 @@ public class WaterTentacle : ObjectPrefab
         if (!_eventsRegistered)
             return;
 
-        Exiled.Events.Handlers.Scp096.AddingTarget -= OnScp096AddingTarget;
+        Scp096.AddingTarget -= OnScp096AddingTarget;
         Exiled.Events.Handlers.Player.SpawningRagdoll -= OnSpawningRagdoll;
         TentacleNpcIds.Clear();
         _eventsRegistered = false;
@@ -358,7 +362,7 @@ public class WaterTentacle : ObjectPrefab
     {
         try
         {
-            ProjectMER.Features.AnimationController animator = schematic.AnimationController;
+            AnimationController animator = schematic.AnimationController;
             if (animator.Animators.Count > 0)
                 animator.Play("destroying");
         }
@@ -372,7 +376,7 @@ public class WaterTentacle : ObjectPrefab
     {
         try
         {
-            ProjectMER.Features.AnimationController animator = schematic.AnimationController;
+            AnimationController animator = schematic.AnimationController;
             if (animator.Animators.Count > 0)
                 animator.Stop();
         }
@@ -391,13 +395,13 @@ public class WaterTentacle : ObjectPrefab
         }
     }
 
-    private static void OnSpawningRagdoll(Exiled.Events.EventArgs.Player.SpawningRagdollEventArgs ev)
+    private static void OnSpawningRagdoll(SpawningRagdollEventArgs ev)
     {
         if (ev?.Player != null && TentacleNpcIds.Contains(ev.Player.Id))
             ev.IsAllowed = false;
     }
 
-    private static void OnScp096AddingTarget(Exiled.Events.EventArgs.Scp096.AddingTargetEventArgs ev)
+    private static void OnScp096AddingTarget(AddingTargetEventArgs ev)
     {
         if (ev?.Target != null && TentacleNpcIds.Contains(ev.Target.Id))
             ev.IsAllowed = false;

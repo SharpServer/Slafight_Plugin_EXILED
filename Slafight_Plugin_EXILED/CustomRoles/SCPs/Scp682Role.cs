@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp939;
+using Exiled.Events.Handlers;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -10,6 +12,7 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -97,7 +100,7 @@ public class Scp682Role : CRole
         {
             player.Position = position;
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Log.Warn($"[Scp682Role] Skipped teleport during {context}: {ex.Message}");
         }
@@ -157,21 +160,21 @@ public class Scp682Role : CRole
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Scp939.PlacingAmnesticCloud += OnAmnesia;
-        Exiled.Events.Handlers.Scp939.PlacingMimicPoint += OnMimic;
-        Exiled.Events.Handlers.Scp939.PlayingFootstep += OnPF;
-        Exiled.Events.Handlers.Scp939.PlayingSound += OnPS;
-        Exiled.Events.Handlers.Scp939.PlayingVoice += OnPV;
+        Scp939.PlacingAmnesticCloud += OnAmnesia;
+        Scp939.PlacingMimicPoint += OnMimic;
+        Scp939.PlayingFootstep += OnPF;
+        Scp939.PlayingSound += OnPS;
+        Scp939.PlayingVoice += OnPV;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Scp939.PlacingAmnesticCloud -= OnAmnesia;
-        Exiled.Events.Handlers.Scp939.PlacingMimicPoint -= OnMimic;
-        Exiled.Events.Handlers.Scp939.PlayingFootstep -= OnPF;
-        Exiled.Events.Handlers.Scp939.PlayingSound -= OnPS;
-        Exiled.Events.Handlers.Scp939.PlayingVoice -= OnPV;
+        Scp939.PlacingAmnesticCloud -= OnAmnesia;
+        Scp939.PlacingMimicPoint -= OnMimic;
+        Scp939.PlayingFootstep -= OnPF;
+        Scp939.PlayingSound -= OnPS;
+        Scp939.PlayingVoice -= OnPV;
         base.UnregisterEvents();
     }
 

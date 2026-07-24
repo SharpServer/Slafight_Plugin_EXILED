@@ -1,12 +1,15 @@
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.EventArgs.Scp3114;
+using Exiled.Events.Handlers;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -25,13 +28,13 @@ public class Scp3114Role : CRole
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Scp3114.Disguised += ExtendTime;
+        Scp3114.Disguised += ExtendTime;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Scp3114.Disguised -= ExtendTime;
+        Scp3114.Disguised -= ExtendTime;
         base.UnregisterEvents();
     }
     
@@ -50,7 +53,7 @@ public class Scp3114Role : CRole
         });
     }
 
-    private void ExtendTime(Exiled.Events.EventArgs.Scp3114.DisguisedEventArgs ev)
+    private void ExtendTime(DisguisedEventArgs ev)
     {
         ev.Scp3114.DisguiseDuration = 300f;
     }

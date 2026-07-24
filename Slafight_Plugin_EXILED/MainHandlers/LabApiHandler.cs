@@ -1,11 +1,12 @@
 using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.Extensions;
-using Player = LabApi.Features.Wrappers.Player;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Bridges;
+using Slafight_Plugin_EXILED.Extensions;
+using Player = LabApi.Features.Wrappers.Player;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -30,8 +31,8 @@ public class LabApiHandler : SlafightLabApiHandler, IBootstrapHandler
 
     protected override void RegisterEvents(EventSubscriptionScope subscriptions)
     {
-        subscriptions.Add(() => LabApi.Events.Handlers.PlayerEvents.RaPlayerListAddingPlayer += HideWatchFromRaPlayerList, () => LabApi.Events.Handlers.PlayerEvents.RaPlayerListAddingPlayer -= HideWatchFromRaPlayerList);
-        subscriptions.Add(() => LabApi.Events.Handlers.PlayerEvents.RequestedRaPlayerInfo += HideWatchFromRaPlayerInfo, () => LabApi.Events.Handlers.PlayerEvents.RequestedRaPlayerInfo -= HideWatchFromRaPlayerInfo);
+        subscriptions.Add(() => PlayerEvents.RaPlayerListAddingPlayer += HideWatchFromRaPlayerList, () => PlayerEvents.RaPlayerListAddingPlayer -= HideWatchFromRaPlayerList);
+        subscriptions.Add(() => PlayerEvents.RequestedRaPlayerInfo += HideWatchFromRaPlayerInfo, () => PlayerEvents.RequestedRaPlayerInfo -= HideWatchFromRaPlayerInfo);
     }
 
     public bool ActivatedAntiMemeProtocol => FacilityControlRoom.IsAntiMemeProtocolActive;

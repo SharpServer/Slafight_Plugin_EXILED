@@ -7,6 +7,7 @@ using Interactables.Interobjects.DoorUtils;
 using MapGeneration;
 using MEC;
 using UnityEngine;
+using Warhead = Exiled.Events.Handlers.Warhead;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;
 
@@ -15,13 +16,13 @@ public static class MapGuardHandler
     public static void Register()
     {
         Exiled.Events.Handlers.Player.DamagingDoor += OnExplodingDoor;
-        Exiled.Events.Handlers.Warhead.Starting += OnWarheadDoor;
+        Warhead.Starting += OnWarheadDoor;
     }
 
     public static void Unregister()
     {
         Exiled.Events.Handlers.Player.DamagingDoor -= OnExplodingDoor;
-        Exiled.Events.Handlers.Warhead.Starting -= OnWarheadDoor;
+        Warhead.Starting -= OnWarheadDoor;
     }
 
     private static void OnExplodingDoor(DamagingDoorEventArgs ev)
@@ -77,7 +78,6 @@ public static class MapGuardHandler
                     door.Unlock();
                     door.IsOpen = false;
                     door.Lock(DoorLockType.AdminCommand);
-                    continue;
                 }
             }
         });

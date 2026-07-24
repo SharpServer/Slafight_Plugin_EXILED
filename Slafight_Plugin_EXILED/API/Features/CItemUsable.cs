@@ -1,7 +1,8 @@
 #nullable enable
+
 using System.Collections.Generic;
 using Exiled.API.Features.Items;
-
+using Exiled.API.Features.Pickups;
 using PlayerEvents = Exiled.Events.EventArgs.Player;
 
 namespace Slafight_Plugin_EXILED.API.Features;
@@ -62,7 +63,7 @@ public abstract class CItemUsable : CItem
             EnsureUseCounter(ev.Item.Serial);
     }
 
-    protected override void OnSpawned(Exiled.API.Features.Pickups.Pickup pickup)
+    protected override void OnSpawned(Pickup pickup)
     {
         base.OnSpawned(pickup);
         EnsureUseCounter(pickup.Serial);

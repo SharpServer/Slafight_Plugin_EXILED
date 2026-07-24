@@ -1,7 +1,7 @@
+using System.Collections.Generic;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.CustomMaps.Core;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;

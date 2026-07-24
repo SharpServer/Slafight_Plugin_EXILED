@@ -3,12 +3,13 @@ using System.Linq;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Warhead;
 using MEC;
+using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.Extensions;
-using PlayerRoles;
 using UnityEngine;
+using Warhead = Exiled.Events.Handlers.Warhead;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -27,8 +28,8 @@ public class AbelHandler : IBootstrapHandler
         if (_registered)
             return;
 
-        Exiled.Events.Handlers.Warhead.Detonating += OnDetonating;
-        Exiled.Events.Handlers.Warhead.Detonated += OnDetonated;
+        Warhead.Detonating += OnDetonating;
+        Warhead.Detonated += OnDetonated;
         OmegaWarhead.OmegaWarheadDetonating += OnOmegaWarheadDetonating;
         _registered = true;
         Log.Debug("AbelHandler: registered warhead detonation hooks.");
@@ -39,8 +40,8 @@ public class AbelHandler : IBootstrapHandler
         if (!_registered)
             return;
 
-        Exiled.Events.Handlers.Warhead.Detonating -= OnDetonating;
-        Exiled.Events.Handlers.Warhead.Detonated -= OnDetonated;
+        Warhead.Detonating -= OnDetonating;
+        Warhead.Detonated -= OnDetonated;
         OmegaWarhead.OmegaWarheadDetonating -= OnOmegaWarheadDetonating;
         if (_spawnHandle.IsRunning)
             Timing.KillCoroutines(_spawnHandle);

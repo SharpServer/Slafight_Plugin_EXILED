@@ -6,11 +6,13 @@ using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using InventorySystem.Items.Usables.Scp1344;
 using MEC;
+using Mirror;
 using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers.Wearables;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using ExiledScp1344 = Exiled.API.Features.Items.Scp1344;
 using Light = Exiled.API.Features.Toys.Light;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.CustomItems;
 
@@ -62,8 +64,8 @@ public static class NvgManager
     {
         if (_registered) return;
 
-        Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
-        Exiled.Events.Handlers.Server.RestartingRound += OnRoundRestarting;
+        Server.RoundStarted += OnRoundStarted;
+        Server.RestartingRound += OnRoundRestarting;
         Exiled.Events.Handlers.Player.ChangingRole  += OnChangingRole;
         Exiled.Events.Handlers.Player.Died          += OnDied;
         Exiled.Events.Handlers.Player.Left          += OnLeft;
@@ -81,8 +83,8 @@ public static class NvgManager
             return;
         }
 
-        Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
-        Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarting;
+        Server.RoundStarted -= OnRoundStarted;
+        Server.RestartingRound -= OnRoundRestarting;
         Exiled.Events.Handlers.Player.ChangingRole  -= OnChangingRole;
         Exiled.Events.Handlers.Player.Died          -= OnDied;
         Exiled.Events.Handlers.Player.Left          -= OnLeft;
@@ -318,7 +320,7 @@ public static class NvgManager
     /// owner 本人と owner を現在観戦中のプレイヤーだけに identity を表示し、
     /// それ以外の接続プレイヤーには明示 Hide を送る。
     /// </summary>
-    private static void ApplyOwnerVisibility(Player owner, Mirror.NetworkIdentity? identity)
+    private static void ApplyOwnerVisibility(Player owner, NetworkIdentity? identity)
     {
         if (owner == null || identity == null) return;
 
@@ -334,7 +336,7 @@ public static class NvgManager
         }
     }
 
-    private static void HideFromAll(Mirror.NetworkIdentity? identity)
+    private static void HideFromAll(NetworkIdentity? identity)
     {
         if (identity == null) return;
 
@@ -356,7 +358,6 @@ public static class NvgManager
             var light = Light.Create(
                 player.CameraTransform.position,
                 player.Rotation.eulerAngles,
-                null,
                 spawn: false);
 
             if (light?.Base == null || light.Base.netIdentity == null)
@@ -651,13 +652,13 @@ public static class NvgManager
 
     public static bool AddBattery(ushort serial, float amount)
     {
-        var current = GetBattery(serial, 0f);
+        var current = GetBattery(serial);
         return TrySetBattery(serial, current + amount);
     }
 
     public static bool DrainBattery(ushort serial, float amount)
     {
-        var current = GetBattery(serial, 0f);
+        var current = GetBattery(serial);
         return TrySetBattery(serial, current - amount);
     }
 

@@ -2,7 +2,6 @@ using System;
 using CommandSystem;
 using Exiled.API.Features;
 using Exiled.Permissions.Extensions;
-using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 
@@ -59,14 +58,14 @@ public class SpawnUniversal : ICommand
         // ── ロール付与 ────────────────────────────────────────────
         if (vanilla.HasValue)
         {
-            target.SetRole(vanilla.Value, RoleSpawnFlags.All);
+            target.SetRole(vanilla.Value);
             response = $"{target.Nickname} → {vanilla.Value}";
             return true;
         }
 
         if (custom.HasValue)
         {
-            target.SetRole(custom.Value, RoleSpawnFlags.All);
+            target.SetRole(custom.Value);
             response = $"{target.Nickname} → {target.UniqueRole}";
             return true;
         }

@@ -1,7 +1,6 @@
 #nullable enable
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
@@ -13,6 +12,7 @@ using Respawning;
 using Respawning.Waves;
 using Slafight_Plugin_EXILED.API.Interface;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.Hints;
 
@@ -46,8 +46,8 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
     {
         Exiled.Events.Handlers.Player.Verified += OnVerified;
         Exiled.Events.Handlers.Player.ChangingRole += OnChangingRole;
-        Exiled.Events.Handlers.Server.RoundStarted += EnsureAll;
-        Exiled.Events.Handlers.Server.RestartingRound += ClearAll;
+        Server.RoundStarted += EnsureAll;
+        Server.RestartingRound += ClearAll;
         _loop = Timing.RunCoroutine(UpdateLoop());
     }
 
@@ -59,8 +59,8 @@ public sealed class RespawnTimerHints : IBootstrapHandler, IDisposable
         _disposed = true;
         Exiled.Events.Handlers.Player.Verified -= OnVerified;
         Exiled.Events.Handlers.Player.ChangingRole -= OnChangingRole;
-        Exiled.Events.Handlers.Server.RoundStarted -= EnsureAll;
-        Exiled.Events.Handlers.Server.RestartingRound -= ClearAll;
+        Server.RoundStarted -= EnsureAll;
+        Server.RestartingRound -= ClearAll;
 
         if (_loop.IsRunning)
             Timing.KillCoroutines(_loop);

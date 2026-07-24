@@ -7,13 +7,13 @@ using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.API.Objects;
 using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
-
-using Slafight_Plugin_EXILED.API.Interface;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -25,18 +25,18 @@ public class FirstRolesHandler : IBootstrapHandler
 
     public FirstRolesHandler()
     {
-        Exiled.Events.Handlers.Server.WaitingForPlayers += RoundLocker;
+        Server.WaitingForPlayers += RoundLocker;
         Exiled.Events.Handlers.Player.ChangingRole += CancelRoundStartedRole;
-        Exiled.Events.Handlers.Server.RoundStarted += SetupRandomRoles;
-        Exiled.Events.Handlers.Server.RoundStarted += RoundUnlocker;
+        Server.RoundStarted += SetupRandomRoles;
+        Server.RoundStarted += RoundUnlocker;
     }
 
     ~FirstRolesHandler()
     {
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= RoundLocker;
+        Server.WaitingForPlayers -= RoundLocker;
         Exiled.Events.Handlers.Player.ChangingRole -= CancelRoundStartedRole;
-        Exiled.Events.Handlers.Server.RoundStarted -= SetupRandomRoles;
-        Exiled.Events.Handlers.Server.RoundStarted -= RoundUnlocker;
+        Server.RoundStarted -= SetupRandomRoles;
+        Server.RoundStarted -= RoundUnlocker;
     }
 
     private static void RoundLocker()

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Enums;
@@ -8,14 +9,13 @@ using Exiled.CustomItems.API.Features;
 using Exiled.Events.EventArgs.Scp2536;
 using InventorySystem.Items.Usables.Scp330;
 using PlayerRoles;
-using UnityEngine;
-using EffectType = Exiled.API.Enums.EffectType;
-
 using Slafight_Plugin_EXILED.API.Interface;
+using EffectType = Exiled.API.Enums.EffectType;
+using Random = UnityEngine.Random;
 
 namespace Slafight_Plugin_EXILED.Changes;
 
-public class ChristmasChanges : IBootstrapHandler, System.IDisposable
+public class ChristmasChanges : IBootstrapHandler, IDisposable
 {
     public static ChristmasChanges Instance { get; private set; }
     public static void Register()
@@ -32,11 +32,6 @@ public class ChristmasChanges : IBootstrapHandler, System.IDisposable
 
     private bool _disposed;
 
-    public ChristmasChanges()
-    {
-        //Exiled.Events.Handlers.Scp2536.GrantingGift += TreeChange;
-    }
-
     public void Dispose()
     {
         if (_disposed)
@@ -44,7 +39,7 @@ public class ChristmasChanges : IBootstrapHandler, System.IDisposable
 
         _disposed = true;
         //Exiled.Events.Handlers.Scp2536.GrantingGift -= TreeChange;
-        System.GC.SuppressFinalize(this);
+        GC.SuppressFinalize(this);
     }
 
     public void TreeChange(GrantingGiftEventArgs ev)
@@ -97,7 +92,7 @@ public class ChristmasChanges : IBootstrapHandler, System.IDisposable
             {
                 if (!player.IsInventoryFull || player.HasItem(ItemType.SCP330))
                 {
-                    float random = UnityEngine.Random.Range(0f, 1f);
+                    float random = Random.Range(0f, 1f);
                     List<CandyKindID> rareCandies =
                     [
                         CandyKindID.Black,

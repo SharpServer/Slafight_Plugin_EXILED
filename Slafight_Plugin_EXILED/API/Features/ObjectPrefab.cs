@@ -14,6 +14,8 @@ using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Interface;
 using UnityEngine;
+using Component = UnityEngine.Component;
+using Object = UnityEngine.Object;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -102,7 +104,7 @@ public abstract class ObjectPrefab : IObjectPrefab
 
     public virtual bool AutoDestroyEnabled { get; set; } = false;
     public virtual float AutoDestroyTime { get; set; } = -1f;
-    public virtual CoroutineHandle AutoDestroyCoroutineHandle { get; set; } = new CoroutineHandle();
+    public virtual CoroutineHandle AutoDestroyCoroutineHandle { get; set; }
     public virtual bool FollowMarkerTransform => true;
     public virtual bool IsSaveable { get; set; } = true;
 
@@ -388,7 +390,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     /// キー（ObjectPrefabSchematicInfo）またはブロック名からコンポーネントを取得する。
     /// キー一致を優先し、無ければブロック名で検索する。
     /// </summary>
-    public T? GetBlockComponent<T>(string keyOrName) where T : UnityEngine.Component
+    public T? GetBlockComponent<T>(string keyOrName) where T : Component
     {
         SchematicBlock? block = GetBlock(keyOrName) ?? Schematic?.FindBlock(keyOrName);
         return block != null && block.TryGetComponent(out T component) ? component : null;
@@ -426,7 +428,7 @@ public abstract class ObjectPrefab : IObjectPrefab
         }
 
         if (block != null && block.gameObject != null)
-            UnityEngine.Object.Destroy(block.gameObject);
+            Object.Destroy(block.gameObject);
 
         return true;
     }

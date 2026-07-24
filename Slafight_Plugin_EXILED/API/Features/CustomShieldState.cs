@@ -6,7 +6,6 @@ using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerStatsSystem;
 using UnityEngine;
-
 using PlayerHandlers = Exiled.Events.Handlers.Player;
 using ServerHandlers = Exiled.Events.Handlers.Server;
 

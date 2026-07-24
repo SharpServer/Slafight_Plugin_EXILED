@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Linq;
 using Exiled.API.Features;
 using MEC;
 using Slafight_Plugin_EXILED.API.Enums;

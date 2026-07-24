@@ -1,4 +1,5 @@
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
@@ -9,14 +10,14 @@ public class SpecificFlagsHandler : IBootstrapHandler
 {
     public static void Register()
     {
-        Exiled.Events.Handlers.Player.PickingUpItem += OnPicking;
-        Exiled.Events.Handlers.Player.DroppingItem += OnDropping;
+        Player.PickingUpItem += OnPicking;
+        Player.DroppingItem += OnDropping;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Player.PickingUpItem -= OnPicking;
-        Exiled.Events.Handlers.Player.DroppingItem -= OnDropping;
+        Player.PickingUpItem -= OnPicking;
+        Player.DroppingItem -= OnDropping;
         SpecificFlagsManager.ClearAll();
     }
 

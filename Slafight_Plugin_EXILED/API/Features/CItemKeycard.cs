@@ -1,4 +1,5 @@
 #nullable enable
+
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
@@ -6,7 +7,6 @@ using Exiled.API.Features.Items.Keycards;
 using Exiled.API.Features.Pickups;
 using Exiled.API.Interfaces.Keycards;
 using UnityEngine;
-
 using ItemHandlers = Exiled.Events.Handlers.Item;
 using PlayerHandlers = Exiled.Events.Handlers.Player;
 using ItemEvents = Exiled.Events.EventArgs.Item;

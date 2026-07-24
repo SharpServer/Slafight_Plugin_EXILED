@@ -915,7 +915,7 @@ public static class Scp914Changes
     private static void FullyRemoveItem(Scp914Context ctx)
     {
         if (ctx.IsInventory)
-            ctx.Owner!.RemoveItem(ctx.Item!, true);
+            ctx.Owner!.RemoveItem(ctx.Item!);
         else
             ctx.Pickup?.Destroy();
     }

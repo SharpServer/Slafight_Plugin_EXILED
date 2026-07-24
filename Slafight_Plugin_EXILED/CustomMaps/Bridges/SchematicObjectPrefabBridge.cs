@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Exiled.API.Features;
 using LabApi.Events.Handlers;
@@ -85,7 +86,7 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
     private static IEnumerator<float> ProcessBindQueue()
     {
         Log.Debug($"[SchematicObjectPrefabBridge] ProcessBindQueue start. pending={PendingBinds.Count}");
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var stopwatch = Stopwatch.StartNew();
         int processed = 0;
 
         while (_pendingBindIndex < PendingBinds.Count)
@@ -105,7 +106,7 @@ public class SchematicObjectPrefabBridge : SlafightLabApiHandler, IBootstrapHand
 
             if (marker != null)
             {
-                var markerStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                var markerStopwatch = Stopwatch.StartNew();
                 BindMarker(marker);
                 markerStopwatch.Stop();
                 if (markerStopwatch.Elapsed.TotalMilliseconds >= 20d)

@@ -1,6 +1,6 @@
 using Exiled.API.Enums;
-using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using InventorySystem.Items.Firearms.Attachments;
 using PlayerRoles;
 using PlayerStatsSystem;
@@ -8,6 +8,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Map = Exiled.API.Features.Map;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
@@ -51,13 +52,13 @@ public class GunM82 : CItemWeapon
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Player.SendingGunSound += OnSound;
+        Player.SendingGunSound += OnSound;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Player.SendingGunSound -= OnSound;
+        Player.SendingGunSound -= OnSound;
         base.UnregisterEvents();
     }
 

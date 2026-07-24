@@ -1,5 +1,7 @@
 using Slafight_Plugin_EXILED.API.Enums;
-using Slafight_Plugin_EXILED.API.Features; // SpecialEvent 基底クラス
+using Slafight_Plugin_EXILED.API.Features;
+
+// SpecialEvent 基底クラス
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -20,7 +22,6 @@ public class DailyFoundationEvent : SpecialEvent
 
     protected override void OnExecute(int eventPid)
     {
-        return; // None lol.
     }
 
     public override void RegisterEvents() { }

@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using CommandSystem;
 using Exiled.API.Features;
 using Exiled.Permissions.Extensions;
 using MEC;
-using Newtonsoft.Json;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 
@@ -197,7 +197,7 @@ public class SpawnObjectPrefab : ICommand
     }
 
     private static bool TryParseFloat(string value, out float result)
-        => float.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out result);
+        => float.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out result);
 
     private static bool TryReadVector(ArraySegment<string> args, int index, out Vector3 value)
     {
@@ -264,7 +264,7 @@ public class SpawnObjectPrefab : ICommand
                 return false;
             }
 
-            var byId = ObjectPrefabInstances.Get(id) as ObjectPrefab;
+            var byId = ObjectPrefabInstances.Get(id);
             if (byId != null)
             {
                 prefab = byId;
@@ -502,7 +502,7 @@ public class SpawnObjectPrefab : ICommand
             Vector3 localPos = inv * (p.Position - room.Position);
             Quaternion localRot = inv * p.Rotation;
 
-            var op = p as ObjectPrefab;
+            var op = p;
             ObjectPrefabRegistry.TryResolveExact(p.GetType().FullName ?? p.GetType().Name,
                 out ObjectPrefabDescriptor descriptor, out _);
 
@@ -576,7 +576,7 @@ public class SpawnObjectPrefab : ICommand
             Vector3 localPos = inv * (p.Position - room.Position);
             Quaternion localRot = inv * p.Rotation;
 
-            var op = p as ObjectPrefab;
+            var op = p;
             ObjectPrefabRegistry.TryResolveExact(p.GetType().FullName ?? p.GetType().Name,
                 out ObjectPrefabDescriptor descriptor, out _);
 
@@ -660,7 +660,7 @@ public class SpawnObjectPrefab : ICommand
                     .OrderBy(r => Vector3.Distance(r.Position, p.Position))
                     .FirstOrDefault();
                 var roomName = closestRoom?.Name ?? "Unknown";
-                var op = p as ObjectPrefab;
+                var op = p;
                 var marker = selected != null && selected.ObjectInstanceID == p.ObjectInstanceID ? "* " : "  ";
                 var tag = string.IsNullOrWhiteSpace(p.Tag) ? string.Empty : $" Tag:{p.Tag}";
                 return $"{marker}[{p.ObjectInstanceID}] {p.GetType().Name} @ {roomName} " +
@@ -1146,7 +1146,7 @@ public class SpawnObjectPrefab : ICommand
             return true;
         }
 
-        var prefab = ObjectPrefabInstances.Get(selector) as ObjectPrefab;
+        var prefab = ObjectPrefabInstances.Get(selector);
         if (prefab is null)
         {
             response = $"Prefab {selector} not found.";

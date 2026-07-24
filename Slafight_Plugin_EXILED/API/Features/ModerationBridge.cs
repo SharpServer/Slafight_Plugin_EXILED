@@ -3,10 +3,9 @@ using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Exiled.API.Features;
 
 namespace Slafight_Plugin_EXILED.API.Features;
-
-using Exiled.API.Features;
 
 /// <summary>
 /// Discord Bot 側 (bot.py の Flask エンドポイント /moderation_event) へ、

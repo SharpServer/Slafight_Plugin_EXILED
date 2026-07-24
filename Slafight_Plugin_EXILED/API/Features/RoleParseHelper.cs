@@ -8,7 +8,7 @@ namespace Slafight_Plugin_EXILED.API.Features;
 
 public static class RoleParseHelper
 {
-    private static readonly Dictionary<string, string> Aliases = new(StringComparer.OrdinalIgnoreCase) { };
+    private static readonly Dictionary<string, string> Aliases = new(StringComparer.OrdinalIgnoreCase);
 
     public static bool TryParseRole(string input, out RoleTypeId? vanilla, out CRoleTypeId? custom)
     {

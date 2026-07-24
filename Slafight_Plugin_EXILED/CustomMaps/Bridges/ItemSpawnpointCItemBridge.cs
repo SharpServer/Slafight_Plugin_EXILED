@@ -6,6 +6,8 @@ using ProjectMER.Features.Serializable;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 using UnityEngine;
+using Pickup = Exiled.API.Features.Pickups.Pickup;
+using Player = LabApi.Features.Wrappers.Player;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
 
@@ -71,7 +73,7 @@ public class ItemSpawnpointCItemBridge : IBootstrapHandler
         }
     }
 
-    private static bool TryGiveCItem(string customItemKey, ItemPickupBase pickup, LabApi.Features.Wrappers.Player player)
+    private static bool TryGiveCItem(string customItemKey, ItemPickupBase pickup, Player player)
     {
         if (!CItem.TryResolve(customItemKey, out CItem? cItem) || cItem == null)
             return false;
@@ -81,7 +83,7 @@ public class ItemSpawnpointCItemBridge : IBootstrapHandler
     }
 
     private static void ApplySpawnpointSettings(
-        Exiled.API.Features.Pickups.Pickup pickup,
+        Pickup pickup,
         SerializableItemSpawnpoint spawnpoint,
         Quaternion rotation,
         Transform parent)

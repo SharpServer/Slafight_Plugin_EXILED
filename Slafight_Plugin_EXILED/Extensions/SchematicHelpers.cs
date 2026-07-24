@@ -1,4 +1,5 @@
 using System;
+using Exiled.API.Features;
 using MEC;
 using ProjectMER.Events.Arguments;
 using ProjectMER.Features.Objects;
@@ -22,7 +23,7 @@ public static class SchematicHelpers
         }
         catch (Exception e)
         {
-            Exiled.API.Features.Log.Error(
+            Log.Error(
                 $"[SchematicHelpers] Failed to get position for schematic {ev.Schematic.Name}: {e}");
             return false;
         }

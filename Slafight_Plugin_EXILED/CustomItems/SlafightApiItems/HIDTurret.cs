@@ -1,4 +1,5 @@
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using InventorySystem.Items.MicroHID.Modules;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
@@ -22,13 +23,13 @@ public class HIDTurret : CItem
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Player.ChangingMicroHIDState += OnChangingMicroHIDState;
+        Player.ChangingMicroHIDState += OnChangingMicroHIDState;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Player.ChangingMicroHIDState -= OnChangingMicroHIDState;
+        Player.ChangingMicroHIDState -= OnChangingMicroHIDState;
         base.UnregisterEvents();
     }
 

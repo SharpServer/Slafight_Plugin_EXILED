@@ -47,7 +47,7 @@ public class SergeyMakarovAwakenRole : CRole
                 return;
 
             RPNameSetter.SetForcedCustomName(current, $"セルゲイ・マカロフ ({current.Nickname})");
-            var bossbar = new BossBar()
+            var bossbar = new BossBar
             {
                 Title = "呪詛 セルゲイ・マカロフ",
                 TitleColor = "#c50000",

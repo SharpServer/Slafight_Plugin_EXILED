@@ -4,23 +4,25 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Exiled.API.Features;
+using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
 using HintServiceMeow.Core.Enum;
+using HintServiceMeow.Core.Models.Hints;
 using HintServiceMeow.Core.Utilities;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
-using HintParameter = global::Hints.HintParameter;
-using SSKeybindHintParameter = global::Hints.SSKeybindHintParameter;
-
-using Slafight_Plugin_EXILED.API.Interface;
+using HintParameter = Hints.HintParameter;
+using Server = Exiled.Events.Handlers.Server;
+using SSKeybindHintParameter = Hints.SSKeybindHintParameter;
 
 namespace Slafight_Plugin_EXILED.Hints;
 
@@ -51,10 +53,10 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     public PlayerHUD()
     {
         Exiled.Events.Handlers.Player.Verified += ServerInfoHint;
-        Exiled.Events.Handlers.Server.RoundStarted += PlayerHUDMain;
+        Server.RoundStarted += PlayerHUDMain;
         Exiled.Events.Handlers.Player.ChangingRole += AllSyncHUD;
-        Exiled.Events.Handlers.Server.RoundStarted += AllSyncHUD_;
-        Exiled.Events.Handlers.Server.RestartingRound += DestroyHints;
+        Server.RoundStarted += AllSyncHUD_;
+        Server.RestartingRound += DestroyHints;
         Exiled.Events.Handlers.Player.ChangingSpectatedPlayer += Spectate;
         Exiled.Events.Handlers.Player.Left += OnLeft;
 
@@ -72,10 +74,10 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
 
         _disposed = true;
         Exiled.Events.Handlers.Player.Verified -= ServerInfoHint;
-        Exiled.Events.Handlers.Server.RoundStarted -= PlayerHUDMain;
+        Server.RoundStarted -= PlayerHUDMain;
         Exiled.Events.Handlers.Player.ChangingRole -= AllSyncHUD;
-        Exiled.Events.Handlers.Server.RoundStarted -= AllSyncHUD_;
-        Exiled.Events.Handlers.Server.RestartingRound -= DestroyHints;
+        Server.RoundStarted -= AllSyncHUD_;
+        Server.RestartingRound -= DestroyHints;
         Exiled.Events.Handlers.Player.ChangingSpectatedPlayer -= Spectate;
         Exiled.Events.Handlers.Player.Left -= OnLeft;
 
@@ -187,7 +189,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
             : "[<color=#008cff>Sharp Server</color>]";
     }
 
-    private static HintServiceMeow.Core.Models.Hints.AbstractHint EnsureServerInfoHint(PlayerDisplay display)
+    private static AbstractHint EnsureServerInfoHint(PlayerDisplay display)
     {
         var existing = display.GetHint(HudConstId.PlayerHUD_ServerInfo);
         if (existing != null)
@@ -651,7 +653,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     // =========================================================
 
     private static void ApplyAbilityHud(
-        HintServiceMeow.Core.Models.Hints.AbstractHint abilityHint,
+        AbstractHint abilityHint,
         Player target)
     {
         var content = BuildAbilityHud(target);
@@ -966,7 +968,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
     
     private static string BuildDebugHud(Player player)
     {
-        var sb = new System.Text.StringBuilder();
+        var sb = new StringBuilder();
         sb.AppendLine("<size=18><color=#ffff00>[DEBUG MODE]</color>");
 
         // ── ロール・チーム情報 ────────────────────────────────────────
@@ -1099,7 +1101,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
             }
 
             // ── Firearm 情報 ───────────────────────────────────────────
-            if (currentItem is Exiled.API.Features.Items.Firearm firearm)
+            if (currentItem is Firearm firearm)
             {
                 sb.AppendLine(
                     $"<color=#ffaa44>[Firearm]</color> " +
@@ -1146,7 +1148,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
             }
 
             // ── Armor 情報 ─────────────────────────────────────────────
-            if (currentItem is Exiled.API.Features.Items.Armor armor)
+            if (currentItem is Armor armor)
             {
                 sb.AppendLine(
                     $"<color=#aaddff>[Armor]</color> " +
@@ -1163,7 +1165,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
             {
                 bool isCurrent = it.Serial == currentItem.Serial;
                 bool isCItem   = CItem.TryGet(it, out var itCi);
-                string tag     = isCItem ? $"<color=#88ffcc>[C]</color>" : "";
+                string tag     = isCItem ? "<color=#88ffcc>[C]</color>" : "";
                 string cur     = isCurrent ? "<color=yellow>▶</color>" : "  ";
                 sb.Append($" {cur}{tag}{it.Type}");
             }

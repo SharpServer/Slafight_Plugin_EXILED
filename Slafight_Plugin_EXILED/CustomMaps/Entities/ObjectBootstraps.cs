@@ -6,6 +6,7 @@ using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using UnityEngine;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Entities;
 
@@ -15,12 +16,12 @@ public class ObjectBootstraps : IBootstrapHandler
 
     public static void Register()
     {
-        Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
+        Server.RoundStarted += OnRoundStarted;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
+        Server.RoundStarted -= OnRoundStarted;
         Timing.KillCoroutines(_setupHandle);
     }
 

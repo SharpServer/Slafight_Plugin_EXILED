@@ -7,7 +7,7 @@ public class AbilityLoadout
     // スロット → AbilityBase のインスタンス
     public AbilityBase[] Slots { get; } = new AbilityBase[MaxSlots];
 
-    public int ActiveIndex { get; set; } = 0;
+    public int ActiveIndex { get; set; }
 
     public AbilityBase ActiveAbility
     {

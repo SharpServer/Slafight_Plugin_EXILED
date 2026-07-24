@@ -3,7 +3,9 @@ using Exiled.API.Features;
 using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.CustomMaps.Features; // SpecialEvent 基底クラス
+using Slafight_Plugin_EXILED.CustomMaps.Features;
+
+// SpecialEvent 基底クラス
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -51,7 +53,6 @@ public class OmegaWarheadEvent : SpecialEvent
                 Exiled.API.Features.Cassie.MessageTranslated(
                     "New Status for Containment Breach by O5 Command : Using OMEGA WARHEAD",
                     "O5による収容違反対応ステータス更新：<color=blue>OMEGA WARHEAD</color>を用いた対応",
-                    true,
                     true);
 
                 Exiled.API.Features.Cassie.MessageTranslated(

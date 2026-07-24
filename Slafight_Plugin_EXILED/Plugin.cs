@@ -2,12 +2,12 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
-using Exiled.CustomItems.API.Features;
-using Exiled.CustomRoles.API.Features;
-using Slafight_Plugin_EXILED.CustomItems;
 using System.Text.Json;
 using System.Threading;
+using System.Threading.Tasks;
+using Exiled.API.Features;
+using Exiled.CustomItems.API.Features;
+using Exiled.CustomRoles.API.Features;
 using HarmonyLib;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Features.FilmmakerAnimations;
@@ -15,6 +15,7 @@ using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.Commands.DevTools;
 using Slafight_Plugin_EXILED.CustomEffects;
+using Slafight_Plugin_EXILED.CustomItems;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Entities;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
@@ -22,11 +23,11 @@ using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.Patches;
+using Slafight_Plugin_EXILED.ProximityChat;
 using UserSettings.ServerSpecific;
 
 namespace Slafight_Plugin_EXILED;
 
-using Exiled.API.Features;
 public class Plugin : Plugin<Config>
 {
     public static Plugin Singleton { get; set; } = null!;
@@ -51,7 +52,7 @@ public class Plugin : Plugin<Config>
         InitializeMediaTools();
         PlayerSpeakerManager.RegisterEvents();
         VoiceRoutingApi.RegisterEvents();
-        ProximityChat.Handler.RegisterEvents();
+        Handler.RegisterEvents();
         WaypointChunkStreamer.RegisterEvents();
         FilmmakerAnimationPlayer.RegisterEvents();
 
@@ -153,7 +154,7 @@ public class Plugin : Plugin<Config>
         }
             
         PlayerSpeakerManager.UnregisterEvents();
-        ProximityChat.Handler.UnregisterEvents();
+        Handler.UnregisterEvents();
         VoiceRoutingApi.UnregisterEvents();
         WaypointChunkStreamer.UnregisterEvents();
         FilmmakerAnimationPlayer.UnregisterEvents();
@@ -236,7 +237,7 @@ public class Plugin : Plugin<Config>
             var data = new
             {
                 server = ServerName,
-                count = count,
+                count,
                 timestamp = DateTime.UtcNow
             };
 

@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems.IntermediateBases;
 using UnityEngine;
@@ -36,13 +37,13 @@ public class SNAV300 : CItem
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Player.ChangingRadioPreset += OnChangingRadioPreset;
+        Player.ChangingRadioPreset += OnChangingRadioPreset;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Player.ChangingRadioPreset -= OnChangingRadioPreset;
+        Player.ChangingRadioPreset -= OnChangingRadioPreset;
         base.UnregisterEvents();
     }
 
@@ -65,7 +66,7 @@ public class SNAV300 : CItem
         var consumption = SnavCommon.Consumption(_mode);
         if (radio.BatteryLevel < consumption)
         {
-            ev.Player.ShowHint("バッテリー不足！", 3f);
+            ev.Player.ShowHint("バッテリー不足！");
             return;
         }
 

@@ -63,10 +63,8 @@ public class GiveItem : ICommand
             response = $"Gave {cItem.DisplayName} ({cItem.UniqueKeyName}) to {target.Nickname}.";
             return true;
         }
-        else
-        {
-            response = $"Failed to give {cItem.DisplayName} to {target.Nickname}.";
-            return false;
-        }
+
+        response = $"Failed to give {cItem.DisplayName} to {target.Nickname}.";
+        return false;
     }
 }

@@ -1,4 +1,5 @@
 using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Features.Wrappers;
 using Slafight_Plugin_EXILED.CustomMaps.Core.FemurBreaker;
 using Slafight_Plugin_EXILED.CustomMaps.Core.SurfaceGate;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
@@ -43,7 +44,7 @@ internal sealed class MapToyInteractionRouter
                Vector3.SqrMagnitude(position - MapFlags.OmegaWarheadButton) <= _positionToleranceSq;
     }
 
-    private static void StartOmegaWarhead(LabApi.Features.Wrappers.Player labPlayer)
+    private static void StartOmegaWarhead(Player labPlayer)
     {
         if (!SpecialEventsHandler.IsWarheadable() || OmegaWarhead.IsWarheadStarted)
         {
@@ -52,6 +53,6 @@ internal sealed class MapToyInteractionRouter
         }
 
         var player = Exiled.API.Features.Player.Get(labPlayer.NetworkId);
-        OmegaWarhead.StartProtocol(0f, startedBy: player);
+        OmegaWarhead.StartProtocol(startedBy: player);
     }
 }

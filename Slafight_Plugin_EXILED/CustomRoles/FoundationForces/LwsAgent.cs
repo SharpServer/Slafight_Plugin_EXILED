@@ -4,6 +4,7 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
+using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces;
 
@@ -29,6 +30,6 @@ public class LwsAgent : CRole
     {
         [AmmoType.Nato9] = 140,
     };
-    protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
+    protected override Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
     protected override string SpawnCustomInfo => $"<color={ServerColors.Silver}>Law's Left Hand Agent</color>";
 }

@@ -10,10 +10,11 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
-using Slafight_Plugin_EXILED.Extensions;
-using UnityEngine;
 using Slafight_Plugin_EXILED.API.Interface;
+using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.Hints;
+using UnityEngine;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.CustomRoles;
 
@@ -40,10 +41,10 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
     {
         Exiled.Events.Handlers.Player.Hurting += OnHurting;
         Exiled.Events.Handlers.Player.ChangingRole += CustomRoleRemover;
-        Exiled.Events.Handlers.Server.RoundStarted += RoundCoroutine;
-        Exiled.Events.Handlers.Server.EndingRound += CancelEnd;
-        Exiled.Events.Handlers.Server.WaitingForPlayers += ResetAbilities;
-        Exiled.Events.Handlers.Server.RestartingRound += AbilityResetInRoundRestarting;
+        Server.RoundStarted += RoundCoroutine;
+        Server.EndingRound += CancelEnd;
+        Server.WaitingForPlayers += ResetAbilities;
+        Server.RestartingRound += AbilityResetInRoundRestarting;
     }
 
     public void Dispose()
@@ -54,10 +55,10 @@ public class CustomRolesHandler : IBootstrapHandler, IDisposable
         _disposed = true;
         Exiled.Events.Handlers.Player.Hurting -= OnHurting;
         Exiled.Events.Handlers.Player.ChangingRole -= CustomRoleRemover;
-        Exiled.Events.Handlers.Server.RoundStarted -= RoundCoroutine;
-        Exiled.Events.Handlers.Server.EndingRound -= CancelEnd;
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= ResetAbilities;
-        Exiled.Events.Handlers.Server.RestartingRound -= AbilityResetInRoundRestarting;
+        Server.RoundStarted -= RoundCoroutine;
+        Server.EndingRound -= CancelEnd;
+        Server.WaitingForPlayers -= ResetAbilities;
+        Server.RestartingRound -= AbilityResetInRoundRestarting;
 
         if (_conditionCoroutine.IsRunning)
             Timing.KillCoroutines(_conditionCoroutine);

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Exiled.API.Features;
 using MEC;
@@ -92,7 +93,7 @@ public static class TerminalTrain
                 _currentTrain.Destroy();
                 Log.Info("[Train] Cleaned up remaining STrain in StopAll.");
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Log.Error($"[Train] Error destroying remaining STrain in StopAll: {ex}");
             }
@@ -196,7 +197,7 @@ public static class TerminalTrain
                     Log.Warn("[Train] Destroy skipped: train was already null.");
                 }
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Log.Error($"[Train] Error destroying STrain: {ex}");
             }

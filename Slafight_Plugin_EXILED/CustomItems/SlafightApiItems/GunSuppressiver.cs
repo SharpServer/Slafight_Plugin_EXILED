@@ -1,4 +1,5 @@
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
@@ -22,13 +23,13 @@ public class GunSuppressiver : CItemWeapon
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Player.SendingGunSound += OnSendingGunSound;
+        Player.SendingGunSound += OnSendingGunSound;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Player.SendingGunSound -= OnSendingGunSound;
+        Player.SendingGunSound -= OnSendingGunSound;
         base.UnregisterEvents();
     }
 

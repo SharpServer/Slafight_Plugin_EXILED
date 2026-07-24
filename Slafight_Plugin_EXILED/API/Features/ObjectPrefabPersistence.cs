@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Exiled.API.Features;
 using MEC;
 using Newtonsoft.Json;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -69,7 +71,7 @@ public static class ObjectPrefabLoader
         ObjectPrefabConfig cfg = ObjectPrefabConfig.Load(normalizedMapName);
         ClearSaveablePrefabs();
         int totalSpawned = 0;
-        var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+        var stopwatch = Stopwatch.StartNew();
 
         foreach (PrefabSaveData data in cfg.Prefabs)
         {
@@ -78,7 +80,7 @@ public static class ObjectPrefabLoader
 
             for (int i = 0; i < maxRooms; i++)
             {
-                var prefabStopwatch = System.Diagnostics.Stopwatch.StartNew();
+                var prefabStopwatch = Stopwatch.StartNew();
                 bool spawned = TrySpawnPrefab(descriptor, data, rooms[i]);
                 prefabStopwatch.Stop();
                 if (spawned)
@@ -139,7 +141,7 @@ public static class ObjectPrefabLoader
 
         int maxRoomsFromData = data.MaxRooms <= 0 ? roomsOfType.Count : data.MaxRooms;
         maxRooms = Mathf.Min(maxRoomsFromData, roomsOfType.Count);
-        rooms = roomsOfType.OrderBy(_ => UnityEngine.Random.value).ToList();
+        rooms = roomsOfType.OrderBy(_ => Random.value).ToList();
         return true;
     }
 

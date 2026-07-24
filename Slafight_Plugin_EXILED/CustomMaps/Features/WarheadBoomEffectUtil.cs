@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using MEC;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using UnityEngine;
+using Random = System.Random;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 
@@ -16,7 +17,7 @@ public static class WarheadBoomEffectUtil
     private const float ScaleMax = 1.1f;
 
     private static readonly List<CoroutineHandle> CoroutineHandles = [];
-    private static readonly System.Random         Rng              = new();
+    private static readonly Random         Rng              = new();
 
     /// <summary>
     /// 指定座標に煙エフェクトを <paramref name="endTime"/> 秒間、

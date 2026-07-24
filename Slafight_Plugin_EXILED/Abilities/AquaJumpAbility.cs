@@ -5,6 +5,7 @@ using MEC;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Slafight_Plugin_EXILED.Abilities;
 
@@ -60,9 +61,9 @@ public class AquaJumpAbility : AbilityBase
         for (int i = 0; i < JetCount; i++)
         {
             var offset = new Vector3(
-                UnityEngine.Random.Range(-JetSpread, JetSpread),
+                Random.Range(-JetSpread, JetSpread),
                 0f,
-                UnityEngine.Random.Range(-JetSpread, JetSpread));
+                Random.Range(-JetSpread, JetSpread));
 
             try
             {

@@ -224,7 +224,7 @@ public class Scp1509BattleFieldEvent : SpecialEvent
         foreach (Lift lift in Lift.List)
         {
             if (lockEvTypes.Contains(lift.Type))
-                lift.TryStart(0, false);
+                lift.TryStart(0);
         }
 
         // エレベータードアロック

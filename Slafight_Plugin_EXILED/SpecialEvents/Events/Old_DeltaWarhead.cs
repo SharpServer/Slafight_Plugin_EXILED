@@ -4,8 +4,9 @@ using Exiled.API.Features;
 using Exiled.API.Features.Doors;
 using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
-using Slafight_Plugin_EXILED.API.Features; // SpecialEvent 基底
+using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
+// SpecialEvent 基底
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 

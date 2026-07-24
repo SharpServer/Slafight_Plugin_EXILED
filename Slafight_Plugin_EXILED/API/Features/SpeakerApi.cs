@@ -73,7 +73,7 @@ public static class SpeakerApi
         public float Volume => IsValid ? Speaker.Volume : 0f;
 
         public bool DestroyAudioPlayer()
-            => SpeakerApi.DestroyLiveSpeaker(this);
+            => DestroyLiveSpeaker(this);
 
         public void SetTransform(Vector3 position, Transform? parent = null)
             => SpeakerApi.SetTransform(this, position, parent);
@@ -85,7 +85,7 @@ public static class SpeakerApi
             => SpeakerApi.SetListeners(this, listeners);
 
         public int SendFrame(byte[] data, int dataLength, IEnumerable<ReferenceHub> targets)
-            => SpeakerApi.SendAudioFrame(this, data, dataLength, targets);
+            => SendAudioFrame(this, data, dataLength, targets);
     }
 
     private sealed class CachedClip

@@ -4,12 +4,14 @@ using System.Linq;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Item;
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
@@ -74,14 +76,14 @@ public class ModeratorUtil : CItemWeapon
     public override void RegisterEvents()
     {
         Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
-        Exiled.Events.Handlers.Item.InspectingItem += OnInspecting;
+        Item.InspectingItem += OnInspecting;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
-        Exiled.Events.Handlers.Item.InspectingItem -= OnInspecting;
+        Item.InspectingItem -= OnInspecting;
         base.UnregisterEvents();
     }
 
@@ -106,7 +108,7 @@ public class ModeratorUtil : CItemWeapon
     {
         if (CanUse(ev.Player)) return;
         ev.IsAllowed = false;
-        ev.Player.ShowHint("<size=22><color=red>Moderator Util は管理者専用です。</color></size>", 3f);
+        ev.Player.ShowHint("<size=22><color=red>Moderator Util は管理者専用です。</color></size>");
     }
 
     protected override void OnAcquired(ItemAddedEventArgs ev, bool displayMessage)
@@ -159,7 +161,7 @@ public class ModeratorUtil : CItemWeapon
 
         if (!CanUse(ev.Attacker))
         {
-            ev.Attacker.ShowHint("<size=22><color=red>Moderator Util を使用する権限がありません。</color></size>", 3f);
+            ev.Attacker.ShowHint("<size=22><color=red>Moderator Util を使用する権限がありません。</color></size>");
             return;
         }
 
@@ -495,7 +497,7 @@ public class ModeratorUtil : CItemWeapon
         while (true)
         {
             if (Round.IsLobby) yield break;
-            if (CItem.Get<ModeratorUtil>()?.CheckHeld(player) != true) yield break;
+            if (Get<ModeratorUtil>()?.CheckHeld(player) != true) yield break;
             if (!StatsMap.TryGetValue(player, out _)) yield break;
 
             ShowCurrentSelection(player, 1.2f);

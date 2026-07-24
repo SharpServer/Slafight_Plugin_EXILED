@@ -1,4 +1,5 @@
 #nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,7 +11,7 @@ using Exiled.API.Structs;
 using InventorySystem.Items.Armor;
 using PlayerStatsSystem;
 using UnityEngine;
-
+using BodyArmorPickup = Exiled.API.Features.Pickups.BodyArmorPickup;
 using PlayerEvents = Exiled.Events.EventArgs.Player;
 
 namespace Slafight_Plugin_EXILED.API.Features;
@@ -312,7 +313,7 @@ public abstract class CItemArmor : CItem
     {
         if (player == null) return null;
 
-        CItem.SetPendingGive(this, displayMessage);
+        SetPendingGive(this, displayMessage);
         try
         {
             var armor = (Armor?)Item.Create(BaseItem);
@@ -324,9 +325,9 @@ public abstract class CItemArmor : CItem
             // armor 自体がすでに正しいシリアルを持っている点を利用してそのまま返す。
             player.AddItem(armor);
 
-            if (!CItem.SerialTracker.TryGet(armor.Serial, out _))
+            if (!SerialTracker.TryGet(armor.Serial, out _))
             {
-                CItem.SerialTracker.ForceRegister(armor.Serial, this);
+                SerialTracker.ForceRegister(armor.Serial, this);
                 Log.Warn($"[CItemArmor] Give: ItemAdded missed for serial={armor.Serial}, force-registered.");
             }
 
@@ -339,7 +340,7 @@ public abstract class CItemArmor : CItem
         }
         finally
         {
-            CItem.ClearPendingGive();
+            ClearPendingGive();
         }
     }
 
@@ -377,7 +378,7 @@ public abstract class CItemArmor : CItem
         if (ev.Player.Items.Count >= 8) return;
 
         // BodyArmorPickup でなければ（通常の Pickup 型）素通り
-        if (ev.Pickup is not Exiled.API.Features.Pickups.BodyArmorPickup) return;
+        if (ev.Pickup is not BodyArmorPickup) return;
 
         // キャンセルして Give に差し替え
         ev.IsAllowed = false;

@@ -13,8 +13,9 @@ using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.CustomMaps;
+using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.Commands.DevTools;
+using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
@@ -23,7 +24,6 @@ using Player = Exiled.API.Features.Player;
 using PlayerHandler = Exiled.Events.Handlers.Player;
 using Room = Exiled.API.Features.Room;
 using ServerHandler = Exiled.Events.Handlers.Server;
-using Slafight_Plugin_EXILED.API.Interface;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -78,7 +78,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
         GC.SuppressFinalize(this);
     }
 
-    private bool _pluginLoaded = false;
+    private bool _pluginLoaded;
 
     private static bool IsPlayerValid(Player? p)
     {
@@ -140,7 +140,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
         EffectFakeSyncProvider.RemovePlayer(leaving);
         PlayerVisibilitySyncProvider.RemoveViewer(leaving);
         RoleSpecificTextProvider.Clear(leaving);
-        SpecificFlagsManager.Clear(leaving);
+        leaving.Clear();
         SpawnObjectPrefab.CleanupPlayer(leaving);
         HitboxCommand.CleanupPlayer(leaving);
 

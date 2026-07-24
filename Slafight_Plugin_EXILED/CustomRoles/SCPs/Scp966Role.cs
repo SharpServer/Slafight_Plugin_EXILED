@@ -7,6 +7,7 @@ using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp3114;
+using Exiled.Events.Handlers;
 using InventorySystem.Items.Usables.Scp1344;
 using MEC;
 using PlayerRoles;
@@ -14,6 +15,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -46,13 +48,13 @@ public class Scp966Role : CRole
     
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Scp3114.Disguising += OnDisguising;
+        Scp3114.Disguising += OnDisguising;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Scp3114.Disguising -= OnDisguising;
+        Scp3114.Disguising -= OnDisguising;
         base.UnregisterEvents();
     }
 

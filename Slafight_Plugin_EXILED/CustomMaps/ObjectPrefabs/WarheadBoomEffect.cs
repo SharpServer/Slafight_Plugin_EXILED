@@ -1,9 +1,11 @@
 using System.Collections.Generic;
+using Exiled.API.Features;
 using MEC;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
+using Random = System.Random;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
@@ -34,7 +36,7 @@ public class WarheadBoomEffect : ObjectPrefab
     private Vector3          _initialScale;
     private bool             _isAnimating;
 
-    private readonly System.Random _rng = new();
+    private readonly Random _rng = new();
     // ================================================================
     //  Position / Rotation / Scale — バッキングフィールド経由で管理
     // ================================================================
@@ -78,14 +80,14 @@ public class WarheadBoomEffect : ObjectPrefab
     {
         base.OnCreate();
 
-        Exiled.API.Features.Log.Debug(
+        Log.Debug(
             $"[WarheadBoomEffect] Spawning schematic at pos={_position}, rot={_rotation}, scale={_scale}");
 
         _schematicObject = ObjectSpawner.SpawnSchematic("WarheadBoomEffect", _position, _rotation);
 
         if (_schematicObject == null)
         {
-            Exiled.API.Features.Log.Error(
+            Log.Error(
                 "[WarheadBoomEffect] SpawnSchematic returned null! Schematic名またはファイル配置を確認してください。");
             return;
         }

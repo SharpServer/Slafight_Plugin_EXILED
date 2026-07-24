@@ -19,6 +19,7 @@ using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using AbstractHint = HintServiceMeow.Core.Models.Hints.AbstractHint;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.Hints;
 
@@ -65,8 +66,8 @@ public class ScpStatusHints : IBootstrapHandler
         _registered = true;
         _updateVersion++;
 
-        Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
-        Exiled.Events.Handlers.Server.RestartingRound += OnRestartingRound;
+        Server.RoundStarted += OnRoundStarted;
+        Server.RestartingRound += OnRestartingRound;
         Exiled.Events.Handlers.Player.Verified += OnVerified;
         Exiled.Events.Handlers.Player.Left += OnLeft;
         Exiled.Events.Handlers.Player.ChangingRole += OnChangingRole;
@@ -80,8 +81,8 @@ public class ScpStatusHints : IBootstrapHandler
         _registered = false;
         _updateVersion++;
 
-        Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
-        Exiled.Events.Handlers.Server.RestartingRound -= OnRestartingRound;
+        Server.RoundStarted -= OnRoundStarted;
+        Server.RestartingRound -= OnRestartingRound;
         Exiled.Events.Handlers.Player.Verified -= OnVerified;
         Exiled.Events.Handlers.Player.Left -= OnLeft;
         Exiled.Events.Handlers.Player.ChangingRole -= OnChangingRole;
@@ -387,7 +388,7 @@ public class ScpStatusHints : IBootstrapHandler
 
         if (display.GetHint(hintId) is not Hint hint)
         {
-            hint = new Hint()
+            hint = new Hint
             {
                 Id = hintId,
                 Text = string.Empty,

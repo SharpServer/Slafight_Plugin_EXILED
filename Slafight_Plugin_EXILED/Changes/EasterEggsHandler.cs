@@ -1,13 +1,14 @@
+using System;
 using Exiled.API.Enums;
 using Exiled.API.Features;
-using UnityEngine;
-
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
+using UnityEngine;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.Changes;
 
-public class EasterEggsHandler : IBootstrapHandler, System.IDisposable
+public class EasterEggsHandler : IBootstrapHandler, IDisposable
 {
     private const string MelancholyClip = "ee_melancholy.ogg";
     private const string MelancholyAudioPlayer = "EE_Melancholy";
@@ -29,8 +30,8 @@ public class EasterEggsHandler : IBootstrapHandler, System.IDisposable
 
     public EasterEggsHandler()
     {
-        Exiled.Events.Handlers.Server.RoundStarted += MelancholyNuke;
-        Exiled.Events.Handlers.Server.RestartingRound += ClearSpeakers;
+        Server.RoundStarted += MelancholyNuke;
+        Server.RestartingRound += ClearSpeakers;
     }
 
     public void Dispose()
@@ -39,10 +40,10 @@ public class EasterEggsHandler : IBootstrapHandler, System.IDisposable
             return;
 
         _disposed = true;
-        Exiled.Events.Handlers.Server.RoundStarted -= MelancholyNuke;
-        Exiled.Events.Handlers.Server.RestartingRound -= ClearSpeakers;
+        Server.RoundStarted -= MelancholyNuke;
+        Server.RestartingRound -= ClearSpeakers;
         ClearSpeakers();
-        System.GC.SuppressFinalize(this);
+        GC.SuppressFinalize(this);
     }
     public void ClearSpeakers()
         => SpeakerApi.DestroyAll();

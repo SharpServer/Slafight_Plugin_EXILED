@@ -10,6 +10,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
+using Map = Exiled.Events.Handlers.Map;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -27,13 +28,13 @@ public class Scp079Role : CRole
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Map.GeneratorActivating += OnGenerated;
+        Map.GeneratorActivating += OnGenerated;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Map.GeneratorActivating -= OnGenerated;
+        Map.GeneratorActivating -= OnGenerated;
         base.UnregisterEvents();
     }
     

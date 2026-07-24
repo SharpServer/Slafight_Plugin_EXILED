@@ -1,5 +1,7 @@
 using Slafight_Plugin_EXILED.API.Enums;
-using Slafight_Plugin_EXILED.API.Features; // SpecialEvent 基底クラス
+using Slafight_Plugin_EXILED.API.Features;
+
+// SpecialEvent 基底クラス
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -15,7 +17,6 @@ public class NoneEvent : SpecialEvent
     // ===== 実行本体 =====
     protected override void OnExecute(int eventPid)
     {
-        return; // None lol.
     }
 
     public override void RegisterEvents() { }

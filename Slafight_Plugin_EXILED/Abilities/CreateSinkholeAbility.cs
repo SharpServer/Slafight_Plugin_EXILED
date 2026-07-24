@@ -5,6 +5,7 @@ using MEC;
 using Mirror;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Slafight_Plugin_EXILED.Abilities;
 
@@ -35,7 +36,7 @@ public class CreateSinkholeAbility : AbilityBase
 
             var sinkhole = PrefabHelper.Spawn(PrefabType.Sinkhole, position, Quaternion.identity);
             NetworkServer.Spawn(sinkhole);
-            Timing.CallDelayed(10f, () => UnityEngine.Object.Destroy(sinkhole));
+            Timing.CallDelayed(10f, () => Object.Destroy(sinkhole));
         }
         catch (Exception ex)
         {

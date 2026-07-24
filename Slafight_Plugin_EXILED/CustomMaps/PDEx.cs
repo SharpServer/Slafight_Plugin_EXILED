@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using CustomPlayerEffects;
@@ -8,15 +9,15 @@ using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.Abilities;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.ProximityChat;
-using UnityEngine;
-
-using Slafight_Plugin_EXILED.API.Interface;
+using Random = UnityEngine.Random;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.CustomMaps;
 
-public class PDEx : IBootstrapHandler, System.IDisposable
+public class PDEx : IBootstrapHandler, IDisposable
 {
     private static readonly HashSet<int> PendingPocketCorrodingDeaths = [];
 
@@ -37,7 +38,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
 
     public PDEx()
     {
-        Exiled.Events.Handlers.Server.RoundStarted += Setup;
+        Server.RoundStarted += Setup;
         Exiled.Events.Handlers.Player.FailingEscapePocketDimension += JoinPDEx;
         Exiled.Events.Handlers.Player.Dying += OnDying;
         Exiled.Events.Handlers.Player.Died += OnDied;
@@ -51,7 +52,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
             return;
 
         _disposed = true;
-        Exiled.Events.Handlers.Server.RoundStarted -= Setup;
+        Server.RoundStarted -= Setup;
         Exiled.Events.Handlers.Player.FailingEscapePocketDimension -= JoinPDEx;
         Exiled.Events.Handlers.Player.Dying -= OnDying;
         Exiled.Events.Handlers.Player.Died -= OnDied;
@@ -60,7 +61,7 @@ public class PDEx : IBootstrapHandler, System.IDisposable
         Timing.KillCoroutines(handle);
         PDExPlayers.Clear();
         PendingPocketCorrodingDeaths.Clear();
-        System.GC.SuppressFinalize(this);
+        GC.SuppressFinalize(this);
     }
 
     public static List<Player> PDExPlayers = [];

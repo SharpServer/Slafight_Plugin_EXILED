@@ -79,7 +79,7 @@ public class AbilityUniversal : ICommand
         if (maxUses.HasValue) msg += $" 回数={maxUses}";
         
         response = msg;
-        executor.ShowHint($"<color=green>{msg}</color>", 3f);
+        executor.ShowHint($"<color=green>{msg}</color>");
         return true;
     }
 }

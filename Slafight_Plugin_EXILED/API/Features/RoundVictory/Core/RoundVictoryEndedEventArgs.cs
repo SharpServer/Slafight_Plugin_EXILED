@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
+using Exiled.Events.EventArgs.Server;
 using GameCore;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features.Teams.Profiles;
 using Slafight_Plugin_EXILED.Extensions;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 
@@ -238,9 +240,9 @@ public static class RoundVictoryEvents
         if (_registered)
             return;
 
-        Exiled.Events.Handlers.Server.RoundEnded += OnExiledRoundEnded;
-        Exiled.Events.Handlers.Server.RestartingRound += ClearPendingVanillaRoundEnd;
-        Exiled.Events.Handlers.Server.WaitingForPlayers += ClearPendingVanillaRoundEnd;
+        Server.RoundEnded += OnExiledRoundEnded;
+        Server.RestartingRound += ClearPendingVanillaRoundEnd;
+        Server.WaitingForPlayers += ClearPendingVanillaRoundEnd;
         _registered = true;
     }
 
@@ -252,9 +254,9 @@ public static class RoundVictoryEvents
             return;
         }
 
-        Exiled.Events.Handlers.Server.RoundEnded -= OnExiledRoundEnded;
-        Exiled.Events.Handlers.Server.RestartingRound -= ClearPendingVanillaRoundEnd;
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= ClearPendingVanillaRoundEnd;
+        Server.RoundEnded -= OnExiledRoundEnded;
+        Server.RestartingRound -= ClearPendingVanillaRoundEnd;
+        Server.WaitingForPlayers -= ClearPendingVanillaRoundEnd;
         ClearPendingVanillaRoundEnd();
         _registered = false;
     }
@@ -283,7 +285,7 @@ public static class RoundVictoryEvents
         }
     }
 
-    private static void OnExiledRoundEnded(Exiled.Events.EventArgs.Server.RoundEndedEventArgs ev)
+    private static void OnExiledRoundEnded(RoundEndedEventArgs ev)
     {
         var definition = _pendingVanillaRoundEnd;
         if (definition == null)

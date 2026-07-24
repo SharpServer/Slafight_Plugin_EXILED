@@ -7,6 +7,7 @@ using Exiled.Events.EventArgs.Player;
 using InventorySystem.Items.Firearms.Attachments;
 using MEC;
 using Slafight_Plugin_EXILED.API.Features;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
@@ -98,13 +99,13 @@ public class GunXE11KMR_GL : CItemWeapon
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
+        Server.RoundStarted += OnRoundStarted;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
+        Server.RoundStarted -= OnRoundStarted;
         base.UnregisterEvents();
     }
 

@@ -6,18 +6,21 @@ using Exiled.API.Features;
 using Exiled.API.Features.Toys;
 using Exiled.Events.EventArgs.Player;
 using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Handlers;
 using MapGeneration;
 using MEC;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
+using Player = Exiled.Events.Handlers.Player;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 
 public static class TerminalRift
 {
-    private static bool _registered = false;
+    private static bool _registered;
     private static TerminalRiftLabHandler? _labHandler;
 
     private static CoroutineHandle _animCoroutineHandle;
@@ -33,18 +36,18 @@ public static class TerminalRift
     // ★追加
     private static Waypoint? _riftWaypoint;
 
-    public static bool Invoking { get; private set; } = false;
+    public static bool Invoking { get; private set; }
     public static void Register()
     {
         if (_registered) return;
 
         Log.Debug("[TerminalRift] Registering...");
 
-        Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
-        Exiled.Events.Handlers.Server.RestartingRound += Cleanup;
-        Exiled.Events.Handlers.Player.ReceivingEffect += CancelDeath;
-        Exiled.Events.Handlers.Player.ChangingRole += OnChanging;
-        Exiled.Events.Handlers.Player.Dying += CancelDeathForDying;
+        Server.RoundStarted += OnRoundStarted;
+        Server.RestartingRound += Cleanup;
+        Player.ReceivingEffect += CancelDeath;
+        Player.ChangingRole += OnChanging;
+        Player.Dying += CancelDeathForDying;
 
         _labHandler = LabApiHandlerRegistry.Register(_labHandler);
         _registered = true;
@@ -60,11 +63,11 @@ public static class TerminalRift
 
         Cleanup();
 
-        Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
-        Exiled.Events.Handlers.Server.RestartingRound -= Cleanup;
-        Exiled.Events.Handlers.Player.ReceivingEffect -= CancelDeath;
-        Exiled.Events.Handlers.Player.ChangingRole -= OnChanging;
-        Exiled.Events.Handlers.Player.Dying -= CancelDeathForDying;
+        Server.RoundStarted -= OnRoundStarted;
+        Server.RestartingRound -= Cleanup;
+        Player.ReceivingEffect -= CancelDeath;
+        Player.ChangingRole -= OnChanging;
+        Player.Dying -= CancelDeathForDying;
 
         LabApiHandlerRegistry.Unregister(ref _labHandler);
         _registered = false;
@@ -354,8 +357,8 @@ public class TerminalRiftLabHandler : SlafightLabApiHandler
     {
         Log.Debug("[TerminalRiftLabHandler] Register");
         subscriptions.Add(
-            () => LabApi.Events.Handlers.PlayerEvents.SearchedToy += OnSearchedToy,
-            () => LabApi.Events.Handlers.PlayerEvents.SearchedToy -= OnSearchedToy);
+            () => PlayerEvents.SearchedToy += OnSearchedToy,
+            () => PlayerEvents.SearchedToy -= OnSearchedToy);
     }
 
     private void OnSearchedToy(PlayerSearchedToyEventArgs ev)

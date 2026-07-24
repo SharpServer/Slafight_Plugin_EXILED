@@ -6,6 +6,7 @@ using Exiled.API.Features.Pickups;
 using Exiled.API.Features.Pickups.Projectiles;
 using Exiled.Events.EventArgs.Map;
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using InventorySystem.Items.Usables.Scp244;
 using MEC;
 using Slafight_Plugin_EXILED.API.Features;
@@ -28,15 +29,15 @@ public class ThrowableScp244 : CItem
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Player.ThrownProjectile += OnThrown;
-        Exiled.Events.Handlers.Map.ExplodingGrenade += OnExploding;
+        Player.ThrownProjectile += OnThrown;
+        Map.ExplodingGrenade += OnExploding;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Player.ThrownProjectile -= OnThrown;
-        Exiled.Events.Handlers.Map.ExplodingGrenade -= OnExploding;
+        Player.ThrownProjectile -= OnThrown;
+        Map.ExplodingGrenade -= OnExploding;
         ClearTrackedProjectiles(destroyPickups: true);
         base.UnregisterEvents();
     }

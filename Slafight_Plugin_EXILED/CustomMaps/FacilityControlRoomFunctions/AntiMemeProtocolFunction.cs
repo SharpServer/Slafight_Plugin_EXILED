@@ -1,5 +1,6 @@
 using System.Linq;
 using Exiled.API.Enums;
+using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
 
@@ -26,14 +27,14 @@ public sealed class AntiMemeProtocolFunction : FacilityControlRoomFunction
         return IsActive ? StopProtocol() : StartProtocol(context.Player);
     }
 
-    private static FacilityControlRoomFunctionResult StartProtocol(Exiled.API.Features.Player player)
+    private static FacilityControlRoomFunctionResult StartProtocol(Player player)
     {
         if (player.GetTeam() is CTeam.Fifthists)
         {
             return Failure("<size=24>アンチミームプロトコルの開始に失敗しました。\n第五教会は開始できません。</size>");
         }
 
-        var targets = Exiled.API.Features.Player.List
+        var targets = Player.List
             .Where(IsAntiMemeProtocolTarget)
             .ToList();
 
@@ -59,13 +60,13 @@ public sealed class AntiMemeProtocolFunction : FacilityControlRoomFunction
 
     private static FacilityControlRoomFunctionResult StopProtocol()
     {
-        foreach (var player in Exiled.API.Features.Player.List.Where(IsAntiMemeProtocolTarget))
+        foreach (var player in Player.List.Where(IsAntiMemeProtocolTarget))
         {
             player.DisableEffect(EffectType.Poisoned);
             player.DisableEffect(EffectType.Decontaminating);
         }
 
-        if (Exiled.API.Features.Player.List.Any())
+        if (Player.List.Any())
         {
             Exiled.API.Features.Cassie.MessageTranslated(
                 "$pitch_.85 Anti- $pitch_1 Me mu Protocol Stopped .",
@@ -98,7 +99,7 @@ public sealed class AntiMemeProtocolFunction : FacilityControlRoomFunction
             false);
     }
 
-    private static bool IsAntiMemeProtocolTarget(Exiled.API.Features.Player player)
+    private static bool IsAntiMemeProtocolTarget(Player player)
     {
         return player.GetCustomRole() is CRoleTypeId.Scp3005 or CRoleTypeId.Scp3125;
     }

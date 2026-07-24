@@ -6,6 +6,7 @@ using MEC;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Random = UnityEngine.Random;
 
 namespace Slafight_Plugin_EXILED.Abilities;
 
@@ -62,7 +63,7 @@ public class AquaSplashAbility : AbilityBase
         direction.y = 0f;
         direction = direction.sqrMagnitude > 0.01f
             ? direction.normalized
-            : Vector3.ProjectOnPlane(UnityEngine.Random.insideUnitSphere, Vector3.up).normalized;
+            : Vector3.ProjectOnPlane(Random.insideUnitSphere, Vector3.up).normalized;
 
         if (direction.sqrMagnitude < 0.01f)
             direction = Vector3.forward;

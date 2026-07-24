@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
@@ -270,7 +271,7 @@ public abstract class CItemHybrid : CItem
 
     public string GetDebugStateFor(Player player, ushort currentSerial)
     {
-        var sb = new System.Text.StringBuilder();
+        var sb = new StringBuilder();
         sb.AppendLine("<color=#88ffcc>[Hybrid]</color>");
 
         if (_states.TryGetValue(currentSerial, out var state))

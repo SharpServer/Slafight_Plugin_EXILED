@@ -6,6 +6,7 @@ using Exiled.API.Features.Pickups;
 using Exiled.CustomItems.API.Features;
 using Exiled.Events.EventArgs.Scp914;
 using UnityEngine;
+using Random = System.Random;
 
 namespace Slafight_Plugin_EXILED.API.Features.Scp914;
 
@@ -15,7 +16,7 @@ namespace Slafight_Plugin_EXILED.API.Features.Scp914;
 /// </summary>
 public static class Scp914Dispatcher
 {
-    private static readonly System.Random Random = new();
+    private static readonly Random Random = new();
 
     /// <summary>
     /// 床 Pickup のアップグレードにルールを適用する。
@@ -121,7 +122,7 @@ public static class Scp914Dispatcher
             {
                 case Scp914RuleKind.Destroy:
                     ev.IsAllowed = false;
-                    owner.RemoveItem(ev.Item, true);
+                    owner.RemoveItem(ev.Item);
                     break;
 
                 case Scp914RuleKind.Keep:
@@ -136,7 +137,7 @@ public static class Scp914Dispatcher
                 case Scp914RuleKind.ToVanilla:
                 {
                     ev.IsAllowed = false;
-                    owner.RemoveItem(ev.Item, true);
+                    owner.RemoveItem(ev.Item);
                     var type = rule.VanillaSelector?.Invoke(ctx) ?? rule.VanillaItem;
                     for (var i = 0; i < rule.Count; i++)
                         AddOrDropVanilla(owner, type, dropPosition);
@@ -145,14 +146,14 @@ public static class Scp914Dispatcher
 
                 case Scp914RuleKind.ToCustomItem:
                     ev.IsAllowed = false;
-                    owner.RemoveItem(ev.Item, true);
+                    owner.RemoveItem(ev.Item);
                     for (var i = 0; i < rule.Count; i++)
                         AddOrDropCustomItem(owner, rule.CustomItemType!, dropPosition);
                     break;
 
                 case Scp914RuleKind.ToCItem:
                     ev.IsAllowed = false;
-                    owner.RemoveItem(ev.Item, true);
+                    owner.RemoveItem(ev.Item);
                     for (var i = 0; i < rule.Count; i++)
                         AddOrDropCItem(owner, rule.CItemType!, dropPosition);
                     break;

@@ -13,6 +13,7 @@ using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using VoiceChat;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
+using Server = Exiled.Events.Handlers.Server;
 using SpectatorRole = PlayerRoles.Spectating.SpectatorRole;
 
 namespace Slafight_Plugin_EXILED.ProximityChat;
@@ -41,7 +42,7 @@ public static class Handler
 
     public static void RegisterEvents()
     {
-        Exiled.Events.Handlers.Server.RestartingRound += OnRoundRestarted;
+        Server.RestartingRound += OnRoundRestarted;
         Exiled.Events.Handlers.Player.ChangingRole += OnPlayerChangingRole;
         Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
         VoiceRoutingApi.Register(new VoiceRouteRule(
@@ -52,7 +53,7 @@ public static class Handler
 
     public static void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarted;
+        Server.RestartingRound -= OnRoundRestarted;
         Exiled.Events.Handlers.Player.ChangingRole -= OnPlayerChangingRole;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
         VoiceRoutingApi.Unregister("proximity.scp-chat-mirror");

@@ -8,6 +8,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.SpecialEvents;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -15,17 +16,17 @@ public class RoundHandler : IBootstrapHandler
 {
     public static void Register()
     {
-        Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
-        Exiled.Events.Handlers.Server.RestartingRound += OnRoundRestarting;
-        Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
+        Server.RoundStarted += OnRoundStarted;
+        Server.RestartingRound += OnRoundRestarting;
+        Server.WaitingForPlayers += OnWaitingForPlayers;
         SpawnSystem.Spawned += OnSpawnSystemSpawned;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
-        Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarting;
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
+        Server.RoundStarted -= OnRoundStarted;
+        Server.RestartingRound -= OnRoundRestarting;
+        Server.WaitingForPlayers -= OnWaitingForPlayers;
         SpawnSystem.Spawned -= OnSpawnSystemSpawned;
         ResetState(nameof(Unregister));
     }
@@ -86,10 +87,8 @@ public class RoundHandler : IBootstrapHandler
         {
             return SpawnTypeId.SecurityTeam;
         }
-        else
-        {
-            return SpawnTypeId.ChaosAgents;
-        }
+
+        return SpawnTypeId.ChaosAgents;
     }
 
     private static IEnumerator<float> GuardsCoroutine()

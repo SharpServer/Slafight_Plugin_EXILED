@@ -260,7 +260,7 @@ public class WaterWarriorsRaidEvent : SpecialEvent
                 EvacuationRoundEndState.Begin();
                 EscapeHandler.AddEscapeOverride(p => new EscapeHandler.EscapeTargetRole { Vanilla = RoleTypeId.Spectator });
                 Exiled.API.Features.Cassie.MessageTranslated("Attention, Were Successfully Destroyed Exit Gates It.",
-                    "通達。脱出口をふさいでいた触手の破壊に成功しました。<split>時間は一刻一刻と迫ってきています。早急に脱出してください！",false);
+                    "通達。脱出口をふさいでいた触手の破壊に成功しました。<split>時間は一刻一刻と迫ってきています。早急に脱出してください！");
             }
 
             elapsed += Time.deltaTime;
@@ -313,7 +313,7 @@ public class WaterWarriorsRaidEvent : SpecialEvent
             {
                 var tentacle = new WaterTentacle();
                 tentacle.Create();
-                var offset = new Vector3(UnityEngine.Random.Range(0f, 0.15f), 0f, UnityEngine.Random.Range(0f, 0.15f));
+                var offset = new Vector3(Random.Range(0f, 0.15f), 0f, Random.Range(0f, 0.15f));
                 tentacle.Position = point + offset + Vector3.down * 0.45f;
                 _activeTentacles.Add(tentacle);
             }
@@ -415,17 +415,17 @@ public class WaterWarriorsRaidEvent : SpecialEvent
 
     private WaterParticleState CreateWaterParticleState(FloodVolumeState volume)
     {
-        float angle = UnityEngine.Random.Range(0f, Mathf.PI * 2f);
-        float radius = Mathf.Sqrt(UnityEngine.Random.Range(0f, 1f));
-        float size = UnityEngine.Random.Range(0.14f, 0.38f);
+        float angle = Random.Range(0f, Mathf.PI * 2f);
+        float radius = Mathf.Sqrt(Random.Range(0f, 1f));
+        float size = Random.Range(0.14f, 0.38f);
         var type = _activeWaterParticles.Count % 5 == 0
             ? PrimitiveType.Capsule
             : PrimitiveType.Sphere;
         var color = new Color(
-            Mathf.Clamp01(FloodParticleColor.r + UnityEngine.Random.Range(-0.08f, 0.08f)),
-            Mathf.Clamp01(FloodParticleColor.g + UnityEngine.Random.Range(-0.04f, 0.0f)),
+            Mathf.Clamp01(FloodParticleColor.r + Random.Range(-0.08f, 0.08f)),
+            Mathf.Clamp01(FloodParticleColor.g + Random.Range(-0.04f, 0.0f)),
             1f,
-            UnityEngine.Random.Range(0.34f, 0.62f));
+            Random.Range(0.34f, 0.62f));
 
         Primitive particle = Primitive.Create(
             type,
@@ -442,12 +442,12 @@ public class WaterWarriorsRaidEvent : SpecialEvent
         {
             Primitive = particle,
             NormalizedHorizontalOffset = new Vector2(Mathf.Cos(angle) * radius, Mathf.Sin(angle) * radius),
-            VerticalFactor = UnityEngine.Random.Range(0.1f, 0.9f),
-            DriftRadiusFactor = UnityEngine.Random.Range(0.015f, 0.055f),
-            OrbitSpeed = UnityEngine.Random.Range(0.12f, 0.55f),
-            BobSpeed = UnityEngine.Random.Range(0.6f, 1.6f),
-            Phase = UnityEngine.Random.Range(0f, Mathf.PI * 2f),
-            RotationSpeed = UnityEngine.Random.Range(18f, 80f),
+            VerticalFactor = Random.Range(0.1f, 0.9f),
+            DriftRadiusFactor = Random.Range(0.015f, 0.055f),
+            OrbitSpeed = Random.Range(0.12f, 0.55f),
+            BobSpeed = Random.Range(0.6f, 1.6f),
+            Phase = Random.Range(0f, Mathf.PI * 2f),
+            RotationSpeed = Random.Range(18f, 80f),
         };
     }
 
@@ -586,23 +586,23 @@ public class WaterWarriorsRaidEvent : SpecialEvent
     private RoomWaterParticleState CreateRoomWaterParticleState(Room room, int index)
     {
         bool isMicrobe = index % 3 == 0;
-        float size = UnityEngine.Random.Range(0.1f, 0.24f);
+        float size = Random.Range(0.1f, 0.24f);
         Vector3 scale = isMicrobe
-            ? new Vector3(size * 0.45f, size * UnityEngine.Random.Range(1.55f, 2.25f), size * 0.45f)
+            ? new Vector3(size * 0.45f, size * Random.Range(1.55f, 2.25f), size * 0.45f)
             : Vector3.one * size;
 
         Color color = isMicrobe ? RoomMicrobeColor : RoomBubbleColor;
-        color.a = UnityEngine.Random.Range(0.34f, 0.62f);
+        color.a = Random.Range(0.34f, 0.62f);
 
         Vector3 localAnchor = new(
-            UnityEngine.Random.Range(-RoomParticleHorizontalSpread, RoomParticleHorizontalSpread),
+            Random.Range(-RoomParticleHorizontalSpread, RoomParticleHorizontalSpread),
             RoomParticleMinLocalY,
-            UnityEngine.Random.Range(-RoomParticleHorizontalSpread, RoomParticleHorizontalSpread));
+            Random.Range(-RoomParticleHorizontalSpread, RoomParticleHorizontalSpread));
 
         Primitive particle = Primitive.Create(
             isMicrobe ? PrimitiveType.Capsule : PrimitiveType.Sphere,
             RoomLocalToWorld(room, localAnchor),
-            UnityEngine.Random.rotation.eulerAngles,
+            Random.rotation.eulerAngles,
             scale,
             true,
             color);
@@ -614,13 +614,13 @@ public class WaterWarriorsRaidEvent : SpecialEvent
         {
             Primitive = particle,
             LocalAnchor = localAnchor,
-            LocalTopY = UnityEngine.Random.Range(2.4f, RoomParticleMaxLocalY),
-            DriftRadius = UnityEngine.Random.Range(0.12f, 0.55f),
-            RiseSpeed = UnityEngine.Random.Range(0.04f, 0.12f),
-            OrbitSpeed = UnityEngine.Random.Range(0.25f, 0.85f),
-            BobSpeed = UnityEngine.Random.Range(0.9f, 1.8f),
-            Phase = UnityEngine.Random.Range(0f, Mathf.PI * 2f),
-            RotationSpeed = UnityEngine.Random.Range(22f, 115f),
+            LocalTopY = Random.Range(2.4f, RoomParticleMaxLocalY),
+            DriftRadius = Random.Range(0.12f, 0.55f),
+            RiseSpeed = Random.Range(0.04f, 0.12f),
+            OrbitSpeed = Random.Range(0.25f, 0.85f),
+            BobSpeed = Random.Range(0.9f, 1.8f),
+            Phase = Random.Range(0f, Mathf.PI * 2f),
+            RotationSpeed = Random.Range(22f, 115f),
         };
     }
 

@@ -1,23 +1,26 @@
 #nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
-using Exiled.API.Features.Pickups;
 using InventorySystem.Items.Usables.Scp1344;
+using LabApi.Features.Wrappers;
 using MEC;
 using Mirror;
 using PlayerRoles.FirstPersonControl.Thirdperson.Subcontrollers.Wearables;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using UnityEngine;
-
+using Item = Exiled.API.Features.Items.Item;
 using PlayerHandlers = Exiled.Events.Handlers.Player;
 using MapHandlers = Exiled.Events.Handlers.Map;
 using PlayerEvents = Exiled.Events.EventArgs.Player;
 using MapEvents = Exiled.Events.EventArgs.Map;
+using Pickup = Exiled.API.Features.Pickups.Pickup;
+using Player = Exiled.API.Features.Player;
 using ServerHandlers = Exiled.Events.Handlers.Server;
 using Scp914Handlers = Exiled.Events.Handlers.Scp914;
 using Scp914Events = Exiled.Events.EventArgs.Scp914;
@@ -55,7 +58,7 @@ public abstract class CItem
     private static readonly Dictionary<ushort, CItem> SerialToItem = new();
 
     // Pickup の Light オブジェクト管理
-    private static readonly Dictionary<ushort, LabApi.Features.Wrappers.LightSourceToy> PickupLights = new();
+    private static readonly Dictionary<ushort, LightSourceToy> PickupLights = new();
     private static readonly Dictionary<ushort, CoroutineHandle> PickupLightCoroutines = new();
 
     // Pickup に追従する Schematic
@@ -569,14 +572,14 @@ public virtual Pickup? Spawn(Vector3 position)
     // Pickup ライト制御
     // ======================================================
 
-    public virtual LabApi.Features.Wrappers.LightSourceToy? AddPickupLight(Pickup? pickup)
+    public virtual LightSourceToy? AddPickupLight(Pickup? pickup)
     {
         if (pickup == null) return null;
         if (PickupLights.TryGetValue(pickup.Serial, out var existing)) return existing;
 
         try
         {
-            var light = LabApi.Features.Wrappers.LightSourceToy.Create(pickup.Position);
+            var light = LightSourceToy.Create(pickup.Position);
             if (light == null) return null;
 
             light.Color      = PickupLightColor;
@@ -600,7 +603,7 @@ public virtual Pickup? Spawn(Vector3 position)
     }
 
     private static IEnumerator<float> TrackPickupLight(
-        ushort serial, Pickup? pickup, LabApi.Features.Wrappers.LightSourceToy? light)
+        ushort serial, Pickup? pickup, LightSourceToy? light)
     {
         while (pickup?.Base?.gameObject != null && light?.Base?.gameObject != null)
         {
@@ -1275,7 +1278,7 @@ public virtual Pickup? Spawn(Vector3 position)
                 {
                     ev.Player.DisableEffect(EffectType.Blinded);
                     if (ev.Player.ReferenceHub != null)
-                        WearableSync.DisableWearables(ev.Player.ReferenceHub, WearableElements.Scp1344Goggles);
+                        ev.Player.ReferenceHub.DisableWearables(WearableElements.Scp1344Goggles);
                 }
 
                 ci.OnGogglesRemoved(ev.Player, ev.Scp1344);

@@ -12,6 +12,8 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Object = UnityEngine.Object;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -68,7 +70,7 @@ public class Scp106Role : CRole
         Exiled.Events.Handlers.Player.ChangingRole += OnAnyPlayerChangingRole;
         Exiled.Events.Handlers.Player.Died += OnAnyPlayerDied;
         Exiled.Events.Handlers.Player.Left += OnAnyPlayerLeft;
-        Exiled.Events.Handlers.Server.WaitingForPlayers += CleanupAll;
+        Server.WaitingForPlayers += CleanupAll;
         base.RegisterEvents();
     }
 
@@ -78,7 +80,7 @@ public class Scp106Role : CRole
         Exiled.Events.Handlers.Player.ChangingRole -= OnAnyPlayerChangingRole;
         Exiled.Events.Handlers.Player.Died -= OnAnyPlayerDied;
         Exiled.Events.Handlers.Player.Left -= OnAnyPlayerLeft;
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= CleanupAll;
+        Server.WaitingForPlayers -= CleanupAll;
         CleanupAll();
         base.UnregisterEvents();
     }
@@ -389,9 +391,9 @@ public class Scp106Role : CRole
             NetworkServer.Spawn(sinkhole);
         
             // 10秒後に削除
-            Timing.CallDelayed(5f, () => UnityEngine.Object.Destroy(sinkhole));
+            Timing.CallDelayed(5f, () => Object.Destroy(sinkhole));
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Log.Error($"Sinkhole Prefabスポーン失敗: {ex.Message}");
         }

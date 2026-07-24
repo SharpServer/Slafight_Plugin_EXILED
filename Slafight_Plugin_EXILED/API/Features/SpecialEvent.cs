@@ -6,6 +6,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using Player = Exiled.API.Features.Player;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -122,9 +123,9 @@ public abstract class SpecialEvent
     {
         if (!_eventsSubscribed)
         {
-            Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
-            Exiled.Events.Handlers.Server.RestartingRound += OnRestartingRound;
-            Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
+            Server.RoundStarted += OnRoundStarted;
+            Server.RestartingRound += OnRestartingRound;
+            Server.WaitingForPlayers += OnWaitingForPlayers;
             _eventsSubscribed = true;
         }
 
@@ -153,9 +154,9 @@ public abstract class SpecialEvent
 
         if (_eventsSubscribed)
         {
-            Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
-            Exiled.Events.Handlers.Server.RestartingRound -= OnRestartingRound;
-            Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
+            Server.RoundStarted -= OnRoundStarted;
+            Server.RestartingRound -= OnRestartingRound;
+            Server.WaitingForPlayers -= OnWaitingForPlayers;
             _eventsSubscribed = false;
         }
     }

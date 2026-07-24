@@ -1,5 +1,6 @@
 using Exiled.API.Enums;
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.Extensions;
@@ -10,12 +11,12 @@ public class ScpPermissions : IBootstrapHandler
 {
     public static void Register()
     {
-        Exiled.Events.Handlers.Player.InteractingDoor += OnKeyDoor;
+        Player.InteractingDoor += OnKeyDoor;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Player.InteractingDoor -= OnKeyDoor;
+        Player.InteractingDoor -= OnKeyDoor;
     }
 
     private static void OnKeyDoor(InteractingDoorEventArgs ev)

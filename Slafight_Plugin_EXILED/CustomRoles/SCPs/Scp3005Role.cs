@@ -1,10 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
-using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp0492;
+using Exiled.Events.Handlers;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.Abilities;
@@ -14,6 +16,8 @@ using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Player = Exiled.API.Features.Player;
+using Scp1344 = Exiled.API.Features.Items.Scp1344;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -35,13 +39,13 @@ public class Scp3005Role : CRole
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Scp0492.ConsumedCorpse += OnConsumed;
+        Scp0492.ConsumedCorpse += OnConsumed;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Scp0492.ConsumedCorpse -= OnConsumed;
+        Scp0492.ConsumedCorpse -= OnConsumed;
         base.UnregisterEvents();
     }
 
@@ -76,12 +80,12 @@ public class Scp3005Role : CRole
 
     protected override void OnRoleHurting(HurtingEventArgs ev)
     {
-        if (ev.Attacker != null && ev.Attacker?.GetCustomRole() != this.CRoleTypeId)
+        if (ev.Attacker != null && ev.Attacker?.GetCustomRole() != CRoleTypeId)
         {
             var hasGoggles = ev.Attacker != null && ev.Attacker.Items
                 .OfType<Scp1344>()
                 .Any(i => CItem.TryGet(i, out var ci) && ci is AntiMemeGoggle && i.IsWorn);
-            if (ev.Player.IsEffectActive<CustomPlayerEffects.Sinkhole>() || hasGoggles) return;
+            if (ev.Player.IsEffectActive<Sinkhole>() || hasGoggles) return;
             ev.IsAllowed = false;
             ev.Attacker?.Hurt(ev.Player, 20f, DamageType.Unknown,null,  "<color=#ff00fa>第五的</color>な力による影響");
 
@@ -149,7 +153,7 @@ public class Scp3005Role : CRole
         {
             player.Position = position;
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Log.Warn($"[Scp3005Role] Skipped teleport during {context}: {ex.Message}");
         }

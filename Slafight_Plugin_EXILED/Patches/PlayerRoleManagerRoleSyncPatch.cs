@@ -120,12 +120,12 @@ public static class PlayerRoleManagerRoleSyncPatch
             if (targetRole is RoleTypeId.None or RoleTypeId.Destroyed)
                 return false;
 
-            var connection = ((NetworkBehaviour)receiverHub).connectionToClient;
-            ((NetworkConnection)connection).Send(
+            var connection = receiverHub.connectionToClient;
+            connection.Send(
                 new RoleSyncInfo(targetHub, targetRole, receiverHub, writer),
                 channelId: 0);
 
-            manager.PreviouslySentRole[((NetworkBehaviour)receiverHub).netId] = targetRole;
+            manager.PreviouslySentRole[receiverHub.netId] = targetRole;
             return true;
         }
         catch (Exception ex)
@@ -152,7 +152,7 @@ public static class PlayerRoleManagerRoleSyncPatch
             if (targetHub?.roleManager == null)
                 return false;
 
-            if (((NetworkBehaviour)targetHub).isLocalPlayer)
+            if (targetHub.isLocalPlayer)
                 return false;
 
             if (targetHub.Mode == ClientInstanceMode.Unverified)
@@ -162,7 +162,7 @@ public static class PlayerRoleManagerRoleSyncPatch
             if (currentRole == null || currentRole.RoleTypeId is RoleTypeId.None or RoleTypeId.Destroyed)
                 return false;
 
-            targetNetId = ((NetworkBehaviour)targetHub).netId;
+            targetNetId = targetHub.netId;
             return targetNetId != 0;
         }
         catch (Exception ex)
@@ -179,13 +179,13 @@ public static class PlayerRoleManagerRoleSyncPatch
             if (receiverHub == null)
                 return false;
 
-            if (((NetworkBehaviour)receiverHub).isLocalPlayer)
+            if (receiverHub.isLocalPlayer)
                 return false;
 
             if (receiverHub.Mode == ClientInstanceMode.Unverified)
                 return false;
 
-            var connection = ((NetworkBehaviour)receiverHub).connectionToClient;
+            var connection = receiverHub.connectionToClient;
             return connection != null && connection.isReady;
         }
         catch
@@ -201,7 +201,7 @@ public static class PlayerRoleManagerRoleSyncPatch
 
         try
         {
-            return $"{hub.nicknameSync?.MyNick ?? hub.ToString()}#{hub.PlayerId}/{((NetworkBehaviour)hub).netId}";
+            return $"{hub.nicknameSync?.MyNick ?? hub.ToString()}#{hub.PlayerId}/{hub.netId}";
         }
         catch
         {
@@ -230,7 +230,7 @@ public static class PlayerRolesNetUtilsHandleSpawnedPlayerPatch
         if (hub == null)
             return;
 
-        if (((NetworkBehaviour)hub).isLocalPlayer)
+        if (hub.isLocalPlayer)
             return;
 
         if (!IsReadyForInitialRolePack(hub))
@@ -272,7 +272,7 @@ public static class PlayerRolesNetUtilsHandleSpawnedPlayerPatch
 
         try
         {
-            ((NetworkConnection)((NetworkBehaviour)hub).connectionToClient).Send(
+            hub.connectionToClient.Send(
                 new RoleSyncInfoPack(hub),
                 channelId: 0);
         }
@@ -289,8 +289,8 @@ public static class PlayerRolesNetUtilsHandleSpawnedPlayerPatch
             if (hub.Mode == ClientInstanceMode.Unverified)
                 return false;
 
-            var connection = ((NetworkBehaviour)hub).connectionToClient;
-            return ((NetworkBehaviour)hub).netId != 0 &&
+            var connection = hub.connectionToClient;
+            return hub.netId != 0 &&
                    connection != null &&
                    connection.isReady;
         }
@@ -307,7 +307,7 @@ public static class PlayerRolesNetUtilsHandleSpawnedPlayerPatch
 
         try
         {
-            return $"{hub.nicknameSync?.MyNick ?? hub.ToString()}#{hub.PlayerId}/{((NetworkBehaviour)hub).netId}";
+            return $"{hub.nicknameSync?.MyNick ?? hub.ToString()}#{hub.PlayerId}/{hub.netId}";
         }
         catch
         {
@@ -329,7 +329,7 @@ public static class PlayerRolesNetUtilsWriteRoleSyncInfoPackPatch
         catch (Exception ex)
         {
             Log.Warn($"[RoleSyncGuard] RoleSyncInfoPack safe writer failed: {ex}");
-            NetworkWriterExtensions.WriteUShort(writer, 0);
+            writer.WriteUShort(0);
         }
 
         return false;
@@ -339,7 +339,7 @@ public static class PlayerRolesNetUtilsWriteRoleSyncInfoPackPatch
     {
         if (!TryGetReceiverNetId(receiverHub, out var receiverNetId))
         {
-            NetworkWriterExtensions.WriteUShort(writer, 0);
+            writer.WriteUShort(0);
             return;
         }
 
@@ -353,7 +353,7 @@ public static class PlayerRolesNetUtilsWriteRoleSyncInfoPackPatch
             payloads.Add(payload);
         }
 
-        NetworkWriterExtensions.WriteUShort(writer, (ushort)payloads.Count);
+        writer.WriteUShort((ushort)payloads.Count);
 
         foreach (var payload in payloads)
         {
@@ -533,7 +533,7 @@ public static class PlayerRolesNetUtilsWriteRoleSyncInfoPackPatch
             if (receiverHub == null)
                 return false;
 
-            receiverNetId = ((NetworkBehaviour)receiverHub).netId;
+            receiverNetId = receiverHub.netId;
             return receiverNetId != 0;
         }
         catch
@@ -549,7 +549,7 @@ public static class PlayerRolesNetUtilsWriteRoleSyncInfoPackPatch
 
         try
         {
-            return $"{hub.nicknameSync?.MyNick ?? hub.ToString()}#{hub.PlayerId}/{((NetworkBehaviour)hub).netId}";
+            return $"{hub.nicknameSync?.MyNick ?? hub.ToString()}#{hub.PlayerId}/{hub.netId}";
         }
         catch
         {

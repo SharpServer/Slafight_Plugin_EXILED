@@ -11,6 +11,7 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using UnityEngine;
+using VoiceChat;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -35,10 +36,10 @@ public class Scp610Role : CRole
             CRoleVoiceRoute.ToTeams(
                 [CTeam.SCPs],
                 VoiceRouteDecision.Direct(),
-                context => context.SourceChannel != VoiceChat.VoiceChatChannel.None),
+                context => context.SourceChannel != VoiceChatChannel.None),
             CRoleVoiceRoute.All(
                 VoiceRouteDecision.Block(),
-                context => context.SourceChannel != VoiceChat.VoiceChatChannel.None)
+                context => context.SourceChannel != VoiceChatChannel.None)
         ]);
     protected override IReadOnlyList<CRoleEffect> SpawnEffects =>
     [

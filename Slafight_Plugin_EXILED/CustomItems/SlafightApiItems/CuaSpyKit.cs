@@ -5,6 +5,7 @@ using Exiled.API.Extensions;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Item;
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -12,6 +13,7 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomRoles.ChaosInsurgency;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
@@ -51,7 +53,7 @@ public class CuaSpyKit : CItemKeycard
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Item.InspectingItem += OnInspecting;
+        Item.InspectingItem += OnInspecting;
         Exiled.Events.Handlers.Player.Handcuffing += OnHandcuff;
         Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
         _appearanceSyncCoroutine = Timing.RunCoroutine(AppearanceSyncCoroutine());
@@ -60,7 +62,7 @@ public class CuaSpyKit : CItemKeycard
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Item.InspectingItem -= OnInspecting;
+        Item.InspectingItem -= OnInspecting;
         Exiled.Events.Handlers.Player.Handcuffing -= OnHandcuff;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
         if (_appearanceSyncCoroutine.IsRunning)

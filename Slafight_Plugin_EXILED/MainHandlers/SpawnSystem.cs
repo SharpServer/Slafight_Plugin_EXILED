@@ -8,9 +8,10 @@ using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.Extensions;
 using Random = UnityEngine.Random;
-using Slafight_Plugin_EXILED.API.Interface;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -201,7 +202,7 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
 
     private bool _defaultWaveGateOpen = true;
     private CoroutineHandle _defaultWaveResetHandle;
-    public static bool Disable = false;
+    public static bool Disable;
 
     private static readonly List<RegisteredNextWaveOverride> PendingOverrides = [];
     private static long _overrideSequence;
@@ -292,9 +293,9 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
     public SpawnSystem()
     {
         Instance = this;
-        Exiled.Events.Handlers.Server.RespawningTeam += SpawnHandler;
-        Exiled.Events.Handlers.Server.RestartingRound += OnRoundRestarting;
-        Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
+        Server.RespawningTeam += SpawnHandler;
+        Server.RestartingRound += OnRoundRestarting;
+        Server.WaitingForPlayers += OnWaitingForPlayers;
     }
 
     public void Dispose()
@@ -303,9 +304,9 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
             return;
 
         _disposed = true;
-        Exiled.Events.Handlers.Server.RespawningTeam -= SpawnHandler;
-        Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarting;
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
+        Server.RespawningTeam -= SpawnHandler;
+        Server.RestartingRound -= OnRoundRestarting;
+        Server.WaitingForPlayers -= OnWaitingForPlayers;
 
         if (_defaultWaveResetHandle.IsRunning)
             Timing.KillCoroutines(_defaultWaveResetHandle);

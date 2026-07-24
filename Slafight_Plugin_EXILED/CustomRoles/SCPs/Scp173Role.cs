@@ -1,8 +1,10 @@
+using System;
 using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp173;
+using Exiled.Events.Handlers;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.Abilities;
@@ -11,6 +13,7 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -29,13 +32,13 @@ public class Scp173Role : CRole
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Scp173.Blinking += OnBlinking;
+        Scp173.Blinking += OnBlinking;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Scp173.Blinking -= OnBlinking;
+        Scp173.Blinking -= OnBlinking;
         base.UnregisterEvents();
     }
     
@@ -95,7 +98,7 @@ public class Scp173Role : CRole
         {
             player.Position = position;
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Log.Warn($"[Scp173Role] Skipped teleport during {context}: {ex.Message}");
         }

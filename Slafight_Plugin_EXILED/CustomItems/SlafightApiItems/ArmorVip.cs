@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using Exiled.API.Enums;
 using Exiled.API.Structs;
 using InventorySystem.Items.Armor;
-using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;

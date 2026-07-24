@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Enums;
@@ -14,6 +15,7 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 
@@ -208,7 +210,7 @@ public class DanteEvent : SpecialEvent
                 follower.Initialize(bossTransform);
             }
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Log.Warn($"[Dante] スキン装着に失敗（無視して続行）: {ex.Message}");
             _skin = null;
@@ -230,7 +232,7 @@ public class DanteEvent : SpecialEvent
             _boss.EnableEffect(EffectType.Fade, 255);
             _bodyHidden = true;
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Log.Warn($"[Dante] 本体の Fade に失敗（無視して続行）: {ex.Message}");
         }
@@ -244,7 +246,7 @@ public class DanteEvent : SpecialEvent
                 ThemeFile, "DanteTheme", _arenaCenter,
                 isSpatial: false, maxDistance: 9_999_999f, minDistance: 0.1f, volume: 1f);
         }
-        catch (System.Exception ex)
+        catch (Exception ex)
         {
             Log.Warn($"[Dante] テーマ再生に失敗（無視して続行）: {ex.Message}");
         }
@@ -1104,7 +1106,7 @@ public class DanteEvent : SpecialEvent
         _invulnerable = false;
         DestroyWeakPoints();
         Announce("<size=32><color=#ffd000><b>コア露出！ 今だ、叩け！</b></color></size>", 5);
-        Speak("ぐっ…触腕が…ええい、忌々しい羽虫共め！", 5f);
+        Speak("ぐっ…触腕が…ええい、忌々しい羽虫共め！");
     }
 
     private void DestroyWeakPoints()
@@ -1274,7 +1276,7 @@ public class DanteEvent : SpecialEvent
             return;
 
         Exiled.Events.Handlers.Player.Hurting += OnBossHurting;
-        Exiled.Events.Handlers.Server.RestartingRound += OnRestarting;
+        Server.RestartingRound += OnRestarting;
         _eventsHooked = true;
     }
 
@@ -1284,7 +1286,7 @@ public class DanteEvent : SpecialEvent
             return;
 
         Exiled.Events.Handlers.Player.Hurting -= OnBossHurting;
-        Exiled.Events.Handlers.Server.RestartingRound -= OnRestarting;
+        Server.RestartingRound -= OnRestarting;
         _eventsHooked = false;
     }
 

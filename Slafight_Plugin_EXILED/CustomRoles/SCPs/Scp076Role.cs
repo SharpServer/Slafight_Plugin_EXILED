@@ -13,6 +13,7 @@ using Slafight_Plugin_EXILED.CustomEffects;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -128,8 +129,8 @@ public class Scp076Role : CRole
         Exiled.Events.Handlers.Player.ChangingRole += OnAnyPlayerChangingRole;
         Exiled.Events.Handlers.Player.Left += OnAnyPlayerLeft;
         RoundVictoryEvents.RoundEnded += OnRoundEnded;
-        Exiled.Events.Handlers.Server.WaitingForPlayers += ResetRoundState;
-        Exiled.Events.Handlers.Server.RestartingRound += ResetRoundState;
+        Server.WaitingForPlayers += ResetRoundState;
+        Server.RestartingRound += ResetRoundState;
         base.RegisterEvents();
     }
 
@@ -139,8 +140,8 @@ public class Scp076Role : CRole
         Exiled.Events.Handlers.Player.ChangingRole -= OnAnyPlayerChangingRole;
         Exiled.Events.Handlers.Player.Left -= OnAnyPlayerLeft;
         RoundVictoryEvents.RoundEnded -= OnRoundEnded;
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= ResetRoundState;
-        Exiled.Events.Handlers.Server.RestartingRound -= ResetRoundState;
+        Server.WaitingForPlayers -= ResetRoundState;
+        Server.RestartingRound -= ResetRoundState;
         base.UnregisterEvents();
     }
 

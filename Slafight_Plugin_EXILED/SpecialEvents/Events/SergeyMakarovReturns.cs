@@ -6,9 +6,9 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomRoles.Others.SergeyMakarov;
-// SpecialEvent 基底クラス
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
+// SpecialEvent 基底クラス
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
 

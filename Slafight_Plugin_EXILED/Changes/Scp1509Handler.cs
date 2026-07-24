@@ -1,16 +1,17 @@
+using System;
 using Exiled.Events.EventArgs.Scp1509;
+using Exiled.Events.Handlers;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.Extensions;
 
-using Slafight_Plugin_EXILED.API.Interface;
-
 namespace Slafight_Plugin_EXILED.Changes;
 
-public class Scp1509Handler : IBootstrapHandler, System.IDisposable
+public class Scp1509Handler : IBootstrapHandler, IDisposable
 {
     public static Scp1509Handler Instance { get; private set; }
     public static void Register()
@@ -29,7 +30,7 @@ public class Scp1509Handler : IBootstrapHandler, System.IDisposable
 
     public Scp1509Handler()
     {
-        Exiled.Events.Handlers.Scp1509.Resurrecting += OnReincarnating;
+        Scp1509.Resurrecting += OnReincarnating;
     }
 
     public void Dispose()
@@ -38,8 +39,8 @@ public class Scp1509Handler : IBootstrapHandler, System.IDisposable
             return;
 
         _disposed = true;
-        Exiled.Events.Handlers.Scp1509.Resurrecting -= OnReincarnating;
-        System.GC.SuppressFinalize(this);
+        Scp1509.Resurrecting -= OnReincarnating;
+        GC.SuppressFinalize(this);
     }
 
     private void OnReincarnating(ResurrectingEventArgs ev)
@@ -88,7 +89,7 @@ public class Scp1509Handler : IBootstrapHandler, System.IDisposable
                 default:
                     var state = caster.GetRoleInfo();
                     if (state.Custom != CRoleTypeId.None)
-                        target.SetRole((CRoleTypeId)state.Custom, RoleSpawnFlags.None);
+                        target.SetRole(state.Custom, RoleSpawnFlags.None);
                     else
                         target.SetRole(state.Vanilla, RoleSpawnFlags.None);
                     break;

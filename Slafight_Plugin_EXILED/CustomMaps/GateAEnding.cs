@@ -9,26 +9,27 @@ using PlayerRoles;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Server = Exiled.Events.Handlers.Server;
 
-using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.CustomMaps;
 
 public static class GateAEnding
 {
     public static void Register()
     {
-        Exiled.Events.Handlers.Server.RoundStarted += SetupNpcs;
+        Server.RoundStarted += SetupNpcs;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Server.RoundStarted -= SetupNpcs;
+        Server.RoundStarted -= SetupNpcs;
     }
 
     private static SchematicObject? _triggerObject;
-    public static bool NowPlayingSound = false;
+    public static bool NowPlayingSound;
     private static Npc npc1;
     private static Npc npc2;
     private static Npc npc3;

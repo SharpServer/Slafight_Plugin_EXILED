@@ -2,6 +2,7 @@ using System.Linq;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
+using MEC;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems.IntermediateBases;
 using UnityEngine;
@@ -78,10 +79,10 @@ public abstract class DataCellBase : CItem
         var pickup = ev.Pickup;
 
         ev.Pickup.Destroy();
-        MEC.Timing.CallDelayed(0.1f, () =>
+        Timing.CallDelayed(0.1f, () =>
         {
             RemovePickupLight(pickup);
-            CItem.SerialTracker.ForceUnregister(serial);
+            SerialTracker.ForceUnregister(serial);
         });
     }
 
@@ -125,7 +126,7 @@ public abstract class DataCellBase : CItem
         accessTuner = null;
         accessTunerItem = null;
 
-        if (item == null || !CItem.TryGet(item, out var cItem) || cItem is not AccessTunerBase tuner)
+        if (item == null || !TryGet(item, out var cItem) || cItem is not AccessTunerBase tuner)
             return false;
 
         accessTuner = tuner;

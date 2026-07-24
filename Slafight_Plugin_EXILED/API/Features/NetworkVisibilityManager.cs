@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using AdminToys;
 using Exiled.API.Features;
 using Exiled.API.Features.Toys;
 using Exiled.Events.EventArgs.Player;
@@ -8,6 +9,7 @@ using MEC;
 using Mirror;
 using UnityEngine;
 using Light = Exiled.API.Features.Toys.Light;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -39,7 +41,7 @@ public class NetworkShowState
     // ---- 所有者 ----
 
     /// <summary>所有者のプレイヤーID。null の場合は所有者なし。</summary>
-    public int? OwnerId { get; set; } = null;
+    public int? OwnerId { get; set; }
 
     /// <summary>所有者本人に表示するか。</summary>
     public bool ShowToOwner { get; set; } = true;
@@ -140,7 +142,7 @@ public static class NetworkVisibilityManager
 
     public static void Register()
     {
-        Exiled.Events.Handlers.Server.RoundStarted            += OnRoundStarted;
+        Server.RoundStarted            += OnRoundStarted;
         Exiled.Events.Handlers.Player.Verified                += OnVerified;
         Exiled.Events.Handlers.Player.Spawned                 += OnSpawned;
         Exiled.Events.Handlers.Player.ChangingSpectatedPlayer += OnChangingSpectatedPlayer;
@@ -148,7 +150,7 @@ public static class NetworkVisibilityManager
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Server.RoundStarted            -= OnRoundStarted;
+        Server.RoundStarted            -= OnRoundStarted;
         Exiled.Events.Handlers.Player.Verified                -= OnVerified;
         Exiled.Events.Handlers.Player.Spawned                 -= OnSpawned;
         Exiled.Events.Handlers.Player.ChangingSpectatedPlayer -= OnChangingSpectatedPlayer;
@@ -306,7 +308,7 @@ public static class NetworkVisibilityManager
     public static NetworkShowState? GetShowState(this Light? light)
         => light?.Base?.netIdentity?.GetShowState();
 
-    public static NetworkShowState? GetShowState(this AdminToys.AdminToyBase? toy)
+    public static NetworkShowState? GetShowState(this AdminToyBase? toy)
         => toy?.netIdentity?.GetShowState();
 
     // =========================================================
@@ -610,53 +612,53 @@ public static class NetworkVisibilityManager
     // AdminToyBase 向け糖衣構文
     // =========================================================
 
-    public static void InitShowState(this AdminToys.AdminToyBase? toy, NetworkShowState? initialState = null)
+    public static void InitShowState(this AdminToyBase? toy, NetworkShowState? initialState = null)
         => toy?.netIdentity?.InitShowState(initialState);
 
-    public static void RemoveShowState(this AdminToys.AdminToyBase? toy)
+    public static void RemoveShowState(this AdminToyBase? toy)
         => toy?.netIdentity?.RemoveShowState();
 
-    public static void UpdateShowState(this AdminToys.AdminToyBase? toy, NetworkShowState newState)
+    public static void UpdateShowState(this AdminToyBase? toy, NetworkShowState newState)
         => toy?.netIdentity?.UpdateShowState(newState);
 
-    public static void UpdateShowState(this AdminToys.AdminToyBase? toy, Action<NetworkShowState> mutate)
+    public static void UpdateShowState(this AdminToyBase? toy, Action<NetworkShowState> mutate)
         => toy?.netIdentity?.UpdateShowState(mutate);
 
-    public static void SetOwner(this AdminToys.AdminToyBase? toy, Player owner, bool showToOwner = true)
+    public static void SetOwner(this AdminToyBase? toy, Player owner, bool showToOwner = true)
         => toy?.netIdentity?.SetOwner(owner, showToOwner);
 
-    public static void ClearOwner(this AdminToys.AdminToyBase? toy)
+    public static void ClearOwner(this AdminToyBase? toy)
         => toy?.netIdentity?.ClearOwner();
 
-    public static void SetShowToOwner(this AdminToys.AdminToyBase? toy, bool show)
+    public static void SetShowToOwner(this AdminToyBase? toy, bool show)
         => toy?.netIdentity?.SetShowToOwner(show);
 
-    public static void SetSpectatorVisibility(this AdminToys.AdminToyBase? toy, SpectatorVisibility vis)
+    public static void SetSpectatorVisibility(this AdminToyBase? toy, SpectatorVisibility vis)
         => toy?.netIdentity?.SetSpectatorVisibility(vis);
 
-    public static void AddExplicitShow(this AdminToys.AdminToyBase? toy, Player player)
+    public static void AddExplicitShow(this AdminToyBase? toy, Player player)
         => toy?.netIdentity?.AddExplicitShow(player);
 
-    public static void AddExplicitHide(this AdminToys.AdminToyBase? toy, Player player)
+    public static void AddExplicitHide(this AdminToyBase? toy, Player player)
         => toy?.netIdentity?.AddExplicitHide(player);
 
-    public static void RemoveExplicit(this AdminToys.AdminToyBase? toy, Player player)
+    public static void RemoveExplicit(this AdminToyBase? toy, Player player)
         => toy?.netIdentity?.RemoveExplicit(player);
 
-    public static void ClearExplicitShow(this AdminToys.AdminToyBase? toy)
+    public static void ClearExplicitShow(this AdminToyBase? toy)
         => toy?.netIdentity?.ClearExplicitShow();
 
-    public static void ClearExplicitHide(this AdminToys.AdminToyBase? toy)
+    public static void ClearExplicitHide(this AdminToyBase? toy)
         => toy?.netIdentity?.ClearExplicitHide();
 
-    public static void ClearAllExplicit(this AdminToys.AdminToyBase? toy)
+    public static void ClearAllExplicit(this AdminToyBase? toy)
         => toy?.netIdentity?.ClearAllExplicit();
 
-    public static void ApplyShowState(this AdminToys.AdminToyBase? toy)
+    public static void ApplyShowState(this AdminToyBase? toy)
         => toy?.netIdentity?.ApplyShowState();
 
     public static void SetVisibilityPredicate(
-        this AdminToys.AdminToyBase? toy,
+        this AdminToyBase? toy,
         Predicate<Player>? predicate)
         => toy?.netIdentity?.SetVisibilityPredicate(predicate);
 

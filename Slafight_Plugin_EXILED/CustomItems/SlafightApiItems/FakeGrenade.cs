@@ -52,7 +52,7 @@ public class FakeGrenade : CItem
     private void OnExploding(ExplodingGrenadeEventArgs ev)
     {
         if (!Check(ev.Projectile)) return;
-        if (UnityEngine.Random.Range(0, 11) != 0)
+        if (Random.Range(0, 11) != 0)
         {
             ev.TargetsToAffect.Clear();
         }

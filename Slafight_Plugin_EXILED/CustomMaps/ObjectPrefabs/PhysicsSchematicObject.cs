@@ -8,6 +8,7 @@ using MEC;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
@@ -35,7 +36,7 @@ public class PhysicsSchematicObject : ObjectPrefab
     public string TargetSchematicName { get; set; } = string.Empty;
     public float Mass { get; set; } = 1f;
     public bool UseGravity { get; set; } = true;
-    public bool IsKinematic { get; set; } = false;
+    public bool IsKinematic { get; set; }
     public bool DetachBlocks { get; set; } = true;
     public float SyncInterval { get; set; } = 0.05f;
     public Vector3 InitialVelocity { get; set; } = Vector3.zero;
@@ -216,7 +217,7 @@ public class PhysicsSchematicObject : ObjectPrefab
         foreach (GameObject block in detachedBlocks)
         {
             if (block != null)
-                UnityEngine.Object.Destroy(block);
+                Object.Destroy(block);
         }
     }
 

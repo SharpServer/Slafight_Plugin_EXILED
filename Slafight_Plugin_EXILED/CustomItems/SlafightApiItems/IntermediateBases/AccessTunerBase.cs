@@ -6,11 +6,13 @@ using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using Exiled.API.Features.Pickups;
 using Exiled.Events.EventArgs.Item;
+using Exiled.Events.EventArgs.Map;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.Core;
 using SNAPI.Events.EventArgs;
+using SNAPI.Events.Handlers;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems.IntermediateBases;
 
@@ -93,7 +95,7 @@ public abstract class AccessTunerBase : CItem
         base.OnPickingUp(ev);
     }
 
-    protected override void OnPickupAdded(Exiled.Events.EventArgs.Map.PickupAddedEventArgs ev)
+    protected override void OnPickupAdded(PickupAddedEventArgs ev)
     {
         GetOrCreateService(ev.Pickup.Serial);
         ApplyNoPermissions(ev.Pickup);
@@ -109,7 +111,7 @@ public abstract class AccessTunerBase : CItem
 
     public override void RegisterEvents()
     {
-        SNAPI.Events.Handlers.SnakePlayer.Score += OnSnakeScore;
+        SnakePlayer.Score += OnSnakeScore;
         Exiled.Events.Handlers.Item.KeycardInteracting += OnKeycardInteracting;
         Exiled.Events.Handlers.Player.InteractingDoor += OnInteractingDoor;
         Exiled.Events.Handlers.Player.ChangingItem += OnAnyChangingItem;
@@ -118,7 +120,7 @@ public abstract class AccessTunerBase : CItem
 
     public override void UnregisterEvents()
     {
-        SNAPI.Events.Handlers.SnakePlayer.Score -= OnSnakeScore;
+        SnakePlayer.Score -= OnSnakeScore;
         Exiled.Events.Handlers.Item.KeycardInteracting -= OnKeycardInteracting;
         Exiled.Events.Handlers.Player.InteractingDoor -= OnInteractingDoor;
         Exiled.Events.Handlers.Player.ChangingItem -= OnAnyChangingItem;
@@ -359,7 +361,7 @@ public abstract class AccessTunerBase : CItem
             return DataCellApplyResult.FilledPoints;
         }
 
-        AccessTunerBase? target = CItem.GetAllInstances()
+        AccessTunerBase? target = GetAllInstances()
             .OfType<AccessTunerBase>()
             .FirstOrDefault(t => NormalizeAccessLevel(t.AccessLevel) == targetLevel);
         if (target == null)
@@ -374,7 +376,7 @@ public abstract class AccessTunerBase : CItem
 
         Services.Remove(item.Serial);
         target.Services[item.Serial] = migrated;
-        CItem.SerialTracker.ForceRegister(item.Serial, target);
+        SerialTracker.ForceRegister(item.Serial, target);
         ApplyNoPermissions(item);
         target.ReapplyNoPermissionsDelayed(item);
         target.UpdateEffectedInfo(player, item.Serial);

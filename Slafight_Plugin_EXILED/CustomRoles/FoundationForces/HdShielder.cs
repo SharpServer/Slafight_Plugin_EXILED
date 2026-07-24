@@ -1,13 +1,14 @@
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
 using Exiled.API.Enums;
-using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp049;
+using Exiled.Events.Handlers;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces;
 
@@ -41,14 +42,14 @@ public class HdShielder : CRole
     public override void RegisterEvents()
     {
         CustomShieldState.AbsorbingDamage += OnShieldAbsorbingDamage;
-        Exiled.Events.Handlers.Scp049.Attacking += OnScp049Attacking;
+        Scp049.Attacking += OnScp049Attacking;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
         CustomShieldState.AbsorbingDamage -= OnShieldAbsorbingDamage;
-        Exiled.Events.Handlers.Scp049.Attacking -= OnScp049Attacking;
+        Scp049.Attacking -= OnScp049Attacking;
         base.UnregisterEvents();
     }
 

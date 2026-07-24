@@ -3,6 +3,7 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Hazards;
 using Exiled.Events.EventArgs.Scp330;
+using Exiled.Events.Handlers;
 using InventorySystem.Items.Usables.Scp330;
 using MEC;
 using PlayerRoles;
@@ -11,6 +12,7 @@ using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.ProximityChat;
 using UnityEngine;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.Changes;
 
@@ -26,16 +28,16 @@ public static class CandyChanges
 {
     public static void Register()
     {
-        Exiled.Events.Handlers.Scp330.InteractingScp330 += CandyRoll;
-        Exiled.Events.Handlers.Scp330.EatenScp330 += SpecialCandiesEffect;
+        Scp330.InteractingScp330 += CandyRoll;
+        Scp330.EatenScp330 += SpecialCandiesEffect;
         
         Init();
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Scp330.InteractingScp330 -= CandyRoll;
-        Exiled.Events.Handlers.Scp330.EatenScp330 -= SpecialCandiesEffect;
+        Scp330.InteractingScp330 -= CandyRoll;
+        Scp330.EatenScp330 -= SpecialCandiesEffect;
     }
 
     public static Dictionary<string, CandyChanceStruct> CandyChances { get; private set; } = [];
@@ -45,7 +47,7 @@ public static class CandyChanges
     public static void Init()
     {
         CandyChances.Clear();
-        CandyChances.Add("Default", new CandyChanceStruct()
+        CandyChances.Add("Default", new CandyChanceStruct
         {
             MostRareCandy = CandyKindID.Pink,
             MostRareChance = 0.25f,
@@ -93,7 +95,7 @@ public static class CandyChanges
     private static void CandyRoll(InteractingScp330EventArgs ev)
     {
         if (ev.Player == null) return;
-        var random = UnityEngine.Random.Range(0f, 1f);
+        var random = Random.Range(0f, 1f);
         var before = ev.Candy;
         CandyChances.TryGetValue(SelectedDictionary, out var result);
 

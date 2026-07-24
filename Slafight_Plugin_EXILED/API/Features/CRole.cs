@@ -973,7 +973,7 @@ public abstract class CRole
             Hint hint;
             if (DescriptionShowRoleName)
             {
-                hint = new Hint()
+                hint = new Hint
                 {
                     Alignment = HintAlignment.Center, XCoordinate = 0, YCoordinate = 770,
                     Text = $"<size=24><color={Team.GetTeamColor()}>{RoleName}</color>\n{Description}</size>", Id = HudConstId.CRoleSpawned
@@ -981,7 +981,7 @@ public abstract class CRole
             }
             else
             {
-                hint = new Hint()
+                hint = new Hint
                 {
                     Alignment = HintAlignment.Center, XCoordinate = 0, YCoordinate = 770,
                     Text = $"<size=24>{Description}</size>", Id = HudConstId.CRoleSpawned

@@ -5,6 +5,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomMaps;
+using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.ChaosInsurgency;
 
@@ -30,7 +31,7 @@ public class ChaosIntruder : CRole
     {
         [AmmoType.Nato9] = 100,
     };
-    protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
+    protected override Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
     protected override string SpawnCustomInfo => "Chaos Insurgency Intruder";
 
 }

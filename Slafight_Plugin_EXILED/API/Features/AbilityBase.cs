@@ -7,6 +7,7 @@ using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
 using UnityEngine;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -27,10 +28,6 @@ public abstract class AbilityBase
 
     private float _cooldownSeconds;
     private int _maxUses;
-
-    protected AbilityBase()
-    {
-    }
 
     public Player? Owner { get; private set; }
     public bool IsInitialized { get; private set; }
@@ -312,7 +309,7 @@ public abstract class AbilityBase
         {
             Log.Debug($"[Ability] CanActivate rejected {GetType().Name} for {player.Nickname}");
             if (!string.IsNullOrWhiteSpace(failureReason))
-                player.ShowHint($"<color=yellow>{failureReason}</color>", 3f);
+                player.ShowHint($"<color=yellow>{failureReason}</color>");
             return;
         }
 
@@ -330,7 +327,7 @@ public abstract class AbilityBase
         if (_initialized)
             return;
 
-        Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
+        Server.WaitingForPlayers += OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Joined += OnPlayerJoined;
         Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
         _initialized = true;
@@ -341,7 +338,7 @@ public abstract class AbilityBase
         if (!_initialized)
             return;
 
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
+        Server.WaitingForPlayers -= OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Joined -= OnPlayerJoined;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
         RevokeAllPlayers();
@@ -455,7 +452,7 @@ public abstract class AbilityBase
             loadout.ActiveAbility == this)
         {
             var abilityName = AbilityLocalization.GetDisplayName(GetType().Name, player);
-            player.ShowHint($"<color=yellow>{abilityName} のクールダウンが終了しました。</color>", 3f);
+            player.ShowHint($"<color=yellow>{abilityName} のクールダウンが終了しました。</color>");
             AbilityManager.UpdateAbilityHint(player, loadout);
         }
     }

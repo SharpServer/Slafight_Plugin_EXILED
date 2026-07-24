@@ -7,6 +7,7 @@ using CommandSystem;
 using Exiled.API.Features;
 using MEC;
 using Slafight_Plugin_EXILED.API.Features;
+using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.Commands.DevTools;
 
@@ -184,7 +185,7 @@ public class PlayAudioHere : ICommand
         string url,
         string audioPlayerName,
         Player player,
-        UnityEngine.Vector3 initialPosition,
+        Vector3 initialPosition,
         bool followPlayer,
         bool loop,
         float maxDistance,
@@ -233,7 +234,7 @@ public class PlayAudioHere : ICommand
                 volume: volume,
                 loop: loop,
                 destroyOnEnd: !loop);
-            sender.Respond($"Playing downloaded media audio. Name: {audioPlayerName}", true);
+            sender.Respond($"Playing downloaded media audio. Name: {audioPlayerName}");
         }
         catch (Exception ex)
         {

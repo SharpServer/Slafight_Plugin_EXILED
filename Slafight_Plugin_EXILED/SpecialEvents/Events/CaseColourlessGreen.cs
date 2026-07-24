@@ -12,8 +12,10 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
-using Slafight_Plugin_EXILED.Extensions; // SpecialEvent 基底クラス
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Map = Exiled.Events.Handlers.Map;
+// SpecialEvent 基底クラス
 using SpawnSystem = Slafight_Plugin_EXILED.MainHandlers.SpawnSystem;
 
 namespace Slafight_Plugin_EXILED.SpecialEvents.Events;
@@ -48,13 +50,13 @@ public class CaseColourlessGreen : SpecialEvent
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Map.GeneratorActivating += OnGenerating;
+        Map.GeneratorActivating += OnGenerating;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Map.GeneratorActivating -= OnGenerating;
+        Map.GeneratorActivating -= OnGenerating;
         base.UnregisterEvents();
     }
 
@@ -166,7 +168,7 @@ public class CaseColourlessGreen : SpecialEvent
             foreach (var p in remaining)
             {
                 // ランダムで 40% の場合 Marionette、60% の場合 Scientist
-                var roleToAssign = UnityEngine.Random.value < marionetteChance ? marionetteRole : scientistRole;
+                var roleToAssign = Random.value < marionetteChance ? marionetteRole : scientistRole;
     
                 p.SetRole(roleToAssign);
             }

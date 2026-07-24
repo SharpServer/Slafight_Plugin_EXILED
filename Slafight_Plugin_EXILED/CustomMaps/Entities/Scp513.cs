@@ -7,6 +7,7 @@ using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using Utils.NonAllocLINQ;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Entities;
 
@@ -14,14 +15,14 @@ public static class Scp513
 {
     public static void Register()
     {
-        Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingPlayers;
+        Server.WaitingForPlayers += OnWaitingPlayers;
         Exiled.Events.Handlers.Player.ChangingRole       += OnChangingRole;
         Exiled.Events.Handlers.Player.Left               += OnLeft;
     }
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingPlayers;
+        Server.WaitingForPlayers -= OnWaitingPlayers;
         Exiled.Events.Handlers.Player.ChangingRole       -= OnChangingRole;
         Exiled.Events.Handlers.Player.Left               -= OnLeft;
         StalkingTargets.Clear();

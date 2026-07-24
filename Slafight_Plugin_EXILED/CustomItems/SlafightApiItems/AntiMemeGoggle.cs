@@ -1,4 +1,5 @@
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
@@ -20,13 +21,13 @@ public class AntiMemeGoggle : CItem
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Player.Hurting += OnHurting;
+        Player.Hurting += OnHurting;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Player.Hurting -= OnHurting;
+        Player.Hurting -= OnHurting;
         base.UnregisterEvents();
     }
 

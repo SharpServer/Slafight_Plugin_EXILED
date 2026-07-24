@@ -9,11 +9,12 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 using Slafight_Plugin_EXILED.API.Features.Teams.Escape;
+using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;
-using Slafight_Plugin_EXILED.API.Interface;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.Changes;
 
@@ -60,8 +61,8 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
 
         Exiled.Events.Handlers.Player.Escaping += CancelDefaultEscape;
         Exiled.Events.Handlers.Player.Left += OnLeft;
-        Exiled.Events.Handlers.Server.RoundStarted += AddEscapeCoroutine;
-        Exiled.Events.Handlers.Server.RestartingRound += ResetRoundState;
+        Server.RoundStarted += AddEscapeCoroutine;
+        Server.RestartingRound += ResetRoundState;
     }
 
     public void Dispose()
@@ -72,8 +73,8 @@ public class EscapeHandler : IBootstrapHandler, IDisposable
         _disposed = true;
         Exiled.Events.Handlers.Player.Escaping -= CancelDefaultEscape;
         Exiled.Events.Handlers.Player.Left -= OnLeft;
-        Exiled.Events.Handlers.Server.RoundStarted -= AddEscapeCoroutine;
-        Exiled.Events.Handlers.Server.RestartingRound -= ResetRoundState;
+        Server.RoundStarted -= AddEscapeCoroutine;
+        Server.RestartingRound -= ResetRoundState;
         ResetRoundState();
         MapFlags.EscapePoints.Clear();
         PlayerCustomEscaping = null;

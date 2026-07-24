@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using Exiled.API.Features;
 using Exiled.Permissions.Extensions;
 using UnityEngine;
+
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
 public static class DebugModeHandler

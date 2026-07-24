@@ -9,13 +9,13 @@ using PlayerRoles;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
 using OmegaWarhead = Slafight_Plugin_EXILED.CustomMaps.Features.OmegaWarhead;
 using Npc = Exiled.API.Features.Npc;
 
-using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.Commands;
 
 public class DevToolFunctionHandler
@@ -258,7 +258,7 @@ public class DevToolFunctionHandler
 
             try
             {
-                npc.SetRole(cId, RoleSpawnFlags.All);
+                npc.SetRole(cId);
             }
             catch (Exception ex)
             {

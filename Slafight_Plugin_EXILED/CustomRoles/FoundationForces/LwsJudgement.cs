@@ -5,6 +5,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomMaps;
+using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces;
 
@@ -33,6 +34,6 @@ public class LwsJudgement : CRole
         [AmmoType.Nato556] = 220,
         [AmmoType.Nato9] = 80,
     };
-    protected override UnityEngine.Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
+    protected override Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
     protected override string SpawnCustomInfo => $"<color={ServerColors.Silver}>Law's Left Hand Judgement</color>";
 }

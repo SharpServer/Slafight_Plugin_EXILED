@@ -1,13 +1,14 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using AdminToys;
 using Exiled.API.Features;
-using LabApi.Features.Wrappers;
 using MEC;
 using Mirror;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomMaps.Features;
 using UnityEngine;
 using LightSourceToy = LabApi.Features.Wrappers.LightSourceToy;
+using Object = UnityEngine.Object;
 
 #pragma warning disable CS0618 // 元 LightSourceToy の旧 LightShape も欠落なく複製する。
 
@@ -59,7 +60,7 @@ public sealed class AlarmLight : ObjectPrefab
     public static void ReplaceAll()
     {
         // 最初に対象を固定する。以降に生成された LightSourceToy は今回の置換対象に含めない。
-        LightSourceToy[] originals = UnityEngine.Object
+        LightSourceToy[] originals = Object
             .FindObjectsByType<AdminToys.LightSourceToy>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
             .Where(light => light != null && light.netIdentity != null && light.netIdentity.isServer)
             .Select(LightSourceToy.Get)
@@ -107,7 +108,7 @@ public sealed class AlarmLight : ObjectPrefab
                 NetworkServer.UnSpawn(original.GameObject);
                 replaced++;
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
                 Log.Error($"[AlarmLight] LightSourceToy の置換に失敗しました: {ex}");
             }
@@ -142,9 +143,9 @@ public sealed class AlarmLight : ObjectPrefab
         _rightSpotLight = CreateLight(LightType.Spot, AlarmRed, 0f, Rotation * Quaternion.Euler(0f, -90f, 0f));
         Instances.Add(this);
 
-        if (Features.OmegaWarhead.IsWarheadStarted)
+        if (OmegaWarhead.IsWarheadStarted)
             SetAlarm(AlarmMode.Omega);
-        else if (Exiled.API.Features.Warhead.IsInProgress)
+        else if (Warhead.IsInProgress)
             SetAlarm(AlarmMode.Alpha);
 
         EnsureAlarmCoroutine();

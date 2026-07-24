@@ -1,13 +1,14 @@
 using System.Collections.Generic;
 using Exiled.API.Enums;
-using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp173;
+using Exiled.Events.Handlers;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces;
 
@@ -27,15 +28,15 @@ public class Sculpture : CRole
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Scp173.Blinking += OnBlinking;
-        Exiled.Events.Handlers.Scp173.AddingObserver += OnObserving;
+        Scp173.Blinking += OnBlinking;
+        Scp173.AddingObserver += OnObserving;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Scp173.Blinking -= OnBlinking;
-        Exiled.Events.Handlers.Scp173.AddingObserver -= OnObserving;
+        Scp173.Blinking -= OnBlinking;
+        Scp173.AddingObserver -= OnObserving;
         base.UnregisterEvents();
     }
     

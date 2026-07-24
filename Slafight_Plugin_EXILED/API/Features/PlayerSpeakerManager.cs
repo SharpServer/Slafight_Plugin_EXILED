@@ -4,7 +4,10 @@ using System.Linq;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
+using PlayerRoles;
 using Slafight_Plugin_EXILED.Extensions;
+using Slafight_Plugin_EXILED.ProximityChat;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -40,7 +43,7 @@ public static class PlayerSpeakerManager
         Exiled.Events.Handlers.Player.ChangingRole += OnPlayerChangingRole;
         Exiled.Events.Handlers.Player.Died += OnPlayerDied;
         Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
-        Exiled.Events.Handlers.Server.RestartingRound += OnRoundRestarted;
+        Server.RestartingRound += OnRoundRestarted;
 
         _registered = true;
     }
@@ -54,7 +57,7 @@ public static class PlayerSpeakerManager
         Exiled.Events.Handlers.Player.ChangingRole -= OnPlayerChangingRole;
         Exiled.Events.Handlers.Player.Died -= OnPlayerDied;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
-        Exiled.Events.Handlers.Server.RestartingRound -= OnRoundRestarted;
+        Server.RestartingRound -= OnRoundRestarted;
 
         DestroyAll();
         _registered = false;
@@ -130,7 +133,6 @@ public static class PlayerSpeakerManager
             speaker = SpeakerApi.CreateLiveSpeaker(
                 $"PlayerSpeaker_{playerId}_{purpose}",
                 player.Position,
-                null,
                 speakerName: speakerName,
                 isSpatial: isSpatial,
                 maxDistance: maxDistance,
@@ -457,8 +459,8 @@ public static class PlayerSpeakerManager
         }
 
         if (ev.Player.IsAlive &&
-            ev.Player.Role != PlayerRoles.RoleTypeId.Spectator &&
-            ev.Player.Role != PlayerRoles.RoleTypeId.None)
+            ev.Player.Role != RoleTypeId.Spectator &&
+            ev.Player.Role != RoleTypeId.None)
         {
             // Proximity 用だけ自動生成する例
             Timing.CallDelayed(1.5f, () =>
@@ -474,10 +476,10 @@ public static class PlayerSpeakerManager
                         GetOrCreateSpeaker(
                             player,
                             PurposeProximity,
-                            isSpatial: ProximityChat.Handler.AudioIsSpatial,
-                            maxDistance: ProximityChat.Handler.AudioMaxDistance,
-                            minDistance: ProximityChat.Handler.AudioMinDistance,
-                            volume: ProximityChat.Handler.AudioVolume,
+                            isSpatial: Handler.AudioIsSpatial,
+                            maxDistance: Handler.AudioMaxDistance,
+                            minDistance: Handler.AudioMinDistance,
+                            volume: Handler.AudioVolume,
                             speakerName: "ProximityVoice");
                     }
                 }
@@ -538,7 +540,7 @@ public static class PlayerSpeakerManager
                 var player = GetManagedPlayer(playerId);
                 shouldContinue = ShouldManageSpeaker(player) && player.IsAlive && liveSpeaker.IsValid;
                 if (shouldContinue)
-                    liveSpeaker.SetTransform(player.Position, null);
+                    liveSpeaker.SetTransform(player.Position);
             }
             catch (Exception ex)
             {

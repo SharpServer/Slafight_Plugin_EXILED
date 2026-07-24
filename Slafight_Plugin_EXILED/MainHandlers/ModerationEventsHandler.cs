@@ -8,6 +8,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Features.Attributes;
 using Slafight_Plugin_EXILED.Extensions;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.MainHandlers;
 
@@ -34,9 +35,9 @@ public static class ModerationEventsHandler
 
     public static void Register()
     {
-        Exiled.Events.Handlers.Server.ReportingCheater += OnReportingCheater;
-        Exiled.Events.Handlers.Server.LocalReporting += OnLocalReporting;
-        Exiled.Events.Handlers.Server.RestartingRound += OnRestartingRound;
+        Server.ReportingCheater += OnReportingCheater;
+        Server.LocalReporting += OnLocalReporting;
+        Server.RestartingRound += OnRestartingRound;
         Exiled.Events.Handlers.Player.Dying += OnDying;
         Exiled.Events.Handlers.Player.Kicking += OnKicking;
         Exiled.Events.Handlers.Player.Kicked += OnKicked;
@@ -45,9 +46,9 @@ public static class ModerationEventsHandler
 
     public static void Unregister()
     {
-        Exiled.Events.Handlers.Server.ReportingCheater -= OnReportingCheater;
-        Exiled.Events.Handlers.Server.LocalReporting -= OnLocalReporting;
-        Exiled.Events.Handlers.Server.RestartingRound -= OnRestartingRound;
+        Server.ReportingCheater -= OnReportingCheater;
+        Server.LocalReporting -= OnLocalReporting;
+        Server.RestartingRound -= OnRestartingRound;
         Exiled.Events.Handlers.Player.Dying -= OnDying;
         Exiled.Events.Handlers.Player.Kicking -= OnKicking;
         Exiled.Events.Handlers.Player.Kicked -= OnKicked;

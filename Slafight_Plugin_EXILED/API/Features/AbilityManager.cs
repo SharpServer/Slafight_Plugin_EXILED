@@ -4,6 +4,7 @@ using System.Text;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.Hints;
+using Server = Exiled.Events.Handlers.Server;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -118,8 +119,8 @@ public static class AbilityManager
     {
         if (_initialized) return;
 
-        Exiled.Events.Handlers.Server.RoundStarted += OnRoundStarted;
-        Exiled.Events.Handlers.Server.WaitingForPlayers += OnWaitingForPlayers;
+        Server.RoundStarted += OnRoundStarted;
+        Server.WaitingForPlayers += OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
         Exiled.Events.Handlers.Player.Joined += OnPlayerJoined;
         _initialized = true;
@@ -129,8 +130,8 @@ public static class AbilityManager
     {
         if (!_initialized) return;
 
-        Exiled.Events.Handlers.Server.RoundStarted -= OnRoundStarted;
-        Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
+        Server.RoundStarted -= OnRoundStarted;
+        Server.WaitingForPlayers -= OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
         Exiled.Events.Handlers.Player.Joined -= OnPlayerJoined;
         ClearAllLoadouts();

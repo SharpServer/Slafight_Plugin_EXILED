@@ -50,7 +50,7 @@ public class AccessTunerBox : ObjectPrefab
 
     /// <summary>AccessTuner パーツのレベル。0 = Broken、1〜3 = Lv1〜Lv3。</summary>
     public Option SpawnAccessTunerLevel { get; } = new(
-        OptionPart.Int("AccessTuner_level", BrokenTunerLevel, min: BrokenTunerLevel, max: MaxLevel));
+        OptionPart.Int("AccessTuner_level", min: BrokenTunerLevel, max: MaxLevel));
 
     public Option SpawnDataCell { get; } = new(
         OptionPart.Bool("LeftSide", true),

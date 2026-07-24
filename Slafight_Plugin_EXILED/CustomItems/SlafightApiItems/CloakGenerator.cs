@@ -1,5 +1,6 @@
 using CustomPlayerEffects;
 using Exiled.Events.EventArgs.Player;
+using Exiled.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 
@@ -18,13 +19,13 @@ public class CloakGenerator : CItem
 
     public override void RegisterEvents()
     {
-        Exiled.Events.Handlers.Player.UsingItemCompleted += OnUsingCompleted;
+        Player.UsingItemCompleted += OnUsingCompleted;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
-        Exiled.Events.Handlers.Player.UsingItemCompleted -= OnUsingCompleted;
+        Player.UsingItemCompleted -= OnUsingCompleted;
         base.UnregisterEvents();
     }
 

@@ -81,7 +81,7 @@ public static class ServerSpecificUserSettings
 
         return new KeybindHintContent(
             string.Format(KeybindUsageHintFormat, keyText, actionText, settingsText),
-            [(HintParameter)new SSKeybindHintParameter(settingId)]);
+            [new SSKeybindHintParameter(settingId)]);
     }
 
     public static string GetSuggestedKeyText(int settingId)
