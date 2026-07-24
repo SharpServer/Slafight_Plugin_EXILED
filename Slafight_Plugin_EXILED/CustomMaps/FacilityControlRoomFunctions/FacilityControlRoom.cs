@@ -408,9 +408,3 @@ public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
         public float SuppressModeHintUntil { get; set; }
     }
 }
-
-public static class FacilityContorlRoom
-{
-    public static bool IsAntiMemeProtocolActive => FacilityControlRoom.IsAntiMemeProtocolActive;
-    public static bool HasAntiMemeProtocolActivatedInPast => FacilityControlRoom.HasAntiMemeProtocolActivatedInPast;
-}
