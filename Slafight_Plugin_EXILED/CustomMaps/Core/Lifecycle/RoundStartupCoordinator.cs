@@ -12,6 +12,7 @@ using Slafight_Plugin_EXILED.CustomMaps.Core.DoorAccess;
 using Slafight_Plugin_EXILED.CustomMaps.Core.FemurBreaker;
 using Slafight_Plugin_EXILED.CustomMaps.Core.SurfaceGate;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
+using Slafight_Plugin_EXILED.CustomMaps.Features.Warhead;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Core.Lifecycle;

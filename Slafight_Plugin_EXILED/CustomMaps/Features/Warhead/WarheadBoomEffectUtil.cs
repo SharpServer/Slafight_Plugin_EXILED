@@ -5,7 +5,7 @@ using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using UnityEngine;
 using Random = System.Random;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.Features;
+namespace Slafight_Plugin_EXILED.CustomMaps.Features.Warhead;
 
 public static class WarheadBoomEffectUtil
 {

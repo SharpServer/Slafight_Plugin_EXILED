@@ -7,6 +7,7 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
+using Slafight_Plugin_EXILED.CustomMaps.Features.Warhead;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Warhead = Exiled.Events.Handlers.Warhead;

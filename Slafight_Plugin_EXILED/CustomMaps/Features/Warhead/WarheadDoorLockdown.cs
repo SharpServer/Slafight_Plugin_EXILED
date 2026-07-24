@@ -1,7 +1,7 @@
 using Exiled.API.Enums;
 using Exiled.API.Features.Doors;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.Features;
+namespace Slafight_Plugin_EXILED.CustomMaps.Features.Warhead;
 
 public static class WarheadDoorLockdown
 {

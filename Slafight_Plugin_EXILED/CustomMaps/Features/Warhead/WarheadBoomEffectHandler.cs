@@ -9,9 +9,9 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Light = Exiled.API.Features.Toys.Light;
-using Warhead = Exiled.Events.Handlers.Warhead;
+using WarheadHandler = Exiled.Events.Handlers.Warhead;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.Features;
+namespace Slafight_Plugin_EXILED.CustomMaps.Features.Warhead;
 
 public static class WarheadBoomEffectHandler
 {
@@ -20,16 +20,16 @@ public static class WarheadBoomEffectHandler
 
     public static void Register()
     {
-        Warhead.Starting += InvokeCoroutine;
-        Warhead.Detonating += OnDetonating;
-        Warhead.Detonated += OnDetonated;
+        WarheadHandler.Starting += InvokeCoroutine;
+        WarheadHandler.Detonating += OnDetonating;
+        WarheadHandler.Detonated += OnDetonated;
     }
 
     public static void Unregister()
     {
-        Warhead.Starting -= InvokeCoroutine;
-        Warhead.Detonating -= OnDetonating;
-        Warhead.Detonated -= OnDetonated;
+        WarheadHandler.Starting -= InvokeCoroutine;
+        WarheadHandler.Detonating -= OnDetonating;
+        WarheadHandler.Detonated -= OnDetonated;
         CleanupRunningEffects();
     }
     private static CoroutineHandle _handle;
@@ -48,7 +48,7 @@ public static class WarheadBoomEffectHandler
     }
 
     private static void OnDetonated()
-        => ApplyPostDetonationEffects("Warhead.Detonated");
+        => ApplyPostDetonationEffects("WarheadHandler.Detonated");
 
     private static IEnumerator<float> PostDetonationFallbackCoroutine()
     {
@@ -59,7 +59,7 @@ public static class WarheadBoomEffectHandler
         {
             if (Exiled.API.Features.Warhead.IsDetonated || AlphaWarheadController.Singleton?.AlreadyDetonated == true)
             {
-                ApplyPostDetonationEffects("Warhead.Detonating fallback");
+                ApplyPostDetonationEffects("WarheadHandler.Detonating fallback");
                 yield break;
             }
 

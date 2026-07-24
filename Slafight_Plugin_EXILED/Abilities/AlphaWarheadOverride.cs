@@ -7,6 +7,7 @@ using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Core;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
+using Slafight_Plugin_EXILED.CustomMaps.Features.Warhead;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 

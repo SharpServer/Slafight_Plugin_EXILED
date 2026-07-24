@@ -16,6 +16,7 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Features.RoundVictory.Core;
 using Slafight_Plugin_EXILED.Changes;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
+using Slafight_Plugin_EXILED.CustomMaps.Features.Warhead;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Player = Exiled.Events.Handlers.Player;

@@ -6,6 +6,7 @@ using MEC;
 using Mirror;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
+using Slafight_Plugin_EXILED.CustomMaps.Features.Warhead;
 using UnityEngine;
 using LightSourceToy = LabApi.Features.Wrappers.LightSourceToy;
 using Object = UnityEngine.Object;

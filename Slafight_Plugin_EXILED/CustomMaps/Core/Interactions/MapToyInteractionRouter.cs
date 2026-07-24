@@ -3,6 +3,7 @@ using LabApi.Features.Wrappers;
 using Slafight_Plugin_EXILED.CustomMaps.Core.FemurBreaker;
 using Slafight_Plugin_EXILED.CustomMaps.Core.SurfaceGate;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
+using Slafight_Plugin_EXILED.CustomMaps.Features.Warhead;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
 

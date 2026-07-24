@@ -12,7 +12,7 @@ using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.Features;
+namespace Slafight_Plugin_EXILED.CustomMaps.Features.Warhead;
 
 public class OmegaWarheadStartingEventArgs : EventArgs
 {
@@ -45,7 +45,7 @@ public static class OmegaWarhead
     {
         Log.Debug("[OMEGA WARHEAD]Called Start Protocol.");
         if (!CanBeStart()) return false;
-        if (Warhead.IsInProgress) Warhead.Stop();
+        if (Exiled.API.Features.Warhead.IsInProgress) Exiled.API.Features.Warhead.Stop();
         RoundHazardController.SetDeadmanSwitchBlocked(true);
         RoundHazardController.SetAlphaWarheadDisarmLocked(true);
 

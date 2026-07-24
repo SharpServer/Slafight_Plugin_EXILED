@@ -13,7 +13,7 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
-using OmegaWarhead = Slafight_Plugin_EXILED.CustomMaps.Features.OmegaWarhead;
+using OmegaWarhead = Slafight_Plugin_EXILED.CustomMaps.Features.Warhead.OmegaWarhead;
 using Npc = Exiled.API.Features.Npc;
 
 namespace Slafight_Plugin_EXILED.Commands;
