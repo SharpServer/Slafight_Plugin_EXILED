@@ -8,7 +8,7 @@ using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
+namespace Slafight_Plugin_EXILED.CustomMaps.Bridges.ProjectMER;
 
 public class TriggerPointRegistry : SlafightLabApiHandler
 {

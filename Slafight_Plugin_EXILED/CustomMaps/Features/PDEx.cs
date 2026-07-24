@@ -15,7 +15,7 @@ using Slafight_Plugin_EXILED.ProximityChat;
 using Random = UnityEngine.Random;
 using Server = Exiled.Events.Handlers.Server;
 
-namespace Slafight_Plugin_EXILED.CustomMaps;
+namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 
 public class PDEx : IBootstrapHandler, IDisposable
 {

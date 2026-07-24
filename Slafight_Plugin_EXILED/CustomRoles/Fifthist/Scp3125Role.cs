@@ -11,6 +11,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomMaps;
+using Slafight_Plugin_EXILED.CustomMaps.FacilityControlRoomFunctions;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 

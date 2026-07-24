@@ -9,7 +9,7 @@ using MEC;
 using UnityEngine;
 using Warhead = Exiled.Events.Handlers.Warhead;
 
-namespace Slafight_Plugin_EXILED.CustomMaps;
+namespace Slafight_Plugin_EXILED.CustomMaps.Core.DoorAccess;
 
 public static class MapGuardHandler
 {

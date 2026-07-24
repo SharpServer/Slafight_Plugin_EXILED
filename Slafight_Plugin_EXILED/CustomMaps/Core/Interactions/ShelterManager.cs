@@ -2,7 +2,7 @@ using Exiled.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 
-namespace Slafight_Plugin_EXILED.CustomMaps;
+namespace Slafight_Plugin_EXILED.CustomMaps.Core.Interactions;
 
 public class ShelterManager : IBootstrapHandler
 {

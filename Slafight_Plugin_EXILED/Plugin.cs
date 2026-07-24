@@ -17,6 +17,7 @@ using Slafight_Plugin_EXILED.Commands.DevTools;
 using Slafight_Plugin_EXILED.CustomEffects;
 using Slafight_Plugin_EXILED.CustomItems;
 using Slafight_Plugin_EXILED.CustomMaps;
+using Slafight_Plugin_EXILED.CustomMaps.Core.DoorAccess;
 using Slafight_Plugin_EXILED.CustomMaps.Entities;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;

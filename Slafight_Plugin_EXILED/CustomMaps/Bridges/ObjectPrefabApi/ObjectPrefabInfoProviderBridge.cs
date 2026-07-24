@@ -6,7 +6,7 @@ using ProjectMER.Features.Interfaces;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
+namespace Slafight_Plugin_EXILED.CustomMaps.Bridges.ObjectPrefabApi;
 
 /// <summary>
 /// ProjectMER の <see cref="ObjectPrefabInfoRegistry"/> に、SlafightのObjectPrefab登録情報

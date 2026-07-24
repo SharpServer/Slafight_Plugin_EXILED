@@ -11,7 +11,7 @@ using Slafight_Plugin_EXILED.API.Interface;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
+namespace Slafight_Plugin_EXILED.CustomMaps.Bridges.ObjectPrefabApi;
 
 /// <summary>
 /// ProjectMER のマーカー（SchematicObjectPrefabObject）と ObjectPrefab を結び付けるブリッジ。

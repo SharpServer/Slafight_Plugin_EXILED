@@ -9,7 +9,7 @@ using UnityEngine;
 using Pickup = Exiled.API.Features.Pickups.Pickup;
 using Player = LabApi.Features.Wrappers.Player;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
+namespace Slafight_Plugin_EXILED.CustomMaps.Bridges.ProjectMER;
 
 /// <summary>
 /// ProjectMER の ItemSpawnpoint カスタムアイテムレジストリへ CItem プロバイダを登録するブリッジ。

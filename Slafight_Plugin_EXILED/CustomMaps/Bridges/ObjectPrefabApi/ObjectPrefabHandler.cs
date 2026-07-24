@@ -5,7 +5,7 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 using UnityEngine;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.Bridges;
+namespace Slafight_Plugin_EXILED.CustomMaps.Bridges.ObjectPrefabApi;
 
 /// <summary>
 /// ObjectPrefab へのイベント配送。

@@ -14,7 +14,7 @@ using Light = Exiled.API.Features.Toys.Light;
 using Player = Exiled.API.Features.Player;
 using Server = Exiled.Events.Handlers.Server;
 
-namespace Slafight_Plugin_EXILED.CustomMaps;
+namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 
 public static class Communications
 {
