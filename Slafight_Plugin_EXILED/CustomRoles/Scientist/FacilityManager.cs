@@ -5,6 +5,7 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
+using Slafight_Plugin_EXILED.CustomMaps.Core;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.Scientist;
 

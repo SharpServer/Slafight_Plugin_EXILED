@@ -14,6 +14,7 @@ using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.ProximityChat;
 using Random = UnityEngine.Random;
 using Server = Exiled.Events.Handlers.Server;
+using Slafight_Plugin_EXILED.CustomMaps.Core;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 

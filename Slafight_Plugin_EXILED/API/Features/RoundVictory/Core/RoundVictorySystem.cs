@@ -8,6 +8,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features.Common;
 using Slafight_Plugin_EXILED.API.Features.Teams.Profiles;
 using Slafight_Plugin_EXILED.CustomMaps;
+using Slafight_Plugin_EXILED.CustomMaps.Core;
 using Slafight_Plugin_EXILED.CustomRoles;
 using Slafight_Plugin_EXILED.CustomRoles.SCPs;
 using Slafight_Plugin_EXILED.Extensions;

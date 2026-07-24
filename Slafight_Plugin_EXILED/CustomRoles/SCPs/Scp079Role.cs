@@ -9,6 +9,7 @@ using Slafight_Plugin_EXILED.Abilities;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps;
+using Slafight_Plugin_EXILED.CustomMaps.Core;
 using Slafight_Plugin_EXILED.Extensions;
 using Map = Exiled.Events.Handlers.Map;
 

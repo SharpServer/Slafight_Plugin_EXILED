@@ -7,6 +7,7 @@ using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using Random = UnityEngine.Random;
+using Slafight_Plugin_EXILED.CustomMaps.Core;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 

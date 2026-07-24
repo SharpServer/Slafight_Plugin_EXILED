@@ -13,6 +13,7 @@ using UnityEngine;
 using Light = Exiled.API.Features.Toys.Light;
 using Player = Exiled.API.Features.Player;
 using Server = Exiled.Events.Handlers.Server;
+using Slafight_Plugin_EXILED.CustomMaps.Core;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 

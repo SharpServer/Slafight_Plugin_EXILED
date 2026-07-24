@@ -7,6 +7,7 @@ using ProjectMER.Events.Handlers;
 using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using Logger = LabApi.Features.Console.Logger;
+using Slafight_Plugin_EXILED.CustomMaps.Core;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.Bridges.ProjectMER;
 

@@ -1,10 +1,9 @@
 using System.Collections.Generic;
 using Slafight_Plugin_EXILED.API.Enums;
-using Slafight_Plugin_EXILED.CustomMaps.Core;
 using Slafight_Plugin_EXILED.CustomMaps.Features;
 using UnityEngine;
 
-namespace Slafight_Plugin_EXILED.CustomMaps;
+namespace Slafight_Plugin_EXILED.CustomMaps.Core;
 
 public static class MapFlags
 {

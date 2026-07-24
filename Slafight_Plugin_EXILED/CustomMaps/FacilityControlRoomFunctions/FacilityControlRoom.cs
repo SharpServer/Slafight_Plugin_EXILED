@@ -13,6 +13,7 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 using UnityEngine;
 using Server = Exiled.Events.Handlers.Server;
+using Slafight_Plugin_EXILED.CustomMaps.Core;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.FacilityControlRoomFunctions;
 
