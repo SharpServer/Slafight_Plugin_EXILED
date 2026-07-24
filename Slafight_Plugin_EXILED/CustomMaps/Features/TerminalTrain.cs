@@ -2,9 +2,8 @@ using System;
 using System.Collections.Generic;
 using Exiled.API.Features;
 using MEC;
-using ProjectMER.Features;
-using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using UnityEngine;
 using Random = UnityEngine.Random;
 using Slafight_Plugin_EXILED.CustomMaps.Core;
@@ -22,7 +21,7 @@ public static class TerminalTrain
     private static SpeakerApi.Playback _playback;
 
     // 直近の列車オブジェクト参照（クリーンアップ用）
-    private static SchematicObject _currentTrain;
+    private static TerminalTrainCar _currentTrain;
 
     // 最後に指定された座標
     private static Vector3 _lastStartPos;
@@ -117,12 +116,7 @@ public static class TerminalTrain
                 yield break;
             }
 
-            if (!ObjectSpawner.TrySpawnSchematic("STrain", startPos, out var train))
-            {
-                Log.Error("[Train] Failed to spawn STrain.");
-                yield break;
-            }
-
+            var train = (TerminalTrainCar)new TerminalTrainCar { Position = startPos }.Create();
             _currentTrain = train;
             Log.Info("[Train] Spawned STrain at " + startPos);
 
@@ -226,11 +220,11 @@ public static class TerminalTrain
     }
 
     // 安全版アニメーション
-    private static IEnumerator<float> AnimSafe(SchematicObject? schem, Vector3 startpos, Vector3 endpos, float duration)
+    private static IEnumerator<float> AnimSafe(TerminalTrainCar? train, Vector3 startpos, Vector3 endpos, float duration)
     {
-        if (schem is null || duration <= 0f)
+        if (train is null || duration <= 0f)
         {
-            Log.Warn("[Train] AnimSafe aborted: schem is null or duration <= 0.");
+            Log.Warn("[Train] AnimSafe aborted: train is null or duration <= 0.");
             yield break;
         }
 
@@ -248,26 +242,26 @@ public static class TerminalTrain
             }
 
             // Destroy 済み対策
-            if (schem == null || schem.transform == null)
+            if (train?.Schematic == null || train.Schematic.transform == null)
             {
-                Log.Warn("[Train] AnimSafe stopped: schem or its transform is null.");
+                Log.Warn("[Train] AnimSafe stopped: train or its transform is null.");
                 yield break;
             }
 
             elapsedTime += Time.deltaTime;
             float progress = elapsedTime / duration;
-            schem.transform.position = Vector3.Lerp(startPos, endPos, progress);
+            train.Position = Vector3.Lerp(startPos, endPos, progress);
 
             yield return 0f;
         }
 
-        if (schem != null && schem.transform != null)
+        if (train?.Schematic != null)
         {
-            schem.transform.position = endPos;
+            train.Position = endPos;
         }
         else
         {
-            Log.Warn("[Train] AnimSafe end: schem destroyed before setting final position.");
+            Log.Warn("[Train] AnimSafe end: train destroyed before setting final position.");
         }
     }
 }

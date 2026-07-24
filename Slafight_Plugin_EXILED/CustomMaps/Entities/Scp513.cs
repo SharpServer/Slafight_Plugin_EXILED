@@ -2,9 +2,8 @@ using System.Collections.Generic;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
-using ProjectMER.Features;
-using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using UnityEngine;
 using Utils.NonAllocLINQ;
 using Server = Exiled.Events.Handlers.Server;
@@ -72,7 +71,7 @@ public static class Scp513
 
     private static IEnumerator<float> Scp513Coroutine()
     {
-        List<SchematicObject> instances = [];
+        List<Scp513Manifestation> instances = [];
 
         while (true)
         {
@@ -83,7 +82,6 @@ public static class Scp513
             foreach (var instance in instances)
             {
                 if (instance == null) continue;
-                instance.NetworkIdentities.RemoveShowState();
                 instance.Destroy();
             }
             instances.Clear();
@@ -107,20 +105,14 @@ public static class Scp513
 
                 Quaternion rotation = Quaternion.LookRotation(lookDir.normalized, Vector3.up);
 
-                var obj = ObjectSpawner.SpawnSchematic("SCP513", spawnPos, rotation);
-                if (obj == null) continue;
-
-                obj.transform.SetParent(player.Transform, true);
-
-                // Owner 設定だけで Show/Hide・観戦者同期はすべて Extensions が担う
-                obj.NetworkIdentities.InitShowState(new NetworkShowState
+                var manifestation = (Scp513Manifestation)new Scp513Manifestation
                 {
-                    OwnerId             = player.Id,
-                    ShowToOwner         = true,
-                    SpectatorVisibility = SpectatorVisibility.Show,
-                });
+                    Position = spawnPos,
+                    Rotation = rotation,
+                    TargetPlayer = player,
+                }.Create();
 
-                instances.Add(obj);
+                instances.Add(manifestation);
             }
 
             yield return Timing.WaitForSeconds(Random.Range(2f, 7f));
