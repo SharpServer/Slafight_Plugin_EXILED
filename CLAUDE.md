@@ -8,7 +8,7 @@ network invariants, and log locations.
 
 1. Run `git status` in Slafight and every family repository involved in the task.
 2. Verify APIs against current source, `.csproj` files, or exact assemblies in
-   `D:\RiderWorks\SL_References`; do not rely on remembered EXILED/ProjectMER APIs.
+   `%SL_References%`; do not rely on remembered EXILED/ProjectMER APIs.
 3. Make the smallest coherent change in the repository that owns the behavior.
 4. Keep source changes, Unity asset changes, and generated MapWorks data in
    separate commits.

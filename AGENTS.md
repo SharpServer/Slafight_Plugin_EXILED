@@ -38,16 +38,18 @@ SHA-256 hashes.
 ## Family repositories
 
 These repositories form one server feature stack. They are separate Git
-repositories and must not be committed as if they were one working tree.
+repositories and must not be committed as if they were one working tree. Do not
+assume where a contributor cloned them; discover sibling checkouts from the current
+workspace or ask for their locations when they are required.
 
-| Component | Local path | Repository | Responsibility |
-| --- | --- | --- | --- |
-| Slafight | `D:\RiderWorks\Slafight_Plugin_EXILED` | `https://github.com/SharpServer/Slafight_Plugin_EXILED` | Main EXILED plugin, roles, items, events, HUD, maps, and server behavior |
-| ProjectMER | `D:\RiderWorks\ProjectMER\ProjectMER` | `https://github.com/SharpServer/ProjectMER` | LabAPI schematic loader, map objects, markers, animation, and spawn/update/despawn behavior |
-| HintServiceMeow | `D:\RiderWorks\HintServiceMeow` | `https://github.com/SharpServer/HintServiceMeow` | Shared hint compositor and the EXILED output plugin |
-| Unity assets | `D:\Unity\Projects\SL-CustomObjects-dev` | `https://github.com/SharpServer/SL-CustomObjects-dev` | Unity 2021.3.17f1 source for ProjectMER schematics and asset bundles |
-| MapWorks | `%APPDATA%\SCP Secret Laboratory\LabAPI\configs\ProjectMER` | `https://github.com/SharpServer/ProjectMER-MapWorks` | Live `Maps`, `Schematics`, and exported asset bundles; this directory is itself a Git repository |
-| SL references | `D:\RiderWorks\SL_References` | `https://github.com/SharpServer/SL_References` | Exact local compile/decompilation assemblies shared by the family projects |
+| Component | Repository | Responsibility |
+| --- | --- | --- |
+| Slafight | `https://github.com/SharpServer/Slafight_Plugin_EXILED` | Main EXILED plugin, roles, items, events, HUD, maps, and server behavior |
+| ProjectMER | `https://github.com/SharpServer/ProjectMER` | LabAPI schematic loader, map objects, markers, animation, and spawn/update/despawn behavior |
+| HintServiceMeow | `https://github.com/SharpServer/HintServiceMeow` | Shared hint compositor and the EXILED output plugin |
+| Unity assets | `https://github.com/SharpServer/SL-CustomObjects-dev` | Unity 2021.3.17f1 source for ProjectMER schematics and asset bundles |
+| MapWorks | `https://github.com/SharpServer/ProjectMER-MapWorks` | Live `Maps`, `Schematics`, and exported asset bundles; the configured export directory may itself be this Git working tree |
+| SL references | `https://github.com/SharpServer/SL_References` | Exact local compile/decompilation assemblies shared by the family projects |
 
 Important boundaries:
 
@@ -74,7 +76,7 @@ Automatic destinations:
 
 ### ProjectMER
 
-Run from `D:\RiderWorks\ProjectMER\ProjectMER`:
+Run from the ProjectMER checkout:
 
 ```powershell
 dotnet build .\ProjectMER.csproj --configuration Release
@@ -87,7 +89,7 @@ Its Release target automatically copies `ProjectMER.dll` to:
 
 ### HintServiceMeow
 
-Run from `D:\RiderWorks\HintServiceMeow`:
+Run from the HintServiceMeow checkout:
 
 ```powershell
 dotnet build .\HintServiceMeow.sln --configuration Release
@@ -103,7 +105,7 @@ post-build deployment target, so copy that exact file manually to:
 ### Unity schematics
 
 - Required editor: Unity `2021.3.17f1`.
-- Project: `D:\Unity\Projects\SL-CustomObjects-dev`.
+- Project: the contributor's `SL-CustomObjects-dev` checkout.
 - Export destination:
   `%APPDATA%\SCP Secret Laboratory\LabAPI\configs\ProjectMER\Schematics`.
 - After editor script changes, wait for compilation and check the Unity Console.

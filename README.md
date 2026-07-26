@@ -96,8 +96,8 @@ Slafightの設定は通常、次に生成されます。
 ## ビルド
 
 環境変数`SL_References`を、必要なSCP:SL／EXILED／LabAPIアセンブリを格納した
-ディレクトリへ設定します。Sharp Serverの標準ローカル構成では
-`D:\RiderWorks\SL_References`です。
+各自のディレクトリへ設定します。参照アセンブリの構成は
+[SL_References](https://github.com/SharpServer/SL_References)を確認してください。
 
 ```powershell
 dotnet build .\Slafight_Plugin_EXILED.sln --configuration Release
