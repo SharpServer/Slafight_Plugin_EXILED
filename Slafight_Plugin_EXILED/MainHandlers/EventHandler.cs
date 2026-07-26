@@ -18,6 +18,7 @@ using Slafight_Plugin_EXILED.Commands.DevTools;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Core;
 using Slafight_Plugin_EXILED.Extensions;
+using Slafight_Plugin_EXILED.Patches;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
 using Log = Exiled.API.Features.Log;
@@ -181,6 +182,7 @@ public class EventHandler : IBootstrapHandler, IDisposable
 
     private void OnRoundRestarted()
     {
+        PlayerRoleManagerRoleSyncPatch.ResetState();
         EffectFakeSyncProvider.DisableAll();
         EffectedInfoTextProvider.ClearAll();
 

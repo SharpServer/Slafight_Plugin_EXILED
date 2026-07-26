@@ -18,8 +18,9 @@ namespace Slafight_Plugin_EXILED.Patches;
 [HarmonyPatch(typeof(PlayerRoleManager), nameof(PlayerRoleManager.SendNewRoleInfo))]
 public static class PlayerRoleManagerRoleSyncPatch
 {
-    private static readonly Dictionary<uint, float> LastRoleSyncTimeByTarget = new();
-    private static readonly HashSet<uint> PendingRoleSyncTargets = [];
+    private static readonly Dictionary<uint, (ReferenceHub Hub, float Time)> LastRoleSyncTimeByTarget = new();
+    private static readonly Dictionary<uint, ReferenceHub> PendingRoleSyncTargets = new();
+    private static int generation;
 
     [HarmonyPrefix]
     private static bool SendNewRoleInfoPrefix(PlayerRoleManager __instance)
@@ -45,12 +46,13 @@ public static class PlayerRoleManagerRoleSyncPatch
             return;
 
         var now = Time.realtimeSinceStartup;
-        if (LastRoleSyncTimeByTarget.TryGetValue(targetNetId, out var lastSyncTime))
+        if (LastRoleSyncTimeByTarget.TryGetValue(targetNetId, out var lastSync) &&
+            ReferenceEquals(lastSync.Hub, targetHub))
         {
-            var elapsed = now - lastSyncTime;
+            var elapsed = now - lastSync.Time;
             if (elapsed < RoleSpawnTimings.RoleSyncMinSendInterval)
             {
-                DeferLatestRoleSync(targetNetId, RoleSpawnTimings.RoleSyncMinSendInterval - elapsed);
+                DeferLatestRoleSync(targetHub, targetNetId, RoleSpawnTimings.RoleSyncMinSendInterval - elapsed);
                 return;
             }
         }
@@ -58,21 +60,39 @@ public static class PlayerRoleManagerRoleSyncPatch
         SendNow(manager, targetHub, targetNetId);
     }
 
-    private static void DeferLatestRoleSync(uint targetNetId, float delay)
+    private static void DeferLatestRoleSync(ReferenceHub expectedHub, uint targetNetId, float delay)
     {
-        if (!PendingRoleSyncTargets.Add(targetNetId))
-            return;
+        if (PendingRoleSyncTargets.TryGetValue(targetNetId, out var pendingHub))
+        {
+            if (ReferenceEquals(pendingHub, expectedHub))
+                return;
 
+            PendingRoleSyncTargets[targetNetId] = expectedHub;
+        }
+        else
+        {
+            PendingRoleSyncTargets.Add(targetNetId, expectedHub);
+        }
+
+        var scheduledGeneration = generation;
         delay = Mathf.Max(RoleSpawnTimings.NextFrame, delay);
         Log.Debug($"[RoleSyncGuard] Deferred role sync for netId={targetNetId} by {delay:0.###}s.");
 
         Timing.CallDelayed(delay, () =>
         {
+            if (scheduledGeneration != generation)
+                return;
+
+            if (!PendingRoleSyncTargets.TryGetValue(targetNetId, out var currentPendingHub) ||
+                !ReferenceEquals(currentPendingHub, expectedHub))
+                return;
+
             PendingRoleSyncTargets.Remove(targetNetId);
 
             try
             {
-                if (!ReferenceHub.TryGetHubNetID(targetNetId, out var targetHub))
+                if (!ReferenceHub.TryGetHubNetID(targetNetId, out var targetHub) ||
+                    !ReferenceEquals(targetHub, expectedHub))
                     return;
 
                 if (targetHub?.roleManager == null)
@@ -87,9 +107,17 @@ public static class PlayerRoleManagerRoleSyncPatch
         });
     }
 
+    internal static void ResetState()
+    {
+        generation++;
+        LastRoleSyncTimeByTarget.Clear();
+        PendingRoleSyncTargets.Clear();
+        PlayerRolesNetUtilsHandleSpawnedPlayerPatch.ResetState();
+    }
+
     private static void SendNow(PlayerRoleManager manager, ReferenceHub targetHub, uint targetNetId)
     {
-        LastRoleSyncTimeByTarget[targetNetId] = Time.realtimeSinceStartup;
+        LastRoleSyncTimeByTarget[targetNetId] = (targetHub, Time.realtimeSinceStartup);
 
         foreach (var receiverHub in ReferenceHub.AllHubs.ToArray())
         {
@@ -213,7 +241,8 @@ public static class PlayerRoleManagerRoleSyncPatch
 [HarmonyPatch(typeof(PlayerRolesNetUtils), nameof(PlayerRolesNetUtils.HandleSpawnedPlayer))]
 public static class PlayerRolesNetUtilsHandleSpawnedPlayerPatch
 {
-    private static readonly HashSet<ReferenceHub> PendingInitialPacks = [];
+    private static readonly Dictionary<uint, ReferenceHub> PendingInitialPacks = new();
+    private static int generation;
 
     [HarmonyPrefix]
     private static bool HandleSpawnedPlayerPrefix(ReferenceHub hub)
@@ -221,13 +250,29 @@ public static class PlayerRolesNetUtilsHandleSpawnedPlayerPatch
         if (!NetworkServer.active)
             return true;
 
-        TrySendInitialRolePack(hub, Time.realtimeSinceStartup + RoleSpawnTimings.RoleSyncInitialPackMaxWait, 0f);
+        if (hub != null && hub.netId != 0)
+        {
+            TrySendInitialRolePack(
+                hub.netId,
+                hub,
+                Time.realtimeSinceStartup + RoleSpawnTimings.RoleSyncInitialPackMaxWait,
+                0f,
+                generation);
+        }
+
         return false;
     }
 
-    private static void TrySendInitialRolePack(ReferenceHub hub, float deadline, float readySince)
+    private static void TrySendInitialRolePack(
+        uint receiverNetId,
+        ReferenceHub expectedHub,
+        float deadline,
+        float readySince,
+        int scheduledGeneration)
     {
-        if (hub == null)
+        if (scheduledGeneration != generation ||
+            !ReferenceHub.TryGetHubNetID(receiverNetId, out var hub) ||
+            !ReferenceEquals(hub, expectedHub))
             return;
 
         if (hub.isLocalPlayer)
@@ -241,14 +286,7 @@ public static class PlayerRolesNetUtilsHandleSpawnedPlayerPatch
                 return;
             }
 
-            if (!PendingInitialPacks.Add(hub))
-                return;
-
-            Timing.CallDelayed(RoleSpawnTimings.RoleSyncInitialPackRetryInterval, () =>
-            {
-                PendingInitialPacks.Remove(hub);
-                TrySendInitialRolePack(hub, deadline, 0f);
-            });
+            ScheduleRetry(receiverNetId, expectedHub, deadline, 0f, scheduledGeneration);
 
             return;
         }
@@ -258,14 +296,7 @@ public static class PlayerRolesNetUtilsHandleSpawnedPlayerPatch
 
         if (Time.realtimeSinceStartup - readySince < RoleSpawnTimings.RoleSyncInitialPackReadySettle)
         {
-            if (!PendingInitialPacks.Add(hub))
-                return;
-
-            Timing.CallDelayed(RoleSpawnTimings.RoleSyncInitialPackRetryInterval, () =>
-            {
-                PendingInitialPacks.Remove(hub);
-                TrySendInitialRolePack(hub, deadline, readySince);
-            });
+            ScheduleRetry(receiverNetId, expectedHub, deadline, readySince, scheduledGeneration);
 
             return;
         }
@@ -286,7 +317,7 @@ public static class PlayerRolesNetUtilsHandleSpawnedPlayerPatch
     {
         try
         {
-            if (hub.Mode == ClientInstanceMode.Unverified)
+            if (hub.Mode != ClientInstanceMode.ReadyClient)
                 return false;
 
             var connection = hub.connectionToClient;
@@ -298,6 +329,50 @@ public static class PlayerRolesNetUtilsHandleSpawnedPlayerPatch
         {
             return false;
         }
+    }
+
+    private static void ScheduleRetry(
+        uint receiverNetId,
+        ReferenceHub expectedHub,
+        float deadline,
+        float readySince,
+        int scheduledGeneration)
+    {
+        if (PendingInitialPacks.TryGetValue(receiverNetId, out var pendingHub))
+        {
+            if (ReferenceEquals(pendingHub, expectedHub))
+                return;
+
+            PendingInitialPacks[receiverNetId] = expectedHub;
+        }
+        else
+        {
+            PendingInitialPacks.Add(receiverNetId, expectedHub);
+        }
+
+        Timing.CallDelayed(RoleSpawnTimings.RoleSyncInitialPackRetryInterval, () =>
+        {
+            if (scheduledGeneration != generation)
+                return;
+
+            if (!PendingInitialPacks.TryGetValue(receiverNetId, out var currentPendingHub) ||
+                !ReferenceEquals(currentPendingHub, expectedHub))
+                return;
+
+            PendingInitialPacks.Remove(receiverNetId);
+            TrySendInitialRolePack(
+                receiverNetId,
+                expectedHub,
+                deadline,
+                readySince,
+                scheduledGeneration);
+        });
+    }
+
+    internal static void ResetState()
+    {
+        generation++;
+        PendingInitialPacks.Clear();
     }
 
     private static string DescribeHub(ReferenceHub hub)
