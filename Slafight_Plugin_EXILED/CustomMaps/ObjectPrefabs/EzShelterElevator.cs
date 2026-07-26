@@ -45,7 +45,7 @@ public class EzShelterElevator : ObjectPrefab
             PreviousLevel = field;
             field = value;
         }
-    } = 0;
+    } = 1; // TEMPORARY DISABLED FOR NORMAL PEOPLES. PLEASE SET TO 0 FOR UPDATE RELEASE.
 
     public static int PreviousLevel { get; private set; } = GlobalLevel;
     public static bool IsTransitioning { get; private set; } = false;
