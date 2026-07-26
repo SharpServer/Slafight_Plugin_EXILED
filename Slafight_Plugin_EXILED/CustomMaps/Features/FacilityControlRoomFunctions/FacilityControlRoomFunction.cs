@@ -2,7 +2,7 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.FacilityControlRoomFunctions;
+namespace Slafight_Plugin_EXILED.CustomMaps.Features.FacilityControlRoomFunctions;
 
 public abstract class FacilityControlRoomFunction
 {

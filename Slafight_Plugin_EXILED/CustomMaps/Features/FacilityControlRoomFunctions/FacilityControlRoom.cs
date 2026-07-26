@@ -11,11 +11,11 @@ using LabApi.Events.Handlers;
 using MEC;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
+using Slafight_Plugin_EXILED.CustomMaps.Core;
 using UnityEngine;
 using Server = Exiled.Events.Handlers.Server;
-using Slafight_Plugin_EXILED.CustomMaps.Core;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.FacilityControlRoomFunctions;
+namespace Slafight_Plugin_EXILED.CustomMaps.Features.FacilityControlRoomFunctions;
 
 public class FacilityControlRoom : SlafightLabApiHandler, IBootstrapHandler
 {

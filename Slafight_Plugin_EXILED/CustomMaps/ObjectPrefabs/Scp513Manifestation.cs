@@ -1,10 +1,11 @@
 using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomMaps.Features.Entities;
 
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
 /// <summary>
-/// SCP-513のストーキング演出1体分。<see cref="Entities.Scp513"/> がターゲット管理と
+/// SCP-513のストーキング演出1体分。<see cref="Scp513"/> がターゲット管理と
 /// スポーンサイクルを担い、このクラスは Position/Create/Destroy のライフサイクルを
 /// ObjectPrefab に寄せ、対象プレイヤーへの追従と可視状態設定のみ行う。
 /// </summary>

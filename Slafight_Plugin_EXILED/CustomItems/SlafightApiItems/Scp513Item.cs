@@ -3,7 +3,7 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.CustomMaps.Entities;
+using Slafight_Plugin_EXILED.CustomMaps.Features.Entities;
 using UnityEngine;
 using Player = Exiled.Events.Handlers.Player;
 

@@ -5,7 +5,7 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Bridges.ProjectMER;
-using Slafight_Plugin_EXILED.CustomMaps.FacilityControlRoomFunctions;
+using Slafight_Plugin_EXILED.CustomMaps.Features.FacilityControlRoomFunctions;
 using Slafight_Plugin_EXILED.Extensions;
 using Player = LabApi.Features.Wrappers.Player;
 

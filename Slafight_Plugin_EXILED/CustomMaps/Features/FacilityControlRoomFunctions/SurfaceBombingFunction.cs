@@ -9,7 +9,7 @@ using Slafight_Plugin_EXILED.API.Features;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.FacilityControlRoomFunctions;
+namespace Slafight_Plugin_EXILED.CustomMaps.Features.FacilityControlRoomFunctions;
 
 public sealed class SurfaceBombingFunction : FacilityControlRoomFunction
 {

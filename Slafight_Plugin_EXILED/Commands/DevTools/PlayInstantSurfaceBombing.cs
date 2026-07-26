@@ -1,7 +1,7 @@
 using System;
 using CommandSystem;
 using Exiled.Permissions.Extensions;
-using Slafight_Plugin_EXILED.CustomMaps.FacilityControlRoomFunctions;
+using Slafight_Plugin_EXILED.CustomMaps.Features.FacilityControlRoomFunctions;
 
 namespace Slafight_Plugin_EXILED.Commands.DevTools;
 

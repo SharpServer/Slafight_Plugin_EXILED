@@ -16,7 +16,7 @@ using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
+namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs.Bases;
 
 /// <summary>
 /// 触手系 ObjectPrefab の共通実装。見た目は Schematic を使い、衝突は不可視 NPC 側で受ける。

@@ -1,7 +1,7 @@
 using Exiled.API.Enums;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.FacilityControlRoomFunctions;
+namespace Slafight_Plugin_EXILED.CustomMaps.Features.FacilityControlRoomFunctions;
 
 public sealed class HidTurretControlFunction : FacilityControlRoomFunction
 {

@@ -1291,6 +1291,14 @@ public static class ObjectPrefabInstances
             return Instances.TryGetValue(objectInstanceID, out ObjectPrefab? prefab) ? prefab : null;
     }
 
+    /// <summary>指定したIDのインスタンスを、指定した型（派生型を含む）であれば返す。型が一致しなければnull。</summary>
+    public static TPrefab? Get<TPrefab>(string objectInstanceID)
+        where TPrefab : ObjectPrefab
+    {
+        lock (Sync)
+            return Instances.TryGetValue(objectInstanceID, out ObjectPrefab? prefab) ? prefab as TPrefab : null;
+    }
+
     /// <summary>Returns all registered instances as a stable snapshot.</summary>
     public static IReadOnlyList<ObjectPrefab> GetAllSnapshot()
     {
@@ -1303,6 +1311,14 @@ public static class ObjectPrefabInstances
     {
         lock (Sync)
             return RadiusCandidates.ToArray();
+    }
+
+    /// <summary>ToySearchRadiusが正のインスタンスのうち、指定した型（派生型を含む）に一致するものだけを返す。</summary>
+    public static IReadOnlyList<TPrefab> GetRadiusCandidatesSnapshot<TPrefab>()
+        where TPrefab : ObjectPrefab
+    {
+        lock (Sync)
+            return RadiusCandidates.OfType<TPrefab>().ToArray();
     }
 
     internal static void NotifyTagChanged(ObjectPrefab prefab, string previousTag, string currentTag)
@@ -1399,6 +1415,14 @@ public static class ObjectPrefabInstances
     }
 
     public static IReadOnlyList<ObjectPrefab> GetAll() => GetAllSnapshot();
+
+    /// <summary>指定した型（派生型を含む）に一致するインスタンスのみをスナップショットで返す。</summary>
+    public static IReadOnlyList<TPrefab> GetAll<TPrefab>()
+        where TPrefab : ObjectPrefab
+    {
+        lock (Sync)
+            return Instances.Values.OfType<TPrefab>().ToArray();
+    }
 
     public static void ClearAll()
     {

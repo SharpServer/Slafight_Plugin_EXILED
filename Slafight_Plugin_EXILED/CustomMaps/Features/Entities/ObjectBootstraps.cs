@@ -3,13 +3,12 @@ using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.Abilities;
 using Slafight_Plugin_EXILED.API.Interface;
-using Slafight_Plugin_EXILED.CustomMaps.Features;
+using Slafight_Plugin_EXILED.CustomMaps.Core;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using UnityEngine;
 using Server = Exiled.Events.Handlers.Server;
-using Slafight_Plugin_EXILED.CustomMaps.Core;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.Entities;
+namespace Slafight_Plugin_EXILED.CustomMaps.Features.Entities;
 
 public class ObjectBootstraps : IBootstrapHandler
 {

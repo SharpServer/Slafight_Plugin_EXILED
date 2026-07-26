@@ -2,13 +2,12 @@ using System.Collections.Generic;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
-using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using UnityEngine;
 using Utils.NonAllocLINQ;
 using Server = Exiled.Events.Handlers.Server;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.Entities;
+namespace Slafight_Plugin_EXILED.CustomMaps.Features.Entities;
 
 public static class Scp513
 {

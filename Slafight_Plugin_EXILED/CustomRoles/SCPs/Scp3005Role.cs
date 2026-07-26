@@ -15,7 +15,7 @@ using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomMaps.Core;
-using Slafight_Plugin_EXILED.CustomMaps.FacilityControlRoomFunctions;
+using Slafight_Plugin_EXILED.CustomMaps.Features.FacilityControlRoomFunctions;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Player = Exiled.API.Features.Player;

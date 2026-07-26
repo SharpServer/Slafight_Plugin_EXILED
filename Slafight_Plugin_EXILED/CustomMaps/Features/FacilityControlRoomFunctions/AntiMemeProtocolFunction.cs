@@ -4,7 +4,7 @@ using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
 
-namespace Slafight_Plugin_EXILED.CustomMaps.FacilityControlRoomFunctions;
+namespace Slafight_Plugin_EXILED.CustomMaps.Features.FacilityControlRoomFunctions;
 
 public sealed class AntiMemeProtocolFunction : FacilityControlRoomFunction
 {
