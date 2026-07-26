@@ -1,92 +1,148 @@
-# Slafight_Plugin_EXILED
+# Slafight Plugin EXILED
 
-**Version:** `v1.8.0.2` | **Framework:** `EXILED v9.14.2`
+**Version:** `v1.9.0.0` | **Target:** SCP: Secret Laboratory / EXILED `9.14.2` / .NET Framework 4.8
 
-SCP: Secret LaboratoryのEXILEDフレームワークで動作する、自サーバー向けの大型拡張プラグインです。
+シャープ鯖向けに開発されている大型EXILEDプラグインです。カスタムロール、
+カスタムアイテム、特殊イベント、HUD、音声、ProjectMER製マップ・ギミックを
+一つのサーバー構成として統合します。
 
-完全にプライベートサーバー（自鯖）の運営・運用を前提として設計・開発されているため、コードの可読性や汎用性は全く考慮されておりません。しかしながら、日本発の最新版SCP:SL・EXILED開発資料が少ない現状を鑑みて、「誰かの参考になれば」「何かの役に立つかもしれない」という思いからオープンソースとして公開しています。
+本リポジトリは一般配布向けの単体プラグインではありません。Sharp Server固有の
+ProjectMER・HintServiceMeowフォーク、マップデータ、Unityアセット、SNAPI-HSM、
+音声ランタイムを前提としています。導入例やSCP:SLプラグイン開発資料として公開
+していますが、別サーバーで利用する場合は依存機能の切り離しや設定変更が必要です。
 
-作者自身、C#については手探りで学んでいる部分が多く、実装に粗がある可能性がありますが、少しでも日本のSCP:SL開発コミュニティの助けになれれば幸いです。
+## 主な機能
 
----
+- カスタムロールとチーム／勝利条件
+- カスタムアイテム、武器、防具、キーカード、SCP-914連携
+- アビリティとServer Specific Settings
+- 特殊イベント、襲撃、季節イベント、独自弾頭
+- HSMベースのHUD、ステータス、リスポーン表示
+- 近接チャットとサーバー側音声再生
+- ProjectMER製カスタムマップ、Schematic、ObjectPrefab、TriggerPoint
+- NPCを利用するタレット、当たり判定、演出オブジェクト
 
-## 📦 主な機能 (Features)
-本プラグインは非常に多岐にわたる機能をサーバーに追加します。
-- **カスタムロール (Custom Roles):** 独自のクラスや役職を追加
-- **カスタムアイテム (Custom Items):** 特殊な効果やアビリティを持つアイテム
-- **豊富なアビリティ (Abilities):** シンクホール(Sinkhole)、マジックミサイル(Magic Missile)などの固有能力
-- **特殊イベント (Special Events):** オメガ弾頭(Omega Warhead)やデルタ弾頭(Delta Warhead)などのイベント発生と制御
-- **近接チャット拡張 (Proximity Chat):** 限定的な音声コミュニケーションの調整
-- **カスタムマップ・ギミック:** Terminal Rift、Pocket Dimension EX、SCP-3005モデリング対応など
+## ファミリーリポジトリ
 
----
+Slafightの現行構成は、以下のSharp Server管理リポジトリで構成されています。
 
-## 📚 Wiki / GitHub Pages
-ユーザー向けのロール、アイテム、特殊イベント、マップギミック一覧は [`docs/`](docs/) にGitHub Pages用Wikiとして整理しています。
+| Repository | 用途 |
+| --- | --- |
+| [Slafight_Plugin_EXILED](https://github.com/SharpServer/Slafight_Plugin_EXILED) | メインEXILEDプラグイン |
+| [ProjectMER](https://github.com/SharpServer/ProjectMER) | LabAPIベースのSchematic／マップランタイム |
+| [HintServiceMeow](https://github.com/SharpServer/HintServiceMeow) | HUD・Hint合成とEXILED出力 |
+| [SL-CustomObjects-dev](https://github.com/SharpServer/SL-CustomObjects-dev) | Unity 2021.3.17f1製Schematic／AssetBundleソース |
+| [ProjectMER-MapWorks](https://github.com/SharpServer/ProjectMER-MapWorks) | 運用中のMaps、Schematics、AssetBundle |
+| [SL_References](https://github.com/SharpServer/SL_References) | 開発・ビルド・逆コンパイル用の共有参照アセンブリ |
 
-- 公開設定: GitHub PagesのSourceを `main` / `/docs` に設定
-- 管理ガイド: `/internal/` または [`docs/internal/index.md`](docs/internal/index.md)
-- データ編集: `docs/_data/*.yml` に追記すると一覧ページと検索に反映
-- 既存資料: [`docs/internal/scp914-keycard-flow.html`](docs/internal/scp914-keycard-flow.html)
+`SL-CustomObjects-dev`のエクスポート先は`ProjectMER-MapWorks`です。Unityソースと
+生成されたJSON／AssetBundleは別のGitリポジトリとして管理されます。
 
----
+## 必須・運用依存
 
-## ⚙️ 必須要件・前提条件 (Dependencies)
-このプラグインを正常に動作させるためには、以下のプラグイン、ライブラリ、およびツールが必要です。
+### 直接参照
 
-### 必須プラグイン・ライブラリ
-- **EXILED** (v9.14.2以上推奨)
-- **HSM (HintServiceMeow)**
-- **0Harmony**
-- **AudioPlayerApi**
+- EXILED `9.14.2`
+- `ProjectMER.dll`
+- `HintServiceMeow-Exiled.dll`
+- `SNAPI-HSM.dll`
+- Harmony
 
-### 作者製ツール・フォークリポジトリ
-本プラグインの核となる機能は、以下の専用前提ツールに強く依存しています。かならず導入してください。
-- 🔗 [**ProjectMER**](https://github.com/Slaviaaa2/ProjectMER) 
+### 音声・運用ランタイム
 
-**配置例 (ディレクトリ構造):**
+- `AudioPlayerApi.dll`
+- `SCPSLAudioApi.dll`
+- `NVorbis.dll`
+- `ffmpeg.exe`
+- `yt-dlp.exe`
+- `MEROptimizerLabAPI.dll`（現行サーバー構成で併用）
+
+正確なコンパイル参照は
+[`Slafight_Plugin_EXILED.csproj`](Slafight_Plugin_EXILED/Slafight_Plugin_EXILED.csproj)
+を確認してください。古いMapEditorReborn／AdvancedMERTools構成の導入例は現行
+ランタイムを表していません。
+
+## ランタイム配置
+
+現行サーバーはポート`7777`を使用します。
+
 ```text
-[ポート番号]/
- ├─ HSM.dll
+%APPDATA%\EXILED\Plugins\7777\
+  Slafight_Plugin_EXILED.dll
+  HintServiceMeow-Exiled.dll
+  SNAPI-HSM.dll
 
-dependencies/
- ├─ 0Harmony.dll
- ├─ AudioPlayerApi.dll
+%APPDATA%\EXILED\Plugins\dependencies\
+  0Harmony.dll
+  AudioPlayerApi.dll
+  SCPSLAudioApi.dll
+  ...音声・管理ライブラリ
 
-SCP Secret Laboratory/LabAPI/plugins/[ポート番号]/
- ├─ ProjectMER.dll
- ├─ MEROptimizer.dll
- ├─ AdvancedMERtools.dll
+%APPDATA%\SCP Secret Laboratory\LabAPI\plugins\7777\
+  ProjectMER.dll
+  MEROptimizerLabAPI.dll
+
+%APPDATA%\SCP Secret Laboratory\LabAPI\configs\ProjectMER\
+  Maps\
+  Schematics\
 ```
 
----
+Slafightの設定は通常、次に生成されます。
 
-## 🚀 インストール & 設定 (Installation & Configuration)
-1. 上記の前提プラグインをすべて適切なディレクトリに配置します。
-2. `Slafight_Plugin_EXILED.dll` を `%AppData%\EXILED\Plugins` (または各ポートのディレクトリ) に配置します。
-3. サーバーを起動すると、Configファイルが以下の場所に生成されます。
-   📄 `%AppData%\EXILED\Configs\Plugins\Slafight_Plugin_EXILED\[サーバーポート].yml`
-4. 用途に合わせてConfigを調整してください。
+```text
+%APPDATA%\EXILED\Configs\Plugins\Slafight_Plugin_EXILED\7777.yml
+```
 
----
+## ビルド
 
-## 🎧 BGM設定について (イベントBGM)
-Omega Warhead や Delta Warhead などの大型イベント発生時、デフォルトの設定ではBGMは再生されません。
-これらを再生させたい場合は、以下の手順に従ってください。
-1. Configファイルにて、音楽ファイルを配置するフォルダパスを指定します。
-2. 指定したフォルダ内に `omega.ogg`、`delta.ogg` などのファイル名で音声ファイル(ogg形式)を配置してください。
+環境変数`SL_References`を、必要なSCP:SL／EXILED／LabAPIアセンブリを格納した
+ディレクトリへ設定します。Sharp Serverの標準ローカル構成では
+`D:\RiderWorks\SL_References`です。
 
----
+```powershell
+dotnet build .\Slafight_Plugin_EXILED.sln --configuration Release
+```
 
-## 🏗️ カスタムマップ・モデルデータの読み込みについて
-SCP-3005 や Pocked Dimension EX (PDEx) 等で使用される専用モデルや配置データをスポーンさせるためには、Config等で座標やデータを指定する必要があります。
-- 配置先: `SCP Secret Laboratory/LabAPI/configs/ProjectMER/Maps` および `Schematics`
-- **注意:** マップやモデルデータ（Schematics）が存在しない場合でも、内部でエラーログが出力されるだけで、サーバー自体がクラッシュすることはありません。ただしモデル自体は表示されません。
+Releaseビルド後、`Slafight_Plugin_EXILED.dll`は
+`%APPDATA%\EXILED\Plugins\7777`へ自動コピーされます。ビルドに含まれる一部の
+ランタイム依存DLLも`%APPDATA%\EXILED\Plugins\dependencies`へコピーされます。
 
----
+## カスタムマップとモデル
 
-## 💬 連絡先・サポート (Contact)
-導入に関する質問、バグ報告、またはその他のお問い合わせがありましたら、作者のX (旧Twitter) プロフィール等から直接ご連絡ください。
+SlafightはProjectMERの`Maps`と`Schematics`を名前で参照します。データが存在しない
+場合、該当モデルやギミックは生成されません。
 
-- **Author:** Slaviaaa_2
-- **GitHub:** [Slaviaaa2](https://github.com/Slaviaaa2)
+- 運用データ:
+  `%APPDATA%\SCP Secret Laboratory\LabAPI\configs\ProjectMER`
+- Unityソース:
+  [SL-CustomObjects-dev](https://github.com/SharpServer/SL-CustomObjects-dev)
+- 運用データのGit:
+  [ProjectMER-MapWorks](https://github.com/SharpServer/ProjectMER-MapWorks)
+
+JSONを直接編集した場合はUnityソースへ自動反映されません。Unityから再エクスポート
+した場合はMapWorks側の差分も確認してください。
+
+## イベントBGM
+
+Omega WarheadやDelta WarheadなどのBGMを有効にする場合は、Slafight設定で音声
+ディレクトリを指定し、期待される名前の`.ogg`ファイル（例: `omega.ogg`、
+`delta.ogg`）を配置してください。音声再生には上記の音声ランタイムが必要です。
+
+## Wiki / GitHub Pages
+
+プレイヤー向けのロール、アイテム、アビリティ、イベント、マップ、キー設定は
+[`docs/`](docs/)にまとめています。
+
+- GitHub Pages: `master`ブランチの`/docs`
+- 管理ガイド: [`docs/internal/index.md`](docs/internal/index.md)
+- 一覧データ: `docs/_data/*.yml`
+
+## ライセンス・サポート
+
+このプラグインはシャープ鯖固有構成を前提としており、第三者環境への無保証の
+ターンキー配布ではありません。素材・音声等のクレジットは
+[`docs/credits.md`](docs/credits.md)を確認してください。
+
+- Author: `org.sharp-server.jp.scpsl`
+- GitHub organization: [SharpServer](https://github.com/SharpServer)
+- Original maintainer: [Slaviaaa2](https://github.com/Slaviaaa2)

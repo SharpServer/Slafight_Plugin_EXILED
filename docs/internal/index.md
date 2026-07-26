@@ -18,7 +18,7 @@ permalink: /internal/
     <li>GitHubのリポジトリ設定を開く。</li>
     <li><strong>Pages</strong> を開く。</li>
     <li><strong>Build and deployment</strong> のSourceを <strong>Deploy from a branch</strong> にする。</li>
-    <li>Branchは <strong>main</strong>、Folderは <strong>/docs</strong> を選ぶ。</li>
+    <li>Branchは <strong>master</strong>、Folderは <strong>/docs</strong> を選ぶ。</li>
     <li>保存後、数分待つとPages URLが発行される。</li>
   </ol>
   <p>現在の <code>docs/_config.yml</code> は、このリポジトリ名に合わせて <code>baseurl: "/Slafight_Plugin_EXILED"</code> にしています。GitHub上のリポジトリ名が違う場合、またはカスタムドメインで公開する場合はここを変更してください。</p>
