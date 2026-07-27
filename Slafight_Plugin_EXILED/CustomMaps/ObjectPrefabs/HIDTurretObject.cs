@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Enums;
@@ -27,6 +28,8 @@ public class HIDTurretObject : ObjectPrefab
     private static CoroutineHandle _autoActivationHandle;
 
     private const float UpdateInterval = 1f / 30f;
+    private const float NpcInitializationRetryInterval = 0.1f;
+    private const float NpcInitializationTimeout = 5f;
 
     /// <summary>
     /// 自動起動条件を判定する間隔（秒）。
@@ -72,6 +75,7 @@ public class HIDTurretObject : ObjectPrefab
     public override bool FollowMarkerTransform => false;
 
     private SchematicObject? _schematicObject;
+    private CoroutineHandle _initializationHandle;
     private CoroutineHandle _updateHandle;
     private readonly List<TurretNpcState> _npcs = [];
     private Player? _currentTarget;
@@ -174,8 +178,7 @@ public class HIDTurretObject : ObjectPrefab
         {
             if (player == null ||
                 !player.IsAlive ||
-                !player.IsSafePlayer() ||
-                CRole.IsTeamNpc(player))
+                !player.IsSafePlayer())
                 continue;
 
             totalCount++;
@@ -243,16 +246,7 @@ public class HIDTurretObject : ObjectPrefab
             return;
 
         _isOperating = true;
-
-        SpawnNpcPool();
-        if (_npcs.Count == 0)
-        {
-            Log.Error("[HIDTurretObject] Failed to create the turret NPC pool.");
-            EndOperation();
-            return;
-        }
-
-        ScheduleDelayed(Npc.SpawnSetRoleDelay + 0.1f, StartUpdating);
+        _initializationHandle = Timing.RunCoroutine(InitializeOperationCoroutine());
     }
 
     /// <summary>
@@ -261,9 +255,13 @@ public class HIDTurretObject : ObjectPrefab
     /// </summary>
     private void EndOperation()
     {
+        if (_initializationHandle.IsRunning)
+            Timing.KillCoroutines(_initializationHandle);
+
         if (_updateHandle.IsRunning)
             Timing.KillCoroutines(_updateHandle);
 
+        _initializationHandle = default;
         _updateHandle = default;
 
         foreach (TurretNpcState state in _npcs)
@@ -284,40 +282,89 @@ public class HIDTurretObject : ObjectPrefab
         _isOperating = false;
     }
 
-    private void StartUpdating()
+    /// <summary>
+    /// NPC生成からロール確定、Fade・MicroHID設定までを直列に完了させてから更新を開始する。
+    /// </summary>
+    private IEnumerator<float> InitializeOperationCoroutine()
     {
+        int poolSize = Mathf.Max(1, NpcPoolSize);
+        for (int index = 0; index < poolSize && _isOperating; index++)
+        {
+            SpawnSingleNpc(index);
+            if (index + 1 < poolSize)
+                yield return Timing.WaitForSeconds(NpcSpawnStaggerInterval);
+        }
+
         if (!_isOperating)
-            return;
+            yield break;
 
-        bool anyInitialized = false;
-        foreach (TurretNpcState state in _npcs)
+        if (_npcs.Count == 0)
         {
-            if (state.IsInitialized || TryInitializeNpc(state))
-                anyInitialized = true;
-        }
-
-        if (!anyInitialized)
-        {
-            Log.Error("[HIDTurretObject] Failed to initialize turret NPCs.");
+            Log.Error("[HIDTurretObject] Failed to create the turret NPC pool.");
             EndOperation();
-            return;
+            yield break;
         }
+
+        float timeoutAt = Time.time + NpcInitializationTimeout;
+        while (_isOperating)
+        {
+            foreach (TurretNpcState state in _npcs)
+            {
+                if (state.IsInitialized)
+                    continue;
+
+                try
+                {
+                    TryInitializeNpc(state);
+                }
+                catch (Exception exception)
+                {
+                    Log.Error($"[HIDTurretObject] NPC {state.Index} initialization exception: {exception}");
+                }
+            }
+
+            if (_npcs.All(state => state.IsInitialized))
+                break;
+
+            if (Time.time >= timeoutAt)
+            {
+                string pending = string.Join(", ", _npcs
+                    .Where(state => !state.IsInitialized)
+                    .Select(state =>
+                        $"index={state.Index} id={state.Npc.Id} alive={state.Npc.IsAlive} " +
+                        $"role={state.Npc.Role.Type} item={state.Npc.CurrentItem?.Type.ToString() ?? "null"}"));
+                Log.Error($"[HIDTurretObject] NPC initialization timed out: {pending}");
+                EndOperation();
+                yield break;
+            }
+
+            yield return Timing.WaitForSeconds(NpcInitializationRetryInterval);
+        }
+
+        if (!_isOperating)
+            yield break;
+
+        for (int index = 1; index < _npcs.Count; index++)
+            EnterNpcStandby(_npcs[index]);
 
         AimAtIdleDirection();
         _updateHandle = Timing.RunCoroutine(UpdateCoroutine());
+        _initializationHandle = default;
     }
 
     private static bool TryInitializeNpc(TurretNpcState state)
     {
         Npc npc = state.Npc;
-        if (npc?.ReferenceHub == null)
+        if (npc?.ReferenceHub == null ||
+            !npc.IsAlive ||
+            npc.ReferenceHub.roleManager.CurrentRole is not IFpcRole)
             return false;
 
         npc.HideNpcFromClientPlayerList($"HIDTurret:{state.Index}:post-spawn");
         npc.IsNoclipPermitted = true;
         npc.IsNoclipEnabled = true;
         npc.IsGodModeEnabled = true;
-        npc.EnableEffect(EffectType.Fade, 255);
+        npc.IsSpectatable = false;
         npc.InfoArea = 0;
 
         npc.ClearInventory();
@@ -328,6 +375,9 @@ public class HIDTurretObject : ObjectPrefab
         microHid.Energy = 1f;
         microHid.IsBroken = false;
         microHid.LastReceived = InputSyncModule.SyncData.None;
+        if (!npc.EnableEffect(EffectType.Fade, 255))
+            return false;
+
         state.IsInitialized = true;
         return true;
     }
@@ -336,27 +386,42 @@ public class HIDTurretObject : ObjectPrefab
     {
         while (_isOperating && IsPowerEnabled && _schematicObject != null && _npcs.Count > 0)
         {
-            _currentTarget = SelectTarget(_currentTarget);
-            if (_currentTarget == null)
+            bool updateFailed = false;
+            try
             {
-                SetActiveNpcCount(1);
-                StopFiring();
-                AimAtIdleDirection();
-                yield return Timing.WaitForSeconds(UpdateInterval);
-                continue;
+                _currentTarget = SelectTarget(_currentTarget);
+                if (_currentTarget == null)
+                {
+                    SetActiveNpcCount(1);
+                    StopFiring();
+                    AimAtIdleDirection();
+                }
+                else
+                {
+                    Vector3 targetPoint = GetTargetPoint(_currentTarget);
+                    RotateTurretTowards(targetPoint);
+                    float targetDistance = Vector3.Distance(GetCenterNpcPosition(), targetPoint);
+                    SetActiveNpcCount(GetRequiredNpcCount(targetDistance, _activeNpcCount));
+                    AlignNpcsOnBeam(targetPoint, targetDistance);
+
+                    for (int i = 0; i < _npcs.Count; i++)
+                    {
+                        TurretNpcState state = _npcs[i];
+                        SetNpcFiring(state, i < _activeNpcCount && state.IsInitialized);
+                        RechargeNpc(state.Npc);
+                    }
+                }
+            }
+            catch (Exception exception)
+            {
+                Log.Error($"[HIDTurretObject] Update loop failed: {exception}");
+                updateFailed = true;
             }
 
-            Vector3 targetPoint = GetTargetPoint(_currentTarget);
-            RotateTurretTowards(targetPoint);
-            float targetDistance = Vector3.Distance(GetCenterNpcPosition(), targetPoint);
-            SetActiveNpcCount(GetRequiredNpcCount(targetDistance, _activeNpcCount));
-            AlignNpcsOnBeam(targetPoint, targetDistance);
-
-            for (int i = 0; i < _npcs.Count; i++)
+            if (updateFailed)
             {
-                TurretNpcState state = _npcs[i];
-                SetNpcFiring(state, i < _activeNpcCount && state.IsInitialized);
-                RechargeNpc(state.Npc);
+                EndOperation();
+                yield break;
             }
 
             yield return Timing.WaitForSeconds(UpdateInterval);
@@ -394,8 +459,9 @@ public class HIDTurretObject : ObjectPrefab
 
     private static bool IsTargetCandidate(Player? player)
         => player != null &&
-           player is not Npc &&
            player.IsAlive &&
+           !TurretNpcIds.Contains(player.Id) &&
+           player.IsSafePlayer() &&
            player.GetTeam() == CTeam.SCPs;
 
     private void RotateTurretTowards(Vector3 targetPoint)
@@ -563,20 +629,6 @@ public class HIDTurretObject : ObjectPrefab
     /// </summary>
     private const float NpcSpawnStaggerInterval = 0.02f;
 
-    private void SpawnNpcPool()
-    {
-        int poolSize = Mathf.Max(1, NpcPoolSize);
-
-        // 先頭NPCは同期生成し、スキマティック/NPC生成自体の致命的失敗を即座に検出する。
-        SpawnSingleNpc(0);
-
-        for (int index = 1; index < poolSize; index++)
-        {
-            int capturedIndex = index;
-            ScheduleDelayed(capturedIndex * NpcSpawnStaggerInterval, () => SpawnSingleNpc(capturedIndex));
-        }
-    }
-
     private void SpawnSingleNpc(int index)
     {
         // 分散生成の途中で電源断・破棄された場合、解放済みのプールへ後から追加しない。
@@ -595,20 +647,6 @@ public class HIDTurretObject : ObjectPrefab
         TurretNpcIds.Add(npc.Id);
         InternalNpcRegistry.Register(npc, InternalNpcCategory.HidTurret);
         npc.HideNpcFromClientPlayerList($"HIDTurret:{index}:spawn");
-        ScheduleDelayed(Npc.SpawnSetRoleDelay + 0.1f, () =>
-        {
-            if (!_npcs.Contains(state))
-                return;
-
-            if (!state.IsInitialized && !TryInitializeNpc(state))
-            {
-                Log.Error($"[HIDTurretObject] Failed to initialize turret NPC {index}.");
-                return;
-            }
-
-            if (index > 0)
-                EnterNpcStandby(state);
-        });
     }
 
     private static void OnScp096AddingTarget(AddingTargetEventArgs ev)
