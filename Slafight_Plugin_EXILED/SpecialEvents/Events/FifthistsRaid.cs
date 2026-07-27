@@ -73,7 +73,7 @@ public class FifthistsRaidEvent : SpecialEvent
                 return;
 
             // BGM 再生
-            SpeakerApi.Play("_w_fifthists.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999f, 0f);
+            SpeakerApi.Play("./WaveThemes/_w_fifthists.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999f, 0f);
 
             // Cassie アナウンス（元コードのヘルパー）
             CassieHelper.AnnounceFifthist(convertedCount);

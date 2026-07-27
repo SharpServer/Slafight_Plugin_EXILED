@@ -137,6 +137,7 @@ public class Trashbox : ObjectPrefab
                                    $"<color=yellow>{text}</color></size>";
                 player.ShowHint(combinedText, 10);
                 var random = new Random();
+                const string prefixDir = "./Trashbox/";
                 var songName = random.Next(0, 5) switch
                 {
                     0 => "5egg_0.ogg",
@@ -146,7 +147,7 @@ public class Trashbox : ObjectPrefab
                     4 => "5egg_4.ogg",
                     _ => string.Empty
                 };
-                SpeakerApi.Play(songName, "Trashbox___PLS_HL_55555", pos, true, null, false, 5f, 0f);
+                SpeakerApi.Play($"{prefixDir}{songName}", "Trashbox___PLS_HL_55555", pos, true, null, false, 5f, 0f);
                 triggeredSecretCount++;
                 if (triggeredSecretCount >= 4)
                 {

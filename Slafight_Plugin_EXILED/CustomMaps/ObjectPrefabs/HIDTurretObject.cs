@@ -24,11 +24,20 @@ public class HIDTurretObject : ObjectPrefab
 {
     private static readonly HashSet<int> TurretNpcIds = [];
     private static bool _eventsRegistered;
-    private static CoroutineHandle _powerTimeoutHandle;
-    private static float _powerEnabledUntil;
-    private static float _powerRestartReadyAt;
+    private static CoroutineHandle _autoActivationHandle;
 
     private const float UpdateInterval = 1f / 30f;
+
+    /// <summary>
+    /// 自動起動条件を判定する間隔（秒）。
+    /// </summary>
+    private const float AutoActivationCheckInterval = 2f;
+
+    /// <summary>
+    /// 自動起動に必要な、生存者に占めるSCPチームの比率。SCPチーム対その他が 7:3 の状態を指す。
+    /// </summary>
+    private const float ScpDominanceRatio = 0.7f;
+
     private const float TargetRetentionMargin = 0.25f;
     private const float HidPrimaryRange = 6f;
     private const float MinimumNpcSpacing = 0.1f;
@@ -68,12 +77,20 @@ public class HIDTurretObject : ObjectPrefab
     private Player? _currentTarget;
     private int _activeNpcCount = 1;
 
+    /// <summary>
+    /// NPCプールを生成して稼働中かどうか。電源投入で true、電源断・破棄で false になる。
+    /// </summary>
+    private bool _isOperating;
+
+    /// <summary>
+    /// タレットが稼働状態かどうか。自動起動条件を一度でも満たすとラウンド終了まで解除されない。
+    /// </summary>
     public static bool IsPowerEnabled { get; private set; }
-    public static float PowerRemainingSeconds =>
-        IsPowerEnabled ? Mathf.Max(0f, _powerEnabledUntil - Time.time) : 0f;
-    public static float PowerRestartCooldownRemaining =>
-        IsPowerEnabled ? 0f : Mathf.Max(0f, _powerRestartReadyAt - Time.time);
-    public static int InstanceCount => ObjectPrefabInstances.GetAll().OfType<HIDTurretObject>().Count();
+
+    public static int InstanceCount => GetInstances().Count;
+
+    private static List<HIDTurretObject> GetInstances()
+        => ObjectPrefabInstances.GetAll().OfType<HIDTurretObject>().ToList();
 
     public static void RegisterEvents()
     {
@@ -81,6 +98,9 @@ public class HIDTurretObject : ObjectPrefab
             return;
 
         Scp096.AddingTarget += OnScp096AddingTarget;
+        Exiled.Events.Handlers.Server.WaitingForPlayers += ResetPowerState;
+        Exiled.Events.Handlers.Server.RoundStarted += ResetPowerState;
+        _autoActivationHandle = Timing.RunCoroutine(AutoActivationCoroutine());
         _eventsRegistered = true;
     }
 
@@ -90,48 +110,101 @@ public class HIDTurretObject : ObjectPrefab
             return;
 
         Scp096.AddingTarget -= OnScp096AddingTarget;
+        Exiled.Events.Handlers.Server.WaitingForPlayers -= ResetPowerState;
+        Exiled.Events.Handlers.Server.RoundStarted -= ResetPowerState;
+
+        if (_autoActivationHandle.IsRunning)
+            Timing.KillCoroutines(_autoActivationHandle);
+
+        _autoActivationHandle = default;
         ResetPowerState();
         TurretNpcIds.Clear();
         _eventsRegistered = false;
     }
 
-    public static bool EnablePower(float durationSeconds)
-    {
-        if (InstanceCount <= 0 || PowerRestartCooldownRemaining > 0f)
-            return false;
-
-        if (_powerTimeoutHandle.IsRunning)
-            Timing.KillCoroutines(_powerTimeoutHandle);
-
-        float duration = Mathf.Max(1f, durationSeconds);
-        IsPowerEnabled = true;
-        _powerEnabledUntil = Time.time + duration;
-        _powerTimeoutHandle = Timing.CallDelayed(duration, () => DisablePower());
-        return true;
-    }
-
-    public static void DisablePower(float restartCooldownSeconds = 60f)
-    {
-        bool wasEnabled = IsPowerEnabled;
-
-        if (_powerTimeoutHandle.IsRunning)
-            Timing.KillCoroutines(_powerTimeoutHandle);
-
-        _powerTimeoutHandle = default;
-        _powerEnabledUntil = 0f;
-        IsPowerEnabled = false;
-
-        if (wasEnabled && restartCooldownSeconds > 0f)
-            _powerRestartReadyAt = Time.time + restartCooldownSeconds;
-
-        foreach (HIDTurretObject turret in ObjectPrefabInstances.GetAll().OfType<HIDTurretObject>().ToList())
-            turret.EnterStandby();
-    }
-
+    /// <summary>
+    /// 電源を落とし、生成済みのNPCプールを解放する。ラウンドリセット時に呼ばれる。
+    /// </summary>
     public static void ResetPowerState()
     {
-        DisablePower(0f);
-        _powerRestartReadyAt = 0f;
+        IsPowerEnabled = false;
+
+        foreach (HIDTurretObject turret in GetInstances())
+            turret.EndOperation();
+    }
+
+    /// <summary>
+    /// 自動起動条件を定期的に判定する。一度起動したらラウンドがリセットされるまで停止しない。
+    /// </summary>
+    private static IEnumerator<float> AutoActivationCoroutine()
+    {
+        while (true)
+        {
+            yield return Timing.WaitForSeconds(AutoActivationCheckInterval);
+
+            if (IsPowerEnabled || !Round.IsStarted || Round.IsEnded)
+                continue;
+
+            if (!ShouldAutoActivate())
+                continue;
+
+            EnablePowerPermanently();
+        }
+    }
+
+    /// <summary>
+    /// 自動起動条件。
+    /// 「SCPチーム対その他が 7:3 以上」かつ「下層(軽度収容区画)が除染済み」、
+    /// もしくは「Alpha Warhead 爆発済み」。
+    /// </summary>
+    private static bool ShouldAutoActivate()
+    {
+        if (Exiled.API.Features.Warhead.IsDetonated)
+            return true;
+
+        return Exiled.API.Features.Map.IsLczDecontaminated && IsScpTeamDominant();
+    }
+
+    private static bool IsScpTeamDominant()
+    {
+        int scpCount = 0;
+        int totalCount = 0;
+
+        foreach (Player player in Player.List)
+        {
+            if (player == null ||
+                !player.IsAlive ||
+                !player.IsSafePlayer() ||
+                CRole.IsTeamNpc(player))
+                continue;
+
+            totalCount++;
+            if (player.GetTeam() == CTeam.SCPs)
+                scpCount++;
+        }
+
+        return totalCount > 0 && scpCount >= totalCount * ScpDominanceRatio;
+    }
+
+    private static void EnablePowerPermanently()
+    {
+        List<HIDTurretObject> turrets = GetInstances();
+
+        IsPowerEnabled = true;
+        Log.Debug($"[HIDTurretObject] Auto activation latched. detonated={Exiled.API.Features.Warhead.IsDetonated} " +
+                  $"lczDecontaminated={Exiled.API.Features.Map.IsLczDecontaminated} turrets={turrets.Count}");
+
+        // 電源投入のこのタイミングで初めてNPCプールを生成する。
+        foreach (HIDTurretObject turret in turrets)
+            turret.BeginOperation();
+
+        // マップにタレットが存在しない構成では、無意味なアナウンスを流さない。
+        if (turrets.Count <= 0)
+            return;
+
+        Exiled.API.Features.Cassie.MessageTranslated(
+            "Danger . Facility Defense System Activated . H I D Turret System is now Online . . . . .",
+            "警告。<split>施設防衛システムが作動しました。<split>H.I.Dタレットシステムがオンラインになりました。");
     }
 
     protected override void OnCreate()
@@ -144,22 +217,54 @@ public class HIDTurretObject : ObjectPrefab
             return;
         }
 
-        SpawnNpcPool();
-        if (_npcs.Count == 0)
-        {
-            Log.Error("[HIDTurretObject] Failed to create the turret NPC pool.");
-            Destroy();
-            return;
-        }
+        // NPCプールは電源投入時にのみ生成する。
+        // 起動条件を満たさないラウンドで8体のNPCを抱え続けないため。
+        // 既に起動済みのラウンド中に生成された場合は、その場で稼働を開始する。
+        if (IsPowerEnabled)
+            BeginOperation();
 
-        ScheduleDelayed(Npc.SpawnSetRoleDelay + 0.1f, StartUpdating);
         base.OnCreate();
     }
 
     protected override void OnDestroy()
     {
+        EndOperation();
+        _schematicObject = null;
+
+        base.OnDestroy();
+    }
+
+    /// <summary>
+    /// 電源投入時に呼ばれ、NPCプールを生成して追尾・射撃ループを開始する。
+    /// </summary>
+    private void BeginOperation()
+    {
+        if (_isOperating || _schematicObject == null)
+            return;
+
+        _isOperating = true;
+
+        SpawnNpcPool();
+        if (_npcs.Count == 0)
+        {
+            Log.Error("[HIDTurretObject] Failed to create the turret NPC pool.");
+            EndOperation();
+            return;
+        }
+
+        ScheduleDelayed(Npc.SpawnSetRoleDelay + 0.1f, StartUpdating);
+    }
+
+    /// <summary>
+    /// 電源断・ラウンドリセット・破棄で呼ばれ、稼働を止めてNPCプールを解放する。
+    /// スキマティック自体はマップの一部なので破棄しない。
+    /// </summary>
+    private void EndOperation()
+    {
         if (_updateHandle.IsRunning)
             Timing.KillCoroutines(_updateHandle);
+
+        _updateHandle = default;
 
         foreach (TurretNpcState state in _npcs)
         {
@@ -175,13 +280,15 @@ public class HIDTurretObject : ObjectPrefab
 
         _npcs.Clear();
         _currentTarget = null;
-        _schematicObject = null;
-
-        base.OnDestroy();
+        _activeNpcCount = 1;
+        _isOperating = false;
     }
 
     private void StartUpdating()
     {
+        if (!_isOperating)
+            return;
+
         bool anyInitialized = false;
         foreach (TurretNpcState state in _npcs)
         {
@@ -192,7 +299,7 @@ public class HIDTurretObject : ObjectPrefab
         if (!anyInitialized)
         {
             Log.Error("[HIDTurretObject] Failed to initialize turret NPCs.");
-            Destroy();
+            EndOperation();
             return;
         }
 
@@ -222,21 +329,13 @@ public class HIDTurretObject : ObjectPrefab
         microHid.IsBroken = false;
         microHid.LastReceived = InputSyncModule.SyncData.None;
         state.IsInitialized = true;
-        state.IsStandby = false;
         return true;
     }
 
     private IEnumerator<float> UpdateCoroutine()
     {
-        while (_schematicObject != null && _npcs.Count > 0)
+        while (_isOperating && IsPowerEnabled && _schematicObject != null && _npcs.Count > 0)
         {
-            if (!IsPowerEnabled)
-            {
-                EnterStandby();
-                yield return Timing.WaitForSeconds(UpdateInterval);
-                continue;
-            }
-
             _currentTarget = SelectTarget(_currentTarget);
             if (_currentTarget == null)
             {
@@ -410,14 +509,6 @@ public class HIDTurretObject : ObjectPrefab
             SetNpcFiring(state, false);
     }
 
-    private void EnterStandby()
-    {
-        _currentTarget = null;
-        SetActiveNpcCount(1);
-        StopFiring();
-        AimAtIdleDirection();
-    }
-
     private static void SetNpcFiring(TurretNpcState state, bool shouldFire)
     {
         if (state.IsFiring == shouldFire)
@@ -488,6 +579,10 @@ public class HIDTurretObject : ObjectPrefab
 
     private void SpawnSingleNpc(int index)
     {
+        // 分散生成の途中で電源断・破棄された場合、解放済みのプールへ後から追加しない。
+        if (!_isOperating)
+            return;
+
         Npc? npc = Npc.Spawn("H.I.D Turret", RoleTypeId.Tutorial, true, GetCenterNpcPosition());
         if (npc == null)
         {
@@ -525,38 +620,36 @@ public class HIDTurretObject : ObjectPrefab
             ev.IsAllowed = false;
     }
 
+    /// <summary>
+    /// 予備NPCを稼働状態へ戻す。
+    /// 待機中も役職は Tutorial のまま維持しているため、役職変更は行わない。
+    /// </summary>
     private void ActivateNpc(TurretNpcState state)
     {
         if (!state.IsStandby)
             return;
 
         state.IsStandby = false;
-        state.IsInitialized = false;
-        state.Npc.Role.Set(RoleTypeId.Tutorial, RoleSpawnFlags.All);
-        ScheduleDelayed(RoleSpawnTimings.AfterSpawnFinalize, () =>
-        {
-            if (!_npcs.Contains(state) || state.IsStandby)
-                return;
 
-            if (!TryInitializeNpc(state))
-                Log.Error($"[HIDTurretObject] Failed to activate turret NPC {state.Index}.");
-        });
+        // 初期化済みならインベントリも MicroHID もそのまま使えるため、即座に稼働できる。
+        if (!state.IsInitialized && !TryInitializeNpc(state))
+            Log.Error($"[HIDTurretObject] Failed to activate turret NPC {state.Index}.");
     }
 
+    /// <summary>
+    /// 予備NPCを待機状態にする。
+    /// 待機は「射撃停止 + <see cref="ParkReserveNpcs"/> によるマップ外退避」だけで表現し、
+    /// 役職変更は行わない。役職を差し替えると、遅延して走るロールのセットアップ処理
+    /// （<see cref="Exiled.API.Extensions.PlayerExtensions.ChangeAppearance(Player, RoleTypeId, bool, byte)"/> 等）が
+    /// 復帰後のNPCへ適用され、クライアント側の見た目が壊れたまま復旧しなくなる。
+    /// </summary>
     private void EnterNpcStandby(TurretNpcState state)
     {
         if (state.IsStandby)
             return;
 
         SetNpcFiring(state, false);
-        state.IsInitialized = false;
         state.IsStandby = true;
-        CRole.TrySpawn(state.Npc, CRoleTypeId.HideWatch);
-        ScheduleDelayed(RoleSpawnTimings.AfterSpawnFinalize, () =>
-        {
-            if (_npcs.Contains(state) && state.IsStandby)
-                state.Npc.HideNpcFromClientPlayerList($"HIDTurret:{state.Index}:standby");
-        });
     }
 
     private void ParkReserveNpcs(Vector3 centerPosition)

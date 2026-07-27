@@ -41,7 +41,7 @@ public class AlphaWarheadOverride : AbilityBase
             "<color=red><b>BY ORDER OF FACILITY SYSTEM CONTROL, ALPHA WARHEAD FORCE OPERATION ACTIVATED. DETONATE IN T-90 SECONDS. </b></color>");
         Timing.CallDelayed(5f, () =>
         {
-            SpeakerApi.Play("warhead079.ogg", "AlphaWarhead", Vector3.zero, true, null, false, 999999999, 0);
+            SpeakerApi.Play("./AlphaWarhead/warhead079.ogg", "AlphaWarhead", Vector3.zero, true, null, false, 999999999, 0);
             Timing.RunCoroutine(Coroutine());
             player.RemoveAbility<AlphaWarheadOverride>();
         });

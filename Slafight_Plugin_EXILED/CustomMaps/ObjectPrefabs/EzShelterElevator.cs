@@ -20,17 +20,39 @@ public class EzShelterElevator : ObjectPrefab
 
     private const float TransitionFallbackDuration = 3f;
 
+    // Audio系プロパティが NullOrEmpty の場合のフォールバック先。PreloadHandler はこの定数を参照してプリロードする。
+    internal const string DefaultElevatorJamAudio = "./ObjectPrefabs/EzShelterEV/ElevatorJam.ogg";
+    internal const string DefaultDoorCloseAudio = "./ObjectPrefabs/EzShelterEV/ElevatorDoorClose.ogg";
+    internal const string DefaultMovingAudio = "./ObjectPrefabs/EzShelterEV/ElevatorMoving.ogg";
+    internal const string DefaultDoorOpenAudio = "./ObjectPrefabs/EzShelterEV/ElevatorDoorOpen.ogg";
+
     public int LocalLevel { get; set; } = 0;
     public DoorOpeningSideFlag DoorOpeningSideFlag { get; set; } = DoorOpeningSideFlag.SideA;
 
-    /// <summary>扉が閉まり、移動を開始した直後に鳴らす音(モーター音など)。空なら再生しない。</summary>
+    /// <summary>
+    /// 常に流れているエレベーターのアンビエントジャム音(ループ、常に AudioVolume で再生)。
+    /// 扉が閉じている間は Waypoint(かご)の Bounds 内にいるプレイヤーにだけ聞こえ、扉が開くとリスナー制限を解除する。
+    /// 空なら再生しない。
+    /// </summary>
+    public string ElevatorJamAudio { get; set; } = string.Empty;
+
+    /// <summary>出発階で扉が閉まる際に鳴らす音。空なら再生しない。</summary>
+    public string DoorCloseAudio { get; set; } = string.Empty;
+
+    /// <summary>
+    /// 扉が閉まる音の終了後、移動を開始した直後に鳴らす音(モーター音など)。出発 waypoint 位置で再生を開始し、
+    /// テレポートと同時に到着 waypoint 位置へ切り替わる(waypoint追従)。空なら再生しない。
+    /// </summary>
     public string MovingAudio { get; set; } = string.Empty;
 
-    /// <summary>到着階に着いた直後、扉が開く前に鳴らす音(到着チャイムなど)。空なら再生しない。</summary>
-    public string ArrivalAudio { get; set; } = string.Empty;
+    /// <summary>到着階で扉が開く際に鳴らす音。空なら再生しない。</summary>
+    public string DoorOpenAudio { get; set; } = string.Empty;
 
-    /// <summary>移動音の再生開始から到着音を鳴らすまでの最短待機秒数。実際のクリップ長がこれより長ければそちらを優先する。</summary>
+    /// <summary>移動音の再生開始から到着処理(扉が開く)を始めるまでの最短待機秒数。実際のクリップ長がこれより長ければそちらを優先する。</summary>
     public float RideDuration { get; set; } = 4f;
+
+    /// <summary>移動音の再生開始からプレイヤー・アイテムをテレポートするまでの秒数。</summary>
+    public float TeleportDelay { get; set; } = 2.5f;
 
     public bool AudioSpatial { get; set; } = true;
     public float AudioVolume { get; set; } = 1f;
@@ -72,6 +94,7 @@ public class EzShelterElevator : ObjectPrefab
     private Waypoint? _waypoint;
     private readonly List<InteractableHandle> _innerButtons = [];
     private readonly List<InteractableHandle> _outerButtons = [];
+    private SpeakerApi.Playback _jamPlayback;
 
     protected override void OnSetup()
     {
@@ -92,11 +115,60 @@ public class EzShelterElevator : ObjectPrefab
             }
         }
 
+        StartElevatorJam();
+
+        // Both を閉じることで、非ホスト側インスタンスのジャム音は SetJamDoorState(true) により
+        // Waypoint内リスナー限定の待機状態になる。
         PlayAnimation(DoorOpeningSideFlag.Both, true);
         if (IsHostOfSession())
         {
             PlayAnimation(DoorOpeningSideFlag, false);
         }
+    }
+
+    /// <summary>アンビエントジャム音をループ再生開始する(常に AudioVolume)。</summary>
+    private void StartElevatorJam()
+    {
+        string audio = ResolveAudio(ElevatorJamAudio, DefaultElevatorJamAudio);
+        if (string.IsNullOrWhiteSpace(audio) || _waypoint is null)
+            return;
+
+        try
+        {
+            _jamPlayback = SpeakerApi.PlayLoop(
+                audio.Trim(),
+                $"ezElevator_{ObjectInstanceID}_jam",
+                _waypoint.Position,
+                isSpatial: AudioSpatial,
+                maxDistance: AudioMaxDistance,
+                minDistance: AudioMinDistance,
+                volume: AudioVolume);
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"[EzShelterElevator] Failed to start elevator jam audio '{audio}': {e.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 扉が閉じている間はジャム音のリスナーを Waypoint(かご)の Bounds 内にいるプレイヤーへ限定し、
+    /// 扉が開くとリスナー制限を解除して通常の空間音響に戻す。
+    /// </summary>
+    private void SetJamDoorState(bool isClose)
+    {
+        if (!_jamPlayback.IsValid || _waypoint is null)
+            return;
+
+        SpeakerApi.SetListeners(_jamPlayback, isClose ? IsInsideWaypoint : null);
+    }
+
+    private bool IsInsideWaypoint(Player player)
+        => _waypoint != null && _waypoint.Bounds.Contains(player.Position);
+
+    protected override void OnDestroy()
+    {
+        if (_jamPlayback.IsValid)
+            SpeakerApi.Stop(_jamPlayback);
     }
 
     private void OnInteracted(Player player, PlayerSearchedToyEventArgs ev)
@@ -122,21 +194,57 @@ public class EzShelterElevator : ObjectPrefab
         IsTransitioning = true;
         GlobalLevel = nextLevel;
 
-        // 1. 出発階のドアを閉め、移動音を鳴らす。
+        // 1. 出発階のドアを閉め、扉が閉まる音を鳴らす。
         PlayAnimation(DoorOpeningSideFlag, true);
-        PlayAudio(MovingAudio, _waypoint.Position, "moving");
+        PlayAudio(DoorCloseAudio, DefaultDoorCloseAudio, _waypoint.Position, "doorclose");
 
-        // 2. 移動音の実クリップ長と RideDuration の長い方だけ待ってから到着処理に入る。
-        float rideDuration = string.IsNullOrWhiteSpace(MovingAudio)
-            ? RideDuration
-            : Math.Max(RideDuration, SpeakerApi.GetClipDuration(MovingAudio.Trim()));
+        // 2. 扉が閉まる音の実クリップ長だけ待ってから移動を開始する(クリップが無ければ即座)。
+        string doorCloseAudio = ResolveAudio(DoorCloseAudio, DefaultDoorCloseAudio);
+        float closeDuration = string.IsNullOrWhiteSpace(doorCloseAudio)
+            ? 0f
+            : SpeakerApi.GetClipDuration(doorCloseAudio.Trim());
 
-        ScheduleDelayed(rideDuration, () => CompleteTransition(item));
+        ScheduleDelayed(closeDuration, () => BeginMoving(item));
     }
 
     /// <summary>
-    /// 到着音を鳴らし、乗客をテレポートしてから到着階のドアを開ける。
-    /// ドアが開き終わるまで IsTransitioning を維持し、以後のボタン操作をブロックする。
+    /// 扉が閉まる音の終了後に呼ばれる。移動音の再生を出発 waypoint 位置で開始し、
+    /// 再生開始から <see cref="TeleportDelay"/> 秒後、乗客のテレポートと同時に移動音の位置も
+    /// 到着 waypoint へ切り替える(waypoint追従)。
+    /// 移動音の実クリップ長と <see cref="RideDuration"/> の長い方だけ待ってから到着処理(<see cref="CompleteTransition"/>)に入る。
+    /// </summary>
+    private void BeginMoving(EzShelterElevator destination)
+    {
+        if (destination.Schematic is null || destination._waypoint is null)
+        {
+            IsTransitioning = false;
+            return;
+        }
+
+        Vector3 start = _waypoint!.Position;
+        Waypoint destinationWaypoint = destination._waypoint;
+
+        SpeakerApi.Playback moving = PlayAudio(MovingAudio, DefaultMovingAudio, start, "moving");
+
+        string movingAudio = ResolveAudio(MovingAudio, DefaultMovingAudio);
+        float movingDuration = string.IsNullOrWhiteSpace(movingAudio)
+            ? RideDuration
+            : Math.Max(RideDuration, SpeakerApi.GetClipDuration(movingAudio.Trim()));
+
+        ScheduleDelayed(TeleportDelay, () =>
+        {
+            TeleportOccupants(destinationWaypoint);
+            if (moving.IsValid)
+                SpeakerApi.SetTransform(moving, destinationWaypoint.Position);
+        });
+
+        ScheduleDelayed(movingDuration, () => CompleteTransition(destination));
+    }
+
+    /// <summary>
+    /// 移動音の再生終了後に呼ばれる。乗客のテレポートは <see cref="BeginMoving"/> 側で既に完了している前提で、
+    /// 到着階のドアを開けて扉が開く音を鳴らす。ドアが開き終わるまで IsTransitioning を維持し、
+    /// 以後のボタン操作をブロックする。
     /// </summary>
     private void CompleteTransition(EzShelterElevator destination)
     {
@@ -146,23 +254,23 @@ public class EzShelterElevator : ObjectPrefab
             return;
         }
 
-        destination.PlayAudio(destination.ArrivalAudio, destination._waypoint.Position, "arrival");
-        TeleportOccupants(destination._waypoint);
         destination.PlayAnimation(destination.DoorOpeningSideFlag, false);
+        destination.PlayAudio(destination.DoorOpenAudio, DefaultDoorOpenAudio, destination._waypoint.Position, "dooropen");
 
         Animator? openingAnimator = destination.GetSideAnimator(destination.DoorOpeningSideFlag);
         destination.ScheduleAfterAnimatorState(openingAnimator, "opening", TransitionFallbackDuration, () => IsTransitioning = false);
     }
 
-    private void PlayAudio(string? audio, Vector3 position, string suffix)
+    private SpeakerApi.Playback PlayAudio(string? audio, string fallback, Vector3 position, string suffix)
     {
-        if (string.IsNullOrWhiteSpace(audio))
-            return;
+        string resolved = ResolveAudio(audio, fallback);
+        if (string.IsNullOrWhiteSpace(resolved))
+            return default;
 
         try
         {
-            SpeakerApi.Play(
-                audio.Trim(),
+            return SpeakerApi.Play(
+                resolved.Trim(),
                 $"ezElevator_{ObjectInstanceID}_{suffix}",
                 position,
                 destroyOnEnd: true,
@@ -173,9 +281,14 @@ public class EzShelterElevator : ObjectPrefab
         }
         catch (Exception e)
         {
-            Log.Warn($"[EzShelterElevator] Failed to play audio '{audio}': {e.Message}");
+            Log.Warn($"[EzShelterElevator] Failed to play audio '{resolved}': {e.Message}");
+            return default;
         }
     }
+
+    /// <summary>設定値が NullOrEmpty なら PreloadHandler がプリロードするデフォルトパスにフォールバックする。</summary>
+    private static string ResolveAudio(string? configured, string fallback)
+        => string.IsNullOrEmpty(configured) ? fallback : configured;
 
     /// <summary>
     /// かご（このインスタンスの Waypoint の Bounds 内）にいるプレイヤー・アイテムを、
@@ -254,6 +367,7 @@ public class EzShelterElevator : ObjectPrefab
                 SchematicBlock? block = GetSideBlock(sideFlag.ToString());
                 if (string.IsNullOrEmpty(block?.AnimatorName)) return;
                 Schematic.AnimationController.Play(isClose ? "closing" : "opening", animatorName: block.BlockName);
+                SetJamDoorState(isClose);
                 break;
             }
             case DoorOpeningSideFlag.Both:
@@ -263,6 +377,7 @@ public class EzShelterElevator : ObjectPrefab
                 if (string.IsNullOrEmpty(blockA?.AnimatorName) || string.IsNullOrEmpty(blockB?.AnimatorName)) return;
                 Schematic.AnimationController.Play(isClose ? "closing" : "opening", animatorName: blockA.BlockName);
                 Schematic.AnimationController.Play(isClose ? "closing" : "opening", animatorName: blockB.BlockName);
+                SetJamDoorState(isClose);
                 break;
             }
             case DoorOpeningSideFlag.Custom:

@@ -11,6 +11,7 @@ using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
 using Slafight_Plugin_EXILED.Extensions;
+using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.SpecialEvents;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -28,13 +29,13 @@ public class WaitingForPlayersChanges : IBootstrapHandler
 
     private static readonly Vector3 WaitingRoomPosition = new(246.92f, 198.50f, -60.89f);
 
-    private const string WaitingMusicClipName = "finalflash.ogg";
+    public const string WaitingMusicClipName = "finalflash.ogg";
     private const string WaitingMusicAudioPlayerPrefix = "WaitingForPlayers_RoomMusic_";
     private const float WaitingMusicStartDelay = 1.5f; // メニューテーマが消えるまで待つ
     private const float WaitingMusicFadeInDuration = 3f;
 
     // 実ファイルは未用意。差し替えるまでは LoadClip/Play が失敗し警告ログのみ出る。
-    private const string RoundStartOutroClipName = "finalflash_outro.ogg";
+    public const string RoundStartOutroClipName = "finalflash_outro.ogg";
     private const string RoundStartOutroAudioPlayerPrefix = "WaitingForPlayers_RoundStartOutro_";
 
     private const float RoundStartTriggerRemainingTime = 1f;
@@ -104,22 +105,6 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         KillRoundStartTransitionCoroutines();
         KillRoundStartResumeCallback();
         _handle = Timing.RunCoroutine(Coroutine());
-
-        // スムーズにアウトロへ切り替えられるよう、Waiting 開始時点でクリップを先読みしておく
-        TryPreloadClip(WaitingMusicClipName);
-        TryPreloadClip(RoundStartOutroClipName);
-    }
-
-    private static void TryPreloadClip(string fileName)
-    {
-        try
-        {
-            SpeakerApi.LoadClip(fileName);
-        }
-        catch (Exception ex)
-        {
-            Log.Warn($"[WaitingForPlayersChanges] Failed to preload clip '{fileName}': {ex.Message}");
-        }
     }
 
     private static void ResetWaitingRoomTextRefs()

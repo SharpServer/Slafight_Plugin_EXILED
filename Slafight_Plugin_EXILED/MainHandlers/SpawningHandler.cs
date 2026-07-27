@@ -138,85 +138,85 @@ public class SpawningHandler : IBootstrapHandler, IDisposable
         {
             // Mobile Task Forces
             case SpawnTypeId.MtfNtfNormal:
-                SpeakerApi.Play("_w_ntf.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_ntf.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceNtfArrival();
                 break;
             case SpawnTypeId.MtfNtfBackup:
-                SpeakerApi.Play("_w_ntf.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_ntf.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceNtfBackup();
                 break;
 
             case SpawnTypeId.MtfHdNormal:
-                SpeakerApi.Play("_w_hd.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_hd.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceHdArrival();
                 break;
             case SpawnTypeId.MtfHdBackup:
-                SpeakerApi.Play("_w_hd.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_hd.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceHdBackup();
                 break;
 
             case SpawnTypeId.MtfLastOperationNormal:
-                SpeakerApi.Play("_w_lo.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_lo.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceLastOperationArrival();
                 break;
             case SpawnTypeId.MtfLastOperationBackup:
-                SpeakerApi.Play("_w_lo.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_lo.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceLastOperationBackup();
                 break;
 
             case SpawnTypeId.MtfSneNormal:
-                SpeakerApi.Play("_w_sne.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_sne.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceSneArrival();
                 break;
             case SpawnTypeId.MtfSneBackup:
-                SpeakerApi.Play("_w_sne.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_sne.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceSneBackup();
                 break;
 
             case SpawnTypeId.MtfLwsNormal:
-                SpeakerApi.Play("_w_lws.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_lws.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceLwsArrival();
                 break;
             case SpawnTypeId.MtfLwsBackup:
-                SpeakerApi.Play("_w_lws.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_lws.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceLwsBackup();
                 break;
 
             case SpawnTypeId.MtfRrhNormal:
-                SpeakerApi.Play("_w_rrh.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_rrh.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceRrhArrival();
                 break;
             case SpawnTypeId.MtfRrhBackup:
-                SpeakerApi.Play("_w_rrh.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_rrh.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceRrhBackup();
                 break;
 
             case SpawnTypeId.MtfPdx:
-                SpeakerApi.Play("_w_pdx.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_pdx.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnouncePdxArrival();
                 break;
 
             // ==== Groups of Interests ====
             case SpawnTypeId.GoiChaosNormal:
             case SpawnTypeId.GoiChaosBackup:
-                SpeakerApi.Play("_w_chaos.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_chaos.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceChaos(spawnCount);
                 break;
 
             case SpawnTypeId.GoiFifthistNormal:
             case SpawnTypeId.GoiFifthistBackup:
-                SpeakerApi.Play("_w_fifthists.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_fifthists.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceFifthist(spawnCount);
                 break;
 
             case SpawnTypeId.GoiGoCNormal:
             case SpawnTypeId.GoiGoCBackup:
-                SpeakerApi.Play("_w_ungoc.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_ungoc.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceGoCEnter(spawnCount);
                 break;
 
             case SpawnTypeId.GoiHorizonInitiative:
-                SpeakerApi.Play("_w_initiative.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
+                SpeakerApi.Play("./WaveThemes/_w_initiative.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
                 CassieHelper.AnnounceInitiativeEnter(spawnCount);
                 break;
 
