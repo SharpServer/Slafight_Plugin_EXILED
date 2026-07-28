@@ -2,11 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CentralAuth;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
 using InventorySystem.Items.Keycards;
 using InventorySystem.Items.Keycards.Snake;
 using MEC;
+using Mirror;
 using SNAPI.Events.EventArgs;
 using SNAPI.Events.Handlers;
 using SNAPI.Features;
@@ -36,6 +38,13 @@ public sealed class SnakeImageOptions
     public bool RestoreSnakeOnStop { get; set; } = true;
     public bool StopWhenUnequipped { get; set; } = true;
     public bool StopOnSnakeInput { get; set; } = true;
+
+    /// <summary>
+    /// Replaces the owning client's locally controlled Snake session with a
+    /// server-controlled session before sending the first frame. This is needed
+    /// when the owner must see server-authored full-resync messages.
+    /// </summary>
+    public bool TakeOverOwnerSession { get; set; }
 
     /// <summary>
     /// Set this for webpage URLs such as YouTube. Direct image, GIF, and media
@@ -77,6 +86,7 @@ public sealed class SnakeImagePlayback : IDisposable
     private readonly IReadOnlyList<IReadOnlyList<Vector2Int>> _frames;
     private readonly SnakeImageOptions _options;
     private CoroutineHandle _coroutine;
+    private bool _ownerSessionTakenOver;
     private bool _stopped;
 
     internal SnakeImagePlayback(
@@ -170,12 +180,91 @@ public sealed class SnakeImagePlayback : IDisposable
         if (!IsValidTarget())
             return false;
 
-        _keycard.ServerSendMessage(
-            SnakeNetworkMessage.NewFullResync(
-                gameover: false,
-                new List<Vector2Int>(frame),
-                nextFood: null));
+        var message = SnakeNetworkMessage.NewFullResync(
+            gameover: false,
+            new List<Vector2Int>(frame),
+            nextFood: null);
+
+        if (_options.TakeOverOwnerSession && !_ownerSessionTakenOver)
+        {
+            if (!TryTakeOverOwnerSession(message))
+                return false;
+
+            return true;
+        }
+
+        _keycard.ServerSendMessage(message);
         return true;
+    }
+
+    private bool TryTakeOverOwnerSession(SnakeNetworkMessage firstFrame)
+    {
+        ReferenceHub owner = _keycard.Owner;
+        if (!IsReadyClient(owner))
+        {
+            Log.Warn(
+                $"[SnakeImageApi] Cannot take over the owner Snake session for serial {Serial}: " +
+                "the owning client is not ready.");
+            return false;
+        }
+
+        try
+        {
+            var sessions = ChaosKeycardItem.SnakeSessions.ToArray();
+            _keycard.ServerSendTargetRpc(owner, writer =>
+            {
+                writer.WriteByte((byte)KeycardItem.MsgType.Custom);
+                writer.WriteByte((byte)ChaosKeycardItem.ChaosMsgType.NewConnectionFullSync);
+
+                var includedTarget = false;
+                foreach (var session in sessions)
+                {
+                    writer.WriteUShort(session.Key);
+                    if (session.Key == Serial)
+                    {
+                        firstFrame.WriteSelf(writer);
+                        includedTarget = true;
+                    }
+                    else
+                    {
+                        session.Value.WriteFullResyncMessage(writer);
+                    }
+                }
+
+                if (!includedTarget)
+                {
+                    writer.WriteUShort(Serial);
+                    firstFrame.WriteSelf(writer);
+                }
+            });
+
+            _ownerSessionTakenOver = true;
+            Log.Info(
+                $"[SnakeImageApi] Replaced the owner Snake session for serial {Serial} " +
+                $"and preserved {sessions.Length} server session(s).");
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Warn(
+                $"[SnakeImageApi] Failed to take over the owner Snake session for serial {Serial}: {ex}");
+            return false;
+        }
+    }
+
+    private static bool IsReadyClient(ReferenceHub? hub)
+    {
+        try
+        {
+            return hub != null &&
+                   hub.Mode == ClientInstanceMode.ReadyClient &&
+                   hub.netId != 0 &&
+                   hub.connectionToClient is { isReady: true };
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private bool IsValidTarget()

@@ -194,10 +194,12 @@ public sealed class BadAppleTestPlayer : CItem
         {
             FramesPerSecond = FramesPerSecond,
             MaxFrames = MaxFrames,
+            Invert = true,
             Loop = true,
             StopWhenUnequipped = true,
-            StopOnSnakeInput = true,
+            StopOnSnakeInput = false,
             RestoreSnakeOnStop = true,
+            TakeOverOwnerSession = true,
         };
 
     private bool IsHeldBy(Player? player, ushort serial)

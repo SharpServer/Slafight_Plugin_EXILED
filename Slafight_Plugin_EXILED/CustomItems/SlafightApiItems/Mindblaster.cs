@@ -18,12 +18,13 @@ using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 
-public class Mindblaster : CItemKeycard
+public class Mindblaster : CItemHybrid
 {
     public const int InfiniteShots = -1;
 
-    private sealed class SerialState
+    private sealed class RuntimeState
     {
+        public ushort Serial;
         public int RemainingShots;
         public float ChargeSeconds;
         public bool IsCharging;
@@ -48,45 +49,51 @@ public class Mindblaster : CItemKeycard
         public bool HasInfiniteShots => RemainingShots < 0;
     }
 
-    private static readonly Dictionary<ushort, SerialState> SerialStates = [];
+    private static readonly Dictionary<ushort, RuntimeState> States = [];
+
+    private readonly ReadyCard _readyCard;
+    private readonly ChargingCard _chargingCard;
+    private RuntimeState _pendingRuntimeState;
+
+    public Mindblaster()
+    {
+        _readyCard = new ReadyCard(this);
+        _chargingCard = new ChargingCard(this);
+    }
 
     public static int DefaultShots { get; set; } = InfiniteShots;
     public static float DefaultChargeSeconds { get; set; } = 10f;
 
     public override string DisplayName => "第五思壊線";
-    public override string Description => $"非常に<color={CTeam.Fifthists.GetTeamColor()}>第五的な光</color>を発射し思考を破壊する";
+    public override string Description =>
+        $"非常に<color={CTeam.Fifthists.GetTeamColor()}>第五的な光</color>を発射し思考を破壊する";
+
     protected override string UniqueKey => "Mindblaster";
-    protected override ItemType BaseItem => ItemType.KeycardCustomTaskForce;
-    protected override string KeycardLabel => "Mindblaster";
-    protected override Color32? KeycardLabelColor => new Color32(255, 0, 250, 255);
-    protected override string KeycardName => "Mgc. Fifth";
-    protected override Color32? TintColor => new Color32(255, 0, 250, 255);
-    protected override Color32? KeycardPermissionsColor => new Color32(255, 255, 255, 255);
-    protected override KeycardPermissions Permissions => KeycardPermissions.None;
-    protected override byte Rank => 1;
-    protected override string SerialNumber => "555555555555";
-    protected override bool PickupLightEnabled => true;
-    protected override Color PickupLightColor => Color.magenta;
+    protected override bool EnableKeyModeSwitch => false;
+    protected override bool ShowModeSwitchHint => false;
+
+    protected override List<CItemHybridMode> BuildSubModes()
+        =>
+        [
+            new(_readyCard, "発射可能"),
+            new(_chargingCard, "チャージ中"),
+        ];
 
     /// <summary>
     /// Serial ごとの残り発射回数とチャージ時間を設定する。
     /// remainingShots が負数の場合は発射回数を無限として扱う。
+    /// Hybrid のモード切替後は、新しい Serial へ設定が自動的に引き継がれる。
     /// </summary>
     public static void SetSerialSettings(ushort serial, int remainingShots, float chargeSeconds)
     {
-        if (!SerialStates.TryGetValue(serial, out var state))
-        {
-            state = new SerialState();
-            SerialStates[serial] = state;
-        }
-
+        var state = GetOrCreateState(serial);
         state.RemainingShots = NormalizeShots(remainingShots);
         state.ChargeSeconds = Mathf.Max(0f, chargeSeconds);
     }
 
     public static bool TryGetSerialStatus(ushort serial, out SerialStatus status)
     {
-        if (!SerialStates.TryGetValue(serial, out var state))
+        if (!States.TryGetValue(serial, out var state))
         {
             status = default;
             return false;
@@ -106,47 +113,52 @@ public class Mindblaster : CItemKeycard
 
     public override void UnregisterEvents()
     {
-        ClearSerialStates();
+        ClearStates();
         base.UnregisterEvents();
+    }
+
+    protected override Pickup CreatePickupForSpawn(Vector3 position)
+    {
+        var item = Item.Create(_readyCard.GetBaseItem());
+        if (item == null) return null;
+
+        _readyCard.CallCustomizeItem(item);
+        return item.CreatePickup(position);
     }
 
     protected override void OnAcquired(ItemAddedEventArgs ev, bool displayMessage)
     {
-        GetOrCreateState(ev.Item.Serial);
+        BindRuntimeState(ev.Item.Serial, _pendingRuntimeState);
         base.OnAcquired(ev, displayMessage);
     }
 
     protected override void OnSpawned(Pickup pickup)
     {
-        GetOrCreateState(pickup.Serial);
+        BindRuntimeState(pickup.Serial, _pendingRuntimeState);
         base.OnSpawned(pickup);
     }
 
     protected override void OnWaitingForPlayers()
     {
-        ClearSerialStates();
+        ClearStates();
         base.OnWaitingForPlayers();
     }
 
     protected override void OnSerialUntracked(ushort serial)
     {
-        RemoveSerialState(serial);
+        RemoveState(serial);
         base.OnSerialUntracked(serial);
     }
 
-    /// <summary>
-    /// 投げる (Drop) で SCP3005 schematic を発射し、チャージ中カードへ切り替える。
-    /// 軌道上の他プレイヤーに継続ダメージを与える。
-    /// </summary>
-    protected override void OnDropping(DroppingItemEventArgs ev)
+    private void Fire(DroppingItemEventArgs ev)
     {
-        var serial = ev.Item.Serial;
-        var state = GetOrCreateState(serial);
-
-        // チャージ中の灰色カードは通常どおり受け渡し・ドロップできる。
-        if (state.IsCharging) return;
+        if (!ev.IsThrown) return;
 
         ev.IsAllowed = false;
+
+        var oldSerial = ev.Item.Serial;
+        var state = GetOrCreateState(oldSerial);
+        if (state.IsCharging) return;
 
         if (state.RemainingShots == 0)
         {
@@ -156,7 +168,10 @@ public class Mindblaster : CItemKeycard
 
         try
         {
-            var schem = ObjectSpawner.SpawnSchematic("SCP3005", ev.Player.Position, ev.Player.CameraTransform.forward);
+            var schem = ObjectSpawner.SpawnSchematic(
+                "SCP3005",
+                ev.Player.Position,
+                ev.Player.CameraTransform.forward);
             Timing.RunCoroutine(MissileCoroutine(schem, ev.Player));
         }
         catch (Exception ex)
@@ -171,9 +186,7 @@ public class Mindblaster : CItemKeycard
 
         if (state.RemainingShots == 0)
         {
-            RemoveSerialState(serial);
-            SerialTracker.ForceUnregister(serial);
-            ev.Player.RemoveItem(ev.Item, destroy: true);
+            RemoveFrom(ev.Player);
             ev.Player.ShowHint("<size=23>第五思壊線の発射回数を使い切りました。</size>", 3f);
             return;
         }
@@ -181,173 +194,201 @@ public class Mindblaster : CItemKeycard
         state.IsCharging = true;
         state.ChargeStartedAt = Time.time;
 
-        if (!TryReplaceInventoryItem(ev.Player, ev.Item, ItemType.KeycardJanitor, false, out _))
+        if (!TryChangeInventoryMode(oldSerial, ev.Player, state))
         {
-            Log.Error($"[Mindblaster] Failed to create charging keycard for serial={serial}.");
-            RemoveSerialState(serial);
+            state.IsCharging = false;
+            Log.Error($"[Mindblaster] Failed to enter charging mode for serial={oldSerial}.");
+            ev.Player.ShowHint("<size=23>第五思壊線のチャージ開始に失敗しました。</size>", 3f);
             return;
         }
 
-        state.ChargeHandle = Timing.RunCoroutine(ChargeCoroutine(serial, state));
+        state.ChargeHandle = Timing.RunCoroutine(ChargeCoroutine(state));
         ev.Player.ShowHint(
             $"<size=23>第五思壊線をチャージ中です（{state.ChargeSeconds:0.#}秒）。</size>",
             3f);
     }
 
-    private IEnumerator<float> ChargeCoroutine(ushort serial, SerialState expectedState)
+    private void BlockChargingCardDrop(DroppingItemEventArgs ev)
     {
-        while (SerialStates.TryGetValue(serial, out var state) &&
-               ReferenceEquals(state, expectedState) &&
-               state.IsCharging)
+        if (!ev.IsThrown) return;
+
+        ev.IsAllowed = false;
+
+        if (!States.TryGetValue(ev.Item.Serial, out var state))
+            return;
+
+        var remaining = Mathf.Max(0f, state.ChargeSeconds - (Time.time - state.ChargeStartedAt));
+        ev.Player.ShowHint($"<size=23>チャージ中です（残り {remaining:0.#}秒）。</size>", 2f);
+    }
+
+    private IEnumerator<float> ChargeCoroutine(RuntimeState expectedState)
+    {
+        while (expectedState.IsCharging)
         {
             if (Round.IsLobby || Round.IsEnded)
             {
-                RemoveSerialState(serial, killCoroutine: false);
+                RemoveState(expectedState.Serial, killCoroutine: false);
                 yield break;
             }
 
-            if (Time.time - state.ChargeStartedAt >= state.ChargeSeconds)
-                break;
+            if (Time.time - expectedState.ChargeStartedAt < expectedState.ChargeSeconds)
+            {
+                yield return Timing.WaitForSeconds(0.1f);
+                continue;
+            }
 
+            if (TryCompleteCharge(expectedState))
+                yield break;
+
+            // 死亡時などに床へ落ちた直後でも、次の tick で Pickup として処理できる。
             yield return Timing.WaitForSeconds(0.1f);
         }
-
-        // Pickup -> Item の切り替え瞬間に重なっても消失しないよう、数フレーム再試行する。
-        for (var attempt = 0; attempt < 10; attempt++)
-        {
-            if (!SerialStates.TryGetValue(serial, out var state) ||
-                !ReferenceEquals(state, expectedState) ||
-                !state.IsCharging)
-                yield break;
-
-            if (TryCompleteRecharge(serial, state))
-                yield break;
-
-            yield return Timing.WaitForOneFrame;
-        }
-
-        Log.Warn($"[Mindblaster] Charging card location was not found for serial={serial}; discarding state.");
-        RemoveSerialState(serial, killCoroutine: false);
-        SerialTracker.ForceUnregister(serial);
     }
 
-    private bool TryCompleteRecharge(ushort serial, SerialState state)
+    private bool TryCompleteCharge(RuntimeState state)
     {
+        var serial = state.Serial;
+
         foreach (var player in Player.List)
         {
-            var chargingItem = player?.Items.FirstOrDefault(item => item?.Serial == serial);
-            if (chargingItem == null) continue;
+            if (player?.Items.All(item => item?.Serial != serial) != false)
+                continue;
 
-            if (!TryReplaceInventoryItem(player, chargingItem, BaseItem, true, out _))
+            if (!TryChangeInventoryMode(serial, player, state))
                 return false;
 
             state.IsCharging = false;
             state.ChargeHandle = default;
-            player.ShowHint($"<size=23>第五思壊線のチャージが完了しました。\n{BuildShotsText(state)}</size>", 3f);
+            player.ShowHint(
+                $"<size=23>第五思壊線のチャージが完了しました。\n{BuildShotsText(state)}</size>",
+                3f);
             return true;
         }
 
         var chargingPickup = Pickup.Get(serial);
-        if (chargingPickup == null) return false;
+        if (chargingPickup == null)
+            return false;
 
         var position = chargingPickup.Position;
         var rotation = chargingPickup.Rotation;
 
+        States.Remove(serial);
         SerialTracker.ForceUnregister(serial);
+        base.OnSerialUntracked(serial);
         chargingPickup.Destroy();
 
-        var item = Item.Create(BaseItem);
-        if (item == null) return false;
+        _pendingRuntimeState = state;
+        Pickup readyPickup;
+        try
+        {
+            readyPickup = Spawn(position);
+        }
+        finally
+        {
+            _pendingRuntimeState = null;
+        }
 
-        item.Serial = serial;
-        ApplyKeycardCustomization(item);
+        if (readyPickup == null)
+        {
+            Log.Error($"[Mindblaster] Failed to create recharged pickup for serial={serial}.");
+            state.IsCharging = false;
+            state.ChargeHandle = default;
+            return true;
+        }
 
-        var rechargedPickup = item.CreatePickup(position, rotation, spawn: false);
-        if (rechargedPickup == null) return false;
-
-        SerialTracker.ForceRegister(serial, this);
-        rechargedPickup.Spawn();
-
+        readyPickup.Rotation = rotation;
         state.IsCharging = false;
         state.ChargeHandle = default;
         return true;
     }
 
-    private bool TryReplaceInventoryItem(
-        Player player,
-        Item oldItem,
-        ItemType replacementType,
-        bool customizeAsMindblaster,
-        out Item replacement)
+    private bool TryChangeInventoryMode(ushort oldSerial, Player player, RuntimeState state)
     {
-        replacement = null;
-        if (player == null || oldItem == null) return false;
+        if (player == null) return false;
 
-        var serial = oldItem.Serial;
-        var wasHeld = player.CurrentItem?.Serial == serial;
+        var previouslyHeld = player.CurrentItem;
+        var targetWasHeld = previouslyHeld?.Serial == oldSerial;
 
-        var created = Item.Create(replacementType);
-        if (created == null) return false;
+        _pendingRuntimeState = state;
+        try
+        {
+            SwitchMode(oldSerial, player);
+        }
+        finally
+        {
+            _pendingRuntimeState = null;
+        }
 
-        created.Serial = serial;
+        var replacement = player.Items.FirstOrDefault(item =>
+            item != null &&
+            item.Serial != oldSerial &&
+            States.TryGetValue(item.Serial, out var mapped) &&
+            ReferenceEquals(mapped, state));
 
-        SerialTracker.ForceUnregister(serial);
-        player.RemoveItem(oldItem, destroy: true);
+        if (replacement == null)
+            return false;
 
-        replacement = player.AddItem(created.Base, created);
-        if (replacement == null) return false;
+        States.Remove(oldSerial);
+        state.Serial = replacement.Serial;
 
-        if (customizeAsMindblaster)
-            ApplyKeycardCustomization(replacement);
-
-        SerialTracker.ForceRegister(serial, this);
-
-        if (wasHeld)
-            player.CurrentItem = replacement;
+        if (!targetWasHeld &&
+            previouslyHeld != null &&
+            player.Items.Any(item => item?.Serial == previouslyHeld.Serial))
+        {
+            player.CurrentItem = previouslyHeld;
+        }
 
         return true;
     }
 
-    private static string BuildShotsText(SerialState state)
-        => state.RemainingShots < 0
-            ? "残り発射回数: ∞"
-            : $"残り発射回数: {state.RemainingShots}";
+    private static void BindRuntimeState(ushort serial, RuntimeState pendingState)
+    {
+        var state = pendingState ?? GetOrCreateState(serial);
+        state.Serial = serial;
+        States[serial] = state;
+    }
+
+    private static RuntimeState GetOrCreateState(ushort serial)
+    {
+        if (States.TryGetValue(serial, out var state))
+            return state;
+
+        state = new RuntimeState
+        {
+            Serial = serial,
+            RemainingShots = NormalizeShots(DefaultShots),
+            ChargeSeconds = Mathf.Max(0f, DefaultChargeSeconds),
+        };
+        States[serial] = state;
+        return state;
+    }
 
     private static int NormalizeShots(int shots)
         => shots < 0 ? InfiniteShots : shots;
 
-    private static SerialState GetOrCreateState(ushort serial)
+    private static string BuildShotsText(RuntimeState state)
+        => state.RemainingShots < 0
+            ? "残り発射回数: ∞"
+            : $"残り発射回数: {state.RemainingShots}";
+
+    private static void RemoveState(ushort serial, bool killCoroutine = true)
     {
-        if (SerialStates.TryGetValue(serial, out var state))
-            return state;
+        if (!States.TryGetValue(serial, out var state)) return;
 
-        state = new SerialState
-        {
-            RemainingShots = NormalizeShots(DefaultShots),
-            ChargeSeconds = Mathf.Max(0f, DefaultChargeSeconds),
-        };
-        SerialStates[serial] = state;
-        return state;
-    }
-
-    private static void RemoveSerialState(ushort serial, bool killCoroutine = true)
-    {
-        if (!SerialStates.TryGetValue(serial, out var state)) return;
-
-        SerialStates.Remove(serial);
+        States.Remove(serial);
         if (killCoroutine && state.ChargeHandle.IsValid)
             Timing.KillCoroutines(state.ChargeHandle);
     }
 
-    private static void ClearSerialStates()
+    private static void ClearStates()
     {
-        foreach (var state in SerialStates.Values)
+        foreach (var state in States.Values.Distinct())
         {
             if (state.ChargeHandle.IsValid)
                 Timing.KillCoroutines(state.ChargeHandle);
         }
 
-        SerialStates.Clear();
+        States.Clear();
     }
 
     private static IEnumerator<float> MissileCoroutine(SchematicObject schem, Player pushPlayer)
@@ -396,5 +437,58 @@ public class Mindblaster : CItemKeycard
 
         try { schem?.Destroy(); }
         catch (Exception ex) { Log.Error($"[Mindblaster] Error destroying schem: {ex}"); }
+    }
+
+    [CItemAutoRegisterIgnore]
+    private sealed class ReadyCard : CItemKeycard
+    {
+        private readonly Mindblaster _owner;
+
+        public ReadyCard() { }
+        public ReadyCard(Mindblaster owner) => _owner = owner;
+
+        public override string DisplayName => "第五思壊線";
+        public override string Description => string.Empty;
+        protected override string UniqueKey => "Mindblaster.Ready";
+        protected override ItemType BaseItem => ItemType.KeycardCustomTaskForce;
+        protected override string KeycardLabel => "Mindblaster";
+        protected override Color32? KeycardLabelColor => new(255, 0, 250, 255);
+        protected override string KeycardName => "Mgc. Fifth";
+        protected override Color32? TintColor => new(255, 0, 250, 255);
+        protected override Color32? KeycardPermissionsColor => new(255, 255, 255, 255);
+        protected override KeycardPermissions Permissions => KeycardPermissions.None;
+        protected override byte Rank => 1;
+        protected override string SerialNumber => "555555555555";
+        protected override bool PickupLightEnabled => true;
+        protected override Color PickupLightColor => Color.magenta;
+
+        protected override void OnDropping(DroppingItemEventArgs ev)
+            => _owner?.Fire(ev);
+    }
+
+    [CItemAutoRegisterIgnore]
+    private sealed class ChargingCard : CItemKeycard
+    {
+        private readonly Mindblaster _owner;
+
+        public ChargingCard() { }
+        public ChargingCard(Mindblaster owner) => _owner = owner;
+
+        public override string DisplayName => "第五思壊線（チャージ中）";
+        public override string Description => "第五思壊線をチャージしている";
+        protected override string UniqueKey => "Mindblaster.Charging";
+        protected override ItemType BaseItem => ItemType.KeycardCustomTaskForce;
+        protected override string KeycardLabel => "CHARGING";
+        protected override Color32? KeycardLabelColor => new(210, 210, 210, 255);
+        protected override string KeycardName => "Mindblaster";
+        protected override Color32? TintColor => new(105, 105, 105, 255);
+        protected override Color32? KeycardPermissionsColor => new(145, 145, 145, 255);
+        protected override KeycardPermissions Permissions => KeycardPermissions.None;
+        protected override byte Rank => 1;
+        protected override string SerialNumber => "CHARGING";
+        protected override bool PickupLightEnabled => false;
+
+        protected override void OnDropping(DroppingItemEventArgs ev)
+            => _owner?.BlockChargingCardDrop(ev);
     }
 }

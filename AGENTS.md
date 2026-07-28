@@ -159,6 +159,28 @@ to object lifetime and authentication state.
   custom roles, turrets, hitboxes, and schematic interactions intentionally use
   NPCs.
 
+## Chaos Keycard Snake sessions
+
+- A Chaos Keycard owner creates a local `SnakeEngine` with a non-null delta sender.
+  That engine intentionally ignores server-authored messages, including full
+  resyncs. A public `ServerSendMessage` therefore updates observers but not the
+  owning client's display.
+- To show server-authored content to the owner, send that owner a targeted
+  `KeycardItem.MsgType.Custom` / `ChaosMsgType.NewConnectionFullSync` RPC first.
+  This clears and recreates the owner's `ChaosKeycardItem.SnakeSessions` as
+  server-controlled engines. Preserve every known session in that full sync and
+  replace only the intended serial's frame.
+- `NewConnectionFullSync` clears every Chaos Keycard Snake session on the receiving
+  client. Restrict this takeover to dedicated content such as the Bad Apple test
+  item; do not enable it as the general API default.
+- Inspecting the card still advances its original local engine and sends Snake
+  move deltas. SNAPI raises `SnakeMove` for those automatic moves, not only for
+  explicit direction input, so takeover playback must not use that event as an
+  immediate stop condition.
+- The native display renders an ordered, connected Head/Middle/Tail snake, not an
+  arbitrary pixel framebuffer. Disconnected silhouette coordinates can render
+  with gaps and produce invalid-neighbor warnings.
+
 ## ProjectMER and schematic rules
 
 - Search the exact ProjectMER fork before using an API; this fork contains
