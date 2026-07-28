@@ -23,12 +23,6 @@ public static class PlayerSafetyExtensions
         }
     }
 
-    /// <summary>
-    /// Returns whether the player is a safe non-host target.
-    /// </summary>
-    public static bool IsNotHost(this Player? player)
-        => player.IsSafePlayer();
-
     public static bool IsHidTurretNpc(this Player? player)
         => player is not null &&
            InternalNpcRegistry.IsCategory(player.Id, InternalNpcCategory.HidTurret);

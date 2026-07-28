@@ -212,7 +212,7 @@ public class Plugin : Plugin<Config>
         {
             try
             {
-                await SendPlayerCountAsync(Player.List.Where(p => !p.IsNPC && p.IsNotHost()).ToList().Count);
+                await SendPlayerCountAsync(Player.List.Where(p => !p.IsNPC && p.IsSafePlayer()).ToList().Count);
             }
             catch (Exception ex)
             {

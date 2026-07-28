@@ -412,7 +412,7 @@ public static class VoiceRoutingApi
     {
         try
         {
-            return player != null && player.ReferenceHub != null && player.IsNotHost();
+            return player.IsSafePlayer();
         }
         catch
         {

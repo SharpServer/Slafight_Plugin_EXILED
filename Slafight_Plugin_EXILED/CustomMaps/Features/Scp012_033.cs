@@ -140,9 +140,7 @@ public static class Scp012_033
 
             var scp012Pos = scp012Obj.Position;
 
-            var alivePlayers = Player.List
-                .Where(p => p.ReferenceHub != null && p.IsNotHost() && !p.ReferenceHub.IsHost && p.IsAlive)
-                .ToList();
+            var alivePlayers = PlayerExtensions.ConnectedList();
 
             foreach (var player in alivePlayers)
             {

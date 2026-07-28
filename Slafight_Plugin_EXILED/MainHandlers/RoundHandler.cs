@@ -211,7 +211,7 @@ public class RoundHandler : IBootstrapHandler
     {
         return player != null
                && player.ReferenceHub != null
-               && player.IsNotHost()
+               && player.IsSafePlayer()
                && player.Role.Type is not RoleTypeId.None and not RoleTypeId.Spectator;
     }
 

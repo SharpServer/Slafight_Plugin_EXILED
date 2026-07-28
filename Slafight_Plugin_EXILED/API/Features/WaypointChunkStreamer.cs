@@ -338,7 +338,7 @@ public static class WaypointChunkStreamer
     {
         return player != null &&
                player.IsConnected &&
-               player.IsNotHost() &&
+               player.IsSafePlayer() &&
                player.ReferenceHub?.roleManager?.CurrentRole is IFpcRole &&
                IsFinite(player.Position);
     }

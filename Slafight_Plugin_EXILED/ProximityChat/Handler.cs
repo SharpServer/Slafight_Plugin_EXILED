@@ -263,9 +263,7 @@ public static class Handler
     {
         try
         {
-            return player != null
-                   && player.ReferenceHub != null
-                   && player.IsNotHost();
+            return player.IsSafePlayer();
         }
         catch
         {

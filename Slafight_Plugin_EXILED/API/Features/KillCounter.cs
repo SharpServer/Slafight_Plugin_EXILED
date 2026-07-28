@@ -144,7 +144,7 @@ public class KillCounter : IBootstrapHandler
         {
             return TryGetPlayerId(player, out _) &&
                    player != null &&
-                   player.IsNotHost();
+                   player.IsSafePlayer();
         }
         catch
         {

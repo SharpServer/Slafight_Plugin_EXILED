@@ -134,8 +134,7 @@ public class AbelHandler : IBootstrapHandler
         => Player.List.Count(IsEligibleSpectator);
 
     private static bool IsEligibleSpectator(Player player)
-        => player is not null &&
-           player.IsNotHost() &&
+        => player.IsSafePlayer() &&
            player.Role == RoleTypeId.Spectator &&
            player.GetCustomRole() == CRoleTypeId.None;
 }

@@ -145,7 +145,7 @@ public class DanteEvent : SpecialEvent
 
         // アリーナ中心を「変換前」のプレイヤー位置から算出。
         List<Player> initial = Player.List
-            .Where(p => p is not null && p.IsNotHost() && p.IsAlive)
+            .Where(p => p.IsSafePlayer() && p.IsAlive)
             .ToList();
         _arenaCenter = initial.Count > 0
             ? AveragePosition(initial)
@@ -278,7 +278,7 @@ public class DanteEvent : SpecialEvent
         int playerCount = 0;
         foreach (Player player in Player.List)
         {
-            if (player is null || !player.IsNotHost() || player.ReferenceHub == _boss.ReferenceHub)
+            if (player is null || !player.IsSafePlayer() || player.ReferenceHub == _boss.ReferenceHub)
                 continue;
 
             player.SetRole(CRoleTypeId.DanteSlayer);
@@ -488,9 +488,8 @@ public class DanteEvent : SpecialEvent
                 yield break;
 
             // 戦死した討伐隊（非ホスト・非NPCの Spectator）を増援対象に。
-            // 死にたて触手 NPC を巻き込まないよう !IsNPC を入れる。
             List<Player> reinforcements = Player.List
-                .Where(p => p is not null && p.IsNotHost() && p.Role.Type == RoleTypeId.Spectator)
+                .Where(p => p.IsSafePlayer() && p.Role.Type == RoleTypeId.Spectator)
                 .ToList();
 
             if (reinforcements.Count == 0)
@@ -1249,7 +1248,7 @@ public class DanteEvent : SpecialEvent
 
         foreach (Player player in Player.List)
         {
-            if (player is null || !player.IsNotHost())
+            if (player is null || !player.IsSafePlayer())
                 continue;
 
             EffectedInfoTextProvider.Set(player, text, duration);
@@ -1260,7 +1259,7 @@ public class DanteEvent : SpecialEvent
     {
         foreach (Player player in Player.List)
         {
-            if (player is null || !player.IsNotHost())
+            if (player is null || !player.IsSafePlayer())
                 continue;
 
             player.Broadcast(duration, message, Broadcast.BroadcastFlags.Normal, true);
@@ -1303,7 +1302,7 @@ public class DanteEvent : SpecialEvent
         ev.Amount = 0f;
 
         // 仮想 HP の減算は「実プレイヤーの攻撃」のみ。ボス自身のグレネード巻き込みは無効。
-        if (ev.Attacker is null || !ev.Attacker.IsNotHost() ||
+        if (ev.Attacker is null || !ev.Attacker.IsSafePlayer() ||
             ev.Attacker.ReferenceHub == _boss.ReferenceHub)
             return;
 
@@ -1324,7 +1323,7 @@ public class DanteEvent : SpecialEvent
     // ───────────────────────────────────────────────────────────
     private List<Player> GetTargets()
         => Player.List
-            .Where(p => p is not null && p.IsNotHost() && p.IsAlive && !p.IsScp // 中央触手(SCP)は対象外
+            .Where(p => p is not null && p.IsSafePlayer() && p.IsAlive && !p.IsScp // 中央触手(SCP)は対象外
                         && (_boss == null || p.ReferenceHub != _boss.ReferenceHub))
             .ToList();
 
@@ -1379,7 +1378,7 @@ public class DanteEvent : SpecialEvent
         // EffectedInfo に残ったセリフを掃除（通常のエフェクト表示へ制御を戻す）。
         foreach (Player player in Player.List)
         {
-            if (player is null || !player.IsNotHost())
+            if (player is null || !player.IsSafePlayer())
                 continue;
 
             try { EffectedInfoTextProvider.Clear(player); } catch { /* ignore */ }

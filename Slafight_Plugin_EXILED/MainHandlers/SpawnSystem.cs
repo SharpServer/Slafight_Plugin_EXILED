@@ -700,8 +700,7 @@ public class SpawnSystem : IBootstrapHandler, IDisposable
     }
 
     private static bool IsWaveSpawnCandidate(Player player)
-        => player != null &&
-           player.IsNotHost() &&
+        => player.IsSafePlayer() &&
            !player.IsHidTurretNpc() &&
            player.Role == RoleTypeId.Spectator &&
            player.GetCustomRole() == CRoleTypeId.None;

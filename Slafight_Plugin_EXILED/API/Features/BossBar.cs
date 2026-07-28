@@ -194,7 +194,7 @@ public sealed class BossBar
         if (!clearBroadcasts)
             return;
 
-        foreach (Player player in Player.List.Where(p => p is not null && p.IsNotHost()))
+        foreach (Player player in Player.List.Where(p => p.IsSafePlayer()))
         {
             try { player.ClearBroadcasts(); } catch { /* ignore */ }
         }
@@ -269,7 +269,7 @@ public sealed class BossBar
         if (activeBars.Count == 0)
             return;
 
-        foreach (Player player in Player.List.Where(p => p is not null && p.IsNotHost()))
+        foreach (Player player in Player.List.Where(p => p.IsSafePlayer()))
         {
             List<BossBar> visibleBars = activeBars.Where(bar => bar.CanView(player)).ToList();
             if (visibleBars.Count == 0)
@@ -334,7 +334,7 @@ public sealed class BossBar
 
     private bool CanView(Player player)
     {
-        try { return player is not null && player.IsNotHost() && (Viewers is null || Viewers(player)); }
+        try { return player.IsSafePlayer() && (Viewers is null || Viewers(player)); }
         catch { return false; }
     }
 

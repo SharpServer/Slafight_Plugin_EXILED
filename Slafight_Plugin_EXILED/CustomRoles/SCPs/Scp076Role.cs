@@ -226,7 +226,7 @@ public class Scp076Role : CRole
     }
 
     private static bool IsCountable(Player? player)
-        => player is not null && player.IsNotHost();
+        => player.IsSafePlayer();
 
     private static bool IsFoundationPersonnel(Player? player)
     {

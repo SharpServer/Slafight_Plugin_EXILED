@@ -61,7 +61,7 @@ public abstract class SpecialEvent
     /// </summary>
     public virtual bool IsEventExecutable()
     {
-        return Player.List.Count(p => p.IsNotHost()) >= MinPlayersRequired && IsReadyToExecute();
+        return Player.List.Count(p => p.IsSafePlayer()) >= MinPlayersRequired && IsReadyToExecute();
     }
 
     /// <summary>

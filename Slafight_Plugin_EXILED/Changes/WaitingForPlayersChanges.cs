@@ -116,7 +116,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
 
     private static void OnVerified(VerifiedEventArgs ev)
     {
-        if (ev.Player is null || !ev.Player.IsConnected || ev.Player.IsNPC || !ev.Player.IsNotHost()) return;
+        if (ev.Player.IsNPC || !ev.Player.IsSafePlayer()) return;
         if (!Round.IsLobby) return;
         ev.Player.Role.Set(RoleTypeId.Tutorial, RoleSpawnFlags.None);
         ev.Player.Rotation *= Quaternion.Euler(0f, 158f, 0f);
@@ -255,7 +255,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         {
             foreach (var player in Player.List)
             {
-                if (player is null || !player.IsNotHost() || player.IsHidTurretNpc()) continue;
+                if (!player.IsSafePlayer()) continue;
                 player.IsNoclipEnabled = false;
                 player.IsGodModeEnabled = false;
                 IntercomApi.SetOverride(player, false, IntercomOwner);
@@ -425,7 +425,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
 
             if (!_roundStartTransitionTriggered)
             {
-                var list = Player.List.Where(p => !p.IsNPC && p.IsNotHost()).ToList();
+                var list = Player.List.Where(p => !p.IsNPC && p.IsSafePlayer()).ToList();
                 list.ForEach(p =>
                 {
                     p.Position = WaitingRoomPosition;
@@ -434,7 +434,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
                 });
             }
 
-            UpdateWaitingRoomTexts(Player.List.Count(p => p.IsNotHost()));
+            UpdateWaitingRoomTexts(Player.List.Count(p => p.IsSafePlayer()));
 
             yield return Timing.WaitForSeconds(0.05f);
         }
