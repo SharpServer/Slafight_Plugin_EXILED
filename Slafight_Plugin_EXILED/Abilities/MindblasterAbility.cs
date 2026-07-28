@@ -88,7 +88,7 @@ public class MindblasterAbility : AbilityBase
                     player.EnableEffect<Burned>(255, 35);
                     player.EnableEffect<Concussed>(255, 35);
                     player.EnableEffect<Asphyxiated>(1, 35);
-                    player.Hurt(pushPlayer, 10f, DamageType.Unknown, null,
+                    player.Hurt(pushPlayer, 30f, DamageType.Unknown, null,
                         !pushPlayer.IsSergeyMarkov()
                             ? "<color=#ff00fa>第五的</color>な力による影響"
                             : "<color=red><b>怨念的</b></color>な力による影響");
