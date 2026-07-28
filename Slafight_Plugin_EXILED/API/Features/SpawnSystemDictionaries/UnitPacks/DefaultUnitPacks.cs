@@ -144,6 +144,7 @@ public static class DefaultUnitPacks
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.FifthistPriest),   (1f,  true)  },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.FifthistRescure),  (3f,  false) },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.FifthistGuidance), (1f,  false) },
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.FifthistMindblaster), (1f,  false) },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.FifthistConvert),  (99f, false) },
                     }
                 }

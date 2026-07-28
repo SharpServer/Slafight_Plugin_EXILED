@@ -26,6 +26,8 @@ using Scp914Handlers = Exiled.Events.Handlers.Scp914;
 using Scp914Events = Exiled.Events.EventArgs.Scp914;
 using Scp1344Handlers = Exiled.Events.Handlers.Scp1344;
 using Scp1344Events = Exiled.Events.EventArgs.Scp1344;
+using LabPlayerHandlers = LabApi.Events.Handlers.PlayerEvents;
+using LabPlayerEvents = LabApi.Events.Arguments.PlayerEvents;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -127,6 +129,7 @@ public abstract class CItem
             PlayerHandlers.Dying            += OnAnyDying;
             PlayerHandlers.ChangingItem     += OnAnyChangingItem;
             PlayerHandlers.ThrowingRequest  += OnAnyThrowingRequest;
+            LabPlayerHandlers.InspectedKeycard += OnAnyInspectedKeycard;
 
             MapHandlers.PickupAdded         += OnAnyPickupAdded;
             MapHandlers.PickupDestroyed     += OnAnyPickupDestroyed;
@@ -217,6 +220,7 @@ public abstract class CItem
             PlayerHandlers.Dying            -= OnAnyDying;
             PlayerHandlers.ChangingItem     -= OnAnyChangingItem;
             PlayerHandlers.ThrowingRequest  -= OnAnyThrowingRequest;
+            LabPlayerHandlers.InspectedKeycard -= OnAnyInspectedKeycard;
 
             MapHandlers.PickupAdded         -= OnAnyPickupAdded;
             MapHandlers.PickupDestroyed     -= OnAnyPickupDestroyed;
@@ -876,6 +880,7 @@ public virtual Pickup? Spawn(Vector3 position)
     protected virtual void OnOwnerDying (PlayerEvents.DyingEventArgs          ev) { }
     protected virtual void OnChangingItem(PlayerEvents.ChangingItemEventArgs   ev) { }
     protected virtual void OnThrowingRequest(PlayerEvents.ThrowingRequestEventArgs ev) { }
+    protected virtual void OnInspectedKeycard(LabPlayerEvents.PlayerInspectedKeycardEventArgs ev) { }
     protected virtual void OnPickupAdded    (MapEvents.PickupAddedEventArgs   ev) { }
     protected virtual void OnPickupDestroyed(MapEvents.PickupDestroyedEventArgs ev) { }
     protected virtual void OnWaitingForPlayers() { }
@@ -1075,6 +1080,12 @@ public virtual Pickup? Spawn(Vector3 position)
     {
         if (ev?.Item == null) return;
         Dispatch(ev.Item.Serial, ci => ci.OnThrowingRequest(ev), nameof(OnThrowingRequest));
+    }
+
+    private static void OnAnyInspectedKeycard(LabPlayerEvents.PlayerInspectedKeycardEventArgs ev)
+    {
+        if (ev?.KeycardItem == null) return;
+        Dispatch(ev.KeycardItem.Serial, ci => ci.OnInspectedKeycard(ev), nameof(OnInspectedKeycard));
     }
 
     private static void DispatchPickupAdded(

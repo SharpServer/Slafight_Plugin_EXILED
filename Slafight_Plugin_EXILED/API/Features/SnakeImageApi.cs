@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using CentralAuth;
@@ -16,6 +17,51 @@ using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
+public enum SnakeImageRenderStyle
+{
+    NativeSnake,
+    SolidPixels,
+    AbstractSilhouette,
+}
+
+public sealed class SnakeImageFrameContext
+{
+    internal SnakeImageFrameContext(VideoFrameData frame, SnakeImageOptions options)
+    {
+        Frame = frame;
+        Options = options;
+    }
+
+    public VideoFrameData Frame { get; }
+    public SnakeImageOptions Options { get; }
+
+    public bool IsForeground(int displayX, int displayY)
+    {
+        if (displayX < 0 || displayX >= Options.Width)
+            throw new ArgumentOutOfRangeException(nameof(displayX));
+        if (displayY < 0 || displayY >= Options.Height)
+            throw new ArgumentOutOfRangeException(nameof(displayY));
+
+        int sourceY = Options.FlipVertically
+            ? Options.Height - 1 - displayY
+            : displayY;
+        bool foreground = Frame.GetGrayscale(displayX, sourceY) >= Options.Threshold;
+        return Options.Invert ? !foreground : foreground;
+    }
+
+    public Vector2Int ToDisplayPosition(int displayX, int displayY)
+        => new(Options.OffsetX + displayX, Options.OffsetY + displayY);
+}
+
+/// <summary>
+/// Extension point for renderers that mix native head, body, tail, and fallback
+/// sprites by controlling segment positions and ordering.
+/// </summary>
+public interface ISnakeImageFrameRenderer
+{
+    IReadOnlyList<Vector2Int> Render(SnakeImageFrameContext context);
+}
+
 /// <summary>
 /// Controls how ffmpeg output is mapped onto the Chaos Keycard's native
 /// 18-by-11 Snake display.
@@ -31,9 +77,33 @@ public sealed class SnakeImageOptions
     public int OffsetY { get; set; }
     public float FramesPerSecond { get; set; } = 10f;
     public int MaxFrames { get; set; } = 300;
+
+    /// <summary>
+    /// Overrides the time occupied by one pass through all frames. Use the
+    /// matching audio duration to keep an animation locked to its audio loop.
+    /// </summary>
+    public float? TimelineDurationSeconds { get; set; }
+
     public byte Threshold { get; set; } = 128;
     public bool Invert { get; set; }
     public bool FlipVertically { get; set; } = true;
+    public SnakeImageRenderStyle RenderStyle { get; set; } = SnakeImageRenderStyle.NativeSnake;
+    public VideoSourceCrop? SourceCrop { get; set; }
+
+    /// <summary>
+    /// Controls silhouette simplification from 0 (polarity normalization only)
+    /// through 3 (gap filling, diagonal detail connection, and smoothing).
+    /// </summary>
+    public int AbstractionLevel { get; set; } = 2;
+
+    public ISnakeImageFrameRenderer? CustomRenderer { get; set; }
+
+    /// <summary>
+    /// Orders visible cells so the native display chooses its square fallback
+    /// sprite instead of directional Snake body sprites.
+    /// </summary>
+    public bool RenderSolidPixels { get; set; }
+
     public bool Loop { get; set; } = true;
     public bool RestoreSnakeOnStop { get; set; } = true;
     public bool StopWhenUnequipped { get; set; } = true;
@@ -55,7 +125,9 @@ public sealed class SnakeImageOptions
     internal SnakeImageOptions Snapshot()
     {
         Validate();
-        return (SnakeImageOptions)MemberwiseClone();
+        var snapshot = (SnakeImageOptions)MemberwiseClone();
+        snapshot.SourceCrop = SourceCrop?.Snapshot();
+        return snapshot;
     }
 
     private void Validate()
@@ -72,6 +144,14 @@ public sealed class SnakeImageOptions
             throw new ArgumentOutOfRangeException(nameof(FramesPerSecond), "Frame rate must be greater than 0 and at most 30.");
         if (MaxFrames < 1 || MaxFrames > 10000)
             throw new ArgumentOutOfRangeException(nameof(MaxFrames), "MaxFrames must be between 1 and 10000.");
+        if (TimelineDurationSeconds is <= 0f)
+            throw new ArgumentOutOfRangeException(
+                nameof(TimelineDurationSeconds),
+                "Timeline duration must be greater than zero when specified.");
+        if (AbstractionLevel < 0 || AbstractionLevel > 3)
+            throw new ArgumentOutOfRangeException(
+                nameof(AbstractionLevel),
+                "Abstraction level must be between 0 and 3.");
     }
 }
 
@@ -83,7 +163,7 @@ public sealed class SnakeImagePlayback : IDisposable
 {
     private readonly SnakeContext _context;
     private readonly ChaosKeycardItem _keycard;
-    private readonly IReadOnlyList<IReadOnlyList<Vector2Int>> _frames;
+    private readonly IReadOnlyList<List<Vector2Int>> _frames;
     private readonly SnakeImageOptions _options;
     private CoroutineHandle _coroutine;
     private bool _ownerSessionTakenOver;
@@ -92,7 +172,7 @@ public sealed class SnakeImagePlayback : IDisposable
     internal SnakeImagePlayback(
         SnakeContext context,
         ChaosKeycardItem keycard,
-        IReadOnlyList<IReadOnlyList<Vector2Int>> frames,
+        IReadOnlyList<List<Vector2Int>> frames,
         SnakeImageOptions options)
     {
         _context = context;
@@ -106,6 +186,7 @@ public sealed class SnakeImagePlayback : IDisposable
     public int FrameCount => _frames.Count;
     public bool IsPlaying => !_stopped;
     internal bool StopsOnSnakeInput => _options.StopOnSnakeInput;
+    internal bool BlocksClientSnakeSync => !_stopped && _options.TakeOverOwnerSession;
 
     internal void Start()
         => _coroutine = Timing.RunCoroutine(PlaybackCoroutine());
@@ -146,7 +227,19 @@ public sealed class SnakeImagePlayback : IDisposable
             if (_options.Loop)
             {
                 while (!_stopped && IsValidTarget())
+                {
                     yield return Timing.WaitForSeconds(Math.Min(0.25f, frameDelay));
+
+                    // The inspected card retains its original local SnakeEngine
+                    // even after the full-sync takeover. Reassert a static frame
+                    // like a one-frame video so a late in-flight delta cannot
+                    // leave the owner's display corrupted.
+                    if (_options.TakeOverOwnerSession && !TrySend(_frames[0]))
+                    {
+                        Stop(restoreSnake: false, killCoroutine: false);
+                        yield break;
+                    }
+                }
             }
             else
             {
@@ -157,32 +250,66 @@ public sealed class SnakeImagePlayback : IDisposable
             yield break;
         }
 
-        do
+        var timelineDuration = _options.TimelineDurationSeconds ??
+                               _frames.Count / _options.FramesPerSecond;
+        var timeline = Stopwatch.StartNew();
+        long lastSequence = -1;
+
+        while (!_stopped)
         {
-            foreach (var frame in _frames)
+            if (!IsValidTarget())
             {
-                if (_stopped || !TrySend(frame))
+                Stop(restoreSnake: false, killCoroutine: false);
+                yield break;
+            }
+
+            var elapsed = timeline.Elapsed.TotalSeconds;
+            if (!_options.Loop && elapsed >= timelineDuration)
+            {
+                if (lastSequence != _frames.Count - 1 && !TrySend(_frames[_frames.Count - 1]))
                 {
                     Stop(restoreSnake: false, killCoroutine: false);
                     yield break;
                 }
 
-                yield return Timing.WaitForSeconds(frameDelay);
+                break;
             }
+
+            var cycle = _options.Loop
+                ? (long)(elapsed / timelineDuration)
+                : 0L;
+            var cycleTime = _options.Loop
+                ? elapsed - cycle * timelineDuration
+                : elapsed;
+            var frameIndex = Math.Min(
+                _frames.Count - 1,
+                (int)(cycleTime / timelineDuration * _frames.Count));
+            var sequence = cycle * _frames.Count + frameIndex;
+            if (sequence != lastSequence)
+            {
+                if (!TrySend(_frames[frameIndex]))
+                {
+                    Stop(restoreSnake: false, killCoroutine: false);
+                    yield break;
+                }
+
+                lastSequence = sequence;
+            }
+
+            yield return Timing.WaitForOneFrame;
         }
-        while (_options.Loop);
 
         Stop(_options.RestoreSnakeOnStop, killCoroutine: false);
     }
 
-    private bool TrySend(IReadOnlyList<Vector2Int> frame)
+    private bool TrySend(List<Vector2Int> frame)
     {
         if (!IsValidTarget())
             return false;
 
         var message = SnakeNetworkMessage.NewFullResync(
             gameover: false,
-            new List<Vector2Int>(frame),
+            frame,
             nextFood: null);
 
         if (_options.TakeOverOwnerSession && !_ownerSessionTakenOver)
@@ -332,6 +459,7 @@ public static class SnakeImageApi
         if (!_eventsRegistered)
             return;
 
+        SnakeMediaApi.StopAll(restoreSnake: false);
         Exiled.Events.Handlers.Server.WaitingForPlayers -= OnWaitingForPlayers;
         SnakePlayer.SnakeMove -= OnSnakeMove;
         _eventsRegistered = false;
@@ -387,7 +515,9 @@ public static class SnakeImageApi
             resolvedOptions.Height,
             resolvedOptions.FramesPerSecond,
             resolvedOptions.MaxFrames,
-            VideoPixelFormat.Grayscale8);
+            VideoPixelFormat.Grayscale8,
+            resolvedOptions.Threshold,
+            resolvedOptions.SourceCrop);
         return PlayFrames(keycardSerial, frames, resolvedOptions);
     }
 
@@ -410,14 +540,18 @@ public static class SnakeImageApi
                 resolvedOptions.Height,
                 resolvedOptions.FramesPerSecond,
                 resolvedOptions.MaxFrames,
-                VideoPixelFormat.Grayscale8)
+                VideoPixelFormat.Grayscale8,
+                resolvedOptions.Threshold,
+                sourceCrop: resolvedOptions.SourceCrop)
             : MediaProcessingApi.GetFramesFromDirectUrl(
                 url,
                 resolvedOptions.Width,
                 resolvedOptions.Height,
                 resolvedOptions.FramesPerSecond,
                 resolvedOptions.MaxFrames,
-                VideoPixelFormat.Grayscale8);
+                VideoPixelFormat.Grayscale8,
+                resolvedOptions.Threshold,
+                resolvedOptions.SourceCrop);
         return PlayFrames(keycardSerial, frames, resolvedOptions);
     }
 
@@ -440,7 +574,7 @@ public static class SnakeImageApi
             throw new ArgumentException("The serial does not identify a Chaos Keycard.", nameof(keycardSerial));
 
         var renderedFrames = frames
-            .Select(frame => (IReadOnlyList<Vector2Int>)CreateSegments(frame, resolvedOptions))
+            .Select(frame => CreateSegments(frame, resolvedOptions))
             .ToArray();
 
         Stop(keycardSerial);
@@ -474,6 +608,10 @@ public static class SnakeImageApi
         }
     }
 
+    internal static bool BlocksClientSnakeSync(ushort serial)
+        => ActivePlaybacks.TryGetValue(serial, out SnakeImagePlayback? playback) &&
+           playback.BlocksClientSnakeSync;
+
     internal static List<Vector2Int> CreateDefaultSnakeSegments() =>
     [
         new(9, 5),
@@ -492,27 +630,171 @@ public static class SnakeImageApi
                 $"Frame size {frame.Width}x{frame.Height} does not match the configured " +
                 $"{options.Width}x{options.Height} display region.");
 
+        var context = new SnakeImageFrameContext(frame, options);
+        if (options.CustomRenderer != null)
+        {
+            IReadOnlyList<Vector2Int> rendered =
+                options.CustomRenderer.Render(context) ??
+                throw new InvalidOperationException("The custom Snake frame renderer returned null.");
+            return EnsureRenderableSegments(new List<Vector2Int>(rendered));
+        }
+
+        var mask = new bool[options.Height, options.Width];
+        for (var outputY = 0; outputY < frame.Height; outputY++)
+        {
+            for (var outputX = 0; outputX < frame.Width; outputX++)
+                mask[outputY, outputX] = context.IsForeground(outputX, outputY);
+        }
+
+        SnakeImageRenderStyle renderStyle = options.RenderStyle;
+        if (options.RenderSolidPixels && renderStyle == SnakeImageRenderStyle.NativeSnake)
+            renderStyle = SnakeImageRenderStyle.SolidPixels;
+        if (renderStyle == SnakeImageRenderStyle.AbstractSilhouette)
+            ApplyAbstraction(mask, options.AbstractionLevel);
+
         var segments = new List<Vector2Int>(frame.Width * frame.Height);
         for (var outputY = 0; outputY < frame.Height; outputY++)
         {
-            var sourceY = options.FlipVertically
-                ? frame.Height - 1 - outputY
-                : outputY;
-            var reverseRow = outputY % 2 != 0;
+            bool reverseRow = outputY % 2 != 0;
             for (var column = 0; column < frame.Width; column++)
             {
-                var sourceX = reverseRow ? frame.Width - 1 - column : column;
-                var isLit = frame.GetGrayscale(sourceX, sourceY) >= options.Threshold;
-                if (options.Invert)
-                    isLit = !isLit;
-                if (!isLit)
-                    continue;
-
-                segments.Add(new Vector2Int(
-                    options.OffsetX + sourceX,
-                    options.OffsetY + outputY));
+                int outputX = reverseRow ? frame.Width - 1 - column : column;
+                if (mask[outputY, outputX])
+                    segments.Add(context.ToDisplayPosition(outputX, outputY));
             }
         }
+
+        if (renderStyle is SnakeImageRenderStyle.SolidPixels or
+            SnakeImageRenderStyle.AbstractSilhouette &&
+            segments.Count > 0)
+        {
+            segments = CreateSolidPixelSegments(segments);
+        }
+
+        return EnsureRenderableSegments(segments);
+    }
+
+    private static void ApplyAbstraction(bool[,] mask, int level)
+    {
+        int height = mask.GetLength(0);
+        int width = mask.GetLength(1);
+        int foreground = 0;
+        foreach (bool value in mask)
+        {
+            if (value)
+                foreground++;
+        }
+
+        if (foreground > width * height / 2)
+        {
+            for (var y = 0; y < height; y++)
+            {
+                for (var x = 0; x < width; x++)
+                    mask[y, x] = !mask[y, x];
+            }
+        }
+
+        if (level >= 1)
+            FillSingleCellGaps(mask);
+        if (level >= 2)
+            ConnectDiagonalDetails(mask);
+        if (level >= 3)
+            SmoothMask(mask);
+    }
+
+    private static void FillSingleCellGaps(bool[,] mask)
+    {
+        int height = mask.GetLength(0);
+        int width = mask.GetLength(1);
+        var source = (bool[,])mask.Clone();
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                if (source[y, x])
+                    continue;
+
+                bool horizontal = x > 0 && x + 1 < width &&
+                                  source[y, x - 1] && source[y, x + 1];
+                bool vertical = y > 0 && y + 1 < height &&
+                                source[y - 1, x] && source[y + 1, x];
+                if (horizontal || vertical)
+                    mask[y, x] = true;
+            }
+        }
+    }
+
+    private static void ConnectDiagonalDetails(bool[,] mask)
+    {
+        int height = mask.GetLength(0);
+        int width = mask.GetLength(1);
+        var source = (bool[,])mask.Clone();
+        for (var y = 0; y + 1 < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                if (!source[y, x])
+                    continue;
+
+                if (x + 1 < width &&
+                    source[y + 1, x + 1] &&
+                    !source[y, x + 1] &&
+                    !source[y + 1, x])
+                {
+                    mask[y + 1, x] = true;
+                }
+
+                if (x > 0 &&
+                    source[y + 1, x - 1] &&
+                    !source[y, x - 1] &&
+                    !source[y + 1, x])
+                {
+                    mask[y + 1, x] = true;
+                }
+            }
+        }
+    }
+
+    private static void SmoothMask(bool[,] mask)
+    {
+        int height = mask.GetLength(0);
+        int width = mask.GetLength(1);
+        var source = (bool[,])mask.Clone();
+        for (var y = 0; y < height; y++)
+        {
+            for (var x = 0; x < width; x++)
+            {
+                int neighbors = 0;
+                for (var offsetY = -1; offsetY <= 1; offsetY++)
+                {
+                    for (var offsetX = -1; offsetX <= 1; offsetX++)
+                    {
+                        if (offsetX == 0 && offsetY == 0)
+                            continue;
+
+                        int neighborX = x + offsetX;
+                        int neighborY = y + offsetY;
+                        if (neighborX >= 0 && neighborX < width &&
+                            neighborY >= 0 && neighborY < height &&
+                            source[neighborY, neighborX])
+                        {
+                            neighbors++;
+                        }
+                    }
+                }
+
+                mask[y, x] = source[y, x]
+                    ? neighbors >= 2
+                    : neighbors >= 5;
+            }
+        }
+    }
+
+    private static List<Vector2Int> EnsureRenderableSegments(List<Vector2Int> segments)
+    {
+        if (segments.Count > byte.MaxValue)
+            throw new InvalidOperationException(
+                $"Snake frame contains {segments.Count} segments; the network limit is {byte.MaxValue}.");
 
         if (segments.Count == 0)
         {
@@ -528,8 +810,71 @@ public static class SnakeImageApi
         return segments;
     }
 
+    private static List<Vector2Int> CreateSolidPixelSegments(
+        IReadOnlyCollection<Vector2Int> pixels)
+    {
+        const int hiddenCoordinate = -120;
+        const int hiddenMinimumSide = -120;
+        const int hiddenMaximumSide = 120;
+
+        var rows = pixels
+            .GroupBy(pixel => pixel.y)
+            .OrderBy(row => row.Key)
+            .Select(row => row.OrderBy(pixel => pixel.x).ToArray())
+            .ToArray();
+        var result = new List<Vector2Int>(pixels.Count + rows.Length * 2 + 2);
+        var startFromMinimum = true;
+
+        var firstHiddenX = startFromMinimum ? hiddenMaximumSide : hiddenMinimumSide;
+        result.Add(new Vector2Int(firstHiddenX, hiddenCoordinate));
+        result.Add(new Vector2Int(firstHiddenX, rows[0][0].y));
+
+        for (var rowIndex = 0; rowIndex < rows.Length; rowIndex++)
+        {
+            var row = rows[rowIndex];
+            AddAlternatingRow(result, row, startFromMinimum);
+
+            var endsAtMinimum = row.Length % 2 == 1
+                ? startFromMinimum
+                : !startFromMinimum;
+            var bridgeX = endsAtMinimum ? hiddenMaximumSide : hiddenMinimumSide;
+            result.Add(new Vector2Int(bridgeX, row[0].y));
+
+            if (rowIndex + 1 < rows.Length)
+            {
+                var nextRowY = rows[rowIndex + 1][0].y;
+                result.Add(new Vector2Int(bridgeX, nextRowY));
+                startFromMinimum = endsAtMinimum;
+            }
+            else
+            {
+                result.Add(new Vector2Int(bridgeX, hiddenCoordinate));
+            }
+        }
+
+        return result;
+    }
+
+    private static void AddAlternatingRow(
+        ICollection<Vector2Int> output,
+        IReadOnlyList<Vector2Int> row,
+        bool startFromMinimum)
+    {
+        var minimum = 0;
+        var maximum = row.Count - 1;
+        var takeMinimum = startFromMinimum;
+        while (minimum <= maximum)
+        {
+            output.Add(takeMinimum ? row[minimum++] : row[maximum--]);
+            takeMinimum = !takeMinimum;
+        }
+    }
+
     private static void OnWaitingForPlayers()
-        => StopAll(restoreSnake: false);
+    {
+        SnakeMediaApi.StopAll(restoreSnake: false);
+        StopAll(restoreSnake: false);
+    }
 
     private static void OnSnakeMove(SnakeMoveEventArgs ev)
     {

@@ -180,6 +180,21 @@ to object lifetime and authentication state.
 - The native display renders an ordered, connected Head/Middle/Tail snake, not an
   arbitrary pixel framebuffer. Disconnected silhouette coordinates can render
   with gaps and produce invalid-neighbor warnings.
+- For pixel-like images, `SnakeImageOptions.RenderSolidPixels` alternates the
+  selected cells between each row's extrema so the display chooses its square
+  fallback sprite. It connects rows through off-screen, same-axis bridge segments
+  to avoid diagonal-neighbor warnings and stays below the 255-segment wire limit.
+- Prefer `SnakeMediaApi.PlayPixelMedia` for synchronized URL/file video and
+  Spatial audio instead of recreating download tasks, clip caches, playback
+  dictionaries, or unequip cleanup in each CItem. Its timeline is anchored to the
+  decoded audio duration and skips late video frames rather than accumulating
+  `WaitForSeconds` drift.
+- Choose image behavior through `SnakeImageRenderStyle`: `NativeSnake` preserves
+  directional body sprites, `SolidPixels` forces square cells, and
+  `AbstractSilhouette` normalizes foreground polarity and repairs small gaps and
+  diagonal details according to `AbstractionLevel`. Implement
+  `ISnakeImageFrameRenderer` when a feature needs its own segment ordering or a
+  hybrid of native Snake parts and fallback pixels.
 
 ## ProjectMER and schematic rules
 

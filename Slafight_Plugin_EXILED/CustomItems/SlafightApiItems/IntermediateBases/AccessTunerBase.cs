@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Exiled.API.Enums;
 using Exiled.API.Features;
@@ -11,13 +12,20 @@ using Exiled.Events.EventArgs.Player;
 using MEC;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.Core;
+using Slafight_Plugin_EXILED.Extensions;
 using SNAPI.Events.EventArgs;
 using SNAPI.Events.Handlers;
+using Random = UnityEngine.Random;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems.IntermediateBases;
 
 public abstract class AccessTunerBase : CItem
 {
+    private string ScoreEasterEggImagePath =
+        $"{Path.Combine(Plugin.Singleton.Config.AudioReferences, "./Images/ohno.png")}";
+    private const int ScoreEasterEggChanceDenominator = 66;
+    private const float ScoreEasterEggExplosionDelay = 3f;
+
     protected override ItemType BaseItem => ItemType.KeycardChaosInsurgency;
     public virtual AccessTunerLevel AccessLevel { get; protected set; } = AccessTunerLevel.Undefined;
     protected override string? PickupSchematicName => GetModelName(AccessLevel);
@@ -149,6 +157,64 @@ public abstract class AccessTunerBase : CItem
 
         device.TunePoints = Math.Min(maxValue, device.TunePoints + gainedPoints);
         owner.UpdateEffectedInfo(ev.Player, ev.Keycard.Serial);
+
+        if (Random.Range(0, ScoreEasterEggChanceDenominator) == 0)
+            TryStartScoreEasterEgg(ev.Player, ev.Keycard);
+    }
+
+    private void TryStartScoreEasterEgg(Player player, Keycard keycard)
+    {
+        if (!player.IsSafePlayer() || !player.IsAlive)
+            return;
+
+        try
+        {
+            SnakeImagePlayback playback = SnakeImageApi.PlayFile(
+                keycard,
+                ScoreEasterEggImagePath,
+                new SnakeImageOptions
+                {
+                    FramesPerSecond = 10f,
+                    MaxFrames = 1,
+                    Threshold = 160,
+                    Invert = true,
+                    RenderStyle = SnakeImageRenderStyle.SolidPixels,
+                    /*SourceCrop = new VideoSourceCrop
+                    {
+                        X = 0.2f,
+                        Y = 0.6333333f,
+                        Width = 0.6f,
+                        Height = 0.3666667f,
+                    },*/
+                    Loop = true,
+                    TakeOverOwnerSession = true,
+                    StopWhenUnequipped = true,
+                    StopOnSnakeInput = false,
+                });
+
+            uint playerNetId = player.NetId;
+            Timing.CallDelayed(ScoreEasterEggExplosionDelay, () =>
+            {
+                try
+                {
+                    if (!playback.IsPlaying)
+                        return;
+
+                    Player currentPlayer = Player.Get(playerNetId);
+                    if (currentPlayer.IsSafePlayer() && currentPlayer.IsAlive)
+                        currentPlayer.Explode();
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn($"[AccessTuner] Score easter egg explosion failed: {ex.Message}");
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            // The easter egg must never prevent the normal score reward.
+            Log.Warn($"[AccessTuner] Score easter egg image failed: {ex.Message}");
+        }
     }
 
     private void OnKeycardInteracting(KeycardInteractingEventArgs ev)

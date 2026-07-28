@@ -16,6 +16,43 @@ public enum VideoPixelFormat
     Rgb24,
 }
 
+/// <summary>
+/// A normalized source rectangle applied before media is resized. Coordinates
+/// are expressed from the source's top-left corner in the 0-1 range.
+/// </summary>
+public sealed class VideoSourceCrop
+{
+    public float X { get; set; }
+    public float Y { get; set; }
+    public float Width { get; set; } = 1f;
+    public float Height { get; set; } = 1f;
+
+    internal VideoSourceCrop Snapshot()
+    {
+        const float boundaryTolerance = 0.00001f;
+        float right = X + Width;
+        float bottom = Y + Height;
+        if (!IsFinite(X) || !IsFinite(Y) || !IsFinite(Width) || !IsFinite(Height) ||
+            X < 0f || X >= 1f || Y < 0f || Y >= 1f ||
+            Width <= 0f || Height <= 0f ||
+            right > 1f + boundaryTolerance ||
+            bottom > 1f + boundaryTolerance)
+        {
+            throw new ArgumentOutOfRangeException(
+                nameof(VideoSourceCrop),
+                "Source crop must be a finite normalized rectangle contained within the source image.");
+        }
+
+        var snapshot = (VideoSourceCrop)MemberwiseClone();
+        snapshot.Width = Math.Min(snapshot.Width, 1f - snapshot.X);
+        snapshot.Height = Math.Min(snapshot.Height, 1f - snapshot.Y);
+        return snapshot;
+    }
+
+    private static bool IsFinite(float value)
+        => !float.IsNaN(value) && !float.IsInfinity(value);
+}
+
 public sealed class VideoFrameData
 {
     public VideoFrameData(
@@ -127,12 +164,21 @@ public static class MediaProcessingApi
         int maxFrames = 300,
         VideoPixelFormat pixelFormat = VideoPixelFormat.Grayscale8,
         byte blackWhiteThreshold = 128,
-        bool keepDownloadedFile = false)
+        bool keepDownloadedFile = false,
+        VideoSourceCrop? sourceCrop = null)
     {
         var path = YtDlpApi.DownloadVideo(url);
         try
         {
-            return GetFramesFromFile(path, width, height, framesPerSecond, maxFrames, pixelFormat, blackWhiteThreshold);
+            return GetFramesFromFile(
+                path,
+                width,
+                height,
+                framesPerSecond,
+                maxFrames,
+                pixelFormat,
+                blackWhiteThreshold,
+                sourceCrop);
         }
         finally
         {
@@ -148,7 +194,8 @@ public static class MediaProcessingApi
         float framesPerSecond = 10f,
         int maxFrames = 300,
         VideoPixelFormat pixelFormat = VideoPixelFormat.Grayscale8,
-        byte blackWhiteThreshold = 128)
+        byte blackWhiteThreshold = 128,
+        VideoSourceCrop? sourceCrop = null)
     {
         if (!File.Exists(fullPath))
             throw new FileNotFoundException($"Video file not found: {fullPath}", fullPath);
@@ -161,7 +208,8 @@ public static class MediaProcessingApi
             framesPerSecond,
             maxFrames,
             pixelFormat,
-            blackWhiteThreshold);
+            blackWhiteThreshold,
+            sourceCrop);
     }
 
     /// <summary>
@@ -176,7 +224,8 @@ public static class MediaProcessingApi
         float framesPerSecond = 10f,
         int maxFrames = 300,
         VideoPixelFormat pixelFormat = VideoPixelFormat.Grayscale8,
-        byte blackWhiteThreshold = 128)
+        byte blackWhiteThreshold = 128,
+        VideoSourceCrop? sourceCrop = null)
     {
         if (!YtDlpApi.IsSupportedUrl(url))
             throw new ArgumentException("Only absolute HTTP or HTTPS media URLs are supported.", nameof(url));
@@ -189,7 +238,8 @@ public static class MediaProcessingApi
             framesPerSecond,
             maxFrames,
             pixelFormat,
-            blackWhiteThreshold);
+            blackWhiteThreshold,
+            sourceCrop);
     }
 
     private static IReadOnlyList<VideoFrameData> DecodeFrames(
@@ -200,7 +250,8 @@ public static class MediaProcessingApi
         float framesPerSecond,
         int maxFrames,
         VideoPixelFormat pixelFormat,
-        byte blackWhiteThreshold)
+        byte blackWhiteThreshold,
+        VideoSourceCrop? sourceCrop)
     {
         if (width < 1 || width > 4096)
             throw new ArgumentOutOfRangeException(nameof(width), "Width must be between 1 and 4096.");
@@ -219,7 +270,18 @@ public static class MediaProcessingApi
         FfmpegAudioDecoder.EnsureAvailable();
         var ffmpegPixelFormat = pixelFormat == VideoPixelFormat.Rgb24 ? "rgb24" : "gray";
         var fps = framesPerSecond.ToString("0.########", CultureInfo.InvariantCulture);
-        var filter = $"fps={fps},scale={width}:{height}:force_original_aspect_ratio=decrease," +
+        VideoSourceCrop? resolvedCrop = sourceCrop?.Snapshot();
+        string cropFilter = resolvedCrop == null
+            ? string.Empty
+            : $"crop=iw*{FormatFilterNumber(resolvedCrop.Width)}:" +
+              $"ih*{FormatFilterNumber(resolvedCrop.Height)}:" +
+              $"iw*{FormatFilterNumber(resolvedCrop.X)}:" +
+              $"ih*{FormatFilterNumber(resolvedCrop.Y)},";
+        // A still image has no duration. Without eof_action=pass, ffmpeg's fps
+        // filter can legally discard its only frame and exit successfully with
+        // an empty output stream.
+        var filter = $"{cropFilter}fps={fps}:eof_action=pass," +
+                     $"scale={width}:{height}:force_original_aspect_ratio=decrease," +
                      $"pad={width}:{height}:(ow-iw)/2:(oh-ih)/2:color=black";
         var error = new StringBuilder();
         var startInfo = new ProcessStartInfo
@@ -313,6 +375,9 @@ public static class MediaProcessingApi
 
     private static string EscapeArgument(string value)
         => value.Replace("\"", "\\\"");
+
+    private static string FormatFilterNumber(float value)
+        => value.ToString("0.########", CultureInfo.InvariantCulture);
 
     private static void TryDelete(string path)
     {
