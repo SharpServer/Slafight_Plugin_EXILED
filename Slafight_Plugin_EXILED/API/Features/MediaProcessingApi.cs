@@ -152,6 +152,56 @@ public static class MediaProcessingApi
     {
         if (!File.Exists(fullPath))
             throw new FileNotFoundException($"Video file not found: {fullPath}", fullPath);
+
+        return DecodeFrames(
+            fullPath,
+            $"media file '{fullPath}'",
+            width,
+            height,
+            framesPerSecond,
+            maxFrames,
+            pixelFormat,
+            blackWhiteThreshold);
+    }
+
+    /// <summary>
+    /// Decodes a direct HTTP(S) image, GIF, or video URL with ffmpeg. Use
+    /// <see cref="GetFramesFromUrl"/> instead for webpage URLs that require
+    /// yt-dlp extraction.
+    /// </summary>
+    public static IReadOnlyList<VideoFrameData> GetFramesFromDirectUrl(
+        string url,
+        int width,
+        int height,
+        float framesPerSecond = 10f,
+        int maxFrames = 300,
+        VideoPixelFormat pixelFormat = VideoPixelFormat.Grayscale8,
+        byte blackWhiteThreshold = 128)
+    {
+        if (!YtDlpApi.IsSupportedUrl(url))
+            throw new ArgumentException("Only absolute HTTP or HTTPS media URLs are supported.", nameof(url));
+
+        return DecodeFrames(
+            url,
+            $"media URL '{url}'",
+            width,
+            height,
+            framesPerSecond,
+            maxFrames,
+            pixelFormat,
+            blackWhiteThreshold);
+    }
+
+    private static IReadOnlyList<VideoFrameData> DecodeFrames(
+        string input,
+        string inputDescription,
+        int width,
+        int height,
+        float framesPerSecond,
+        int maxFrames,
+        VideoPixelFormat pixelFormat,
+        byte blackWhiteThreshold)
+    {
         if (width < 1 || width > 4096)
             throw new ArgumentOutOfRangeException(nameof(width), "Width must be between 1 and 4096.");
         if (height < 1 || height > 4096)
@@ -175,7 +225,7 @@ public static class MediaProcessingApi
         var startInfo = new ProcessStartInfo
         {
             FileName = FfmpegAudioDecoder.ExecutablePath,
-            Arguments = $"-v error -nostdin -i \"{EscapeArgument(fullPath)}\" -map 0:v:0 -an " +
+            Arguments = $"-v error -nostdin -i \"{EscapeArgument(input)}\" -map 0:v:0 -an " +
                         $"-vf \"{filter}\" -frames:v {maxFrames} -pix_fmt {ffmpegPixelFormat} -f rawvideo pipe:1",
             UseShellExecute = false,
             CreateNoWindow = true,
@@ -228,9 +278,9 @@ public static class MediaProcessingApi
             process.WaitForExit();
             if (process.ExitCode != 0)
                 throw new InvalidOperationException(
-                    $"ffmpeg failed to decode video '{fullPath}' (exit code {process.ExitCode}): {error.ToString().Trim()}");
+                    $"ffmpeg failed to decode {inputDescription} (exit code {process.ExitCode}): {error.ToString().Trim()}");
             if (frames.Count == 0)
-                throw new InvalidOperationException($"ffmpeg produced no video frames for: {fullPath}");
+                throw new InvalidOperationException($"ffmpeg produced no video frames for {inputDescription}.");
 
             return frames;
         }

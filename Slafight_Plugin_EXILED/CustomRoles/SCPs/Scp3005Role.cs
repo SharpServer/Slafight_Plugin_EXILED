@@ -58,7 +58,7 @@ public class Scp3005Role : CRole
 
         RoleSchematicWears.WearScp3005(player);
 
-        player.AddAbility<MagicMissileAbility>();
+        player.AddAbility<MindblasterAbility>();
         player.AddAbility<SoundOfFifthAbility>();
 
         Timing.RunCoroutine(WaitAndTeleport(player));

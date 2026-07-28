@@ -21,7 +21,7 @@ public class FifthistConvert : CRole
     [
         ItemType.GunA7,
         ItemType.Medkit,
-        ItemType.ArmorCombat,
+        ItemType.ArmorLight,
         typeof(KeycardFifthist),
         typeof(Scp1425),
     ];

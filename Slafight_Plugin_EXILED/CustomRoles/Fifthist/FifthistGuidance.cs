@@ -19,13 +19,13 @@ public class FifthistGuidance : CRole
     protected override IReadOnlyList<object> SpawnItems =>
     [
         typeof(CaneOfTheStars),
-        ItemType.ArmorHeavy,
+        ItemType.ArmorLight,
         typeof(KeycardFifthist),
         ItemType.Medkit,
         ItemType.Adrenaline,
         ItemType.SCP500,
         ItemType.GrenadeHE,
     ];
-    protected override Vector3? SpawnPosition => new Vector3(124f, 289f, 21f);
+    protected override Vector3? SpawnPosition => PositionProvider.GetExitBPosition();
     protected override string SpawnCustomInfo => "<color=#FF0090>Fifthist Guidance</color>";
 }

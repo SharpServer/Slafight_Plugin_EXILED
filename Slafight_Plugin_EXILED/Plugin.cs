@@ -54,6 +54,7 @@ public class Plugin : Plugin<Config>
         InitializeMediaTools();
         PlayerSpeakerManager.RegisterEvents();
         VoiceRoutingApi.RegisterEvents();
+        SnakeImageApi.RegisterEvents();
         Handler.RegisterEvents();
         WaypointChunkStreamer.RegisterEvents();
         FilmmakerAnimationPlayer.RegisterEvents();
@@ -157,6 +158,7 @@ public class Plugin : Plugin<Config>
         PlayerSpeakerManager.UnregisterEvents();
         Handler.UnregisterEvents();
         VoiceRoutingApi.UnregisterEvents();
+        SnakeImageApi.UnregisterEvents();
         WaypointChunkStreamer.UnregisterEvents();
         FilmmakerAnimationPlayer.UnregisterEvents();
 

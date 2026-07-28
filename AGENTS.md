@@ -192,6 +192,18 @@ the production server runs on a remote VPS; local logs and local plugin folders 
 not prove what the VPS loaded. Request the VPS LocalAdmin log and confirm its DLL
 versions or hashes.
 
+## Configuration discipline
+
+- Avoid adding fields to `Config.cs` for test features, one-off content, or values
+  used by only one item/role/component.
+- Prefer scoped `const` or `static readonly` values in the owning class for those
+  cases. Promote a value to `Config.cs` only when server operators genuinely need
+  to change it at runtime or the user explicitly requests configuration support.
+- Keep test-content constants close to their implementation. For example, the
+  Bad Apple test source, FPS, and frame limit belong in
+  `CustomItems/SlafightApiItems/BadAppleTestPlayer.cs`.
+- Do not edit `Config.cs` incidentally while implementing unrelated features.
+
 ## Git and completion
 
 - Keep Slafight, ProjectMER, HSM, Unity assets, MapWorks, and SL references as

@@ -26,6 +26,7 @@ public enum CRoleTypeId
     FifthistPriest,
     FifthistConvert,
     FifthistGuidance,
+    FifthistMindblaster,
     FifthistMarionette,
 
     // ==== Chaos ==== //

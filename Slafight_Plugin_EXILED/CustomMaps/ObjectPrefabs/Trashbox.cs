@@ -103,7 +103,10 @@ public class Trashbox : ObjectPrefab
             case TrashboxEventType.MagicMissile:
                 player.ShowHint("<size=26>あなたはゴミ箱を漁った・・・\n" +
                                 "<color=yellow>マジックミサイルを手に入れた！</color></size>",5);
-                player.GiveOrDrop<MagicMissile>();
+                var item = player.GiveOrDrop<Mindblaster>();
+                var serial = item.Item?.Serial ?? item.Pickup?.Serial ?? 55555;
+                if (serial is 0) break;
+                Mindblaster.SetSerialSettings(serial, 1, 0f);
                 break;
             case TrashboxEventType.MasterCard:
                 player.ShowHint("<size=26>あなたはゴミ箱を漁った・・・\n" +

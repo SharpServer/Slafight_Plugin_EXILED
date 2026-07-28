@@ -63,6 +63,10 @@
         <Reference Include="SNAPI">
             <HintPath>$(SL_References)\SNAPI-HSM.dll</HintPath>
         </Reference>
+        <Reference Include="Snake">
+            <HintPath>$(SL_References)\Snake.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
         <Reference Include="Assembly-CSharp-firstpass">
             <HintPath>$(SL_References)\Assembly-CSharp-firstpass.dll</HintPath>
         </Reference>

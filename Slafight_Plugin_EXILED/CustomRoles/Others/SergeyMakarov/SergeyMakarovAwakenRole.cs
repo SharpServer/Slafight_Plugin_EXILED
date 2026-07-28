@@ -36,7 +36,7 @@ public class SergeyMakarovAwakenRole : CRole
         TrySetPlayerPosition(player, pos, nameof(SergeyMakarovAwakenRole));
 
         player.AddAbility<CreateSinkholeAbility>();
-        player.AddAbility<MagicMissileAbility>();
+        player.AddAbility<MindblasterAbility>();
         player.AddAbility<SoundOfFifthAbility>();
 
         var playerId = player.Id;

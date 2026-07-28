@@ -26,7 +26,7 @@ internal static class RoleHintsDictionary
     private const string OmegaObj = "<b>法のために、秩序の暴走を許さず施設を守護せよ。</b>";
 
     // (role text, team text, objective text)
-    internal static readonly Dictionary<CRoleTypeId, (string Role, string Team, string Objective)> Table =
+    private static readonly Dictionary<CRoleTypeId, (string Role, string Team, string Objective)> Table =
         new Dictionary<CRoleTypeId, (string, string, string)>
     {
         // ── SCPs ──────────────────────────────────────────────────────────
@@ -45,13 +45,14 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.Scp076]       = ("<color=#ff1493>SCP-076</color>",            FoundTeam + " - " + ScpTeam, "財団の制御下で敵対勢力を殲滅せよ。財団を3人殺害、またはOmega-7全滅で反逆状態になる。"),
 
         // ── Fifthists ─────────────────────────────────────────────────────
-        [CRoleTypeId.Scp3005]            = ("<color=#ff00fa>SCP-3005</color>",              ScpTeam + " - " + FifthTeam, "第五教会に道を示し、施設を占領せよ"),
-        [CRoleTypeId.Scp3125]            = ("<color=#ff00fa>SCP-3125</color>",              FifthTeam, "マリオン・ホイーラーを探し出し第五せよ"),
-        [CRoleTypeId.FifthistRescure]    = ("<color=#ff00fa>Fifthist: Rescue</color>",      FifthTeam, "第五を探し出し、救出し、従い、施設を占領せよ。"),
-        [CRoleTypeId.FifthistPriest]     = ("<color=#ff00fa>Fifthist: Priest</color>",      FifthTeam, "あなたは幸福な事に第五の加護を受けている。全てを第五せよ！"),
-        [CRoleTypeId.FifthistConvert]    = ("<color=#ff5ffa>Fifthist: Convert</color>",     FifthTeam, "あなたは第五教会の新入りだ。第五とは何かについて考え、理解し、そして従いなさい。"),
-        [CRoleTypeId.FifthistGuidance]   = ("<color=#ff00fa>Fifthist: Guidance</color>",    FifthTeam, "杖を用い、第五主義を施設に広めなさい。あなたの導きは教会にとって重要です！"),
-        [CRoleTypeId.FifthistMarionette] = ("<color=#ff5ffa>Fifthist: Marionette</color>",  FifthTeam, "第五教会に従い、生存者どもを騙しながら第五しろ！"),
+        [CRoleTypeId.Scp3005]             = ("<color=#ff00fa>SCP-3005</color>",              ScpTeam + " - " + FifthTeam, "第五教会に道を示し、施設を占領せよ"),
+        [CRoleTypeId.Scp3125]             = ("<color=#ff00fa>SCP-3125</color>",              FifthTeam, "マリオン・ホイーラーを探し出し第五せよ"),
+        [CRoleTypeId.FifthistRescure]     = ("<color=#ff00fa>Fifthist: Rescue</color>",      FifthTeam, "第五を探し出し、救出し、従い、施設を占領せよ。"),
+        [CRoleTypeId.FifthistPriest]      = ("<color=#ff00fa>Fifthist: Priest</color>",      FifthTeam, "あなたは幸福な事に第五の加護を受けている。全てを第五せよ！"),
+        [CRoleTypeId.FifthistConvert]     = ("<color=#ff5ffa>Fifthist: Convert</color>",     FifthTeam, "あなたは第五教会の新入りだ。第五とは何かについて考え、理解し、そして従いなさい。"),
+        [CRoleTypeId.FifthistGuidance]    = ("<color=#ff00fa>Fifthist: Guidance</color>",    FifthTeam, "杖を用い、第五主義を施設に広めなさい。あなたの導きは教会にとって重要です！"),
+        [CRoleTypeId.FifthistMindblaster] = ("<color=#ff00fa>Fifthist: Mindblaster</color>", FifthTeam, "第五の力を用いて、全ての思考を第五で破壊しろ！"),
+        [CRoleTypeId.FifthistMarionette]  = ("<color=#ff5ffa>Fifthist: Marionette</color>",  FifthTeam, "第五教会に従い、生存者どもを騙しながら第五しろ！"),
 
         // ── Chaos Insurgency ──────────────────────────────────────────────
         [CRoleTypeId.ChaosCommando]        = ("<color=#228b22>Chaos Insurgency Commando</color>",        ChaosTeam, ChaosObj),
@@ -205,13 +206,13 @@ internal static class RoleHintsDictionary
         if (ResolvedFromRole.TryGetValue(roleTypeId, out data))
             return true;
 
-        if (CRole.TryGet(roleTypeId, out var role) && role != null)
+        if (CRole.TryGet(roleTypeId, out var role))
         {
             var color = role.TeamId.GetTeamColor();
             data = (
                 $"<color={color}>{role.RoleDisplayName}</color>",
                 $"<color={color}>{role.TeamId.GetTeamName()}</color>",
-                role.RoleDescription ?? string.Empty);
+                role.RoleDescription);
 
             ResolvedFromRole[roleTypeId] = data;
             return true;

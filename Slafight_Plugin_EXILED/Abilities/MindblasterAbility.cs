@@ -14,7 +14,7 @@ using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.Abilities;
 
-public class MagicMissileAbility : AbilityBase
+public class MindblasterAbility : AbilityBase
 {
     // AbilityBase 抽象プロパティの実装（デフォルト値）
     protected override float DefaultCooldown => 5f;

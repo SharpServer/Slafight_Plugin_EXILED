@@ -13,4 +13,9 @@ public static class PositionProvider
     {
         return new Vector3(8f, 292f, -45f);
     }
+
+    public static Vector3 GetExitBPosition()
+    {
+        return new Vector3(124f, 289f, 21f);
+    }
 }

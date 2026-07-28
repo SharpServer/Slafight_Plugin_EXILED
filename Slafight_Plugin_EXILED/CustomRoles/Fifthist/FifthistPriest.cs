@@ -34,7 +34,7 @@ public class FifthistPriest : CRole
         ItemType.Adrenaline,
         ItemType.GrenadeHE,
     ];
-    protected override Vector3? SpawnPosition => new Vector3(124f, 289f, 21f);
+    protected override Vector3? SpawnPosition => PositionProvider.GetExitBPosition();
     protected override string SpawnCustomInfo => "<color=#FF0090>Fifthist Priest</color>";
 
     private CoroutineHandle _auraHandle;

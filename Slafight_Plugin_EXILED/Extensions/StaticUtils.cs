@@ -11,6 +11,7 @@ using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Structs;
 using UnityEngine;
 using Random = System.Random;
 
@@ -114,19 +115,28 @@ public static class StaticUtils
     }
     
     /// <summary>型引数でCItemを付与 or ドロップします。</summary>
-    public static void GiveOrDrop<T>(this Player player, bool showHint = false) where T : CItem
+    public static ItemInfo GiveOrDrop<T>(this Player player, bool showHint = false) where T : CItem
         => player.GiveOrDrop(CItem.Get<T>(), showHint);
 
     /// <summary>解決済みCItemインスタンスを付与 or ドロップします。</summary>
-    public static void GiveOrDrop(this Player player, CItem? item, bool showHint = false)
+    public static ItemInfo GiveOrDrop(this Player player, CItem? item, bool showHint = false)
     {
+        ItemInfo info = new ItemInfo();
         if (item == null)
-            return;
+            return info;
 
         if (player.IsInventoryFull)
-            item.Spawn(player.Position + Vector3.up * 0.5f);
+        {
+            var instance = item.Spawn(player.Position + Vector3.up * 0.5f);
+            info.Pickup = instance;
+        }
         else
-            item.Give(player, showHint);
+        {
+            var instance = item.Give(player, showHint);
+            info.Item = instance;
+        }
+        
+        return info;
     }
 
     // ───────────────────────────────

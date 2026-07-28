@@ -9,7 +9,7 @@ public static class AbilityLocalization
     private static readonly Dictionary<string, string> JaNames = new()
     {
         ["CreateSinkholeAbility"] = "シンクホール",
-        ["MagicMissileAbility"] = "マジックミサイル",
+        ["MindblasterAbility"] = "思壊",
         ["AllowEscapeAbility"] = "腐蝕からの解放",
         ["SoundOfFifthAbility"] = "第五からの音",
         ["TeleportRandomAbility"] = "メインヴィラン",
@@ -29,7 +29,7 @@ public static class AbilityLocalization
     private static readonly Dictionary<string, string> JaNamesSergey = new()
     {
         ["CreateSinkholeAbility"] = "怨みの沼",
-        ["MagicMissileAbility"] = "呪詛",
+        ["MindblasterAbility"] = "呪詛",
         ["AllowEscapeAbility"] = "呪縛からの解放",
         ["SoundOfFifthAbility"] = "管理官の祟り",
         ["TeleportRandomAbility"] = "背後からの一突き",

@@ -20,7 +20,7 @@ public class FifthistRescure : CRole
     protected override IReadOnlyList<object> SpawnItems =>
     [
         ItemType.GunAK,
-        ItemType.ArmorHeavy,
+        ItemType.ArmorCombat,
         typeof(KeycardFifthist),
         ItemType.Medkit,
         ItemType.Adrenaline,
@@ -31,6 +31,6 @@ public class FifthistRescure : CRole
     {
         [AmmoType.Nato762] = 180,
     };
-    protected override Vector3? SpawnPosition => new Vector3(124f, 289f, 21f);
+    protected override Vector3? SpawnPosition => PositionProvider.GetExitBPosition();
     protected override string SpawnCustomInfo => "<color=#FF0090>Fifthist Rescure</color>";
 }

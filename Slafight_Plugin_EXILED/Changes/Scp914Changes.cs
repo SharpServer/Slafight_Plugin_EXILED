@@ -363,14 +363,14 @@ public static class Scp914Changes
             All = Scp914Rule.Destroy,
             Coarse = Scp914Rule.ToCItem<Scp1425>(),
             Fine = Scp914Rule.ToCItem<KeycardFifthistPriest>(),
-            VeryFine = Scp914Rule.ToCItem<MagicMissile>().WithChance(1f / 3f),
+            VeryFine = Scp914Rule.ToCItem<Mindblaster>().WithChance(1f / 3f),
         });
 
         Scp914Registry.RegisterCItem<KeycardFifthistPriest>(new()
         {
             All = Scp914Rule.Destroy,
             Coarse = Scp914Rule.ToCItem<KeycardFifthist>(),
-            Fine = Scp914Rule.ToCItem<MagicMissile>(),
+            Fine = Scp914Rule.ToCItem<Mindblaster>(),
             VeryFine = Scp914Rule.ToCItem<CaneOfTheStars>(),
         });
 

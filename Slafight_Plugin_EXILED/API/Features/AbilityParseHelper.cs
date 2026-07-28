@@ -43,7 +43,7 @@ public static class AbilityParseHelper
         return lowerId switch
         {
             "sh" or "sinkhole" => typeof(CreateSinkholeAbility),
-            "magicmissile" => typeof(MagicMissileAbility),
+            "magicmissile" => typeof(MindblasterAbility),
             "fifth" or "soundoffifth" => typeof(SoundOfFifthAbility),
             "escape" or "allowescape" => typeof(AllowEscapeAbility),
             _ => FindAbilityType(lowerId) // 動的検索
