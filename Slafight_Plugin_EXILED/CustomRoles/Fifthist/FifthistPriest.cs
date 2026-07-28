@@ -27,7 +27,7 @@ public class FifthistPriest : CRole
     protected override float? SpawnMaxHealth => 555f;
     protected override IReadOnlyList<object> SpawnItems =>
     [
-        ItemType.GunSCP127,
+        ItemType.GunCOM18,
         ItemType.ArmorHeavy,
         typeof(KeycardFifthistPriest),
         ItemType.SCP500,

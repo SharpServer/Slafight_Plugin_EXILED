@@ -20,7 +20,7 @@ public class FifthistMindblaster : CRole
     protected override float? SpawnMaxHealth => 155f;
     protected override IReadOnlyList<object> SpawnItems =>
     [
-        ItemType.GunAK,
+        ItemType.GunCOM18,
         ItemType.ArmorLight,
         typeof(KeycardFifthist),
         typeof(Mindblaster),

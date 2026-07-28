@@ -19,7 +19,7 @@ public class FifthistRescure : CRole
     protected override float? SpawnMaxHealth => 135f;
     protected override IReadOnlyList<object> SpawnItems =>
     [
-        ItemType.GunAK,
+        ItemType.GunCOM18,
         ItemType.ArmorCombat,
         typeof(KeycardFifthist),
         ItemType.Medkit,
