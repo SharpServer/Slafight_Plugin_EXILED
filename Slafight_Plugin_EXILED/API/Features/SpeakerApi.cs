@@ -16,9 +16,11 @@ public static class SpeakerApi
 {
     private const int PacketSize = VoiceChatSettings.PacketSizePerChannel;
     private const float MinimumAudibleDistance = 1f;
+    private const int MaxOneShotVoices = 8;
     private static readonly Dictionary<string, CachedClip> ClipCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, List<Playback>> PlaybacksByName = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, List<LivePlayback>> LivePlaybacksByName = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly Dictionary<string, int> OneShotCursors = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<byte, CoroutineHandle> PlaybackStreams = new();
     private static readonly HashSet<byte> AllocatedControllerIds = [];
 
@@ -182,6 +184,94 @@ public static class SpeakerApi
             TryDestroy(audioPlayerName);
 
         return PlayCore(fileName, audioPlayerName, position, parent, isSpatial, maxDistance, minDistance, volume, listeners, loadClip, clipName, loop: true, destroyOnEnd: false);
+    }
+
+    /// <summary>
+    /// 短い SFX を高頻度で鳴らすための再生。<paramref name="audioPlayerName"/> ごとに最大
+    /// <paramref name="voices"/> 個のスピーカーを確保して使い回すため、発砲音のように連続する音でも
+    /// SpeakerToy と controller ID を消費し続けない。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="Play"/> と違い、スピーカーは再生終了後も破棄されない。呼び出し側が
+    /// プレイヤー退出・ラウンド終了などのタイミングで <see cref="TryDestroy(string)"/> すること。
+    /// </para>
+    /// <para>
+    /// 音量・空間設定・リスナー条件は最初のスピーカー生成時にだけ適用される。途中で変えたい場合は
+    /// <see cref="SetVolume(Playback, float)"/> / <see cref="SetListeners(Playback, Predicate{Player})"/> を使う。
+    /// 1 つの <paramref name="audioPlayerName"/> には 1 種類のクリップだけを流す前提。
+    /// </para>
+    /// </remarks>
+    public static Playback PlayOneShot(
+        string fileName,
+        string audioPlayerName,
+        Vector3 position,
+        int voices = 1,
+        Transform? parent = null,
+        bool isSpatial = true,
+        float maxDistance = 5f,
+        float minDistance = 0.1f,
+        string? clipName = null,
+        float volume = 1f,
+        Predicate<Player>? listeners = null)
+    {
+        if (string.IsNullOrWhiteSpace(fileName))
+            throw new ArgumentException("Audio file name cannot be empty.", nameof(fileName));
+
+        if (string.IsNullOrWhiteSpace(audioPlayerName))
+            throw new ArgumentException("Audio player name cannot be empty.", nameof(audioPlayerName));
+
+        clipName ??= fileName;
+        if (!ClipCache.ContainsKey(clipName) && !TryLoadClipCore(fileName, clipName))
+            return default;
+
+        if (!ClipCache.TryGetValue(clipName, out var clip))
+        {
+            Log.Warn($"[SpeakerApi] Audio clip is not loaded: {clipName}");
+            return default;
+        }
+
+        var speakers = GetLiveOneShotSpeakers(audioPlayerName);
+        if (speakers.Count < Mathf.Clamp(voices, 1, MaxOneShotVoices))
+        {
+            // まだボイス数に達していないので新しいスピーカーを生成して鳴らす。
+            var created = PlayCore(fileName, audioPlayerName, position, parent, isSpatial, maxDistance, minDistance, volume, listeners, loadClip: false, clipName, loop: false, destroyOnEnd: false);
+            if (created.IsValid)
+                OneShotCursors[audioPlayerName] = 0;
+
+            return created;
+        }
+
+        // 一番古く使ったスピーカーから順に使い回す。
+        int cursor = OneShotCursors.TryGetValue(audioPlayerName, out var stored) ? stored % speakers.Count : 0;
+        var playback = speakers[cursor];
+        OneShotCursors[audioPlayerName] = (cursor + 1) % speakers.Count;
+
+        SetTransform(playback, position, parent);
+        try
+        {
+            playback.Speaker.Play(clip.Samples, queue: false, loop: false);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[SpeakerApi] PlayOneShot failed for {audioPlayerName}/{clipName}: {ex.Message}");
+            Stop(playback);
+            return default;
+        }
+
+        return playback;
+    }
+
+    /// <summary>破棄済みスピーカーを掃除したうえで、その audioPlayerName の生存中 Playback を返す。</summary>
+    private static List<Playback> GetLiveOneShotSpeakers(string audioPlayerName)
+    {
+        if (!PlaybacksByName.TryGetValue(audioPlayerName, out var list))
+            return [];
+
+        foreach (var dead in list.Where(p => !p.IsValid).ToArray())
+            Stop(dead);
+
+        return PlaybacksByName.TryGetValue(audioPlayerName, out var live) ? live : [];
     }
 
     private static Playback PlayCore(
@@ -483,6 +573,7 @@ public static class SpeakerApi
                 destroyed |= DestroyLiveSpeaker(playback);
         }
 
+        OneShotCursors.Remove(audioPlayerName);
         return destroyed;
     }
 
@@ -500,6 +591,7 @@ public static class SpeakerApi
         LivePlaybacksByName.Clear();
         PlaybackStreams.Clear();
         AllocatedControllerIds.Clear();
+        OneShotCursors.Clear();
         return playbacks.Length + livePlaybacks.Length;
     }
 
