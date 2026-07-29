@@ -19,11 +19,11 @@ public class HydroCannon : CItemWeapon
 {
     private const byte SinkHoleIntensity  = 60;
     private const float SinkHoleDuration  = 14f;
-    private const float KnockbackPower    = 12f;
-    private const float UpwardPower       = 2.5f;
-    private const float KnockbackDuration = 0.35f;
+    private const float KnockbackPower    = 6f;
+    private const float UpwardPower       = 1.5f;
+    private const float KnockbackDuration = 0.15f;
     private const float ShotMemorySeconds = 0.35f;
-    private const int BurstCount          = 4;
+    private const int BurstCount          = 8;
     private const float BurstLifetime     = 0.3f;
 
     private static readonly Color WaterColor = new(0.2f, 0.75f, 1f, 0.5f);
@@ -36,8 +36,8 @@ public class HydroCannon : CItemWeapon
     protected override string UniqueKey => "HydroCannon";
     protected override ItemType BaseItem => ItemType.GunFRMG0;
 
-    protected override float   Damage       => 18f;
-    protected override byte    MagazineSize => 60;
+    protected override float   Damage       => 6f;
+    protected override byte    MagazineSize => 40;
     protected override Vector3 Scale        => new(1.05f, 1f, 1.3f);
 
     protected override bool  PickupLightEnabled => true;

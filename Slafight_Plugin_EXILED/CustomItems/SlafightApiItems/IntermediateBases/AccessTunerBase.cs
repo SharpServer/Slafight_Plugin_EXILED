@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using CustomPlayerEffects;
 using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.API.Features.Items;
@@ -202,7 +203,7 @@ public abstract class AccessTunerBase : CItem
 
                     Player currentPlayer = Player.Get(playerNetId);
                     if (currentPlayer.IsSafePlayer() && currentPlayer.IsAlive)
-                        currentPlayer.Explode();
+                        currentPlayer.EnableEffect<Invigorated>(15);
                 }
                 catch (Exception ex)
                 {

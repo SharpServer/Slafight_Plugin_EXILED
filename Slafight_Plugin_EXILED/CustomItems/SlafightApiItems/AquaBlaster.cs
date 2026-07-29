@@ -30,8 +30,8 @@ public class AquaBlaster : CItemWeapon
     protected override string UniqueKey => "AquaBlaster";
     protected override ItemType BaseItem => ItemType.GunCOM18;
 
-    protected override float   Damage       => 12f;
-    protected override byte    MagazineSize => 30;
+    protected override float   Damage       => 14f;
+    protected override byte    MagazineSize => 20;
     protected override Vector3 Scale        => new(1f, 1f, 1.05f);
 
     protected override bool  PickupLightEnabled => true;
