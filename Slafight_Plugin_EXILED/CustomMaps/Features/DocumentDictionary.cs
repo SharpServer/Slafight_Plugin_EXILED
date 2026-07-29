@@ -4,6 +4,33 @@ namespace Slafight_Plugin_EXILED.CustomMaps.Features;
 
 public static class DocumentDictionary
 {
+    /// <summary>
+    /// <see cref="Get"/> が本文を返せる <see cref="DocumentType"/>。
+    /// <see cref="DocumentType"/> には本文未実装の値が含まれるため、
+    /// ランダムに引く用途では enum 全体ではなく必ずこの配列を使うこと。
+    /// </summary>
+    public static readonly DocumentType[] DefinedTypes =
+    [
+        DocumentType.Scp033,
+        DocumentType.Scp096,
+        DocumentType.Scp3005,
+        DocumentType.Backrooms,
+        DocumentType.Cafeteria,
+        DocumentType.DeltaWarhead,
+        DocumentType.OmegaWarhead,
+        DocumentType.ScientistSamuels,
+        DocumentType.ScientistMasoi,
+        DocumentType.ScientistGalia,
+        DocumentType.AboutSergey,
+        DocumentType.AntiAntiMeme,
+        DocumentType.AprilWtf,
+        DocumentType.Overbeyond,
+        DocumentType.AboutSQ,
+        DocumentType.Kai,
+        DocumentType.OperationDoc,
+        DocumentType.SpecDoc,
+    ];
+
     public static string Get(DocumentType type)
     {
         switch (type)
