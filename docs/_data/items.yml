@@ -163,6 +163,24 @@
   effect: Class-Xより強いが安全性に注意。
   tags: [antimeme, medical]
 
+- id: copi-cola
+  name: Copi-Cola
+  category: 医療 / ユーティリティ
+  base: SCP-207
+  version: v1.9.0.0
+  summary: 「スッカリ冴える コピ・コーラ」上層カフェテリアに置かれている炭酸飲料。
+  effect: 使用するとSCP-207の効果が消え、AHP25と10秒間の火力上昇、短時間の自然治癒を得る。
+  tags: [medical, ahp, cafeteria]
+
+- id: papsi-cola
+  name: Papsi Cola
+  category: 医療 / ユーティリティ
+  base: Anti SCP-207
+  version: v1.9.0.0
+  summary: 「パプシの力で生き生きと」上層カフェテリアに置かれている炭酸飲料。
+  effect: 使用するとAnti SCP-207の効果が消え、AHP25と10秒間の火力上昇、短時間の自然治癒を得る。
+  tags: [medical, ahp, cafeteria]
+
 - id: suspicious-tablet
   name: 怪しい薬
   category: 医療 / ユーティリティ

@@ -30,6 +30,8 @@
   kind: 部屋
   entrance: 上層でオレンジ色に光っている扉
   summary: 財団職員が休息する憩いの場。偶に誰かが商売をしていて賑わっている。
+  notes:
+    - Copi-ColaとPapsi Colaが置かれている。
   tags: [entrance, cafeteria]
 
 - id: ez-facility-manager-office
