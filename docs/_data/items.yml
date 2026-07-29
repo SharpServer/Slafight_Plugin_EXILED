@@ -59,6 +59,29 @@
   effect: Lv1 / Lv2 / Lv3があり、Lvが高いほど高権限扉に対応する。Lv3は特殊扉にも対応できる。
   notes:
     - 保持中はポイント、使用回数、直近のハック結果が表示される。
+    - Data Cellを拾うとLvを引き上げたり、ポイントを最大まで補充したりできる。
+    - ミニゲームの獲得ポイントはLv1で5、Lv2で10、Lv3で20。
+  tags: [keycard, hack, access-tuner]
+
+- id: access-tuner-broken
+  name: Broken Access Tuner
+  category: キーカード / アクセスデバイス
+  base: カオスアクセスデバイス
+  version: v1.9.0.0
+  summary: 破損したAccess Tuner。そのままではポイントが貯まらず、扉のハックにも使えない。
+  effect: Data Cellを拾うことで対応するLvのAccess Tunerへ強化できる。
+  tags: [keycard, hack, access-tuner]
+
+- id: data-cell
+  name: Data Cell Level-1 / 2 / 3
+  category: キーカード / アクセスデバイス
+  base: .44口径弾薬
+  version: v1.9.0.0
+  summary: Access Tunerと同期するデータセル。拾うだけで自動的にAccess Tunerへ適用される。
+  effect: 自分のAccess TunerよりLvが高ければそのLvへ強化し、同じLvならポイントを最大まで補充する。Lvが低いData Cellは使用できない。
+  notes:
+    - Access Tunerを持っていない状態では使用できない。
+    - Access Tunerと同じ箱（AccessTunerCase）に収められていることがある。
   tags: [keycard, hack, access-tuner]
 
 - id: scp-1425
@@ -139,6 +162,40 @@
   summary: 反ミームの影響を一時的に無効化する上位寄りの記憶補強剤。
   effect: Class-Xより強いが安全性に注意。
   tags: [antimeme, medical]
+
+- id: suspicious-tablet
+  name: 怪しい薬
+  category: 医療 / ユーティリティ
+  base: アドレナリン
+  version: v1.9.0.0
+  summary: 「誰でも100%安心・安全に一時的な死亡を体験することが可能です！」と謳われている薬。
+  effect: 使用すると死亡し、120秒後に同じ場所・同じロールで復活する。復活までに湧いてしまった場合は失敗する。
+  notes:
+    - SCP陣営とWarrior陣営は使用できない。
+    - SCP-914の1:1で6個のピンクキャンディ入りSCP-330、FineでクラスB-記憶処理剤、Very FineでL-SD2剤に変化する。
+  tags: [medical, anomaly, scp914]
+
+- id: class-b-memory-remove-pill
+  name: クラスB-記憶処理剤
+  category: 医療 / ユーティリティ
+  base: アドレナリン
+  version: v1.9.0.0
+  summary: ここしばらくの出来事や大きな影響を忘却することができる記憶処理剤。
+  effect: 使用すると脳震盪を15秒受ける代わりに、SCP-096のターゲットから外れる。第五教会 改宗者は元のロールへ戻れる。
+  notes:
+    - SCP-914のCoarseでSCP-500、1:1でClass-X 記憶補強剤、FineでSERUM-C、Very FineでClass-Z 記憶補強剤に変化する。
+  tags: [medical, memory, scp096, scp914]
+
+- id: lsd-pill
+  name: L-SD2剤
+  category: 医療 / ユーティリティ
+  base: アドレナリン
+  version: v1.9.0.0
+  summary: 「これはなあに？」
+  effect: 60秒間、画面が文字と色で埋め尽くされ、脳震盪・霧・記憶障害・窒息・活力の効果を同時に受ける。
+  notes:
+    - 効果中はSCP-513の対象になる。
+  tags: [medical, anomaly, scp914]
 
 - id: cua-spykit
   name: CUI式スパイキット
@@ -334,6 +391,73 @@
   effect: 命中した相手に拘束具を取り付ける。
   tags: [weapon, nu7, restraint]
 
+- id: aqua-blaster
+  name: アクア・ブラスター
+  category: 武器
+  base: COM-18
+  version: v1.9.0.0
+  summary: 夏祭りの水鉄砲を魔改造した一品。WATER WARRIORが所持する。
+  stats: ダメージ14、マガジン20発。
+  effect: 命中した相手を10秒間SinkHoleへ引きずり込み、6秒間の鈍足を与える。
+  notes:
+    - SCP-914のFineでハイドロ・キャノンに変化する。
+  tags: [weapon, water, warrior]
+
+- id: hydro-cannon
+  name: ハイドロ・キャノン
+  category: 武器
+  base: FRMG-0
+  version: v1.9.0.0
+  summary: 水鉄砲を悪魔改造した高圧放水砲。WATER WARRIORが所持する。
+  stats: ダメージ6、マガジン40発。
+  effect: 直撃した敵対プレイヤーを撃った方向へ吹き飛ばし、14秒間SinkHoleへ引きずり込む。
+  notes:
+    - SCP-914のCoarseでアクア・ブラスターに戻る。
+  tags: [weapon, water, warrior]
+
+- id: spear
+  name: 槍
+  category: 武器
+  base: Jailbird
+  version: v1.9.0.0
+  summary: SCP-076が持つ槍。
+  stats: 攻撃ダメージは常に50。
+  tags: [weapon, scp076]
+
+- id: battle-axe
+  name: バトルアックス
+  category: 武器
+  base: Jailbird
+  version: v1.9.0.0
+  summary: SCP-076がアビリティ「武器の錬成」で作り出す斧。
+  stats: 攻撃ダメージは常に200。
+  notes:
+    - 一度振ると5秒間は振り直せない。
+  tags: [weapon, scp076]
+
+- id: throw-knife
+  name: 投げナイフ
+  category: 武器
+  base: SCP-1509
+  version: v1.9.0.0
+  summary: SCP-076がアビリティ「武器の錬成」で作り出す投擲用ナイフ。
+  effect: 攻撃すると前方へナイフを投げ、命中した非SCPに50ダメージと15秒の出血を与える。使用すると消滅する。
+  notes:
+    - SCP-1509としての復活効果は無効化されている。
+  tags: [weapon, scp076, throwable]
+
+- id: pandra-breaker
+  name: Pandra Breaker - アベル爆破スイッチ
+  category: 医療 / ユーティリティ
+  base: 無線機
+  version: v1.9.0.0
+  summary: SCP-076の抑制装置を起爆するためのスイッチ。MTF Omega-7 Wardenが所持する。
+  effect: 投げる操作で起爆する。反逆状態のSCP-076がいる場合のみ成功し、対象を爆死させる。
+  notes:
+    - 起爆に成功すると60秒のクールダウンに入る。
+    - SCP-076が反逆状態でない場合、または存在しない場合は何も起こらない。
+  tags: [utility, scp076, omega7]
+
 
 - id: anti-meme-goggle
   name: 反ミームゴーグル
@@ -508,12 +632,17 @@
   summary: 監視担当職員に支給されるキーカード。
   tags: [keycard, scientist]
 
-- id: fifthist-magic-missile-item
-  name: 第五教会 マジックミサイル
+- id: fifthist-mindblaster-item
+  name: 第五思壊線
   category: アノマリー / 特殊
   base: 特殊キーカード
-  summary: 非常に第五的なマジックミサイルを発射するアイテム。
-  tags: [fifthist, weapon]
+  version: v1.9.0.0
+  summary: 非常に第五的な光を発射し、当たった相手の思考を破壊するアイテム。第五教会 思壊師が所持する。
+  effect: 投げる操作で前方へ第五的な光を撃ち出す。命中した相手は火傷・脳震盪・窒息を15秒受け、ダメージを負う。
+  notes:
+    - 発射後はチャージ状態になり、カード表示が「CHARGING」へ変わる。チャージ中は再発射できない。
+    - チャージが完了すると自動で発射可能状態へ戻る。
+  tags: [fifthist, weapon, mindblaster]
 
 - id: master-card
   name: MasterCard

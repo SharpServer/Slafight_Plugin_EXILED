@@ -38,6 +38,32 @@
     - scp
     - scp049
     - proximity-chat
+- id: scp-076
+  name: SCP-076
+  side: SCP
+  team: SCP
+  base: チュートリアル
+  hp: 1500
+  hume: 500（再生速度2.5倍）
+  version: v1.9.0.0
+  condition: MTF Omega-7 "Pandra's Box" と共にスポーン
+  summary: 機動部隊Omega-7 "Pandra's Box" に運用される、財団制御下の異常戦闘員。未反逆の間は財団側の勝利に貢献する。
+  items:
+    - 槍
+  abilities:
+    - 'アビリティ「驚異的な力」で近くのドアを破壊できる。CD 120秒。'
+    - 'アビリティ「武器の錬成」でバトルアックスか投げナイフを錬成できる。CD 120秒。'
+    - 常時移動速度上昇。キル60秒後に30秒間、火力と移動速度がさらに上がる。
+    - SCP-1853と自然治癒効果を持ち、アイテムの取得・投棄はできない。
+  notes:
+    - 財団職員を3人殺害、またはOmega-7が全滅すると反逆状態になる。
+    - 反逆状態に入るとロール名が赤くなり、10分後に抑制装置が起爆して爆死する。
+    - Pandra Breakerを使われると、反逆状態の間は即座に起爆される。
+  tags:
+    - scp
+    - scp076
+    - omega7
+    - ability
 - id: scp-079-custom
   name: SCP-079
   side: SCP
@@ -698,6 +724,51 @@
     - foundation
     - mtf
     - omega1
+- id: pdx-warden
+  name: "MTF Omega-7: Pandra's Box Warden"
+  side: The Foundation
+  team: MTF Omega-7
+  base: MTF隊長
+  hp: 130
+  version: v1.9.0.0
+  summary: Omega-7の監督官。SCP-076を監視し、暴走時にはPandra Breakerで抑制装置を起爆させて制御する。
+  items:
+    - FRMG-X
+    - Pandra Breaker
+    - 要人用アーマー
+    - MTF隊長カード
+    - 高性能手榴弾
+    - フラッシュバン
+    - アドレナリン
+    - 医療キット
+  tags:
+    - foundation
+    - mtf
+    - omega7
+    - scp076
+- id: pdx-watcher
+  name: "MTF Omega-7: Pandra's Box Watcher"
+  side: The Foundation
+  team: MTF Omega-7
+  base: MTF軍曹
+  hp: 100
+  version: v1.9.0.0
+  summary: Wardenの補助を行い、SCP-076を監視する監視員。異常を感知したら迅速に上官へ連絡する。
+  items:
+    - E-11-SR
+    - MTF隊長カード
+    - 重装アーマー
+    - アドレナリン x2
+    - 医療キット
+    - フラッシュバン
+    - 無線機
+  notes:
+    - Omega-7が全滅するとSCP-076が反逆状態に入る。
+  tags:
+    - foundation
+    - mtf
+    - omega7
+    - scp076
 - id: rrh-warden
   name: 'MTF Alpha-1: Red Right Hand Warden'
   side: The Foundation
@@ -894,11 +965,14 @@
   name: Fifthists Church Rescue（第五教会 救出師）
   side: GoI - Fifthists Church
   team: Fifthists Church
+  base: チュートリアル
+  hp: 135
   summary: SCP-3005救出のためにSite-02へ侵入した第五教会の実働員。SCPや他の人間陣営との敵対も辞さない。
   condition: THE FIFTHIST'S RAIDで出現
+  spawn: 脱出口B
   items:
-    - SCP-127
-    - 重装アーマー
+    - COM-18
+    - 戦闘アーマー
     - 第五教会 第五デバイス
     - SCP-500
     - 医療キット
@@ -911,17 +985,21 @@
   name: Fifthists Church Priest（第五教会 司祭）
   side: GoI - Fifthists Church
   team: Fifthists Church
+  base: チュートリアル
+  hp: 555
   condition: SCP-3005がFifthist Raid中に脱出すると変化可能
+  spawn: 脱出口B
   summary: 第五的存在の恩寵を受けた第五主義者。SCP-3005と同じ範囲反ミームが可能。
   items:
-    - SCP-127
+    - COM-18
     - 重装アーマー
     - 第五教会 司祭デバイス
-    - SCP-500 x2
+    - SCP-500
     - アドレナリン
     - 高性能手榴弾
   abilities:
     - 自身はアンチミーム効果を受けず、足の速度も通常通り。
+    - 半径2.75m以内の非第五教会プレイヤーへ1.5秒ごとに25ダメージを与える。
   tags:
     - fifthist
     - antimeme
@@ -943,6 +1021,26 @@
     - Cane of the Stars
   tags:
     - fifthist
+- id: fifthist-mindblaster
+  name: Fifthists Church Mindblaster（第五教会 思壊師）
+  side: GoI - Fifthists Church
+  team: Fifthists Church
+  base: チュートリアル
+  hp: 155
+  version: v1.9.0.0
+  spawn: 脱出口B
+  summary: 第五の力を用いて敵の思念を破壊する第五教会の術者。第五思壊線で前方を薙ぎ払う。
+  items:
+    - 第五思壊線
+    - COM-18
+    - 軽装アーマー
+    - 第五教会 第五デバイス
+    - 医療キット
+    - 高性能手榴弾
+  tags:
+    - fifthist
+    - goi
+    - mindblaster
 - id: fifthist-marionette
   name: Fifthists Church Marionette（第五教会 傀儡人形）
   side: GoI - Fifthists Church
@@ -1158,6 +1256,35 @@
     - seasonal
     - candy
     - halloween
+- id: water-warrior
+  name: WATER WARRIOR
+  side: GoI - Water Warrior's Division
+  team: Water Warrior's Division
+  base: チュートリアル
+  hp: 500
+  version: v1.9.0.0
+  condition: 夏シーズンのWater Warriors Raid
+  spawn: カオス・インサージェンシースポーン地点
+  summary: 夏にヒャッハーしている謎の勢力。水鉄砲で施設を水没まで追い込むことを目指す。
+  items:
+    - アクア・ブラスター
+    - ハイドロ・キャノン
+    - SCP-1509
+    - 重装アーマー
+    - SCP-500 x2
+    - O5カード
+  abilities:
+    - 'アビリティ「アクアジェットジャンプ」で足元に水を噴射し、高く前方へ跳ぶ。CD 12秒。'
+    - 'アビリティ「アクアスプラッシュ」で半径6m以内の敵を吹き飛ばし、SinkHoleを付与する。CD 25秒。'
+  notes:
+    - 常時Slowness 10の鈍足を負う。
+    - テスラゲートから受けるダメージが1.25倍になる。
+    - 特殊武器（Special Weapons）は使用できない。
+  tags:
+    - seasonal
+    - summer
+    - water
+    - warrior
 - id: sergey-makarov
   name: 施設管理官 - セルゲイ・マカロフ
   side: Others / Specials

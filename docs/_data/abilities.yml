@@ -8,13 +8,17 @@
     - Sinkholeの中心に立ったプレイヤーはポケットディメンションへ送られる。
   tags: [scp106, sinkhole]
 
-- id: magic-missile
-  name: マジックミサイル
+- id: mindblaster
+  name: 思壊
   category: 第五教会系
-  summary: 向いている方向へ第五的なマジックミサイルを撃つ。
+  summary: 向いている方向へ第五的な光を撃ち出し、命中した相手に火傷・脳震盪・窒息とダメージを与える。
   users:
-    - 第五教会系ロール
-  tags: [fifthist, missile]
+    - SCP-3005
+    - 呪詛 - セルゲイ・マカロフ（呪詛）
+  notes:
+    - クールダウンは5秒。
+    - 第五教会陣営には当たらない。
+  tags: [fifthist, missile, mindblaster]
 
 - id: allow-escape
   name: 腐蝕からの脱出
@@ -62,6 +66,53 @@
     - 触手はHPを持ち、CustomInfoに残りHPが表示される。
     - 射程内の非SCPを約2.5秒ごとに攻撃し、35ダメージを与える。
   tags: [scp035, tentacle]
+
+- id: absolute-power
+  name: 驚異的な力
+  category: SCP系
+  summary: 近くのドアを力ずくで破壊する。
+  users:
+    - SCP-076
+  notes:
+    - 3.5m以内に破壊可能なドアがないと使用できない。
+    - クールダウンは120秒。
+    - セルゲイ・マカロフ（呪詛）では「怨霊的な力」と表示される。
+  tags: [scp076, door]
+
+- id: generate-weapon
+  name: 武器の錬成
+  category: SCP系
+  summary: バトルアックスか投げナイフを選んで錬成する。
+  users:
+    - SCP-076
+  notes:
+    - アビリティ切り替えキーで錬成する武器を選ぶ。
+    - インベントリが満杯、または同じ武器を既に持っていると使用できない。
+    - クールダウンは120秒。
+    - セルゲイ・マカロフ（呪詛）では「呪具の錬成」と表示される。
+  tags: [scp076, weapon]
+
+- id: aqua-jet-jump
+  name: アクアジェットジャンプ
+  category: Water Warrior系
+  summary: 足元へ水を噴射し、向いている方向へ高く跳ぶ。
+  users:
+    - WATER WARRIOR
+  notes:
+    - クールダウンは12秒。
+  tags: [water, warrior, movement]
+
+- id: aqua-splash
+  name: アクアスプラッシュ
+  category: Water Warrior系
+  summary: 周囲に水しぶきを撒き散らし、半径6m以内の敵を吹き飛ばす。
+  users:
+    - WATER WARRIOR
+  notes:
+    - 吹き飛ばされた相手は8秒間SinkHoleへ引きずり込まれる。
+    - 同じ陣営のプレイヤーには当たらない。
+    - クールダウンは25秒。
+  tags: [water, warrior, knockback]
 
 - id: old-man-road
   name: 爺街道

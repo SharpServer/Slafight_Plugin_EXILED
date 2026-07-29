@@ -90,6 +90,25 @@
   summary: Candy Warrier's Divisionによる襲撃イベント。
   tags: [candy, seasonal, raid]
 
+- id: water-warriors-raid
+  name: Water Warriors Raid
+  status: 季節限定
+  requirement: 5人以上のプレイヤー
+  min_players: 5
+  season: 夏シーズン
+  summary: WATER WARRIORが施設へ攻め込み、玄妙除却システムDSS-08を制御不能にして施設を水没させる襲撃イベント。
+  win_condition: WATER WARRIORを全滅させて施設を安定化させる。安定化に失敗した場合は脱出口から脱出する。
+  flow:
+    - SCP陣営の約1/3がWATER WARRIORへ変換され、放送室が破壊されDSS-08が制御不能になる。
+    - 安定化猶予の間にWATER WARRIORを全滅させれば施設は安定化し、イベントは終了する。
+    - 全滅させられなかった場合、水が溢れ出して施設の浸水が始まる。
+    - 浸水中は脱出口が触手でふさがれ、約158秒後に触手が破壊されて脱出できるようになる。
+    - 水位が地上へ到達すると、残っている全員が溺死する。
+  notes:
+    - 浸水中は水没した部屋の色が変わり、水中にいると溺れてダメージを受ける。
+    - 起動中はALPHA WARHEADの解除とデッドマンスイッチがロックされる。
+  tags: [water, seasonal, raid, summer, flood]
+
 - id: sergey-makarov-returns
   name: -=[管理官の帰還]=-
   status: 季節限定
