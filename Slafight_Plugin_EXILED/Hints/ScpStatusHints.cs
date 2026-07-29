@@ -7,6 +7,7 @@ using System.Text;
 using Exiled.API.Features;
 using Exiled.API.Features.Roles;
 using Exiled.Events.EventArgs.Player;
+using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Extension;
 using HintServiceMeow.Core.Utilities;
 using MEC;
@@ -41,20 +42,170 @@ public class ScpStatusHints : IBootstrapHandler
 
     private sealed class TrackedHint
     {
-        public TrackedHint(string key, string channelId, int playerId, string hintId, AbstractHint hint)
+        public TrackedHint(string key, int slot, int playerId, string hintId, AbstractHint hint)
         {
             Key = key;
-            ChannelId = channelId;
+            Slot = slot;
             PlayerId = playerId;
             HintId = hintId;
             Hint = hint;
         }
 
         public string Key { get; }
-        public string ChannelId { get; }
+        public int Slot { get; }
         public int PlayerId { get; }
         public string HintId { get; }
         public AbstractHint Hint { get; }
+    }
+
+    /// <summary>
+    /// Hint を共有できるレイアウトかどうかの判定キー。
+    /// ここが一致するチャンネルは 1 つの Hint に縦積みで結合されるため、互いに重ならない。
+    /// </summary>
+    private readonly struct HintLayoutKey : IEquatable<HintLayoutKey>
+    {
+        private readonly HintAlignment _alignment;
+        private readonly HintVerticalAlign _verticalAlign;
+        private readonly HintSyncSpeed _syncSpeed;
+        private readonly bool _resolutionBasedAlign;
+        private readonly float _x;
+        private readonly float _y;
+        private readonly float _lineHeight;
+
+        public HintLayoutKey(StatusHintLayout layout, float resolvedX)
+        {
+            _alignment = layout.Alignment;
+            _verticalAlign = layout.VerticalAlign;
+            _syncSpeed = layout.SyncSpeed;
+            _resolutionBasedAlign = layout.ResolutionBasedAlign;
+            _x = Quantize(resolvedX);
+            _y = Quantize(layout.YCoordinate);
+            _lineHeight = Quantize(layout.LineHeight);
+        }
+
+        public HintAlignment Alignment => _alignment;
+        public HintVerticalAlign VerticalAlign => _verticalAlign;
+        public HintSyncSpeed SyncSpeed => _syncSpeed;
+        public bool ResolutionBasedAlign => _resolutionBasedAlign;
+        public float X => _x;
+        public float Y => _y;
+        public float LineHeight => _lineHeight;
+
+        // 浮動小数の微小な揺れで別グループに分かれないよう 0.1 単位に丸める。
+        private static float Quantize(float value)
+        {
+            return Mathf.Round(value * 10f) / 10f;
+        }
+
+        public bool Equals(HintLayoutKey other)
+        {
+            return _alignment == other._alignment &&
+                   _verticalAlign == other._verticalAlign &&
+                   _syncSpeed == other._syncSpeed &&
+                   _resolutionBasedAlign == other._resolutionBasedAlign &&
+                   _x.Equals(other._x) &&
+                   _y.Equals(other._y) &&
+                   _lineHeight.Equals(other._lineHeight);
+        }
+
+        public override bool Equals(object? obj)
+        {
+            return obj is HintLayoutKey other && Equals(other);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hash = (int)_alignment;
+                hash = (hash * 397) ^ (int)_verticalAlign;
+                hash = (hash * 397) ^ (int)_syncSpeed;
+                hash = (hash * 397) ^ _resolutionBasedAlign.GetHashCode();
+                hash = (hash * 397) ^ _x.GetHashCode();
+                hash = (hash * 397) ^ _y.GetHashCode();
+                hash = (hash * 397) ^ _lineHeight.GetHashCode();
+                return hash;
+            }
+        }
+    }
+
+    /// <summary>1 チャンネル分の描画済みブロック。ヘッダーは共有有無が確定してから生成する。</summary>
+    private sealed class ChannelSegment
+    {
+        public ChannelSegment(StatusHintBuildContext context, string body)
+        {
+            Context = context;
+            Body = body;
+        }
+
+        public StatusHintBuildContext Context { get; }
+        public StatusHintChannel Channel => Context.Channel;
+        public string Body { get; }
+        public bool WantsGeneratorStatus => Channel.IncludeGeneratorStatus;
+
+        public string Compose(bool shared)
+        {
+            Context.IsSharedHint = shared;
+
+            var header = BuildHeader(Context);
+
+            if (string.IsNullOrEmpty(header))
+                return Body;
+
+            return string.IsNullOrEmpty(Body) ? header : header + "\n" + Body;
+        }
+    }
+
+    /// <summary>同一レイアウトのチャンネルをまとめて描画する 1 つの Hint 分の情報。</summary>
+    private sealed class ViewerHintGroup
+    {
+        public ViewerHintGroup(HintLayoutKey key, bool allowMerge)
+        {
+            Key = key;
+            AllowMerge = allowMerge;
+        }
+
+        public HintLayoutKey Key { get; }
+        public bool AllowMerge { get; }
+        public List<ChannelSegment> Segments { get; } = new();
+
+        public int FontSize => Segments.Count == 0
+            ? 24
+            : Segments.Max(segment => segment.Channel.Layout.FontSize);
+
+        public string BuildText()
+        {
+            var fontSize = FontSize;
+            var shared = Segments.Count > 1;
+            var parts = new List<string>(Segments.Count);
+
+            foreach (var segment in Segments)
+            {
+                var text = segment.Compose(shared);
+                if (string.IsNullOrEmpty(text))
+                    continue;
+
+                var segmentFontSize = segment.Channel.Layout.FontSize;
+
+                // グループの基準サイズと違うチャンネルはタグでサイズを上書きする。
+                if (segmentFontSize != fontSize)
+                    text = $"<size={segmentFontSize.ToString(CultureInfo.InvariantCulture)}>{text}</size>";
+
+                parts.Add(text);
+            }
+
+            // 発電機の状態はチャンネル固有の情報ではないので、
+            // どのチャンネルのブロックにも埋めずに Hint 全体の末尾へ 1 回だけ置く。
+            if (parts.Count > 0 && Segments.Any(segment => segment.WantsGeneratorStatus))
+            {
+                var generatorText = BuildGeneratorText().TrimEnd('\r', '\n');
+
+                if (!string.IsNullOrEmpty(generatorText))
+                    parts.Add(generatorText);
+            }
+
+            return string.Join("\n", parts);
+        }
     }
 
     public static IReadOnlyCollection<StatusHintChannel> RegisteredChannels => Channels.Values.ToList();
@@ -127,7 +278,14 @@ public class ScpStatusHints : IBootstrapHandler
             return false;
 
         _updateVersion++;
-        ClearChannel(id);
+
+        // Hint はチャンネル単位ではなくレイアウト単位で束ねているため、
+        // 個別に消さず全て破棄して次のリフレッシュで作り直す。
+        ClearAll();
+
+        if (_registered)
+            RefreshSoon();
+
         return true;
     }
 
@@ -292,19 +450,35 @@ public class ScpStatusHints : IBootstrapHandler
         if (!_registered)
             return;
 
-        // UpdateHint が IReadOnlyList (インデックスアクセス) を要求するため ToList() が必要。
+        // StatusHintBuildContext が IReadOnlyList (インデックスアクセス) を要求するため ToList() が必要。
         var players = Player.List.ToList();
         var activeKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
-        foreach (var channel in Channels.Values.OrderBy(channel => channel.Priority).ThenBy(channel => channel.Id))
-        {
-            var members = GetChannelMembers(channel, players);
-            var recipients = GetChannelRecipients(channel, players);
+        var orderedChannels = Channels.Values
+            .OrderBy(channel => channel.Priority)
+            .ThenBy(channel => channel.Id, StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
-            foreach (var recipient in recipients)
+        // メンバー一覧は受信者に依存しないので 1 回だけ計算する。
+        var membersByChannel = new Dictionary<string, List<Player>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var channel in orderedChannels)
+            membersByChannel[channel.Id] = GetChannelMembers(channel, players);
+
+        foreach (var viewer in players)
+        {
+            if (!IsPlayerValid(viewer) || viewer!.IsNPC)
+                continue;
+
+            var display = TryGetDisplay(viewer);
+            if (display == null)
+                continue;
+
+            var groups = BuildViewerGroups(viewer, orderedChannels, membersByChannel, players);
+
+            for (var slot = 0; slot < groups.Count; slot++)
             {
-                if (UpdateHint(recipient, channel, members, players))
-                    activeKeys.Add(GetTrackingKey(channel.Id, recipient.Id));
+                if (ApplyGroupHint(viewer, display, groups[slot], slot))
+                    activeKeys.Add(GetTrackingKey(slot, viewer.Id));
             }
         }
 
@@ -315,6 +489,91 @@ public class ScpStatusHints : IBootstrapHandler
 
             RemoveTrackedHint(tracked);
         }
+    }
+
+    /// <summary>
+    /// 受信者 1 人が見る全チャンネルを、レイアウトが一致するものごとに 1 つの Hint へまとめる。
+    /// これにより行数が動的に変わっても Hint 同士が重ならない。
+    /// </summary>
+    private static List<ViewerHintGroup> BuildViewerGroups(
+        Player viewer,
+        IReadOnlyList<StatusHintChannel> orderedChannels,
+        IReadOnlyDictionary<string, List<Player>> membersByChannel,
+        IReadOnlyList<Player> players)
+    {
+        var groups = new List<ViewerHintGroup>();
+
+        foreach (var channel in orderedChannels)
+        {
+            if (!SafeInvoke(channel.CanReceive, viewer, false))
+                continue;
+
+            if (!membersByChannel.TryGetValue(channel.Id, out var members))
+                continue;
+
+            var segment = BuildSegment(new StatusHintBuildContext(channel, viewer, members, players));
+            if (segment == null)
+                continue;
+
+            var layout = channel.Layout;
+            var key = new HintLayoutKey(layout, layout.ResolveX(viewer));
+
+            var group = layout.AllowMerge
+                ? groups.FirstOrDefault(candidate => candidate.AllowMerge && candidate.Key.Equals(key))
+                : null;
+
+            if (group == null)
+            {
+                group = new ViewerHintGroup(key, layout.AllowMerge);
+                groups.Add(group);
+            }
+
+            group.Segments.Add(segment);
+        }
+
+        return groups;
+    }
+
+    private static bool ApplyGroupHint(Player viewer, PlayerDisplay display, ViewerHintGroup group, int slot)
+    {
+        var text = group.BuildText();
+        var key = GetTrackingKey(slot, viewer.Id);
+
+        if (string.IsNullOrEmpty(text))
+        {
+            if (TrackingHints.TryGetValue(key, out var empty))
+                RemoveTrackedHint(empty, viewer);
+
+            return false;
+        }
+
+        var hintId = GetHintId(slot);
+
+        if (display.GetHint(hintId) is not Hint hint)
+        {
+            hint = new Hint
+            {
+                Id = hintId,
+                Text = string.Empty,
+            };
+
+            display.AddHint(hint);
+        }
+
+        hint.Alignment = group.Key.Alignment;
+        hint.YCoordinateAlign = group.Key.VerticalAlign;
+        hint.ResolutionBasedAlign = group.Key.ResolutionBasedAlign;
+        hint.SyncSpeed = group.Key.SyncSpeed;
+        hint.XCoordinate = group.Key.X;
+        hint.YCoordinate = group.Key.Y;
+        hint.FontSize = group.FontSize;
+        hint.LineHeight = group.Key.LineHeight;
+
+        if (hint.Text != text)
+            hint.Text = text;
+
+        TrackingHints[key] = new TrackedHint(key, slot, viewer.Id, hintId, hint);
+        return true;
     }
 
     private static List<Player> GetChannelMembers(StatusHintChannel channel, IEnumerable<Player> players)
@@ -339,95 +598,30 @@ public class ScpStatusHints : IBootstrapHandler
         }
     }
 
-    private static List<Player> GetChannelRecipients(StatusHintChannel channel, IEnumerable<Player> players)
+    /// <summary>
+    /// 1 チャンネル分の本文を組み立てる。ヘッダーは Hint 共有の有無が決まってから
+    /// <see cref="ChannelSegment.Compose"/> 側で付与するため、ここには含めない。
+    /// </summary>
+    private static ChannelSegment? BuildSegment(StatusHintBuildContext context)
     {
-        return players
-            .Where(player => IsPlayerValid(player))
-            .Where(player => !player.IsNPC)
-            .Where(player => SafeInvoke(channel.CanReceive, player, false))
-            .ToList();
-    }
-
-    private static bool UpdateHint(
-        Player? player,
-        StatusHintChannel channel,
-        IReadOnlyList<Player> members,
-        IReadOnlyList<Player> allPlayers)
-    {
-        if (!_registered || !IsPlayerValid(player))
-            return false;
-
-        if (player!.IsNPC || !SafeInvoke(channel.CanReceive, player, false))
-        {
-            RemoveHint(player, channel.Id);
-            return false;
-        }
-
-        var display = TryGetDisplay(player);
-        if (display == null)
-            return false;
-
-        var context = new StatusHintBuildContext(channel, player, members, allPlayers);
-        var text = BuildStatusText(context);
-
-        if (string.IsNullOrEmpty(text) && channel.HideWhenNoVisibleMembers)
-        {
-            RemoveHint(player, channel.Id);
-            return false;
-        }
-
-        var hint = EnsureHint(player, display, channel);
-
-        if (hint.Text != text)
-            hint.Text = text;
-
-        return true;
-    }
-
-    private static AbstractHint EnsureHint(Player player, PlayerDisplay display, StatusHintChannel channel)
-    {
-        var hintId = GetHintId(channel.Id);
-
-        if (display.GetHint(hintId) is not Hint hint)
-        {
-            hint = new Hint
-            {
-                Id = hintId,
-                Text = string.Empty,
-            };
-
-            display.AddHint(hint);
-        }
-
-        hint.Alignment = channel.Layout.Alignment;
-        hint.ResolutionBasedAlign = channel.Layout.ResolutionBasedAlign;
-        hint.SyncSpeed = channel.Layout.SyncSpeed;
-        hint.XCoordinate = channel.Layout.ResolveX(player);
-        hint.YCoordinate = channel.Layout.YCoordinate;
-        hint.FontSize = channel.Layout.FontSize;
-
-        var key = GetTrackingKey(channel.Id, player.Id);
-        TrackingHints[key] = new TrackedHint(key, channel.Id, player.Id, hintId, hint);
-        return hint;
-    }
-
-    private static string BuildStatusText(StatusHintBuildContext context)
-    {
-        var sb = new StringBuilder();
+        var channel = context.Channel;
 
         var visibleMembers = context.Members
-            .Where(member => SafeInvoke(context.Channel.CanViewerSeeMember, context.Viewer, member, false))
+            .Where(member => SafeInvoke(channel.CanViewerSeeMember, context.Viewer, member, false))
             .ToList();
 
-        if (context.Channel.MaxVisibleMembers > 0)
-            visibleMembers = visibleMembers.Take(context.Channel.MaxVisibleMembers).ToList();
+        var hiddenMemberCount = 0;
 
-        if (visibleMembers.Count == 0 && context.Channel.HideWhenNoVisibleMembers)
-            return string.Empty;
+        if (channel.MaxVisibleMembers > 0 && visibleMembers.Count > channel.MaxVisibleMembers)
+        {
+            hiddenMemberCount = visibleMembers.Count - channel.MaxVisibleMembers;
+            visibleMembers = visibleMembers.Take(channel.MaxVisibleMembers).ToList();
+        }
 
-        var header = BuildHeader(context);
-        if (!string.IsNullOrEmpty(header))
-            sb.AppendLine(header);
+        if (visibleMembers.Count == 0 && channel.HideWhenNoVisibleMembers)
+            return null;
+
+        var sb = new StringBuilder();
 
         foreach (var member in visibleMembers)
         {
@@ -436,17 +630,18 @@ public class ScpStatusHints : IBootstrapHandler
                 sb.AppendLine(line);
         }
 
-        if (context.Channel.MaxVisibleMembers > 0 && context.Members.Count > visibleMembers.Count)
-            sb.AppendLine($"... +{context.Members.Count - visibleMembers.Count}");
+        if (hiddenMemberCount > 0)
+            sb.AppendLine($"... +{hiddenMemberCount}");
 
-        if (context.Channel.IncludeGeneratorStatus)
-            sb.Append(BuildGeneratorText());
-
+        // 発電機の状態は ViewerHintGroup 側で Hint 末尾にまとめて出す。
         var footer = BuildFooter(context);
         if (!string.IsNullOrEmpty(footer))
             sb.Append(footer);
 
-        return sb.ToString();
+        // 末尾の改行を落とさないと結合時にチャンネル間へ空行が入る。
+        var body = sb.ToString().TrimEnd('\r', '\n');
+
+        return new ChannelSegment(context, body);
     }
 
     private static string BuildHeader(StatusHintBuildContext context)
@@ -454,7 +649,15 @@ public class ScpStatusHints : IBootstrapHandler
         if (context.Channel.HeaderBuilder != null)
             return SafeInvoke(context.Channel.HeaderBuilder, context, string.Empty);
 
-        if (!context.Channel.ShowHeader || string.IsNullOrEmpty(context.Channel.Title))
+        if (string.IsNullOrEmpty(context.Channel.Title))
+            return string.Empty;
+
+        // 単独表示ならヘッダー無しでよいが、他チャンネルと同じ Hint に並ぶ場合は
+        // どこからどこまでが同じチャンネルか分かるようタイトルを区切りとして出す。
+        var showHeader = context.Channel.ShowHeader ||
+                         (context.IsSharedHint && context.Channel.ShowHeaderWhenShared);
+
+        if (!showHeader)
             return string.Empty;
 
         return $"<b><color={context.Channel.Color}>{context.Channel.Title}</color></b>";
@@ -716,14 +919,13 @@ public class ScpStatusHints : IBootstrapHandler
         return sb.ToString();
     }
 
-    private static void RemoveHint(Player? player, string? channelId = null)
+    private static void RemoveHint(Player? player)
     {
         if (player == null)
             return;
 
         foreach (var tracked in TrackingHints.Values
-                     .Where(tracked => tracked.PlayerId == player.Id &&
-                                       (channelId == null || string.Equals(tracked.ChannelId, channelId, StringComparison.OrdinalIgnoreCase)))
+                     .Where(tracked => tracked.PlayerId == player.Id)
                      .ToList())
         {
             RemoveTrackedHint(tracked, player);
@@ -754,16 +956,6 @@ public class ScpStatusHints : IBootstrapHandler
         finally
         {
             TrackingHints.Remove(tracked.Key);
-        }
-    }
-
-    private static void ClearChannel(string channelId)
-    {
-        foreach (var tracked in TrackingHints.Values
-                     .Where(tracked => string.Equals(tracked.ChannelId, channelId, StringComparison.OrdinalIgnoreCase))
-                     .ToList())
-        {
-            RemoveTrackedHint(tracked);
         }
     }
 
@@ -804,31 +996,14 @@ public class ScpStatusHints : IBootstrapHandler
         }
     }
 
-    private static string GetTrackingKey(string channelId, int playerId)
+    private static string GetTrackingKey(int slot, int playerId)
     {
-        return channelId + ":" + playerId.ToString(CultureInfo.InvariantCulture);
+        return slot.ToString(CultureInfo.InvariantCulture) + ":" + playerId.ToString(CultureInfo.InvariantCulture);
     }
 
-    private static string GetHintId(string channelId)
+    private static string GetHintId(int slot)
     {
-        return HintIdPrefix + SanitizeId(channelId);
-    }
-
-    private static string SanitizeId(string value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return "default";
-
-        var sb = new StringBuilder(value.Length);
-        foreach (var c in value)
-        {
-            if (char.IsLetterOrDigit(c) || c is '_' or '-')
-                sb.Append(c);
-            else
-                sb.Append('_');
-        }
-
-        return sb.ToString();
+        return HintIdPrefix + slot.ToString(CultureInfo.InvariantCulture);
     }
 
     private static string GetGeneratorStartupBlinkColor(float startupElapsed)
