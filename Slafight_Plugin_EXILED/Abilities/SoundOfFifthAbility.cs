@@ -54,7 +54,8 @@ public class SoundOfFifthAbility : OptionAbilityBase
             if (!(Vector3.Distance(targetPlayer.Position, player.Position) <= range)) continue;
             if (targetPlayer.GetTeam() != CTeam.Fifthists)
             {
-                targetPlayer.Explode(ProjectileType.Flashbang,player);
+                targetPlayer.ExplodeEffect(ProjectileType.Flashbang);
+                targetPlayer.EnableEffect<Flashed>(2.5f);
                 targetPlayer.EnableEffect<Deafened>(255, 45);
                 targetPlayer.EnableEffect<Hemorrhage>(255, 45);
                 targetPlayer.EnableEffect<Blindness>(40, 45);
