@@ -36,6 +36,7 @@ public class GunSuppressiver : CItemWeapon
     private void OnSendingGunSound(SendingGunSoundEventArgs ev)
     {
         if (!Check(ev.Item) || ev.AudioIndex is not (0 or 1 or 2)) return;
-        ev.Pitch = 1;
+        ev.IsAllowed = false;
+        SpeakerApi.Play("GunSuppressiver.ogg", $"GunSuppressiver_{ev.Player.NetId}", ev.SendingPosition, isSpatial: true, maxDistance: 15f);
     }
 }
