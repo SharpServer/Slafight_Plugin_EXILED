@@ -23,7 +23,7 @@ public class SecurityChief : CRole
     [
         ItemType.Medkit,
         ItemType.Medkit,
-        ItemType.ArmorCombat,
+        ItemType.ArmorHeavy,
         ItemType.Radio,
         typeof(KeycardSecurityChief),
         typeof(GunFSP18),

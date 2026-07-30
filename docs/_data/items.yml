@@ -300,8 +300,9 @@
   name: FSP-18
   category: 武器
   base: FSP-9
-  summary: Security Chiefが使用する銃。
-  stats: ダメージ30、最大弾薬62。
+  version: v1.9.0.1
+  summary: 財団が開発したFSP-9の改良版。反動制御に優れ、主に上級警備隊へ配備されている。Security ChiefやSecurity Team Guardが使用する。
+  stats: ダメージ27、装弾数42。素体より反動が小さい。
   tags: [weapon, guard]
 
 - id: goc-railgun
@@ -557,7 +558,10 @@
   name: Project-90
   category: 武器
   base: CROSSVEC
-  summary: 安定した扱いやすさを重視した特殊CROSSVEC。
+  version: v1.9.0.1
+  summary: 昔ながらの安定した撃ち心地を重視した特殊CROSSVEC。九尾狐 士官候補生が装備する。
+  stats: ダメージ38、装弾数25。
+  effect: 発砲・空撃ち・リロード・サプレッサー射撃に専用の音が設定されている。
   tags: [weapon]
 
 - id: revolver-x
@@ -575,6 +579,14 @@
   effect: モード切替でAll、AnimationTime、ZAxis、FovKick、UpKick、SideKickの増減方向を選べる。
   tags: [weapon, revolver, debug]
 
+- id: gun-sound-testbench
+  name: Gun Sound Testbench
+  category: 管理者 / デバッグ
+  version: v1.9.0.1
+  summary: モード切替で全銃器を巡回し、鳴った音のクリップ名と種類をログへ出す採取用アイテム。
+  effect: 音の差し替えは行わないため、バニラ音を聞きながら発砲・空撃ち・リロード・アンロードのクリップを収集できる。
+  tags: [weapon, debug, sound]
+
 - id: scp-7381
   name: SCP-7381
   category: 武器
@@ -586,7 +598,12 @@
   name: Suppressiver
   category: 武器
   base: FSP-9
-  summary: カオス侵入兵が使用する制圧用の特殊FSP-9。
+  version: v1.9.0.1
+  summary: カオスが開発した工作員向けの特殊なサブマシンガン。消音性能に優れる一方、安定性はイマイチ。
+  stats: ダメージ30、装弾数42。
+  effect: 射撃時に妨害電波とノイズを発する専用の発砲音が鳴り、射撃音の捕捉を妨害する。
+  notes:
+    - ドットサイト、サプレッサー、弾数カウンター、収納ストックで固定されており、アタッチメントは変更できない。
   tags: [weapon, chaos]
 
 - id: hid-continuous-model
@@ -607,8 +624,9 @@
   name: カオス侵入兵アクセスデバイス
   category: キーカード / アクセスデバイス
   base: カオス・インサージェンシーアクセスデバイス
-  permission: 収容1 / 武器1 / 管理1
-  summary: カオス侵入部隊用のアクセスデバイス。
+  permission: 収容1 / 武器2 / 管理1
+  version: v1.9.0.1
+  summary: カオス侵入部隊用のアクセスデバイス。v1.9.0.1で武器庫レベル2に対応した。
   tags: [keycard, chaos]
 
 - id: mysterious-keycard

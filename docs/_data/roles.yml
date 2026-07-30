@@ -353,6 +353,28 @@
   tags:
     - guard
     - foundation
+- id: ntf-cadet
+  name: 'MTF Epsilon-11: Nine-Tailed Fox Cadet（九尾狐 士官候補生）'
+  side: The Foundation
+  team: Foundation Security
+  base: MTF二等兵
+  hp: 100
+  version: v1.9.0.1
+  condition: 保安部隊の湧きに必ず1人出現
+  summary: MTFの士官養成課程を受講中の候補生。サイト-02死守のため保安部隊の隊長として緊急動員されたため、装備は一世代前の型落ち品になっている。
+  items:
+    - Project-90
+    - MTF二等兵カード
+    - 戦闘アーマー
+    - 医療キット
+    - 無線機
+    - 懐中電灯
+    - 9x19mm弾薬 x120
+  tags:
+    - foundation
+    - guard
+    - mtf
+    - ntf
 - id: security-chief
   name: Security Chief
   side: The Foundation

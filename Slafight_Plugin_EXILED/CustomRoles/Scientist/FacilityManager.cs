@@ -25,7 +25,7 @@ public class FacilityManager : CRole
         ItemType.KeycardFacilityManager,
         ItemType.Medkit,
         ItemType.Medkit,
-        ItemType.ArmorCombat,
+        ItemType.ArmorHeavy,
         ItemType.Radio,
     ];
     protected override string SpawnCustomInfo => "Facility Manager";
