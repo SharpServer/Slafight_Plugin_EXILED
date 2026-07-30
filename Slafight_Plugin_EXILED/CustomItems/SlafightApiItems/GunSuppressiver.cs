@@ -15,7 +15,7 @@ public class GunSuppressiver : CItemWeapon
     protected override ItemType BaseItem => ItemType.GunFSP9;
     protected override float Damage => 30f;
     protected override byte MagazineSize => 42;
-    protected override Vector3 Scale => new(1f, 1f, 1.15f);
+    protected override Vector3 Scale => new(1.16f, 1f, 0.96f);
     protected override AttachmentName[] Attachments =>
     [
         AttachmentName.DotSight,

@@ -7,8 +7,11 @@ using Exiled.API.Features.Pickups;
 using Exiled.Events.EventArgs.Item;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.Handlers;
+using AudioPooling;
 using InventorySystem.Items.Firearms.Attachments;
 using InventorySystem.Items.Firearms.Modules;
+using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Structs;
 using UnityEngine;
 using Item = Exiled.API.Features.Items.Item;
 
@@ -43,8 +46,8 @@ public abstract class CItemWeapon : CItem
     // リロード開始時のスナップショット: serial → (マガジン弾, 予備弾)
     private readonly Dictionary<ushort, (int Magazine, int Reserve)> _reloadSnapshot = new();
 
-    // 発砲音差し替え用: プレイヤー ID → 最後に鳴らした Time.time
-    private readonly Dictionary<int, float> _lastOverrideAudioTime = new();
+    // 音差し替え用: (プレイヤー ID, 音の識別子) → 最後に鳴らした Time.time
+    private readonly Dictionary<(int PlayerId, string SoundKey), float> _lastOverrideAudioTime = new();
 
     /// <summary>1 撃あたりのダメージ。負値ならバニラのダメージを使う (override 無し)。</summary>
     protected virtual float Damage => -1f;
@@ -82,46 +85,99 @@ public abstract class CItemWeapon : CItem
     /// <summary>プレイヤーによるアタッチメント変更を許可するか。</summary>
     protected virtual bool AllowAttachmentChanges => true;
 
-    // ==== 発砲音の上書き ====
+    // ==== 銃器サウンドの上書き ====
+    //
+    // 差し替え対象の指定には、実行時にゲームから読み出せる情報だけを使う:
+    //   1. GunSoundKind  … ゲーム側の名前付きクリップフィールドと参照比較して決める意味的な種類
+    //                       （GunSoundResolver 参照）。発砲音だけは MixerChannel.Weapons で判定。
+    //   2. AudioClip 名   … AudioModule._registeredClips[AudioIndex].name。
+    //   3. MixerChannel  … 機構音を丸ごと扱いたいとき用（DefaultSfx = 機構音全般）。
+    //   4. AudioIndex     … 最後の逃げ道。
+    // AudioIndex の意味を並べた固定表は持たないので、銃種が追加されても壊れない。
 
     /// <summary>
-    /// バニラの発砲音（<see cref="OverrideGunSoundAudioIndexes"/> に含まれる AudioIndex）を抑制するか。
-    /// <see cref="OverrideAudio"/> を指定すると自動的に true になる。
-    /// true かつ <see cref="OverrideAudio"/> が null の場合は「発砲音を消すだけ」になる。
+    /// バニラの銃器サウンドを抑制 / 差し替えするか。
+    /// <see cref="OverrideAudio"/> や各 <c>OverrideSoundsBy*</c>、
+    /// <see cref="LogGunSoundClips"/> のいずれかが設定されていれば自動的に true になる。
     /// </summary>
-    protected virtual bool OverrideGunSounds => !string.IsNullOrWhiteSpace(OverrideAudio);
+    protected virtual bool OverrideGunSounds =>
+        !string.IsNullOrWhiteSpace(OverrideAudio)
+        || OverrideSounds.Count > 0
+        || LogGunSoundClips;
 
     /// <summary>
     /// 発砲音の代わりに鳴らす音声ファイル名（<c>AudioReferences</c> ディレクトリ配下）。
-    /// null なら差し替え音は鳴らさない。
+    /// <see cref="OverrideAudioKinds"/> の各種類へ同じクリップを割り当てる簡易記法。
     /// </summary>
     protected virtual string? OverrideAudio => null;
 
-    /// <summary>差し替え発砲音の可聴距離。</summary>
+    /// <summary>
+    /// <see cref="OverrideAudio"/> を適用する音の種類。既定は発砲音のみ。
+    /// サプレッサーの有無や弾種でクリップが変わっても発砲音として判定される。
+    /// </summary>
+    protected virtual GunSoundKind[] OverrideAudioKinds => [GunSoundKind.Gunshot];
+
+    /// <summary>
+    /// 差し替え定義。<see cref="OverrideAudio"/> より優先される。
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// キーは <see cref="GunSoundSelector"/> で、<see cref="GunSoundKind"/> / クリップ名 /
+    /// <see cref="MixerChannel"/> / AudioIndex のどれからでも暗黙変換されるため、
+    /// <b>1 つの辞書に混ぜて書ける</b>。値も <c>string</c> から暗黙変換されるので、
+    /// ファイル名だけならそのまま文字列で書ける。
+    /// バニラ音を消すだけなら <see cref="GunSoundOverride.Silent"/> を指定する。
+    /// </para>
+    /// <para>
+    /// 同じ音に複数の指定が当たる場合は AudioIndex → クリップ名 → <see cref="GunSoundKind"/> →
+    /// <see cref="MixerChannel"/> の順で、より具体的な方が勝つ。
+    /// </para>
+    /// <para>
+    /// <see cref="GunSoundKind"/> は銃種に依存せず判定できるので優先して使う。
+    /// マガジン挿入やボルト操作のようにゲーム側が名前を持たない音は
+    /// <see cref="GunSoundClips"/> のクリップ名で指定する。
+    /// </para>
+    /// <example>
+    /// <code>
+    /// protected override IReadOnlyDictionary&lt;GunSoundSelector, GunSoundOverride&gt; OverrideSounds => new Dictionary&lt;GunSoundSelector, GunSoundOverride&gt;
+    /// {
+    ///     [GunSoundKind.Gunshot]             = new("MyGun_Fire.ogg", Range: 25f),
+    ///     [GunSoundKind.DryFire]             = "MyGun_NoAmmo.ogg",
+    ///     [GunSoundClips.Crossvec.MagInsert] = "MyGun_MagIn.ogg",
+    ///     [MixerChannel.DefaultSfx]          = GunSoundOverride.Silent,
+    /// };
+    /// </code>
+    /// </example>
+    /// </remarks>
+    protected virtual IReadOnlyDictionary<GunSoundSelector, GunSoundOverride> OverrideSounds
+        => EmptySoundOverrides;
+
+    /// <summary>
+    /// この CItem の銃が鳴らす音の AudioIndex / クリップ名 / 種類 / チャンネルをログへ出す。
+    /// <see cref="OverrideSoundsByClip"/> や <see cref="OverrideSoundsByIndex"/> に
+    /// 書く値を調べるための開発用スイッチ。
+    /// </summary>
+    protected virtual bool LogGunSoundClips => false;
+
+    /// <summary>差し替え音の既定可聴距離。</summary>
     protected virtual float OverrideAudioRange => 15f;
 
-    /// <summary>差し替え発砲音の音量。</summary>
+    /// <summary>差し替え音の既定音量。</summary>
     protected virtual float OverrideAudioVolume => 1f;
 
-    /// <summary>差し替え発砲音を 3D 空間音として鳴らすか。</summary>
+    /// <summary>差し替え音を 3D 空間音として鳴らすか（既定値）。</summary>
     protected virtual bool OverrideAudioIsSpatial => true;
 
     /// <summary>
-    /// プレイヤー 1 人あたりに確保するスピーカー数。連射時に音が重なる分だけ必要。
+    /// 音の種類ごとに、プレイヤー 1 人あたり確保するスピーカー数（既定値）。
+    /// 連射時に音が重なる分だけ必要。
     /// </summary>
     protected virtual int OverrideAudioVoices => 2;
 
     /// <summary>
-    /// 同一発砲で SendingGunSound が複数回飛ぶ（発砲音・機構音）ため、
-    /// これより短い間隔の再生要求は同じ 1 発とみなして捨てる。
+    /// 同じ音の再生要求がこの間隔より短く連続した場合、同一イベントとみなして捨てる（既定値）。
     /// </summary>
     protected virtual float OverrideAudioMinInterval => 0.04f;
-
-    /// <summary>
-    /// 抑制対象の AudioIndex。既定は発砲音に対応する 0 / 1 / 2。
-    /// 機構音（リロード等）まで消したい場合に override する。
-    /// </summary>
-    protected virtual int[] OverrideGunSoundAudioIndexes => [0, 1, 2];
 
     /// <summary>基底側でリロード弾薬処理を行うか（容量上書き or 倍率カスタム時に有効）。</summary>
     private bool ManagesReloadAmmo => MaxMagazineAmmo > 0 || ReloadAmmoMultiplier > 1;
@@ -273,8 +329,7 @@ public abstract class CItemWeapon : CItem
 
         if (OverrideGunSounds)
         {
-            if (!string.IsNullOrWhiteSpace(OverrideAudio))
-                SpeakerApi.TryLoadClip(OverrideAudio!);
+            PreloadOverrideAudioClips();
 
             Player.SendingGunSound   += OnInternalSendingGunSound;
             Player.ReceivingGunSound += OnInternalReceivingGunSound;
@@ -385,42 +440,212 @@ public abstract class CItemWeapon : CItem
         return Math.Min(loadable, affordable) <= 0;
     }
 
-    // ==== 発砲音の上書き ====
+    // ==== 銃器サウンドの上書き ====
 
-    /// <summary>この CItem の発砲音スピーカー名の接頭辞。プレイヤー ID を後ろに付けて使う。</summary>
+    private static readonly IReadOnlyDictionary<GunSoundSelector, GunSoundOverride> EmptySoundOverrides =
+        new Dictionary<GunSoundSelector, GunSoundOverride>();
+
+    private sealed record ResolvedGunSoundOverrides(
+        Dictionary<int, GunSoundOverride> ByIndex,
+        Dictionary<string, GunSoundOverride> ByClip,
+        Dictionary<GunSoundKind, GunSoundOverride> ByKind,
+        Dictionary<MixerChannel, GunSoundOverride> ByChannel);
+
+    /// <summary>
+    /// 解決済みの差し替え定義。virtual プロパティは毎回 Dictionary を作り直す実装になりがちなので、
+    /// 発砲ごとの再構築を避けるため初回アクセス時に 1 度だけ組み立てて保持する。
+    /// </summary>
+    private ResolvedGunSoundOverrides? _resolvedSoundOverrides;
+
+    private ResolvedGunSoundOverrides ResolvedSoundOverrides
+        => _resolvedSoundOverrides ??= BuildSoundOverrides();
+
+    /// <summary>
+    /// 1 つの <see cref="OverrideSounds"/> 辞書を、解決時に引きやすい 4 つの索引へ振り分ける。
+    /// </summary>
+    private ResolvedGunSoundOverrides BuildSoundOverrides()
+    {
+        var resolved = new ResolvedGunSoundOverrides(
+            new Dictionary<int, GunSoundOverride>(),
+            // クリップ名は Unity のアセット名。大文字小文字と前後の空白は無視して引けるようにする
+            // （"FSP9 Mag In" のように空白を含む名前が実在するため、定義側と実行時名の
+            //   両方に同じ正規化を掛ける）。
+            new Dictionary<string, GunSoundOverride>(StringComparer.OrdinalIgnoreCase),
+            new Dictionary<GunSoundKind, GunSoundOverride>(),
+            new Dictionary<MixerChannel, GunSoundOverride>());
+
+        // OverrideAudio は簡易記法なので先に展開し、明示指定の方で上書きさせる。
+        if (!string.IsNullOrWhiteSpace(OverrideAudio))
+        {
+            var shortcut = new GunSoundOverride(OverrideAudio);
+            foreach (var kind in OverrideAudioKinds)
+                resolved.ByKind[kind] = shortcut;
+        }
+
+        foreach (var entry in OverrideSounds)
+        {
+            switch (entry.Key.Type)
+            {
+                case GunSoundSelector.SelectorType.Index:
+                    resolved.ByIndex[entry.Key.Index] = entry.Value;
+                    break;
+
+                case GunSoundSelector.SelectorType.Clip:
+                    if (!string.IsNullOrWhiteSpace(entry.Key.Clip))
+                        resolved.ByClip[NormalizeClipName(entry.Key.Clip!)] = entry.Value;
+                    break;
+
+                case GunSoundSelector.SelectorType.Kind:
+                    resolved.ByKind[entry.Key.Kind] = entry.Value;
+                    break;
+
+                case GunSoundSelector.SelectorType.Channel:
+                    resolved.ByChannel[entry.Key.Channel] = entry.Value;
+                    break;
+            }
+        }
+
+        return resolved;
+    }
+
+    /// <summary>この CItem の差し替え音スピーカー名の接頭辞。音の識別子とプレイヤー ID を後ろに付ける。</summary>
     private string OverrideAudioSpeakerPrefix => UniqueKey + "_GunSound_";
 
-    private bool IsOverriddenAudioIndex(int audioIndex)
-        => Array.IndexOf(OverrideGunSoundAudioIndexes, audioIndex) >= 0;
+    /// <summary>クリップ名の照合用正規化。定義側と実行時名の両方に同じものを掛ける。</summary>
+    private static string NormalizeClipName(string clipName) => clipName.Trim();
+
+    /// <summary>
+    /// <see cref="LogGunSoundClips"/> 用に、この銃の AudioIndex ↔ クリップ名の全対応表を
+    /// 1 度だけログへ出す。個別の音が鳴るのを待たずに一覧が得られる。
+    /// </summary>
+    private void LogClipTableOnce(Firearm firearm)
+    {
+        if (!_clipTableLogged.Add(firearm.Type))
+            return;
+
+        var entries = GunSoundResolver.DumpClips(firearm);
+        if (entries.Count == 0)
+        {
+            Exiled.API.Features.Log.Warn($"[{GetType().Name}] {firearm.Type}: AudioModule のクリップ一覧を取得できませんでした。");
+            return;
+        }
+
+        Exiled.API.Features.Log.Info(
+            $"[{GetType().Name}] {firearm.Type} registered clips ({entries.Count}):\n  " +
+            string.Join("\n  ", entries));
+    }
+
+    /// <summary>クリップ一覧を既にログへ出した ItemType。</summary>
+    private readonly HashSet<ItemType> _clipTableLogged = [];
+
+    /// <summary>差し替えに使う全クリップを先読みする。初回再生時のデコード遅延を避けるため。</summary>
+    private void PreloadOverrideAudioClips()
+    {
+        var resolved = ResolvedSoundOverrides;
+        foreach (var soundOverride in resolved.ByIndex.Values
+                     .Concat(resolved.ByClip.Values)
+                     .Concat(resolved.ByKind.Values)
+                     .Concat(resolved.ByChannel.Values))
+        {
+            if (!string.IsNullOrWhiteSpace(soundOverride.Audio))
+                SpeakerApi.TryLoadClip(soundOverride.Audio!);
+        }
+    }
+
+    /// <summary>
+    /// この音に対する差し替え定義を解決する。
+    /// AudioIndex → クリップ名 → 種類 → ミキサーチャンネルの順に探し、
+    /// 無ければ false（バニラのまま）。
+    /// </summary>
+    private bool TryResolveSoundOverride(
+        Firearm firearm,
+        int audioIndex,
+        MixerChannel channel,
+        out GunSoundOverride? soundOverride,
+        out string soundKey)
+    {
+        var resolved = ResolvedSoundOverrides;
+
+        if (resolved.ByIndex.TryGetValue(audioIndex, out soundOverride))
+        {
+            soundKey = "i" + audioIndex;
+            return true;
+        }
+
+        if (resolved.ByClip.Count > 0
+            && GunSoundResolver.GetClipName(firearm, audioIndex) is { } clipName
+            && resolved.ByClip.TryGetValue(NormalizeClipName(clipName), out soundOverride))
+        {
+            soundKey = "c" + clipName;
+            return true;
+        }
+
+        if (resolved.ByKind.Count > 0
+            && GunSoundResolver.Resolve(firearm, audioIndex, channel) is { } kind
+            && resolved.ByKind.TryGetValue(kind, out soundOverride))
+        {
+            soundKey = kind.ToString();
+            return true;
+        }
+
+        if (resolved.ByChannel.TryGetValue(channel, out soundOverride))
+        {
+            soundKey = channel.ToString();
+            return true;
+        }
+
+        soundOverride = null;
+        soundKey = string.Empty;
+        return false;
+    }
 
     private void OnInternalSendingGunSound(SendingGunSoundEventArgs ev)
     {
-        if (!Check(ev.Item) || !IsOverriddenAudioIndex(ev.AudioIndex)) return;
-        ev.IsAllowed = false;
+        if (!Check(ev.Item)) return;
 
-        if (ev.Player == null || string.IsNullOrWhiteSpace(OverrideAudio)) return;
+        if (LogGunSoundClips)
+        {
+            LogClipTableOnce(ev.Firearm);
+            Exiled.API.Features.Log.Info(
+                $"[{GetType().Name}] {ev.Firearm.Type} sound: index={ev.AudioIndex}" +
+                $" clip='{GunSoundResolver.GetClipName(ev.Firearm, ev.AudioIndex) ?? "<unknown>"}'" +
+                $" kind={GunSoundResolver.Resolve(ev.Firearm, ev.AudioIndex, ev.MixerChannel)?.ToString() ?? "<none>"}" +
+                $" channel={ev.MixerChannel} range={ev.Range}");
+        }
 
-        int playerId = ev.Player.Id;
-        if (_lastOverrideAudioTime.TryGetValue(playerId, out float last)
-            && Time.time - last < OverrideAudioMinInterval)
+        if (!TryResolveSoundOverride(ev.Firearm, ev.AudioIndex, ev.MixerChannel, out var soundOverride, out string soundKey))
             return;
 
-        _lastOverrideAudioTime[playerId] = Time.time;
+        // 定義があるならバニラ音は常に抑制する。Audio が null なら「消すだけ」。
+        ev.IsAllowed = false;
 
-        // スピーカーは撃つたびに作らず、プレイヤーごとに OverrideAudioVoices 個を使い回す。
+        if (ev.Player == null || soundOverride!.Audio is not { } audio || string.IsNullOrWhiteSpace(audio))
+            return;
+
+        // 同じ音・同じプレイヤーの連続要求だけを弾く。別種類の音は互いに干渉しない。
+        var dedupeKey = (ev.Player.Id, soundKey);
+        float minInterval = soundOverride.MinInterval ?? OverrideAudioMinInterval;
+        if (_lastOverrideAudioTime.TryGetValue(dedupeKey, out float last)
+            && Time.time - last < minInterval)
+            return;
+
+        _lastOverrideAudioTime[dedupeKey] = Time.time;
+
+        // スピーカーは鳴らすたびに作らず、音の種類 × プレイヤーごとに Voices 個を使い回す。
         SpeakerApi.PlayOneShot(
-            OverrideAudio!,
-            OverrideAudioSpeakerPrefix + playerId,
+            audio,
+            $"{OverrideAudioSpeakerPrefix}{soundKey}_{ev.Player.Id}",
             ev.SendingPosition,
-            voices: OverrideAudioVoices,
-            isSpatial: OverrideAudioIsSpatial,
-            maxDistance: OverrideAudioRange,
-            volume: OverrideAudioVolume);
+            voices: soundOverride.Voices ?? OverrideAudioVoices,
+            isSpatial: soundOverride.IsSpatial ?? OverrideAudioIsSpatial,
+            maxDistance: soundOverride.Range ?? OverrideAudioRange,
+            volume: soundOverride.Volume ?? OverrideAudioVolume);
     }
 
     private void OnInternalReceivingGunSound(ReceivingGunSoundEventArgs ev)
     {
-        if (!Check(ev.Item) || !IsOverriddenAudioIndex(ev.AudioIndex)) return;
+        if (!Check(ev.Item)) return;
+        if (!TryResolveSoundOverride(ev.Firearm, ev.AudioIndex, ev.MixerChannel, out _, out _)) return;
         ev.IsAllowed = false;
     }
 
@@ -428,16 +653,29 @@ public abstract class CItemWeapon : CItem
     {
         if (ev.Player == null) return;
 
-        SpeakerApi.TryDestroy(OverrideAudioSpeakerPrefix + ev.Player.Id);
-        _lastOverrideAudioTime.Remove(ev.Player.Id);
+        int playerId = ev.Player.Id;
+        string suffix = "_" + playerId;
+        string prefix = OverrideAudioSpeakerPrefix;
+
+        foreach (string name in SpeakerApi.GetAudioPlayerNames()
+                     .Where(n => n.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)
+                                 && n.EndsWith(suffix, StringComparison.Ordinal))
+                     .ToArray())
+        {
+            SpeakerApi.TryDestroy(name);
+        }
+
+        foreach (var key in _lastOverrideAudioTime.Keys.Where(k => k.PlayerId == playerId).ToArray())
+            _lastOverrideAudioTime.Remove(key);
     }
 
-    /// <summary>この CItem が確保した発砲音スピーカーを全て破棄する。</summary>
+    /// <summary>この CItem が確保した差し替え音スピーカーを全て破棄する。</summary>
     private void ClearOverrideAudioSpeakers()
     {
         string prefix = OverrideAudioSpeakerPrefix;
         foreach (string name in SpeakerApi.GetAudioPlayerNames()
-                     .Where(n => n.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+                     .Where(n => n.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+                     .ToArray())
         {
             SpeakerApi.TryDestroy(name);
         }
