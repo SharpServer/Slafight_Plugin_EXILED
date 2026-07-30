@@ -1,142 +1,58 @@
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using Exiled.API.Features;
+using UnityEngine;
 using VoiceChat;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
+/// <summary>
+/// 音声ファイル / PCM サンプルから <see cref="AudioClip"/> を作り、名前付きでキャッシュする。
+/// </summary>
+/// <remarks>
+/// <para>
+/// 生成するクリップは常にモノラル / <see cref="VoiceChatSettings.SampleRate"/>。
+/// SCP:SL の音声送信経路（<see cref="SpeakerApi"/>）がその形式しか扱わないため。
+/// </para>
+/// <para>
+/// <see cref="AudioClip"/> は <see cref="UnityEngine.Object"/> なので、キャッシュから外すときは
+/// ネイティブ側も破棄する。キャッシュがクリップの所有者である前提。
+/// </para>
+/// </remarks>
 public static class AudioClipApi
 {
     private const int TargetSampleRate = VoiceChatSettings.SampleRate;
-    private static readonly Dictionary<string, object> ClipCache = new(StringComparer.OrdinalIgnoreCase);
+    private const int TargetChannels = 1;
+
+    private static readonly Dictionary<string, AudioClip> ClipCache = new(StringComparer.OrdinalIgnoreCase);
 
     public static string AudioDirectory => Plugin.Singleton.Config.AudioReferences;
 
-    // UnityEngine.AudioClip を文字列から解決
-    private static Type GetAudioClipType()
-    {
-        var t =
-            Type.GetType("UnityEngine.AudioClip, UnityEngine.CoreModule", false) ??
-            Type.GetType("UnityEngine.AudioClip, UnityEngine", false) ??
-            AppDomain.CurrentDomain.GetAssemblies()
-                .Select(a => a.GetType("UnityEngine.AudioClip", false))
-                .FirstOrDefault(x => x != null);
-
-        if (t == null)
-            throw new MissingFieldException("UnityEngine.AudioClip type not found.");
-        return t;
-    }
-
-    private static object CreateClipObject(string name, int samples, int channels, int frequency, bool stream)
-    {
-        var audioClipType = GetAudioClipType();
-
-        var method = audioClipType.GetMethods(BindingFlags.Public | BindingFlags.Static)
-            .FirstOrDefault(m =>
-            {
-                if (m.Name != "Create")
-                    return false;
-
-                var p = m.GetParameters();
-                return p.Length == 5 &&
-                       p[0].ParameterType == typeof(string) &&
-                       p[1].ParameterType == typeof(int) &&
-                       p[2].ParameterType == typeof(int) &&
-                       p[3].ParameterType == typeof(int) &&
-                       p[4].ParameterType == typeof(bool);
-            });
-
-        if (method == null)
-            throw new MissingMethodException("AudioClip.Create(string, int, int, int, bool) not found.");
-
-        Log.Info($"[AudioClipApi] CreateClipObject name={name}, samples={samples}, ch={channels}, freq={frequency}, stream={stream}");
-
-        var clip = method.Invoke(null, [name, samples, channels, frequency, stream]);
-        if (clip == null)
-            throw new InvalidOperationException("AudioClip.Create returned null.");
-
-        // 生成されたクリップの状態を確認
-        var samplesProp = audioClipType.GetProperty("samples", BindingFlags.Public | BindingFlags.Instance);
-        var channelsProp = audioClipType.GetProperty("channels", BindingFlags.Public | BindingFlags.Instance);
-        var freqProp = audioClipType.GetProperty("frequency", BindingFlags.Public | BindingFlags.Instance);
-
-        int clipSamples = samplesProp != null ? Convert.ToInt32(samplesProp.GetValue(clip)) : -1;
-        int clipChannels = channelsProp != null ? Convert.ToInt32(channelsProp.GetValue(clip)) : -1;
-        int clipFreq = freqProp != null ? Convert.ToInt32(freqProp.GetValue(clip)) : -1;
-
-        Log.Info($"[AudioClipApi] Created clip: samples={clipSamples}, channels={clipChannels}, freq={clipFreq}");
-
-        return clip;
-    }
-
-    private static void SetClipData(object clip, float[] data, int offsetSamples)
-    {
-        if (clip == null)
-            throw new ArgumentNullException(nameof(clip));
-        if (data == null || data.Length == 0)
-            throw new ArgumentException("SetClipData data is null or empty.", nameof(data));
-
-        var clipType = clip.GetType();
-
-        var samplesProp = clipType.GetProperty("samples", BindingFlags.Public | BindingFlags.Instance);
-        var channelsProp = clipType.GetProperty("channels", BindingFlags.Public | BindingFlags.Instance);
-
-        int clipSamples = samplesProp != null ? Convert.ToInt32(samplesProp.GetValue(clip)) : -1;
-        int clipChannels = channelsProp != null ? Convert.ToInt32(channelsProp.GetValue(clip)) : -1;
-
-        Log.Info($"[AudioClipApi] SetClipData: dataLen={data.Length}, offset={offsetSamples}, clip.samples={clipSamples}, clip.channels={clipChannels}");
-
-        if (clipChannels <= 0)
-            throw new InvalidOperationException("AudioClip.SetData failed; clip has no channels.");
-
-        if (offsetSamples < 0 || offsetSamples >= clipSamples)
-            throw new ArgumentException($"AudioClip.SetData failed; invalid offsetSamples={offsetSamples}");
-
-        // Unity 的には data.Length + offsetSamples <= clip.samples である必要がある
-        if (offsetSamples + data.Length > clipSamples)
-            throw new ArgumentException($"AudioClip.SetData failed; data too long. dataLen={data.Length}, offset={offsetSamples}, clip.samples={clipSamples}");
-
-        var method = clipType.GetMethod(
-            "SetData",
-            BindingFlags.Public | BindingFlags.Instance,
-            null,
-            [typeof(float[]), typeof(int)],
-            null);
-
-        if (method == null)
-            throw new MissingMethodException("AudioClip.SetData(float[], int) not found.");
-
-        var ok = method.Invoke(clip, [data, offsetSamples]);
-
-        Log.Info($"[AudioClipApi] SetData.Invoke result={ok}");
-
-        if (ok is bool b && !b)
-            throw new InvalidOperationException("AudioClip.SetData returned false.");
-    }
-
-    public static object LoadFromFile(string fileName, string? clipName = null)
+    /// <summary>
+    /// <paramref name="fileName"/> をデコードして <see cref="AudioClip"/> を作る。
+    /// 同じ <paramref name="clipName"/> が既にキャッシュされていればそれを返す。
+    /// </summary>
+    public static AudioClip LoadFromFile(string fileName, string? clipName = null)
     {
         if (string.IsNullOrWhiteSpace(fileName))
             throw new ArgumentException("Audio file name cannot be empty.", nameof(fileName));
 
         clipName ??= fileName;
 
-        if (ClipCache.TryGetValue(clipName, out var cachedClip) && cachedClip != null)
-            return cachedClip;
+        if (TryGetCached(clipName, out var cached))
+            return cached!;
 
-        var fullPath = Path.Combine(AudioDirectory, fileName);
-        if (!File.Exists(fullPath))
-            throw new FileNotFoundException($"Audio file not found: {fullPath}", fullPath);
-
-        var clip = CreateFromAudioFile(fullPath, clipName);
+        var clip = CreateFromSamples(GetSamplesFromFile(fileName), clipName);
         ClipCache[clipName] = clip;
         return clip;
     }
 
-    public static object CreateFromSamples(float[] samples, string clipName = "CustomClip")
+    /// <summary>モノラル PCM サンプル列から <see cref="AudioClip"/> を作る（キャッシュしない）。</summary>
+    public static AudioClip CreateFromSamples(float[] samples, string clipName = "CustomClip")
     {
         if (samples == null || samples.Length == 0)
             throw new ArgumentException("Samples cannot be empty.", nameof(samples));
@@ -144,33 +60,26 @@ public static class AudioClipApi
         if (string.IsNullOrWhiteSpace(clipName))
             clipName = "CustomClip";
 
-        var clip = CreateClipObject(clipName, samples.Length, 1, TargetSampleRate, false);
-        SetClipData(clip, samples, 0);
+        var clip = AudioClip.Create(clipName, samples.Length, TargetChannels, TargetSampleRate, stream: false);
+        if (clip == null)
+            throw new InvalidOperationException($"AudioClip.Create returned null for '{clipName}'.");
+
+        if (!clip.SetData(samples, 0))
+        {
+            UnityEngine.Object.Destroy(clip);
+            throw new InvalidOperationException(
+                $"AudioClip.SetData failed for '{clipName}' (samples={samples.Length}, channels={TargetChannels}, freq={TargetSampleRate}).");
+        }
+
         return clip;
     }
 
-    private static object CreateFromAudioFile(string fullPath, string clipName)
-    {
-        Log.Info($"[AudioClipApi] Decoding with ffmpeg: path={fullPath}, clipName={clipName}");
-        var mono = FfmpegAudioDecoder.DecodeToMono48k(fullPath);
+    /// <summary>キャッシュ済みクリップ。無ければ null。破棄済みのエントリは掃除して null を返す。</summary>
+    public static AudioClip? GetCached(string clipName)
+        => TryGetCached(clipName, out var clip) ? clip : null;
 
-        if (mono.Length == 0)
-            throw new InvalidOperationException($"Converted audio is empty: {fullPath}");
-
-        var clip = CreateClipObject(clipName, mono.Length, 1, TargetSampleRate, false);
-        SetClipData(clip, mono, 0);
-        return clip;
-    }
-
-    public static object? GetCached(string clipName)
-    {
-        if (string.IsNullOrWhiteSpace(clipName))
-            return null;
-
-        return ClipCache.TryGetValue(clipName, out var clip) ? clip : null;
-    }
-
-    public static void CacheClip(string clipName, object clip)
+    /// <summary>外部で作ったクリップをキャッシュへ登録する。同名の既存クリップは破棄される。</summary>
+    public static void CacheClip(string clipName, AudioClip clip)
     {
         if (string.IsNullOrWhiteSpace(clipName))
             throw new ArgumentException("Clip name cannot be empty.", nameof(clipName));
@@ -178,27 +87,41 @@ public static class AudioClipApi
         if (clip == null)
             throw new ArgumentNullException(nameof(clip));
 
+        if (ClipCache.TryGetValue(clipName, out var existing) && existing != clip)
+            DestroyClip(existing);
+
         ClipCache[clipName] = clip;
     }
 
+    /// <summary>キャッシュから外し、ネイティブクリップも破棄する。</summary>
     public static bool RemoveCached(string clipName)
     {
         if (string.IsNullOrWhiteSpace(clipName))
             return false;
 
+        if (!ClipCache.TryGetValue(clipName, out var clip))
+            return false;
+
+        DestroyClip(clip);
         return ClipCache.Remove(clipName);
     }
 
-    public static void ClearCache()
+    /// <summary>キャッシュを空にする。<paramref name="destroyClips"/> が true ならクリップも破棄する。</summary>
+    public static void ClearCache(bool destroyClips = true)
     {
+        if (destroyClips)
+        {
+            foreach (var clip in ClipCache.Values)
+                DestroyClip(clip);
+        }
+
         ClipCache.Clear();
     }
 
     public static IEnumerable<string> GetCachedClipNames()
-    {
-        return ClipCache.Keys.ToArray();
-    }
+        => ClipCache.Keys.ToArray();
 
+    /// <summary>音声ファイルをモノラル 48kHz の PCM サンプル列へデコードする。</summary>
     public static float[] GetSamplesFromFile(string fileName, string? clipName = null)
     {
         if (string.IsNullOrWhiteSpace(fileName))
@@ -208,32 +131,61 @@ public static class AudioClipApi
         if (!File.Exists(fullPath))
             throw new FileNotFoundException($"Audio file not found: {fullPath}", fullPath);
 
-        return FfmpegAudioDecoder.DecodeToMono48k(fullPath);
+        var samples = FfmpegAudioDecoder.DecodeToMono48k(fullPath);
+        if (samples.Length == 0)
+            throw new InvalidOperationException($"Decoded audio is empty: {fullPath}");
+
+        return samples;
     }
 
-    public static float[] GetSamplesFromClip(object clip)
+    /// <summary><see cref="AudioClip"/> から PCM サンプル列を読み出す。</summary>
+    public static float[] GetSamplesFromClip(AudioClip clip)
     {
         if (clip == null)
             throw new ArgumentNullException(nameof(clip));
 
-        var type = clip.GetType();
-        var samplesProp = type.GetProperty("samples", BindingFlags.Public | BindingFlags.Instance);
-        if (samplesProp == null)
-            throw new MissingMemberException("AudioClip.samples not found.");
-
-        int samples = Convert.ToInt32(samplesProp.GetValue(clip));
-        var data = new float[samples];
-
-        var getData = type.GetMethod("GetData", BindingFlags.Public | BindingFlags.Instance, null, [typeof(float[]), typeof(int)
-        ], null);
-        if (getData == null)
-            throw new MissingMethodException("AudioClip.GetData(float[], int) not found.");
-
-        var ok = getData.Invoke(clip, [data, 0]);
-        if (ok is bool b && !b)
-            throw new InvalidOperationException("AudioClip.GetData failed.");
+        var data = new float[clip.samples * clip.channels];
+        if (!clip.GetData(data, 0))
+            throw new InvalidOperationException($"AudioClip.GetData failed for '{clip.name}'.");
 
         return data;
     }
 
+    /// <summary>
+    /// キャッシュを引く。ネイティブ側が破棄済みのエントリは取り除いて false を返す。
+    /// </summary>
+    private static bool TryGetCached(string clipName, out AudioClip? clip)
+    {
+        clip = null;
+        if (string.IsNullOrWhiteSpace(clipName))
+            return false;
+
+        if (!ClipCache.TryGetValue(clipName, out var cached))
+            return false;
+
+        // UnityEngine.Object は破棄されると == null が true になる（参照は残る）。
+        if (cached == null)
+        {
+            ClipCache.Remove(clipName);
+            return false;
+        }
+
+        clip = cached;
+        return true;
+    }
+
+    private static void DestroyClip(AudioClip? clip)
+    {
+        if (clip == null)
+            return;
+
+        try
+        {
+            UnityEngine.Object.Destroy(clip);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[AudioClipApi] Failed to destroy clip '{clip.name}': {ex.Message}");
+        }
+    }
 }
