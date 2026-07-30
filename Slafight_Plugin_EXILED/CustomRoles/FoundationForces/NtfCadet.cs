@@ -4,6 +4,8 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
+using Slafight_Plugin_EXILED.CustomMaps.Core;
+using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces;
 
@@ -17,6 +19,7 @@ public class NtfCadet : CRole
     protected override CTeam Team { get; set; } = CTeam.FoundationForces;
     protected override string UniqueRoleKey { get; set; } = "NtfCadet";
     protected override RoleTypeId? SpawnBaseRole => RoleTypeId.NtfPrivate;
+    protected override Vector3? SpawnPosition => MapFlags.FirstTeamSpawnPoint;
     protected override float? SpawnMaxHealth => 100f;
     protected override IReadOnlyList<object> SpawnItems =>
     [
