@@ -14,7 +14,7 @@ public class GunProject90 : CItemWeapon
     protected override string UniqueKey => "GunProject90";
     protected override ItemType BaseItem => ItemType.GunCrossvec;
     protected override float Damage => 38f;
-    protected override byte MagazineSize => 25;
+    protected override byte MagazineSize => 50;
     protected override Vector3 Scale => new(1.135f, 1.3555f, 1.08f);
     protected override IReadOnlyDictionary<GunSoundSelector, GunSoundOverride> OverrideSounds => new Dictionary<GunSoundSelector, GunSoundOverride>
     {
