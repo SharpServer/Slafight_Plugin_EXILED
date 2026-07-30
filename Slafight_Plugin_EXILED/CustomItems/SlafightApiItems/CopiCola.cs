@@ -22,6 +22,6 @@ public class CopiCola : CItemUsable
         ev.Player.DisableEffect<Scp207>();
         ev.Player.AddAhp(25, decay: 3.5f);
         ev.Player.EnableEffect<DamageBoost>(25, 10f);
-        ev.Player.EnableEffect<NaturalHeal>(5, 1.5f);
+        ev.Player.EnableEffect<NaturalHeal>(5, 5f);
     }
 }
