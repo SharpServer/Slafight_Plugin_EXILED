@@ -30,6 +30,7 @@ public class FifthistPriest : CRole
         ItemType.GunCOM18,
         ItemType.ArmorHeavy,
         typeof(KeycardFifthistPriest),
+        typeof(LsdPill),
         ItemType.SCP500,
         ItemType.Adrenaline,
         ItemType.GrenadeHE,
