@@ -204,6 +204,7 @@ public static class DefaultUnitPacks
                     SpawnTypeId.SecurityTeam,
                     new()
                     {
+                        { new SpawnSystem.SpawnRoleKey(CRoleTypeId.NtfCadet), (1f, true) },
                         { new SpawnSystem.SpawnRoleKey(CRoleTypeId.SecurityTeamGuard), (99f, false) }
                     }
                 }

@@ -10,7 +10,7 @@ namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
 public class KeycardChaosIntruder : CItemKeycard
 {
     public override string DisplayName => "Chaos Intruder Device";
-    public override string Description => "カオスの権限1,1,1の侵入部隊用デバイス。";
+    public override string Description => "カオスの権限1,2,1の侵入部隊用デバイス。";
 
     protected override string UniqueKey => "KeycardChaosIntruder";
     protected override ItemType BaseItem => ItemType.KeycardChaosInsurgency;
@@ -25,6 +25,7 @@ public class KeycardChaosIntruder : CItemKeycard
     protected override KeycardPermissions Permissions =>
         KeycardPermissions.ContainmentLevelOne |
         KeycardPermissions.ArmoryLevelOne |
+        KeycardPermissions.ArmoryLevelTwo |
         KeycardPermissions.Intercom |
         KeycardPermissions.Checkpoints;
 

@@ -44,6 +44,7 @@ public enum CRoleTypeId
     NtfDetainer,
     NtfFieldMedic,
     NtfGunslinger,
+    NtfCadet,
 
     // ==== NU-7 HAMMER DOWN ==== //
     HdInfantry,
