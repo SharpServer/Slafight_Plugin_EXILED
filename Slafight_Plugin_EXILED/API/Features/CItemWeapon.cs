@@ -43,6 +43,9 @@ public abstract class CItemWeapon : CItem
     // リロード開始時のスナップショット: serial → (マガジン弾, 予備弾)
     private readonly Dictionary<ushort, (int Magazine, int Reserve)> _reloadSnapshot = new();
 
+    // 発砲音差し替え用: プレイヤー ID → 最後に鳴らした Time.time
+    private readonly Dictionary<int, float> _lastOverrideAudioTime = new();
+
     /// <summary>1 撃あたりのダメージ。負値ならバニラのダメージを使う (override 無し)。</summary>
     protected virtual float Damage => -1f;
 
@@ -78,6 +81,47 @@ public abstract class CItemWeapon : CItem
 
     /// <summary>プレイヤーによるアタッチメント変更を許可するか。</summary>
     protected virtual bool AllowAttachmentChanges => true;
+
+    // ==== 発砲音の上書き ====
+
+    /// <summary>
+    /// バニラの発砲音（<see cref="OverrideGunSoundAudioIndexes"/> に含まれる AudioIndex）を抑制するか。
+    /// <see cref="OverrideAudio"/> を指定すると自動的に true になる。
+    /// true かつ <see cref="OverrideAudio"/> が null の場合は「発砲音を消すだけ」になる。
+    /// </summary>
+    protected virtual bool OverrideGunSounds => !string.IsNullOrWhiteSpace(OverrideAudio);
+
+    /// <summary>
+    /// 発砲音の代わりに鳴らす音声ファイル名（<c>AudioReferences</c> ディレクトリ配下）。
+    /// null なら差し替え音は鳴らさない。
+    /// </summary>
+    protected virtual string? OverrideAudio => null;
+
+    /// <summary>差し替え発砲音の可聴距離。</summary>
+    protected virtual float OverrideAudioRange => 15f;
+
+    /// <summary>差し替え発砲音の音量。</summary>
+    protected virtual float OverrideAudioVolume => 1f;
+
+    /// <summary>差し替え発砲音を 3D 空間音として鳴らすか。</summary>
+    protected virtual bool OverrideAudioIsSpatial => true;
+
+    /// <summary>
+    /// プレイヤー 1 人あたりに確保するスピーカー数。連射時に音が重なる分だけ必要。
+    /// </summary>
+    protected virtual int OverrideAudioVoices => 2;
+
+    /// <summary>
+    /// 同一発砲で SendingGunSound が複数回飛ぶ（発砲音・機構音）ため、
+    /// これより短い間隔の再生要求は同じ 1 発とみなして捨てる。
+    /// </summary>
+    protected virtual float OverrideAudioMinInterval => 0.04f;
+
+    /// <summary>
+    /// 抑制対象の AudioIndex。既定は発砲音に対応する 0 / 1 / 2。
+    /// 機構音（リロード等）まで消したい場合に override する。
+    /// </summary>
+    protected virtual int[] OverrideGunSoundAudioIndexes => [0, 1, 2];
 
     /// <summary>基底側でリロード弾薬処理を行うか（容量上書き or 倍率カスタム時に有効）。</summary>
     private bool ManagesReloadAmmo => MaxMagazineAmmo > 0 || ReloadAmmoMultiplier > 1;
@@ -226,6 +270,21 @@ public abstract class CItemWeapon : CItem
         Player.ReloadingWeapon += OnInternalReloading;
         Player.ReloadedWeapon  += OnInternalReloaded;
         Exiled.Events.Handlers.Item.ChangingAttachments += OnInternalChangingAttachments;
+
+        if (OverrideGunSounds)
+        {
+            if (!string.IsNullOrWhiteSpace(OverrideAudio))
+                SpeakerApi.TryLoadClip(OverrideAudio!);
+
+            Player.SendingGunSound   += OnInternalSendingGunSound;
+            Player.ReceivingGunSound += OnInternalReceivingGunSound;
+            Player.Left              += OnInternalPlayerLeft;
+
+            // 派生側が OnWaitingForPlayers で base を呼ばない場合でもスピーカーを残さないよう、
+            // ラウンド間の掃除は基底が直接購読して行う。
+            Server.WaitingForPlayers += ClearOverrideAudioSpeakers;
+        }
+
         base.RegisterEvents();
     }
 
@@ -234,6 +293,16 @@ public abstract class CItemWeapon : CItem
         Player.ReloadingWeapon -= OnInternalReloading;
         Player.ReloadedWeapon  -= OnInternalReloaded;
         Exiled.Events.Handlers.Item.ChangingAttachments -= OnInternalChangingAttachments;
+
+        if (OverrideGunSounds)
+        {
+            Player.SendingGunSound   -= OnInternalSendingGunSound;
+            Player.ReceivingGunSound -= OnInternalReceivingGunSound;
+            Player.Left              -= OnInternalPlayerLeft;
+            Server.WaitingForPlayers -= ClearOverrideAudioSpeakers;
+            ClearOverrideAudioSpeakers();
+        }
+
         base.UnregisterEvents();
     }
 
@@ -314,6 +383,66 @@ public abstract class CItemWeapon : CItem
         int affordable = ev.Player.GetAmmo(firearm.AmmoType) / Math.Max(1, ReloadAmmoMultiplier);
 
         return Math.Min(loadable, affordable) <= 0;
+    }
+
+    // ==== 発砲音の上書き ====
+
+    /// <summary>この CItem の発砲音スピーカー名の接頭辞。プレイヤー ID を後ろに付けて使う。</summary>
+    private string OverrideAudioSpeakerPrefix => UniqueKey + "_GunSound_";
+
+    private bool IsOverriddenAudioIndex(int audioIndex)
+        => Array.IndexOf(OverrideGunSoundAudioIndexes, audioIndex) >= 0;
+
+    private void OnInternalSendingGunSound(SendingGunSoundEventArgs ev)
+    {
+        if (!Check(ev.Item) || !IsOverriddenAudioIndex(ev.AudioIndex)) return;
+        ev.IsAllowed = false;
+
+        if (ev.Player == null || string.IsNullOrWhiteSpace(OverrideAudio)) return;
+
+        int playerId = ev.Player.Id;
+        if (_lastOverrideAudioTime.TryGetValue(playerId, out float last)
+            && Time.time - last < OverrideAudioMinInterval)
+            return;
+
+        _lastOverrideAudioTime[playerId] = Time.time;
+
+        // スピーカーは撃つたびに作らず、プレイヤーごとに OverrideAudioVoices 個を使い回す。
+        SpeakerApi.PlayOneShot(
+            OverrideAudio!,
+            OverrideAudioSpeakerPrefix + playerId,
+            ev.SendingPosition,
+            voices: OverrideAudioVoices,
+            isSpatial: OverrideAudioIsSpatial,
+            maxDistance: OverrideAudioRange,
+            volume: OverrideAudioVolume);
+    }
+
+    private void OnInternalReceivingGunSound(ReceivingGunSoundEventArgs ev)
+    {
+        if (!Check(ev.Item) || !IsOverriddenAudioIndex(ev.AudioIndex)) return;
+        ev.IsAllowed = false;
+    }
+
+    private void OnInternalPlayerLeft(LeftEventArgs ev)
+    {
+        if (ev.Player == null) return;
+
+        SpeakerApi.TryDestroy(OverrideAudioSpeakerPrefix + ev.Player.Id);
+        _lastOverrideAudioTime.Remove(ev.Player.Id);
+    }
+
+    /// <summary>この CItem が確保した発砲音スピーカーを全て破棄する。</summary>
+    private void ClearOverrideAudioSpeakers()
+    {
+        string prefix = OverrideAudioSpeakerPrefix;
+        foreach (string name in SpeakerApi.GetAudioPlayerNames()
+                     .Where(n => n.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+        {
+            SpeakerApi.TryDestroy(name);
+        }
+
+        _lastOverrideAudioTime.Clear();
     }
 
     /// <summary>発射を基底側で止めるか。</summary>
