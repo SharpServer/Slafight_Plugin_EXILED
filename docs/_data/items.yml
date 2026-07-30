@@ -560,7 +560,7 @@
   base: CROSSVEC
   version: v1.9.0.1
   summary: 昔ながらの安定した撃ち心地を重視した特殊CROSSVEC。九尾狐 士官候補生が装備する。
-  stats: ダメージ38、装弾数25。
+  stats: ダメージ38、装弾数50。
   effect: 発砲・空撃ち・リロード・サプレッサー射撃に専用の音が設定されている。
   tags: [weapon]
 
