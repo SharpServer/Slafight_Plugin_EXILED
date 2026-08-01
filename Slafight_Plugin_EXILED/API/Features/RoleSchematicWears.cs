@@ -99,7 +99,8 @@ public static class RoleSchematicWears
         Vector3? playerScale = null,
         Vector3? offset = null,
         Action<Player, SchematicObject>? afterAttach = null,
-        string slot = WearsHandler.DefaultWearSlot)
+        string slot = WearsHandler.DefaultWearSlot,
+        bool ignoreInvisibility = false)
     {
         if (player == null)
             return;
@@ -121,7 +122,7 @@ public static class RoleSchematicWears
             if (playerScale.HasValue)
                 current.Scale = playerScale.Value;
 
-            if (!current.TryWear(schematicName, out var schem, offset, slot))
+            if (!current.TryWear(schematicName, out var schem, offset, slot, ignoreInvisibility))
                 return;
 
             Timing.CallDelayed(PostAttachDelay, () =>

@@ -137,6 +137,30 @@ public static class NetworkVisibilityManager
     private static readonly Dictionary<uint, NetworkIdentity>    _identityCache  = new();
 
     // =========================================================
+    // Show 拒否フック
+    // =========================================================
+
+    /// <summary>
+    /// Show を最優先で拒否する追加判定。true を返した (identity, player) の組は Show されない。<br/>
+    /// WearsHandler の透明化連動が、Mirror の再送信や ShowState の再適用で
+    /// 意図せず上書きされないようにするために使う。
+    /// </summary>
+    public static Func<NetworkIdentity, Player, bool>? ShowVeto { get; set; }
+
+    private static bool IsShowVetoed(NetworkIdentity identity, Player player)
+    {
+        var veto = ShowVeto;
+        if (veto == null) return false;
+
+        try { return veto(identity, player); }
+        catch (Exception ex)
+        {
+            Log.Warn($"[NetworkVisibility] ShowVeto 失敗: {ex.Message}");
+            return false;
+        }
+    }
+
+    // =========================================================
     // Register / Unregister
     // =========================================================
 
@@ -154,6 +178,7 @@ public static class NetworkVisibilityManager
         Exiled.Events.Handlers.Player.Verified                -= OnVerified;
         Exiled.Events.Handlers.Player.Spawned                 -= OnSpawned;
         Exiled.Events.Handlers.Player.ChangingSpectatedPlayer -= OnChangingSpectatedPlayer;
+        ShowVeto = null;
         _states.Clear();
         _identityCache.Clear();
     }
@@ -238,6 +263,7 @@ public static class NetworkVisibilityManager
     public static void ShowNetworkIdentity(this Player? player, NetworkIdentity identity)
     {
         if (player?.Connection == null || identity == null) return;
+        if (IsShowVetoed(identity, player)) return;
         try { NetworkServer.ShowForConnection(identity, player.Connection); }
         catch (Exception ex) { Log.Warn($"[NetworkVisibility] ShowNetworkIdentity 失敗: {ex.Message}"); }
     }

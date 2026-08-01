@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using AdminToys;
+using CustomPlayerEffects;
 using Exiled.API.Features;
+using Exiled.API.Features.Roles;
 using Exiled.API.Features.Toys;
 using Exiled.Events.EventArgs.Player;
 using MEC;
+using Mirror;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Features;
@@ -25,6 +28,8 @@ namespace Slafight_Plugin_EXILED.MainHandlers;
 /// - ForceRemoveWear(player, slot) / ForceRemoveWearById(id, slot) で slot 単位の Wear を破壊
 /// - RegisterExternal で外部生成済みオブジェクトを登録
 /// - DestroyCoroutine でロール変化時に自動 Destroy
+/// - 装着者が透明化している間は Wear も自動的に他プレイヤーから隠す
+///   （slot ごとに ignoreInvisibility: true を渡すと隠さない）
 /// </summary>
 public static class WearsHandler
 {
@@ -39,23 +44,41 @@ public static class WearsHandler
         public WearRegistration(
             GameObject gameObject,
             Action destroy,
-            PlayerRoleHelpers.PlayerRoleInfo roleInfo)
+            PlayerRoleHelpers.PlayerRoleInfo roleInfo,
+            bool ignoreInvisibility)
         {
             GameObject = gameObject;
             Destroy = destroy;
             RoleInfo = roleInfo;
+            IgnoreInvisibility = ignoreInvisibility;
         }
 
         public GameObject GameObject { get; }
         public Action Destroy { get; }
         public PlayerRoleHelpers.PlayerRoleInfo RoleInfo { get; }
+
+        /// <summary>true の場合、装着者が透明化していてもこの Wear は隠さない。</summary>
+        public bool IgnoreInvisibility { get; set; }
+
+        /// <summary>透明化により <see cref="HiddenByInvisibility"/> に登録済みの netId。</summary>
+        public HashSet<uint> HiddenNetIds { get; } = new();
     }
+
+    /// <summary>netId → 透明化により Hide 中のプレイヤーID。ShowVeto の判定元。</summary>
+    private static readonly Dictionary<uint, HashSet<int>> HiddenByInvisibility = new();
+
+    private static readonly HashSet<int> EmptyViewerIds = new();
 
     public static void Register()
     {
         Server.RoundStarted += OnRoundStarted;
         Server.RestartingRound += OnRoundRestarting;
         Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
+        Exiled.Events.Handlers.Player.Verified += OnPlayerVerified;
+        Exiled.Events.Handlers.Player.Spawned += OnPlayerSpawned;
+        Exiled.Events.Handlers.Player.ReceivingEffect += OnReceivingEffect;
+
+        NetworkVisibilityManager.ShowVeto = IsHiddenByInvisibility;
     }
 
     public static void Unregister()
@@ -63,6 +86,12 @@ public static class WearsHandler
         Server.RoundStarted -= OnRoundStarted;
         Server.RestartingRound -= OnRoundRestarting;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
+        Exiled.Events.Handlers.Player.Verified -= OnPlayerVerified;
+        Exiled.Events.Handlers.Player.Spawned -= OnPlayerSpawned;
+        Exiled.Events.Handlers.Player.ReceivingEffect -= OnReceivingEffect;
+
+        if (NetworkVisibilityManager.ShowVeto == IsHiddenByInvisibility)
+            NetworkVisibilityManager.ShowVeto = null;
 
         if (_cleanupCoroutine.IsRunning)
             Timing.KillCoroutines(_cleanupCoroutine);
@@ -208,6 +237,59 @@ public static class WearsHandler
     }
 
     // ───────────────────────────────────────────
+    //  Public API - Invisibility
+    // ───────────────────────────────────────────
+
+    /// <summary>
+    /// 指定 slot の Wear について「装着者が透明化しても隠さない」設定を変更する。
+    /// </summary>
+    public static bool SetIgnoreInvisibility(Player player, string slot, bool ignoreInvisibility)
+    {
+        slot = NormalizeSlot(slot);
+
+        if (player == null ||
+            !PlayerWears.TryGetValue(player.Id, out var wears) ||
+            !wears.TryGetValue(slot, out var wear))
+        {
+            return false;
+        }
+
+        wear.IgnoreInvisibility = ignoreInvisibility;
+        SyncPlayerWears(player);
+        return true;
+    }
+
+    /// <summary>指定プレイヤーの全 Wear について「透明化しても隠さない」設定を変更する。</summary>
+    public static bool SetIgnoreInvisibility(Player player, bool ignoreInvisibility)
+    {
+        if (player == null || !PlayerWears.TryGetValue(player.Id, out var wears))
+            return false;
+
+        foreach (var wear in wears.Values)
+            wear.IgnoreInvisibility = ignoreInvisibility;
+
+        SyncPlayerWears(player);
+        return true;
+    }
+
+    /// <summary>指定 slot の Wear の「透明化しても隠さない」設定を取得する。</summary>
+    public static bool TryGetIgnoreInvisibility(Player player, string slot, out bool ignoreInvisibility)
+    {
+        ignoreInvisibility = false;
+        slot = NormalizeSlot(slot);
+
+        if (player == null ||
+            !PlayerWears.TryGetValue(player.Id, out var wears) ||
+            !wears.TryGetValue(slot, out var wear))
+        {
+            return false;
+        }
+
+        ignoreInvisibility = wear.IgnoreInvisibility;
+        return true;
+    }
+
+    // ───────────────────────────────────────────
     //  Public API - Register External
     // ───────────────────────────────────────────
 
@@ -215,10 +297,10 @@ public static class WearsHandler
     /// 既にスポーン済みの Schematic を登録する（外部用）。
     /// WearFollower を自動アタッチする。
     /// </summary>
-    public static void RegisterExternal(Player player, SchematicObject schem, Vector3? offset = null, string slot = DefaultWearSlot)
+    public static void RegisterExternal(Player player, SchematicObject schem, Vector3? offset = null, string slot = DefaultWearSlot, bool ignoreInvisibility = false)
     {
         if (schem != null)
-            RegisterWear(player, schem.gameObject, player?.Transform, offset, () => schem.Destroy(), null, "RegisterExternal(SchematicObject)", true, slot);
+            RegisterWear(player, schem.gameObject, player?.Transform, offset, () => schem.Destroy(), null, "RegisterExternal(SchematicObject)", true, slot, ignoreInvisibility);
     }
 
     /// <summary>
@@ -231,7 +313,8 @@ public static class WearsHandler
         Transform target = null,
         Action<GameObject> destroy = null,
         Quaternion? rotationOffset = null,
-        string slot = DefaultWearSlot)
+        string slot = DefaultWearSlot,
+        bool ignoreInvisibility = false)
     {
         RegisterWear(
             player,
@@ -242,7 +325,8 @@ public static class WearsHandler
             rotationOffset,
             "RegisterExternal(GameObject)",
             true,
-            slot);
+            slot,
+            ignoreInvisibility);
     }
 
     /// <summary>
@@ -254,7 +338,8 @@ public static class WearsHandler
         Vector3? offset = null,
         Transform target = null,
         Quaternion? rotationOffset = null,
-        string slot = DefaultWearSlot)
+        string slot = DefaultWearSlot,
+        bool ignoreInvisibility = false)
     {
         if (toy == null)
             return;
@@ -268,7 +353,8 @@ public static class WearsHandler
             rotationOffset,
             "RegisterExternal(AdminToy)",
             true,
-            slot);
+            slot,
+            ignoreInvisibility);
     }
 
     /// <summary>
@@ -280,7 +366,8 @@ public static class WearsHandler
         Vector3? offset = null,
         Transform target = null,
         Quaternion? rotationOffset = null,
-        string slot = DefaultWearSlot)
+        string slot = DefaultWearSlot,
+        bool ignoreInvisibility = false)
     {
         if (toy == null)
             return;
@@ -294,7 +381,8 @@ public static class WearsHandler
             rotationOffset,
             "RegisterExternal(AdminToyBase)",
             true,
-            slot);
+            slot,
+            ignoreInvisibility);
     }
 
     // ───────────────────────────────────────────
@@ -305,7 +393,7 @@ public static class WearsHandler
     /// Schematic 名を指定してスポーン＆追従。失敗時は何も返さない簡易版。
     /// 既存呼び出しは default slot に登録される。
     /// </summary>
-    public static void Wear(this Player player, string wearSchemName, Vector3? offset = null, string slot = DefaultWearSlot)
+    public static void Wear(this Player player, string wearSchemName, Vector3? offset = null, string slot = DefaultWearSlot, bool ignoreInvisibility = false)
     {
         if (player == null)
             return;
@@ -317,7 +405,7 @@ public static class WearsHandler
         try
         {
             schem = ObjectSpawner.SpawnSchematic(wearSchemName, player.Position + offsetVector);
-            if (!RegisterWear(player, schem.gameObject, player.Transform, offsetVector, () => schem.Destroy(), null, "Wear(string)", true, slot))
+            if (!RegisterWear(player, schem.gameObject, player.Transform, offsetVector, () => schem.Destroy(), null, "Wear(string)", true, slot, ignoreInvisibility))
                 schem.Destroy();
         }
         catch (Exception e)
@@ -329,10 +417,10 @@ public static class WearsHandler
     /// <summary>
     /// スポーン済みの SchematicObject を Wear させる版。
     /// </summary>
-    public static void Wear(this Player player, SchematicObject schem, Vector3? offset = null, string slot = DefaultWearSlot)
+    public static void Wear(this Player player, SchematicObject schem, Vector3? offset = null, string slot = DefaultWearSlot, bool ignoreInvisibility = false)
     {
         if (schem != null)
-            RegisterWear(player, schem.gameObject, player?.Transform, offset, () => schem.Destroy(), null, "Wear(SchematicObject)", true, slot);
+            RegisterWear(player, schem.gameObject, player?.Transform, offset, () => schem.Destroy(), null, "Wear(SchematicObject)", true, slot, ignoreInvisibility);
     }
 
     /// <summary>
@@ -345,7 +433,8 @@ public static class WearsHandler
         Transform target = null,
         Action<GameObject> destroy = null,
         Quaternion? rotationOffset = null,
-        string slot = DefaultWearSlot)
+        string slot = DefaultWearSlot,
+        bool ignoreInvisibility = false)
     {
         RegisterWear(
             player,
@@ -356,7 +445,8 @@ public static class WearsHandler
             rotationOffset,
             "Wear(GameObject)",
             true,
-            slot);
+            slot,
+            ignoreInvisibility);
     }
 
     /// <summary>
@@ -368,10 +458,11 @@ public static class WearsHandler
         Vector3? offset = null,
         Transform target = null,
         Quaternion? rotationOffset = null,
-        string slot = DefaultWearSlot)
+        string slot = DefaultWearSlot,
+        bool ignoreInvisibility = false)
     {
         if (toy != null)
-            RegisterWear(player, toy.GameObject, target ?? player?.Transform, offset, () => toy.Destroy(), rotationOffset, "Wear(AdminToy)", true, slot);
+            RegisterWear(player, toy.GameObject, target ?? player?.Transform, offset, () => toy.Destroy(), rotationOffset, "Wear(AdminToy)", true, slot, ignoreInvisibility);
     }
 
     /// <summary>
@@ -383,10 +474,11 @@ public static class WearsHandler
         Vector3? offset = null,
         Transform target = null,
         Quaternion? rotationOffset = null,
-        string slot = DefaultWearSlot)
+        string slot = DefaultWearSlot,
+        bool ignoreInvisibility = false)
     {
         if (toy != null)
-            RegisterWear(player, toy.gameObject, target ?? player?.Transform, offset, () => DestroyAdminToyBase(toy), rotationOffset, "Wear(AdminToyBase)", true, slot);
+            RegisterWear(player, toy.gameObject, target ?? player?.Transform, offset, () => DestroyAdminToyBase(toy), rotationOffset, "Wear(AdminToyBase)", true, slot, ignoreInvisibility);
     }
 
     // ───────────────────────────────────────────
@@ -397,7 +489,7 @@ public static class WearsHandler
     /// 成否＋SchematicObject を取得したい場合はこちら。
     /// 既存呼び出しは default slot に登録される。
     /// </summary>
-    public static bool TryWear(this Player player, string wearSchemName, out SchematicObject schematicObject, Vector3? offset = null, string slot = DefaultWearSlot)
+    public static bool TryWear(this Player player, string wearSchemName, out SchematicObject schematicObject, Vector3? offset = null, string slot = DefaultWearSlot, bool ignoreInvisibility = false)
     {
         schematicObject = null;
 
@@ -411,7 +503,7 @@ public static class WearsHandler
         try
         {
             schem = ObjectSpawner.SpawnSchematic(wearSchemName, player.Position + offsetVector, player.Rotation);
-            if (!RegisterWear(player, schem.gameObject, player.Transform, offsetVector, () => schem.Destroy(), null, "TryWear(string)", true, slot))
+            if (!RegisterWear(player, schem.gameObject, player.Transform, offsetVector, () => schem.Destroy(), null, "TryWear(string)", true, slot, ignoreInvisibility))
             {
                 schem.Destroy();
                 return false;
@@ -434,7 +526,7 @@ public static class WearsHandler
     /// 親Transform を明示指定できる TryWear。
     /// プレイヤー以外のオブジェクトに追従させたい場合に使用。
     /// </summary>
-    public static bool TryWear(this Player player, string wearSchemName, Transform parent, out SchematicObject schematicObject, Vector3? offset = null, string slot = DefaultWearSlot)
+    public static bool TryWear(this Player player, string wearSchemName, Transform parent, out SchematicObject schematicObject, Vector3? offset = null, string slot = DefaultWearSlot, bool ignoreInvisibility = false)
     {
         schematicObject = null;
 
@@ -448,7 +540,7 @@ public static class WearsHandler
         try
         {
             schem = ObjectSpawner.SpawnSchematic(wearSchemName, parent.position + offsetVector, player.Rotation);
-            if (!RegisterWear(player, schem.gameObject, parent, offsetVector, () => schem.Destroy(), null, "TryWear(parent)", true, slot))
+            if (!RegisterWear(player, schem.gameObject, parent, offsetVector, () => schem.Destroy(), null, "TryWear(parent)", true, slot, ignoreInvisibility))
             {
                 schem.Destroy();
                 return false;
@@ -478,7 +570,8 @@ public static class WearsHandler
         Transform target = null,
         Action<GameObject> destroy = null,
         Quaternion? rotationOffset = null,
-        string slot = DefaultWearSlot)
+        string slot = DefaultWearSlot,
+        bool ignoreInvisibility = false)
     {
         wornObject = null;
         if (!RegisterWear(
@@ -490,7 +583,8 @@ public static class WearsHandler
                 rotationOffset,
                 "TryWear(GameObject)",
                 true,
-                slot))
+                slot,
+                ignoreInvisibility))
         {
             return false;
         }
@@ -509,7 +603,8 @@ public static class WearsHandler
         Vector3? offset = null,
         Transform target = null,
         Quaternion? rotationOffset = null,
-        string slot = DefaultWearSlot)
+        string slot = DefaultWearSlot,
+        bool ignoreInvisibility = false)
         where TToy : AdminToy
     {
         wornToy = null;
@@ -525,7 +620,8 @@ public static class WearsHandler
                 rotationOffset,
                 "TryWear(AdminToy)",
                 true,
-                slot))
+                slot,
+                ignoreInvisibility))
         {
             return false;
         }
@@ -544,7 +640,8 @@ public static class WearsHandler
         Vector3? offset = null,
         Transform target = null,
         Quaternion? rotationOffset = null,
-        string slot = DefaultWearSlot)
+        string slot = DefaultWearSlot,
+        bool ignoreInvisibility = false)
     {
         wornToy = null;
         if (toy == null)
@@ -559,7 +656,8 @@ public static class WearsHandler
                 rotationOffset,
                 "TryWear(AdminToyBase)",
                 true,
-                slot))
+                slot,
+                ignoreInvisibility))
         {
             return false;
         }
@@ -581,7 +679,8 @@ public static class WearsHandler
         Quaternion? rotationOffset,
         string logContext,
         bool removeExisting = true,
-        string slot = DefaultWearSlot)
+        string slot = DefaultWearSlot,
+        bool ignoreInvisibility = false)
     {
         if (player == null || player.ReferenceHub == null || gameObject == null || target == null || destroy == null)
             return false;
@@ -616,7 +715,13 @@ public static class WearsHandler
             wears.Remove(slot);
         }
 
-        wears[slot] = new WearRegistration(gameObject, destroy, player.GetRoleInfo());
+        var registration = new WearRegistration(gameObject, destroy, player.GetRoleInfo(), ignoreInvisibility);
+        wears[slot] = registration;
+
+        // Schematic は生成直後に NetworkIdentity が揃っていない場合があるため、
+        // 1フレーム後に透明化状態を反映する（以降は DestroyCoroutine が追従）。
+        Timing.CallDelayed(0f, () => SyncPlayerWears(Player.Get(id)));
+
         return true;
     }
 
@@ -649,6 +754,8 @@ public static class WearsHandler
 
     private static void OnRoundStarted()
     {
+        HiddenByInvisibility.Clear();
+
         if (_cleanupCoroutine.IsRunning)
             Timing.KillCoroutines(_cleanupCoroutine);
 
@@ -663,7 +770,258 @@ public static class WearsHandler
         CleanupAll();
     }
 
-    private static void OnPlayerLeft(LeftEventArgs ev) => CleanupPlayer(ev.Player);
+    private static void OnPlayerLeft(LeftEventArgs ev)
+    {
+        if (ev?.Player == null)
+            return;
+
+        var leftId = ev.Player.Id;
+        CleanupPlayer(ev.Player);
+        ForgetViewer(leftId);
+    }
+
+    /// <summary>
+    /// 新規接続者には Mirror が全オブジェクトを送信するため、Hide 済み記録を破棄して再適用させる。
+    /// </summary>
+    private static void OnPlayerVerified(VerifiedEventArgs ev) => ScheduleViewerResync(ev?.Player);
+
+    /// <summary>
+    /// ロール変更後は Mirror が全 NetworkIdentity を再送信するため、Hide 済み記録を破棄して再適用させる。
+    /// </summary>
+    private static void OnPlayerSpawned(SpawnedEventArgs ev) => ScheduleViewerResync(ev?.Player);
+
+    /// <summary>透明化エフェクトの増減を即時に Wear へ反映する。</summary>
+    private static void OnReceivingEffect(ReceivingEffectEventArgs ev)
+    {
+        if (ev?.Player == null || ev.Effect is not Invisible)
+            return;
+
+        var playerId = ev.Player.Id;
+
+        // ReceivingEffect は適用前に発火するため、確定後に評価する。
+        Timing.CallDelayed(0f, () => SyncPlayerWears(Player.Get(playerId)));
+    }
+
+    private static void ScheduleViewerResync(Player? viewer)
+    {
+        if (viewer == null)
+            return;
+
+        var viewerId = viewer.Id;
+
+        // Mirror の再送信より後に走らせる必要があるため 1フレーム遅らせる。
+        Timing.CallDelayed(0f, () =>
+        {
+            ForgetViewer(viewerId);
+            SyncAllWears();
+        });
+    }
+
+    /// <summary>
+    /// 指定プレイヤーに対する Hide 済み記録を破棄する。
+    /// Mirror がオブジェクトを再送信した後、次の同期で Hide を送り直させるため。
+    /// </summary>
+    private static void ForgetViewer(int viewerId)
+    {
+        foreach (var hidden in HiddenByInvisibility.Values)
+            hidden.Remove(viewerId);
+    }
+
+    /// <summary>NetworkVisibilityManager.ShowVeto 実装。透明化で隠している間は Show させない。</summary>
+    private static bool IsHiddenByInvisibility(NetworkIdentity identity, Player viewer)
+        => identity != null &&
+           viewer != null &&
+           HiddenByInvisibility.TryGetValue(identity.netId, out var hidden) &&
+           hidden.Contains(viewer.Id);
+
+    // ───────────────────────────────────────────
+    //  Invisibility sync
+    // ───────────────────────────────────────────
+
+    private static void SyncAllWears()
+    {
+        foreach (var playerId in PlayerWears.Keys.ToList())
+            SyncPlayerWears(Player.Get(playerId));
+    }
+
+    /// <summary>指定プレイヤーの全 Wear について、透明化状態に応じた表示/非表示を反映する。</summary>
+    private static void SyncPlayerWears(Player? owner)
+    {
+        if (owner?.ReferenceHub == null)
+            return;
+
+        if (!PlayerWears.TryGetValue(owner.Id, out var wears) || wears.Count == 0)
+            return;
+
+        var globalInvisible = IsGloballyInvisible(owner);
+        var invisibleFor = GetInvisibleForIds(owner);
+
+        foreach (var wear in wears.Values.ToList())
+            SyncWearVisibility(owner, wear, globalInvisible, invisibleFor);
+    }
+
+    private static void SyncWearVisibility(
+        Player owner,
+        WearRegistration wear,
+        bool globalInvisible,
+        HashSet<int>? invisibleFor)
+    {
+        var hasHideSource = !wear.IgnoreInvisibility &&
+                            (globalInvisible || invisibleFor is { Count: > 0 });
+
+        // 隠す理由がなく、隠しているものも無いなら何もしない（通常時のホットパス）。
+        if (!hasHideSource && wear.HiddenNetIds.Count == 0)
+            return;
+
+        var identities = ResolveIdentities(wear);
+        var liveNetIds = new HashSet<uint>(identities.Select(identity => identity.netId));
+
+        // 既に破棄された NetworkIdentity をインデックスから除去。
+        foreach (var staleNetId in wear.HiddenNetIds.Where(netId => !liveNetIds.Contains(netId)).ToList())
+        {
+            HiddenByInvisibility.Remove(staleNetId);
+            wear.HiddenNetIds.Remove(staleNetId);
+        }
+
+        // 装着者本人には見せ続ける（バニラの SCP-268 と同じく、自分自身の視界は変わらない）。
+        var desired = EmptyViewerIds;
+        if (hasHideSource)
+        {
+            desired = new HashSet<int>();
+            foreach (var viewer in Player.List)
+            {
+                if (viewer?.ReferenceHub == null || !viewer.IsConnected || viewer.Id == owner.Id)
+                    continue;
+
+                if (globalInvisible || (invisibleFor?.Contains(viewer.Id) ?? false))
+                    desired.Add(viewer.Id);
+            }
+        }
+
+        foreach (var identity in identities)
+        {
+            var netId = identity.netId;
+            var hasPrevious = HiddenByInvisibility.TryGetValue(netId, out var previous);
+
+            if (!hasPrevious && desired.Count == 0)
+                continue;
+
+            previous ??= EmptyViewerIds;
+
+            // Show より先にインデックスを更新する（自分の Show が ShowVeto で潰されないように）。
+            if (desired.Count > 0)
+            {
+                HiddenByInvisibility[netId] = new HashSet<int>(desired);
+                wear.HiddenNetIds.Add(netId);
+            }
+            else
+            {
+                HiddenByInvisibility.Remove(netId);
+                wear.HiddenNetIds.Remove(netId);
+            }
+
+            if (desired.SetEquals(previous))
+                continue;
+
+            foreach (var viewerId in desired)
+            {
+                if (previous.Contains(viewerId))
+                    continue;
+
+                Player.Get(viewerId)?.HideNetworkIdentity(identity);
+            }
+
+            foreach (var viewerId in previous)
+            {
+                if (desired.Contains(viewerId))
+                    continue;
+
+                var viewer = Player.Get(viewerId);
+                if (viewer?.ReferenceHub == null || !viewer.IsConnected)
+                    continue;
+
+                RestoreVisibility(identity, viewer);
+            }
+        }
+    }
+
+    /// <summary>
+    /// 透明化解除時の再表示。NetworkVisibilityManager 管理下なら、その表示条件を尊重する
+    /// （SCP-3005 のアクセシビリティ判定などを壊さないため）。
+    /// </summary>
+    private static void RestoreVisibility(NetworkIdentity identity, Player viewer)
+    {
+        var state = identity.GetShowState();
+
+        if (state == null || state.ShouldShow(viewer, Player.List))
+            viewer.ShowNetworkIdentity(identity);
+        else
+            viewer.HideNetworkIdentity(identity);
+    }
+
+    /// <summary>全員から見えなくなる種類の透明化かどうか。</summary>
+    private static bool IsGloballyInvisible(Player owner)
+    {
+        try
+        {
+            if (owner.IsEffectActive<Invisible>())
+                return true;
+
+            return owner.Role is FpcRole fpcRole && fpcRole.IsInvisible;
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"[WearsHandler] IsGloballyInvisible failed: {e.Message}");
+            return false;
+        }
+    }
+
+    /// <summary>特定プレイヤーからのみ隠されている場合の対象ID。無ければ null。</summary>
+    private static HashSet<int>? GetInvisibleForIds(Player owner)
+    {
+        try
+        {
+            if (owner.Role is not FpcRole fpcRole || fpcRole.IsInvisibleFor.Count == 0)
+                return null;
+
+            var ids = new HashSet<int>();
+            foreach (var viewer in fpcRole.IsInvisibleFor)
+            {
+                if (viewer?.ReferenceHub != null)
+                    ids.Add(viewer.Id);
+            }
+
+            return ids.Count > 0 ? ids : null;
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"[WearsHandler] GetInvisibleForIds failed: {e.Message}");
+            return null;
+        }
+    }
+
+    /// <summary>
+    /// Wear が持つ NetworkIdentity を毎回解決する。
+    /// Schematic は段階生成されることがあるためキャッシュしない。
+    /// </summary>
+    private static IReadOnlyList<NetworkIdentity> ResolveIdentities(WearRegistration wear)
+    {
+        if (wear.GameObject == null)
+            return Array.Empty<NetworkIdentity>();
+
+        try
+        {
+            return wear.GameObject
+                .GetComponentsInChildren<NetworkIdentity>(true)
+                .Where(identity => identity != null && identity.netId != 0)
+                .ToList();
+        }
+        catch (Exception e)
+        {
+            Log.Warn($"[WearsHandler] ResolveIdentities failed: {e.Message}");
+            return Array.Empty<NetworkIdentity>();
+        }
+    }
 
     // ───────────────────────────────────────────
     //  Coroutine
@@ -706,6 +1064,9 @@ public static class WearsHandler
                         ForceRemoveWearById(playerId, slot);
                     }
                 }
+
+                // 透明化の開始/終了、視聴者の増減を定期的に取り込む（イベント側の取りこぼし対策）。
+                SyncPlayerWears(player);
             }
 
             yield return Timing.WaitForSeconds(0.5f);
@@ -733,12 +1094,18 @@ public static class WearsHandler
         }
 
         PlayerWears.Clear();
+        HiddenByInvisibility.Clear();
     }
 
     private static void DestroyWear(WearRegistration? wear)
     {
         if (wear == null)
             return;
+
+        foreach (var netId in wear.HiddenNetIds)
+            HiddenByInvisibility.Remove(netId);
+
+        wear.HiddenNetIds.Clear();
 
         try
         {
