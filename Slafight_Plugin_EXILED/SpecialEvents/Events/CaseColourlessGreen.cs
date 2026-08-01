@@ -16,6 +16,8 @@ using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 using Map = Exiled.Events.Handlers.Map;
+using PlayerEventArgs = Exiled.Events.EventArgs.Player;
+using PlayerHandlers = Exiled.Events.Handlers.Player;
 // SpecialEvent 基底クラス
 using SpawnSystem = Slafight_Plugin_EXILED.MainHandlers.SpawnSystem;
 
@@ -52,12 +54,14 @@ public class CaseColourlessGreen : SpecialEvent
     public override void RegisterEvents()
     {
         Map.GeneratorActivating += OnGenerating;
+        PlayerHandlers.StoppingGenerator += OnStoppingGenerator;
         base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
         Map.GeneratorActivating -= OnGenerating;
+        PlayerHandlers.StoppingGenerator -= OnStoppingGenerator;
         base.UnregisterEvents();
     }
 
@@ -146,6 +150,17 @@ public class CaseColourlessGreen : SpecialEvent
                 Exiled.API.Features.Cassie.MessageTranslated("Opened Anti- Me mu contained Room. Please go there immediately. . . . .", "反ミーム爆弾部屋(Dクラス収容房)が解放されました。<split>直ちに向かい、起爆させてください！！！！！",true);
                 break;
         }
+    }
+
+    /// <summary>
+    /// 一度発電を開始した発電機の停止を禁止する。
+    /// レバーの戻し操作とキャンセルボタンの両方がこのイベントを通るため、ここで塞げば発電中の解除手段は残らない。
+    /// </summary>
+    private void OnStoppingGenerator(PlayerEventArgs.StoppingGeneratorEventArgs ev)
+    {
+        if (IsCanceled()) return;
+        ev.IsAllowed = false;
+        ev.Player?.ShowHint($"<color={ServerColors.Red}>一度起動した発電機は停止できません。</color>", 3f);
     }
 
     private static void RoleAssign()
