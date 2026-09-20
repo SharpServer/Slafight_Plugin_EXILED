@@ -27,6 +27,8 @@ public sealed class SampleScpRole : CustomRole
 
     public override float? MaxHealth => 2000f;
 
+    public override float? MaxHumeShield => 1000f;
+
     public override string CustomInfo => "Sample SCP";
 
     /// <summary>
@@ -34,10 +36,6 @@ public sealed class SampleScpRole : CustomRole
     /// </summary>
     public override RoleVoiceSettings Voice => RoleVoiceSettings.WithProximity();
 
-    protected override void OnSpawned()
-    {
-        SetHumeShield(1000f);
-    }
 }
 
 /// <summary>

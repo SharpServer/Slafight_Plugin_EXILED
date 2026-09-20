@@ -1,4 +1,5 @@
 using Exiled.API.Features;
+using LabApi.Events.Arguments.PlayerEvents;
 using Slafight_Plugin_EXILED.API.Core.Features;
 
 namespace Slafight_Plugin_EXILED.API.Core.Samples;
@@ -11,7 +12,7 @@ namespace Slafight_Plugin_EXILED.API.Core.Samples;
 /// 落として拾い直しても同じインスタンスが付いてきます。
 /// シリアルをキーにした static 辞書を用意する必要はありません。
 /// </summary>
-public sealed class SampleItem : CustomItem
+public sealed class SampleItem : CustomUsableItem
 {
     /// <summary>
     /// per-item 状態。static 辞書は要りません。
@@ -24,26 +25,28 @@ public sealed class SampleItem : CustomItem
 
     public override string Description => $"動作確認用。残り {charges} 回。";
 
-    protected override void OnPickedUp(Player player)
+    protected override int MaximumUses => 3;
+
+    protected override bool SuppressVanillaEffects => true;
+
+    protected override void OnPickupCompleted(PlayerPickedUpItemEventArgs ev)
     {
-        Log.Debug($"[Sample] {player?.Nickname} が {Name} を拾いました (残り {charges})。");
+        Log.Debug($"[Sample] {ev.Player?.Nickname} が {Name} を拾いました (残り {charges})。");
     }
 
     /// <summary>
     /// 使用モーションの完了時に、バニラの効果を差し替えます。
     /// </summary>
-    protected override void OnUsed()
+    protected override void OnCustomUse()
     {
         charges--;
 
         if (charges > 0)
         {
             Owner.ShowHint($"{Name}: 残り {charges} 回", 3f);
-
             return;
         }
 
         Owner.ShowHint($"{Name} を使い切りました。", 3f);
-        Destroy();
     }
 }

@@ -7,6 +7,7 @@ using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using LabApi.Events.Arguments.PlayerEvents;
 using PlayerRoles;
+using PlayerRoles.PlayableScps.HumeShield;
 using Slafight_Plugin_EXILED.API.Core.Interfaces;
 using Slafight_Plugin_EXILED.API.Core.Structs;
 using Slafight_Plugin_EXILED.API.Features;
@@ -56,13 +57,15 @@ public abstract class CustomRole : IPlayerOwn
 {
     private static readonly Dictionary<uint, CustomRole> ActiveRoles = new Dictionary<uint, CustomRole>();
 
-    private static readonly Dictionary<AmmoType, ushort> EmptyAmmo = new Dictionary<AmmoType, ushort>();
+    private static readonly Dictionary<ItemType, ushort> EmptyAmmo = new Dictionary<ItemType, ushort>();
 
     private static bool hooked;
 
     // ShowStatus の置き場。表示層は Status を読むだけなので、ここに持たせて構わない。
     private string status;
     private float statusExpiresAt;
+    private bool ownsHumeShieldSettings;
+    private bool ownsHumeShieldMaximum;
 
     /// <summary>
     /// この役職を持っているプレイヤーです。<see cref="Spawn(Player)"/> で設定されます。
@@ -135,6 +138,42 @@ public abstract class CustomRole : IPlayerOwn
     public virtual float? MaxHealth => null;
 
     /// <summary>
+    /// スポーン時の体力です。既定では <see cref="MaxHealth"/> と同じ値になります。
+    /// </summary>
+    /// <remarks>
+    /// <see cref="MaxHealth"/> が null でも、このプロパティだけを指定すれば
+    /// 土台役職の最大体力を変えずに初期体力だけを設定できます。
+    /// </remarks>
+    public virtual float? Health => MaxHealth;
+
+    /// <summary>
+    /// この役職のヒュームシールド最大値です。null なら土台役職の設定をそのまま使います。
+    /// </summary>
+    /// <remarks>
+    /// 値を指定すると EXILED の <c>CustomHumeShieldStat</c> に最大値 override を設定します。
+    /// 元からヒュームシールドを持つ SCP は、回復待機や回復速度など土台役職の仕組みを
+    /// 保ったまま、この最大値を使います。
+    /// </remarks>
+    public virtual float? MaxHumeShield => null;
+
+    /// <summary>
+    /// スポーン時のヒュームシールド値です。
+    /// </summary>
+    /// <remarks>
+    /// 既定では <see cref="MaxHumeShield"/> と同じ値、つまり満タンです。
+    /// <see cref="MaxHumeShield"/> が null の場合、この値も適用されません。
+    /// </remarks>
+    public virtual float? HumeShield => MaxHumeShield;
+
+    /// <summary>
+    /// 土台役職や所持品が供給するヒュームシールド回復速度に掛ける倍率です。
+    /// </summary>
+    /// <remarks>
+    /// 人間役職など、土台に回復源がない役職へ単独で指定しても自動回復は発生しません。
+    /// </remarks>
+    public virtual float HumeShieldRegenerationMultiplier => 1f;
+
+    /// <summary>
     /// 支給アイテムです。1 つでも指定するとバニラの初期装備は付きません。
     /// </summary>
     public virtual IReadOnlyList<ItemType> Items => [];
@@ -148,7 +187,7 @@ public abstract class CustomRole : IPlayerOwn
     /// <summary>
     /// 支給する予備弾薬です。
     /// </summary>
-    public virtual IReadOnlyDictionary<AmmoType, ushort> Ammo => EmptyAmmo;
+    public virtual IReadOnlyDictionary<ItemType, ushort> Ammo => EmptyAmmo;
 
     /// <summary>
     /// スポーン時に付与する効果です。
@@ -531,6 +570,8 @@ public abstract class CustomRole : IPlayerOwn
     /// </summary>
     protected void SetHumeShield(float max)
     {
+        ownsHumeShieldSettings = true;
+        ownsHumeShieldMaximum = true;
         Player.MaxHumeShield = max;
         Player.HumeShield = max;
     }
@@ -540,6 +581,7 @@ public abstract class CustomRole : IPlayerOwn
     /// </summary>
     protected void BoostHumeShieldRegen(float multiplier)
     {
+        ownsHumeShieldSettings = true;
         Player.CustomHumeShieldStat.ShieldRegenerationMultiplier *= multiplier;
     }
 
@@ -558,10 +600,12 @@ public abstract class CustomRole : IPlayerOwn
             Player.Scale = scale;
 
         if (MaxHealth is { } maxHealth)
-        {
             Player.MaxHealth = maxHealth;
-            Player.Health = maxHealth;
-        }
+
+        if (Health is { } health)
+            Player.Health = Mathf.Clamp(health, 0f, Player.MaxHealth);
+
+        ApplyHumeShieldSettings();
 
         if (Items.Count > 0 || CustomItems.Count > 0)
         {
@@ -578,7 +622,7 @@ public abstract class CustomRole : IPlayerOwn
             }
         }
 
-        foreach (KeyValuePair<AmmoType, ushort> ammo in Ammo)
+        foreach (KeyValuePair<ItemType, ushort> ammo in Ammo)
         {
             Player.SetAmmo(ammo.Key, ammo.Value);
         }
@@ -590,6 +634,53 @@ public abstract class CustomRole : IPlayerOwn
 
         if (CustomInfo is { } info)
             CustomInfoDisplay.Apply(Player, info, CustomInfoOptions);
+    }
+
+    private void ApplyHumeShieldSettings()
+    {
+        float? configuredMaximum = MaxHumeShield;
+        float regenerationMultiplier = Mathf.Max(0f, HumeShieldRegenerationMultiplier);
+
+        ownsHumeShieldMaximum = configuredMaximum.HasValue;
+        ownsHumeShieldSettings = ownsHumeShieldMaximum ||
+                                 !Mathf.Approximately(regenerationMultiplier, 1f);
+
+        if (!ownsHumeShieldSettings)
+            return;
+
+        Player.HumeShieldRegenerationMultiplier = regenerationMultiplier;
+
+        if (configuredMaximum is not { } maximum)
+            return;
+
+        maximum = Mathf.Max(0f, maximum);
+        Player.MaxHumeShield = maximum;
+        Player.HumeShield = Mathf.Clamp(HumeShield ?? maximum, 0f, maximum);
+    }
+
+    private void ReleaseHumeShieldSettings()
+    {
+        if (!ownsHumeShieldSettings || Player?.ReferenceHub is null)
+            return;
+
+        Player.HumeShieldRegenerationMultiplier = 1f;
+
+        if (ownsHumeShieldMaximum)
+        {
+            Player.MaxHumeShield = float.MinValue;
+
+            // 次の役職・所持品・効果が提供する通常上限へ戻す。プロバイダーがなければ 0 になる。
+            IHumeShieldProvider.GetForHub(
+                Player.ReferenceHub,
+                out _,
+                out float providerMaximum,
+                out _,
+                out _);
+            Player.HumeShield = Mathf.Clamp(Player.HumeShield, 0f, providerMaximum);
+        }
+
+        ownsHumeShieldSettings = false;
+        ownsHumeShieldMaximum = false;
     }
 
     private static void RemoveInternal(uint netId, CustomRole role)
@@ -605,6 +696,8 @@ public abstract class CustomRole : IPlayerOwn
         // ここに書いていないもの (体力・所持品・効果) は役職変更時にゲーム側が作り直す。
         if (player.IsSafePlayer())
         {
+            role.ReleaseHumeShieldSettings();
+
             if (role.Scale is not null)
                 player.Scale = Vector3.one;
 

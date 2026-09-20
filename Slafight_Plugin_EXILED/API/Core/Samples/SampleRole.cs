@@ -49,8 +49,8 @@ public sealed class SampleRole : CustomRole
         ItemType.Radio,
     ];
 
-    public override IReadOnlyDictionary<AmmoType, ushort> Ammo =>
-        new Dictionary<AmmoType, ushort> { [AmmoType.Nato9] = 60 };
+    public override IReadOnlyDictionary<ItemType, ushort> Ammo =>
+        new Dictionary<ItemType, ushort> { [ItemType.Ammo9x19] = 60 };
 
     public override IReadOnlyList<RoleEffect> Effects =>
     [

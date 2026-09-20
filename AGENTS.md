@@ -170,6 +170,25 @@ to object lifetime and authentication state.
   custom roles, turrets, hitboxes, and schematic interactions intentionally use
   NPCs.
 
+## Slafight custom item terminology
+
+- Unless the user explicitly says otherwise, `CustomItem`, `CustomFirearm`,
+  `CustomArmor`, `CustomKeycard`, and `CustomUsableItem` mean the local types under
+  `Slafight_Plugin_EXILED.API.Core.Features`.
+- Do not interpret those names as EXILED CustomItems types, and do not bring
+  `Exiled.CustomItems.API.Features.CustomItem` or `CustomWeapon` into the design,
+  diagnosis, implementation, or explanation unless the user explicitly asks about
+  EXILED CustomItems.
+- The local `CustomFirearm.Damage`, `Penetration`, `Inaccuracy`, and
+  `DamageFalloffDistance` values are written into the corresponding per-instance
+  `Exiled.API.Features.Items.Firearm` properties. They therefore participate in
+  the normal firearm hit-registration, attachment, falloff, penetration, armor,
+  and damage-processing path; they are not final `Hurting`-event damage overrides.
+- Debugging and HUD code should read the live firearm instance after local custom
+  values have been applied. If a feature intentionally changes final damage in an
+  event callback, present that as a separate modifier instead of redefining the
+  meaning of `CustomFirearm.Damage`.
+
 ## Chaos Keycard Snake sessions
 
 - A Chaos Keycard owner creates a local `SnakeEngine` with a non-null delta sender.

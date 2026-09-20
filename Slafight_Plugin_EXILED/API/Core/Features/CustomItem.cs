@@ -2,9 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Arguments.Scp914Events;
+using LabApi.Events.Arguments.ServerEvents;
 using LabApi.Events.Handlers;
+using MEC;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
+using Slafight_Plugin_EXILED.API.Enums;
 using UnityEngine;
 
 using Log = Exiled.API.Features.Log;
@@ -43,7 +47,7 @@ namespace Slafight_Plugin_EXILED.API.Core.Features;
 ///
 ///     private int charges = 6;   // per-item 状態をそのままフィールドに持てる
 ///
-///     protected override void OnShot()
+///     protected override void OnShotCompleted(PlayerShotWeaponEventArgs ev)
 ///     {
 ///         if (charges-- &lt;= 0)
 ///             Owner.ShowHint("チャージ切れ", 3f);
@@ -60,9 +64,9 @@ public abstract class CustomItem
 
     private static bool hooked;
 
-    private LightSourceToy pickupLight;
+    private LightSourceToy? pickupLight;
 
-    private SchematicObject pickupModel;
+    private SchematicObject? pickupSchematic;
 
     /// <summary>
     /// このアイテムのシリアルです。生成時に決まります。
@@ -85,6 +89,16 @@ public abstract class CustomItem
     public virtual string Description => string.Empty;
 
     /// <summary>
+    /// このアイテム自身をカテゴリ所持上限へ数えないか。
+    /// true のアイテムを所持している間は、そのカテゴリの有効上限へ 1 枠が加算されます。
+    /// </summary>
+    /// <remarks>
+    /// 総インベントリ 8 枠の上限は変更しません。これは銃器・医療品などの
+    /// <see cref="ItemCategory"/> ごとの制限だけを無視する設定です。
+    /// </remarks>
+    public virtual bool IgnoreCategoryLimits => false;
+
+    /// <summary>
     /// 拾ったときに本人へ出す文言です。null / 空なら出しません。
     /// </summary>
     protected virtual string PickupHint => $"<size=24>あなたは{Name}を拾いました！\n{Description}</size>";
@@ -104,10 +118,10 @@ public abstract class CustomItem
     /// 地面に落ちている間、ピックアップを光らせるかどうか。
     /// 暗がりで見失いやすい特別なアイテムだけ true にします。
     /// </summary>
-    protected virtual bool PickupLightEnabled => false;
+    protected virtual bool PickupLightEnabled => Rarity != Rarity.None;
 
     /// <summary>ピックアップライトの色です。</summary>
-    protected virtual Color PickupLightColor => Color.white;
+    protected virtual Color PickupLightColor => Rarity == Rarity.None ? Color.white : GetRarityColor(Rarity);
 
     /// <summary>ピックアップライトの強さです。</summary>
     protected virtual float PickupLightIntensity => 0.7f;
@@ -124,22 +138,49 @@ public abstract class CustomItem
     /// <remarks>
     /// バニラの見た目を借りているアイテムに、本来の姿を被せるためのものです。
     /// 状態で見た目が変わるアイテム (レベルの上がる装置など) は、
-    /// ここを自分の状態から組み立てて <see cref="RefreshPickupModel"/> を呼んでください。
+    /// ここを自分の状態から組み立てて <see cref="RefreshPickupSchematic"/> を呼んでください。
     /// </remarks>
-    protected virtual string PickupModel => null;
+    protected virtual string PickupSchematicName => null;
 
     /// <summary>重ねるスキマティックの拡大率です。</summary>
-    protected virtual Vector3 PickupModelScale => Vector3.one;
+    protected virtual Vector3 PickupSchematicScale => Vector3.one;
+
+    /// <summary>
+    /// アイテムのレアリティです。ライト未設定の時レアリティ標準ライトが使われます。
+    /// </summary>
+    public virtual Rarity Rarity => Rarity.None;
 
     /// <summary>
     /// インベントリ内の実体です。地面に落ちていれば null。
     /// </summary>
-    public Item Item => Item.Get(Serial);
+    public Item Item
+    {
+        get
+        {
+            if (Serial == 0) return null;
+
+            // シリアルキャッシュは生成直後だとまだ埋まっていないことがある。
+            // EXILED が保持している実体から取得すれば LabApi 側のラッパーも同期的に作られる。
+            return Item.Get(Serial) ??
+                   (ExiledItem.Get(Serial) is { } item ? Item.Get(item.Base) : null);
+        }
+    }
 
     /// <summary>
     /// 地面のピックアップです。誰かが持っていれば null。
     /// </summary>
-    public Pickup Pickup => Pickup.Get(Serial);
+    public Pickup Pickup
+    {
+        get
+        {
+            if (Serial == 0) return null;
+
+            return Pickup.Get(Serial) ??
+                   (Exiled.API.Features.Pickups.Pickup.Get(Serial) is { } pickup
+                       ? Pickup.Get(pickup.Base)
+                       : null);
+        }
+    }
 
     /// <summary>
     /// 現在の所持者です。地面にあれば null。
@@ -177,14 +218,34 @@ public abstract class CustomItem
         PlayerEvents.PickedUpItem -= OnAnyPickedUp;
         PlayerEvents.PickedUpArmor -= OnAnyPickedUpArmor;
         PlayerEvents.PickedUpScp330 -= OnAnyPickedUpScp330;
+        PlayerEvents.PickingUpItem -= OnAnyPickingUp;
+        PlayerEvents.PickingUpArmor -= OnAnyPickingUpArmor;
+        PlayerEvents.PickingUpScp330 -= OnAnyPickingUpScp330;
         PlayerEvents.DroppingItem -= OnAnyDropping;
         PlayerEvents.DroppedItem -= OnAnyDropped;
         PlayerEvents.ChangedItem -= OnAnyChangedItem;
         PlayerEvents.UsingItem -= OnAnyUsingItem;
         PlayerEvents.ItemUsageEffectsApplying -= OnAnyUsageEffectsApplying;
         PlayerEvents.UsedItem -= OnAnyUsedItem;
+        PlayerEvents.CancellingUsingItem -= OnAnyCancellingUse;
+        PlayerEvents.CancelledUsingItem -= OnAnyCancelledUse;
         PlayerEvents.ShootingWeapon -= OnAnyShootingWeapon;
         PlayerEvents.ShotWeapon -= OnAnyShotWeapon;
+        PlayerEvents.DryFiringWeapon -= OnAnyDryFiringWeapon;
+        PlayerEvents.DryFiredWeapon -= OnAnyDryFiredWeapon;
+        PlayerEvents.ReloadingWeapon -= OnAnyReloadingWeapon;
+        PlayerEvents.ReloadedWeapon -= OnAnyReloadedWeapon;
+        PlayerEvents.ChangingAttachments -= OnAnyChangingAttachments;
+        PlayerEvents.ChangedAttachments -= OnAnyChangedAttachments;
+        PlayerEvents.Hurting -= OnAnyHurting;
+        PlayerEvents.Dying -= OnAnyDying;
+        PlayerEvents.ThrowingProjectile -= OnAnyThrowingProjectile;
+        PlayerEvents.ThrewProjectile -= OnAnyThrewProjectile;
+        PlayerEvents.InspectingKeycard -= OnAnyInspectingKeycard;
+        PlayerEvents.InspectedKeycard -= OnAnyInspectedKeycard;
+        Scp914Events.ProcessingPickup -= OnAnyScp914ProcessingPickup;
+        Scp914Events.ProcessingInventoryItem -= OnAnyScp914ProcessingInventoryItem;
+        ServerEvents.PickupDestroyed -= OnAnyPickupDestroyed;
         ServerEvents.RoundRestarted -= OnRoundRestarted;
         hooked = false;
     }
@@ -250,9 +311,9 @@ public abstract class CustomItem
         if (Serial == 0) return;
 
         DetachPickupLight();
-        DetachPickupModel();
+        DetachPickupSchematic();
         BySerial.Remove(Serial);
-        Invoke(OnReleased, nameof(OnReleased));
+        Invoke(OnTrackingStopped, nameof(OnTrackingStopped));
         Serial = 0;
     }
 
@@ -269,24 +330,63 @@ public abstract class CustomItem
         Release();
     }
 
-    /// <summary>
-    /// 生成直後に呼ばれます。
-    /// </summary>
-    protected virtual void OnCreated()
+    /// <summary>シリアルへの追跡を開始した直後に呼ばれます。</summary>
+    protected virtual void OnTrackingStarted()
+    {
+    }
+
+    /// <summary>シリアルへの追跡を終了するときに呼ばれます。</summary>
+    protected virtual void OnTrackingStopped()
+    {
+    }
+
+    /// <summary><see cref="Spawn{T}"/> で地面へ生成された直後に呼ばれます。</summary>
+    protected virtual void OnPickupSpawned(Pickup pickup)
+    {
+    }
+
+    /// <summary>追跡中の Pickup 実体が破棄されたときに呼ばれます。</summary>
+    protected virtual void OnPickupDestroyed(PickupDestroyedEventArgs ev)
     {
     }
 
     /// <summary>
-    /// 追跡をやめるときに呼ばれます。
+    /// 通常アイテムを拾う直前に呼ばれます。<c>ev.IsAllowed = false</c> で拾得を止められます。
     /// </summary>
-    protected virtual void OnReleased()
+    protected virtual void OnPickupStarting(PlayerPickingUpItemEventArgs ev)
+    {
+    }
+
+    /// <summary>アーマーを拾う直前に呼ばれます。</summary>
+    protected virtual void OnArmorPickupStarting(PlayerPickingUpArmorEventArgs ev)
+    {
+    }
+
+    /// <summary>SCP-330 のキャンディを拾う直前に呼ばれます。</summary>
+    protected virtual void OnCandyPickupStarting(PlayerPickingUpScp330EventArgs ev)
     {
     }
 
     /// <summary>
-    /// 拾われたときに呼ばれます。
+    /// このアイテムの所持者が通常アイテムを拾う直前に呼ばれます。
+    /// 所持者のインベントリを拡張するコンテナ系アイテムで使います。
     /// </summary>
-    protected virtual void OnPickedUp(Player player)
+    protected virtual void OnOwnerPickupStarting(PlayerPickingUpItemEventArgs ev)
+    {
+    }
+
+    /// <summary>通常アイテムの拾得が完了したときに呼ばれます。</summary>
+    protected virtual void OnPickupCompleted(PlayerPickedUpItemEventArgs ev)
+    {
+    }
+
+    /// <summary>アーマーの拾得が完了したときに呼ばれます。</summary>
+    protected virtual void OnArmorPickupCompleted(PlayerPickedUpArmorEventArgs ev)
+    {
+    }
+
+    /// <summary>SCP-330 のキャンディの拾得が完了したときに呼ばれます。</summary>
+    protected virtual void OnCandyPickupCompleted(PlayerPickedUpScp330EventArgs ev)
     {
     }
 
@@ -294,35 +394,27 @@ public abstract class CustomItem
     /// 落とされる直前に呼ばれます。<c>ev.IsAllowed = false</c> で止められます。
     /// 投げ捨てを射出操作として使うアイテムは <c>ev.Throw</c> を見てください。
     /// </summary>
-    protected virtual void OnDropping(PlayerDroppingItemEventArgs ev)
+    protected virtual void OnDropStarting(PlayerDroppingItemEventArgs ev)
     {
     }
 
-    /// <summary>
-    /// 落とされたときに呼ばれます。
-    /// </summary>
-    protected virtual void OnDropped(Player player)
+    /// <summary>落とし終えたときに呼ばれ、生成された Pickup も参照できます。</summary>
+    protected virtual void OnDropCompleted(PlayerDroppedItemEventArgs ev)
     {
     }
 
-    /// <summary>
-    /// 手に持ったときに呼ばれます。
-    /// </summary>
-    protected virtual void OnEquipped(Player player)
+    /// <summary>このアイテムへの持ち替えが完了したときに呼ばれます。</summary>
+    protected virtual void OnSelected(PlayerChangedItemEventArgs ev)
     {
     }
 
-    /// <summary>
-    /// しまったときに呼ばれます。
-    /// </summary>
-    protected virtual void OnUnequipped(Player player)
+    /// <summary>このアイテムから別のアイテムへ持ち替えたときに呼ばれます。</summary>
+    protected virtual void OnDeselected(PlayerChangedItemEventArgs ev)
     {
     }
 
-    /// <summary>
-    /// 使用が始まるときに呼ばれます。<c>ev.IsAllowed = false</c> で止められます。
-    /// </summary>
-    protected virtual void OnUsing(PlayerUsingItemEventArgs ev)
+    /// <summary>使用モーションを開始する直前に呼ばれます。<c>ev.IsAllowed = false</c> で止められます。</summary>
+    protected virtual void OnUseStarting(PlayerUsingItemEventArgs ev)
     {
     }
 
@@ -331,31 +423,115 @@ public abstract class CustomItem
     /// <c>ev.IsAllowed = false</c> でバニラの効果を差し替えられます。
     ///
     /// 消費アイテムの効果を自前にしたい場合はここを使ってください。
-    /// なお <c>IsAllowed = false</c> にすると <see cref="OnUsed"/> は呼ばれません。
+    /// なお <c>IsAllowed = false</c> にすると <see cref="OnUseCompleted"/> は呼ばれません。
     /// </summary>
-    protected virtual void OnUseCompleting(PlayerItemUsageEffectsApplyingEventArgs ev)
+    protected virtual void OnUseEffectsApplying(PlayerItemUsageEffectsApplyingEventArgs ev)
     {
     }
 
     /// <summary>
-    /// バニラの効果まで含めて使用が完了したときに呼ばれます。
-    /// <see cref="OnUseCompleting"/> で差し止めた場合は呼ばれません。
+    /// 使用とバニラ効果の適用が完了したときに呼ばれます。
+    /// <see cref="OnUseEffectsApplying"/> で差し止めた場合は呼ばれません。
     /// </summary>
-    protected virtual void OnUsed()
+    protected virtual void OnUseCompleted(PlayerUsedItemEventArgs ev)
+    {
+    }
+
+    /// <summary>使用のキャンセルを要求したときに呼ばれます。</summary>
+    protected virtual void OnUseCancelling(PlayerCancellingUsingItemEventArgs ev)
+    {
+    }
+
+    /// <summary>使用のキャンセルが完了したときに呼ばれます。</summary>
+    protected virtual void OnUseCancelled(PlayerCancelledUsingItemEventArgs ev)
+    {
+    }
+
+    /// <summary>発砲直前に呼ばれます。</summary>
+    protected virtual void OnShotStarting(PlayerShootingWeaponEventArgs ev)
+    {
+    }
+
+    /// <summary>発砲完了時に呼ばれ、発砲イベントの詳細も参照できます。</summary>
+    protected virtual void OnShotCompleted(PlayerShotWeaponEventArgs ev)
+    {
+    }
+
+    /// <summary>空撃ちの直前に呼ばれます。</summary>
+    protected virtual void OnDryFireStarting(PlayerDryFiringWeaponEventArgs ev)
+    {
+    }
+
+    /// <summary>空撃ちが完了したときに呼ばれます。</summary>
+    protected virtual void OnDryFireCompleted(PlayerDryFiredWeaponEventArgs ev)
+    {
+    }
+
+    /// <summary>リロード直前に呼ばれます。</summary>
+    protected virtual void OnReloadStarting(PlayerReloadingWeaponEventArgs ev)
+    {
+    }
+
+    /// <summary>リロード完了時に呼ばれます。</summary>
+    protected virtual void OnReloadCompleted(PlayerReloadedWeaponEventArgs ev)
+    {
+    }
+
+    /// <summary>アタッチメント変更直前に呼ばれます。</summary>
+    protected virtual void OnAttachmentsChanging(PlayerChangingAttachmentsEventArgs ev)
+    {
+    }
+
+    /// <summary>アタッチメント変更完了時に呼ばれます。</summary>
+    protected virtual void OnAttachmentsChanged(PlayerChangedAttachmentsEventArgs ev)
+    {
+    }
+
+    /// <summary>このアイテムを手に持った攻撃者が別プレイヤーを傷つける直前に呼ばれます。</summary>
+    protected virtual void OnHurtingPlayer(PlayerHurtingEventArgs ev)
     {
     }
 
     /// <summary>
-    /// 撃つ直前に呼ばれます。
+    /// このアイテムの所持者が傷つけられる直前に呼ばれます。
+    /// アーマーや護符のように、選択中でなくても所持者へ作用するアイテムで使います。
     /// </summary>
-    protected virtual void OnShooting(PlayerShootingWeaponEventArgs ev)
+    protected virtual void OnOwnerHurting(PlayerHurtingEventArgs ev)
     {
     }
 
-    /// <summary>
-    /// 撃った直後に呼ばれます。
-    /// </summary>
-    protected virtual void OnShot()
+    /// <summary>このアイテムの所持者が死亡する直前に呼ばれます。</summary>
+    protected virtual void OnOwnerDying(PlayerDyingEventArgs ev)
+    {
+    }
+
+    /// <summary>投擲アイテムを投げる直前に呼ばれます。</summary>
+    protected virtual void OnProjectileThrowStarting(PlayerThrowingProjectileEventArgs ev)
+    {
+    }
+
+    /// <summary>投擲アイテムを投げた直後に呼ばれます。</summary>
+    protected virtual void OnProjectileThrown(PlayerThrewProjectileEventArgs ev)
+    {
+    }
+
+    /// <summary>キーカードの表面確認を始める直前に呼ばれます。</summary>
+    protected virtual void OnKeycardInspectionStarting(PlayerInspectingKeycardEventArgs ev)
+    {
+    }
+
+    /// <summary>キーカードの表面確認が完了したときに呼ばれます。</summary>
+    protected virtual void OnKeycardInspected(PlayerInspectedKeycardEventArgs ev)
+    {
+    }
+
+    /// <summary>SCP-914 が地面の Pickup を処理する直前に呼ばれます。</summary>
+    protected virtual void OnScp914ProcessingPickup(Scp914ProcessingPickupEventArgs ev)
+    {
+    }
+
+    /// <summary>SCP-914 がインベントリアイテムを処理する直前に呼ばれます。</summary>
+    protected virtual void OnScp914ProcessingInventoryItem(Scp914ProcessingInventoryItemEventArgs ev)
     {
     }
 
@@ -367,6 +543,13 @@ public abstract class CustomItem
     }
 
     /// <summary>
+    /// <see cref="Give{T}(Player)"/> で新規作成したインベントリアイテムを調整します。
+    /// 既定では <see cref="Customize(Item)"/> と同じ処理です。
+    /// 初期弾数など、新規作成時だけ設定する値がある派生型で上書きします。
+    /// </summary>
+    protected virtual void CustomizeNewItem(Item item) => Customize(item);
+
+    /// <summary>
     /// 地面のピックアップに対する見た目の調整です。
     /// </summary>
     protected virtual void Customize(Pickup pickup)
@@ -374,13 +557,24 @@ public abstract class CustomItem
     }
 
     /// <summary>
-    /// 重ねているスキマティックを今の <see cref="PickupModel"/> で作り直します。
+    /// 地面へ出す Pickup を生成します。派生型は、状態を設定した実アイテムから
+    /// Pickup を作る必要がある場合にこのメソッドを上書きします。
+    /// </summary>
+    /// <remarks>
+    /// 戻り値はまだネットワークへ Spawn してはいけません。基底側が
+    /// <see cref="Customize(Pickup)"/> の後に一度だけ Spawn します。
+    /// </remarks>
+    protected virtual Pickup CreatePickup(Vector3 position, Quaternion rotation, Vector3 scale) =>
+        Pickup.Create(BaseType, position, rotation, scale, networkSpawn: false);
+
+    /// <summary>
+    /// 重ねているスキマティックを今の <see cref="PickupSchematicName"/> で作り直します。
     /// 状態で見た目が変わるアイテムが、状態を変えた後に呼びます。
     /// </summary>
-    protected void RefreshPickupModel()
+    protected void RefreshPickupSchematic()
     {
-        DetachPickupModel();
-        AttachPickupModel();
+        DetachPickupSchematic();
+        AttachPickupSchematic();
     }
 
     private static CustomItem Give(CustomItem custom, Player player)
@@ -391,8 +585,17 @@ public abstract class CustomItem
 
         custom.Attach(item.Serial);
 
-        if (custom.Item is { } wrapper)
-            custom.Customize(wrapper);
+        // AddItem の戻り値が持つ実体を直接橋渡しする。生成直後の serial 検索は
+        // LabApi のキャッシュ登録より早いことがあり、その場合だけ初期調整が抜けていた。
+        if (Item.Get(item.Base) is not { } wrapper)
+        {
+            Log.Error($"[Slafight] {custom.GetType().Name} の生成直後のアイテムを取得できませんでした (serial: {item.Serial})。");
+            custom.Release();
+            player.RemoveItem(item);
+            return null;
+        }
+
+        custom.ApplyItemCustomization(wrapper, initialize: true);
 
         return custom;
     }
@@ -404,21 +607,20 @@ public abstract class CustomItem
         // networkSpawn: false で作る。
         // Mirror の SpawnMessage はスケールを含むので、Customize で見た目を決めてから Spawn する。
         // 先にネットワーク生成すると UnSpawn → 変更 → Spawn の焼き直しが要り、netId も変わる。
-        Pickup pickup = Pickup.Create(
-            custom.BaseType,
+        Pickup pickup = custom.CreatePickup(
             position,
             rotation ?? Quaternion.identity,
-            scale ?? Vector3.one,
-            networkSpawn: false);
+            scale ?? Vector3.one);
 
         if (pickup is null) return null;
 
         custom.Attach(pickup.Serial);
-        custom.Customize(pickup);
+        custom.ApplyPickupCustomization(pickup);
 
         pickup.Spawn();
+        custom.Invoke(() => custom.OnPickupSpawned(pickup), nameof(OnPickupSpawned));
         custom.AttachPickupLight();
-        custom.AttachPickupModel();
+        custom.AttachPickupSchematic();
 
         return custom;
     }
@@ -431,13 +633,13 @@ public abstract class CustomItem
 
         if (custom.Item is { } item)
         {
-            custom.Customize(item);
+            custom.ApplyItemCustomization(item, initialize: false);
         }
         else if (custom.Pickup is { } pickup)
         {
-            custom.Customize(pickup);
+            custom.ApplyPickupCustomization(pickup);
             custom.AttachPickupLight();
-            custom.AttachPickupModel();
+            custom.AttachPickupSchematic();
         }
 
         return custom;
@@ -473,6 +675,20 @@ public abstract class CustomItem
     /// </summary>
     private static Player ToExiled(LabPlayer player) =>
         player?.ReferenceHub is { } hub ? Player.Get(hub) : null;
+
+    public static Color GetRarityColor(Rarity rarity)
+    {
+        return rarity switch
+        {
+            Rarity.None => Color.black,
+            Rarity.Common => Color.gray,
+            Rarity.Uncommon => Color.green,
+            Rarity.Rare => Color.cyan,
+            Rarity.Epic => Color.magenta,
+            Rarity.Legendary => Color.red,
+            _ => Color.black
+        };
+    }
 
     /// <summary>
     /// 地面のピックアップにライトを付けます。既に付いていれば何もしません。
@@ -526,10 +742,10 @@ public abstract class CustomItem
     /// <summary>
     /// 地面のピックアップへスキマティックを重ねます。既に重なっていれば何もしません。
     /// </summary>
-    private void AttachPickupModel()
+    private void AttachPickupSchematic()
     {
-        if (pickupModel is not null) return;
-        if (PickupModel is not { Length: > 0 } model) return;
+        if (pickupSchematic is not null) return;
+        if (PickupSchematicName is not { Length: > 0 } model) return;
         if (Pickup is not { } pickup) return;
 
         SchematicObject schematic = ObjectSpawner.SpawnSchematic(model, pickup.Position, pickup.Transform.rotation);
@@ -541,17 +757,17 @@ public abstract class CustomItem
             return;
         }
 
-        schematic.Scale = PickupModelScale;
+        schematic.Scale = PickupSchematicScale;
         schematic.transform.SetParent(pickup.Transform, true);
 
-        pickupModel = schematic;
+        pickupSchematic = schematic;
     }
 
     /// <summary>重ねたスキマティックを片付けます。二重に呼んでも安全です。</summary>
-    private void DetachPickupModel()
+    private void DetachPickupSchematic()
     {
-        SchematicObject schematic = pickupModel;
-        pickupModel = null;
+        SchematicObject schematic = pickupSchematic;
+        pickupSchematic = null;
 
         if (schematic == null) return;
 
@@ -577,7 +793,7 @@ public abstract class CustomItem
         BySerial[serial] = this;
 
         Hook();
-        Invoke(OnCreated, nameof(OnCreated));
+        Invoke(OnTrackingStarted, nameof(OnTrackingStarted));
     }
 
     private void Invoke(Action action, string name)
@@ -592,12 +808,39 @@ public abstract class CustomItem
         }
     }
 
-    private void HandlePickedUp(Item item, LabPlayer player)
+    private void ApplyItemCustomization(Item item, bool initialize)
+    {
+        try
+        {
+            if (initialize)
+                CustomizeNewItem(item);
+            else
+                Customize(item);
+        }
+        catch (Exception exception)
+        {
+            Log.Error($"[Slafight] {GetType().Name}.{(initialize ? nameof(CustomizeNewItem) : nameof(Customize))} で例外が発生しました: {exception}");
+        }
+    }
+
+    private void ApplyPickupCustomization(Pickup pickup)
+    {
+        try
+        {
+            Customize(pickup);
+        }
+        catch (Exception exception)
+        {
+            Log.Error($"[Slafight] {GetType().Name}.{nameof(Customize)}(Pickup) で例外が発生しました: {exception}");
+        }
+    }
+
+    private void HandlePickedUp(Item item, LabPlayer player, Action completed, string callbackName)
     {
         DetachPickupLight();
-        DetachPickupModel();
-        Customize(item);
-        Invoke(() => OnPickedUp(ToExiled(player)), nameof(OnPickedUp));
+        DetachPickupSchematic();
+        ApplyItemCustomization(item, initialize: false);
+        Invoke(completed, callbackName);
         ShowItemHint(player, PickupHint, PickupHintDuration);
     }
 
@@ -608,6 +851,9 @@ public abstract class CustomItem
         hooked = true;
 
         // 拾得は種類ごとに別イベント。PickedUpItem だけではアーマーとキャンディを取りこぼす。
+        PlayerEvents.PickingUpItem += OnAnyPickingUp;
+        PlayerEvents.PickingUpArmor += OnAnyPickingUpArmor;
+        PlayerEvents.PickingUpScp330 += OnAnyPickingUpScp330;
         PlayerEvents.PickedUpItem += OnAnyPickedUp;
         PlayerEvents.PickedUpArmor += OnAnyPickedUpArmor;
         PlayerEvents.PickedUpScp330 += OnAnyPickedUpScp330;
@@ -617,15 +863,54 @@ public abstract class CustomItem
         PlayerEvents.UsingItem += OnAnyUsingItem;
         PlayerEvents.ItemUsageEffectsApplying += OnAnyUsageEffectsApplying;
         PlayerEvents.UsedItem += OnAnyUsedItem;
+        PlayerEvents.CancellingUsingItem += OnAnyCancellingUse;
+        PlayerEvents.CancelledUsingItem += OnAnyCancelledUse;
         PlayerEvents.ShootingWeapon += OnAnyShootingWeapon;
         PlayerEvents.ShotWeapon += OnAnyShotWeapon;
+        PlayerEvents.DryFiringWeapon += OnAnyDryFiringWeapon;
+        PlayerEvents.DryFiredWeapon += OnAnyDryFiredWeapon;
+        PlayerEvents.ReloadingWeapon += OnAnyReloadingWeapon;
+        PlayerEvents.ReloadedWeapon += OnAnyReloadedWeapon;
+        PlayerEvents.ChangingAttachments += OnAnyChangingAttachments;
+        PlayerEvents.ChangedAttachments += OnAnyChangedAttachments;
+        PlayerEvents.Hurting += OnAnyHurting;
+        PlayerEvents.Dying += OnAnyDying;
+        PlayerEvents.ThrowingProjectile += OnAnyThrowingProjectile;
+        PlayerEvents.ThrewProjectile += OnAnyThrewProjectile;
+        PlayerEvents.InspectingKeycard += OnAnyInspectingKeycard;
+        PlayerEvents.InspectedKeycard += OnAnyInspectedKeycard;
+        Scp914Events.ProcessingPickup += OnAnyScp914ProcessingPickup;
+        Scp914Events.ProcessingInventoryItem += OnAnyScp914ProcessingInventoryItem;
+        ServerEvents.PickupDestroyed += OnAnyPickupDestroyed;
         ServerEvents.RoundRestarted += OnRoundRestarted;
+    }
+
+    private static void OnAnyPickingUp(PlayerPickingUpItemEventArgs ev)
+    {
+        if (Of(ev.Pickup) is { } custom)
+            custom.Invoke(() => custom.OnPickupStarting(ev), nameof(OnPickupStarting));
+
+        DispatchOwned(ev.Player,
+            item => item.OnOwnerPickupStarting(ev),
+            nameof(OnOwnerPickupStarting));
+    }
+
+    private static void OnAnyPickingUpArmor(PlayerPickingUpArmorEventArgs ev)
+    {
+        if (Of(ev.BodyArmorPickup) is { } custom)
+            custom.Invoke(() => custom.OnArmorPickupStarting(ev), nameof(OnArmorPickupStarting));
+    }
+
+    private static void OnAnyPickingUpScp330(PlayerPickingUpScp330EventArgs ev)
+    {
+        if (Of(ev.CandyPickup) is { } custom)
+            custom.Invoke(() => custom.OnCandyPickupStarting(ev), nameof(OnCandyPickupStarting));
     }
 
     private static void OnAnyPickedUp(PlayerPickedUpItemEventArgs ev)
     {
         if (Of(ev.Item) is { } custom)
-            custom.HandlePickedUp(ev.Item, ev.Player);
+            custom.HandlePickedUp(ev.Item, ev.Player, () => custom.OnPickupCompleted(ev), nameof(OnPickupCompleted));
     }
 
     // アーマーは PickedUpItem を通らず、専用イベントで来る。
@@ -634,41 +919,41 @@ public abstract class CustomItem
         if (ev.BodyArmorItem is not { } armor) return;
 
         if (Of(armor.Serial) is { } custom)
-            custom.HandlePickedUp(armor, ev.Player);
+            custom.HandlePickedUp(armor, ev.Player, () => custom.OnArmorPickupCompleted(ev), nameof(OnArmorPickupCompleted));
     }
 
     // SCP-330 のキャンディも専用イベント。
     private static void OnAnyPickedUpScp330(PlayerPickedUpScp330EventArgs ev)
     {
         if (Of(ev.CandyItem.Serial) is { } custom)
-            custom.HandlePickedUp(ev.CandyItem, ev.Player);
+            custom.HandlePickedUp(ev.CandyItem, ev.Player, () => custom.OnCandyPickupCompleted(ev), nameof(OnCandyPickupCompleted));
     }
 
     private static void OnAnyDropping(PlayerDroppingItemEventArgs ev)
     {
         if (Of(ev.Item.Serial) is { } item)
-            item.Invoke(() => item.OnDropping(ev), nameof(OnDropping));
+            item.Invoke(() => item.OnDropStarting(ev), nameof(OnDropStarting));
     }
 
     private static void OnAnyDropped(PlayerDroppedItemEventArgs ev)
     {
         if (Of(ev.Pickup) is { } custom)
         {
-            custom.Customize(ev.Pickup);
-            custom.Invoke(() => custom.OnDropped(ToExiled(ev.Player)), nameof(OnDropped));
+            custom.ApplyPickupCustomization(ev.Pickup);
+            custom.Invoke(() => custom.OnDropCompleted(ev), nameof(OnDropCompleted));
             custom.AttachPickupLight();
-            custom.AttachPickupModel();
+            custom.AttachPickupSchematic();
         }
     }
 
     private static void OnAnyChangedItem(PlayerChangedItemEventArgs ev)
     {
         if (Of(ev.OldItem) is { } unequipped)
-            unequipped.Invoke(() => unequipped.OnUnequipped(ToExiled(ev.Player)), nameof(OnUnequipped));
+            unequipped.Invoke(() => unequipped.OnDeselected(ev), nameof(OnDeselected));
 
         if (Of(ev.NewItem) is { } equipped)
         {
-            equipped.Invoke(() => equipped.OnEquipped(ToExiled(ev.Player)), nameof(OnEquipped));
+            equipped.Invoke(() => equipped.OnSelected(ev), nameof(OnSelected));
             equipped.ShowItemHint(ev.Player, equipped.SelectedHint, equipped.SelectedHintDuration);
         }
     }
@@ -678,31 +963,169 @@ public abstract class CustomItem
     private static void OnAnyUsingItem(PlayerUsingItemEventArgs ev)
     {
         if (Of(ev.UsableItem.Serial) is { } custom)
-            custom.Invoke(() => custom.OnUsing(ev), nameof(OnUsing));
+            custom.Invoke(() => custom.OnUseStarting(ev), nameof(OnUseStarting));
     }
 
     private static void OnAnyUsageEffectsApplying(PlayerItemUsageEffectsApplyingEventArgs ev)
     {
         if (Of(ev.UsableItem.Serial) is { } custom)
-            custom.Invoke(() => custom.OnUseCompleting(ev), nameof(OnUseCompleting));
+            custom.Invoke(() => custom.OnUseEffectsApplying(ev), nameof(OnUseEffectsApplying));
     }
 
     private static void OnAnyUsedItem(PlayerUsedItemEventArgs ev)
     {
         if (Of(ev.UsableItem.Serial) is { } custom)
-            custom.Invoke(custom.OnUsed, nameof(OnUsed));
+            custom.Invoke(() => custom.OnUseCompleted(ev), nameof(OnUseCompleted));
     }
 
     private static void OnAnyShootingWeapon(PlayerShootingWeaponEventArgs ev)
     {
         if (Of(ev.FirearmItem.Serial) is { } custom)
-            custom.Invoke(() => custom.OnShooting(ev), nameof(OnShooting));
+            custom.Invoke(() => custom.OnShotStarting(ev), nameof(OnShotStarting));
     }
 
     private static void OnAnyShotWeapon(PlayerShotWeaponEventArgs ev)
     {
         if (Of(ev.FirearmItem.Serial) is { } custom)
-            custom.Invoke(custom.OnShot, nameof(OnShot));
+            custom.Invoke(() => custom.OnShotCompleted(ev), nameof(OnShotCompleted));
+    }
+
+    private static void OnAnyCancellingUse(PlayerCancellingUsingItemEventArgs ev)
+    {
+        if (Of(ev.UsableItem.Serial) is { } custom)
+            custom.Invoke(() => custom.OnUseCancelling(ev), nameof(OnUseCancelling));
+    }
+
+    private static void OnAnyCancelledUse(PlayerCancelledUsingItemEventArgs ev)
+    {
+        if (Of(ev.UsableItem.Serial) is { } custom)
+            custom.Invoke(() => custom.OnUseCancelled(ev), nameof(OnUseCancelled));
+    }
+
+    private static void OnAnyDryFiringWeapon(PlayerDryFiringWeaponEventArgs ev)
+    {
+        if (Of(ev.FirearmItem.Serial) is { } custom)
+            custom.Invoke(() => custom.OnDryFireStarting(ev), nameof(OnDryFireStarting));
+    }
+
+    private static void OnAnyDryFiredWeapon(PlayerDryFiredWeaponEventArgs ev)
+    {
+        if (Of(ev.FirearmItem.Serial) is { } custom)
+            custom.Invoke(() => custom.OnDryFireCompleted(ev), nameof(OnDryFireCompleted));
+    }
+
+    private static void OnAnyReloadingWeapon(PlayerReloadingWeaponEventArgs ev)
+    {
+        if (Of(ev.FirearmItem.Serial) is { } custom)
+            custom.Invoke(() => custom.OnReloadStarting(ev), nameof(OnReloadStarting));
+    }
+
+    private static void OnAnyReloadedWeapon(PlayerReloadedWeaponEventArgs ev)
+    {
+        if (Of(ev.FirearmItem.Serial) is { } custom)
+            custom.Invoke(() => custom.OnReloadCompleted(ev), nameof(OnReloadCompleted));
+    }
+
+    private static void OnAnyChangingAttachments(PlayerChangingAttachmentsEventArgs ev)
+    {
+        if (Of(ev.FirearmItem.Serial) is { } custom)
+            custom.Invoke(() => custom.OnAttachmentsChanging(ev), nameof(OnAttachmentsChanging));
+    }
+
+    private static void OnAnyChangedAttachments(PlayerChangedAttachmentsEventArgs ev)
+    {
+        if (Of(ev.FirearmItem.Serial) is { } custom)
+            custom.Invoke(() => custom.OnAttachmentsChanged(ev), nameof(OnAttachmentsChanged));
+    }
+
+    private static void OnAnyHurting(PlayerHurtingEventArgs ev)
+    {
+        if (ev.Attacker?.CurrentItem is { } item && Of(item.Serial) is { } custom)
+            custom.Invoke(() => custom.OnHurtingPlayer(ev), nameof(OnHurtingPlayer));
+
+        DispatchOwned(
+            ev.Player,
+            owned => owned.OnOwnerHurting(ev),
+            nameof(OnOwnerHurting));
+    }
+
+    private static void OnAnyDying(PlayerDyingEventArgs ev)
+    {
+        foreach (Item item in ev.Player.Items)
+        {
+            if (item != null && Of(item.Serial) is { } custom)
+                custom.Invoke(() => custom.OnOwnerDying(ev), nameof(OnOwnerDying));
+        }
+    }
+
+    private static void OnAnyThrowingProjectile(PlayerThrowingProjectileEventArgs ev)
+    {
+        if (Of(ev.ThrowableItem.Serial) is { } custom)
+            custom.Invoke(() => custom.OnProjectileThrowStarting(ev), nameof(OnProjectileThrowStarting));
+    }
+
+    private static void OnAnyThrewProjectile(PlayerThrewProjectileEventArgs ev)
+    {
+        if (Of(ev.ThrowableItem.Serial) is { } custom)
+            custom.Invoke(() => custom.OnProjectileThrown(ev), nameof(OnProjectileThrown));
+    }
+
+    private static void OnAnyInspectingKeycard(PlayerInspectingKeycardEventArgs ev)
+    {
+        if (Of(ev.KeycardItem.Serial) is { } custom)
+            custom.Invoke(() => custom.OnKeycardInspectionStarting(ev), nameof(OnKeycardInspectionStarting));
+    }
+
+    private static void OnAnyInspectedKeycard(PlayerInspectedKeycardEventArgs ev)
+    {
+        if (Of(ev.KeycardItem.Serial) is { } custom)
+            custom.Invoke(() => custom.OnKeycardInspected(ev), nameof(OnKeycardInspected));
+    }
+
+    private static void OnAnyScp914ProcessingPickup(Scp914ProcessingPickupEventArgs ev)
+    {
+        if (Of(ev.Pickup) is { } custom)
+            custom.Invoke(() => custom.OnScp914ProcessingPickup(ev), nameof(OnScp914ProcessingPickup));
+    }
+
+    private static void OnAnyScp914ProcessingInventoryItem(Scp914ProcessingInventoryItemEventArgs ev)
+    {
+        if (Of(ev.Item) is { } custom)
+            custom.Invoke(() => custom.OnScp914ProcessingInventoryItem(ev), nameof(OnScp914ProcessingInventoryItem));
+    }
+
+    private static void OnAnyPickupDestroyed(PickupDestroyedEventArgs ev)
+    {
+        if (Of(ev.Pickup) is not { } custom)
+            return;
+
+        ushort serial = custom.Serial;
+        custom.DetachPickupLight();
+        custom.DetachPickupSchematic();
+        custom.Invoke(() => custom.OnPickupDestroyed(ev), nameof(OnPickupDestroyed));
+
+        // 拾得遷移でも Pickup は破棄されるため、その場では Release しない。
+        // 次フレームにも Item/Pickup のどちらも無ければ、PMER の複数回 Pickup 等で
+        // 実体だけ消えた追跡を解放する。
+        Timing.CallDelayed(0f, () =>
+        {
+            if (serial != 0 && ReferenceEquals(Of(serial), custom) && custom.Item == null && custom.Pickup == null)
+                custom.Release();
+        });
+    }
+
+    private static void DispatchOwned(LabPlayer owner, Action<CustomItem> callback, string callbackName)
+    {
+        if (owner?.ReferenceHub == null)
+            return;
+
+        foreach (CustomItem custom in new List<CustomItem>(BySerial.Values))
+        {
+            if (custom.Owner?.ReferenceHub != owner.ReferenceHub)
+                continue;
+
+            custom.Invoke(() => callback(custom), callbackName);
+        }
     }
 
     private static void OnRoundRestarted()

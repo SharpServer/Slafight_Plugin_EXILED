@@ -109,7 +109,7 @@ public static class LockerFactory
 /// <summary>
 /// Exiled の Locker / Chamber ラッパーを楽に操作するための拡張。
 /// アイテム指定は ItemSpawnpoint と同じ統一書式
-/// （bare 名 = CItem 優先 → ItemType、"(ItemType)X" / "(CItem)X" で種類固定）。
+/// （bare 名 = カスタムアイテム優先 → ItemType、"(ItemType)X" / "(CustomItem)X" で種類固定）。
 /// </summary>
 public static class LockerExtensions
 {
@@ -183,7 +183,7 @@ public static class LockerExtensions
     // ==== Chamber ====
 
     /// <summary>
-    /// 統一書式でアイテムを追加する（CItem 優先 → ItemType）。
+    /// 統一書式でアイテムを追加する（カスタムアイテム優先 → ItemType）。
     /// 閉じたチャンバーに入れた場合は開けるまでロックされる（Exiled の AddItem 準拠）。
     /// </summary>
     /// <returns>生成された Pickup。解決できなければ null。</returns>
@@ -253,8 +253,8 @@ public static class LockerExtensions
     // ==== 統一 Item 解決 ====
 
     /// <summary>
-    /// 統一書式（bare 名 = CItem 優先 → ItemType、"(ItemType)X" / "(CItem)X"）から
-    /// 未設置の Pickup を生成する。CItem は指定位置にスポーンされた状態で返る。
+    /// 統一書式（bare 名 = カスタムアイテム優先 → ItemType、"(ItemType)X" / "(CustomItem)X"）から
+    /// 未設置の Pickup を生成する。カスタムアイテムは指定位置にスポーンされた状態で返る。
     /// </summary>
     public static Pickup? CreatePickupFromSpec(string itemSpec, Vector3 position)
     {

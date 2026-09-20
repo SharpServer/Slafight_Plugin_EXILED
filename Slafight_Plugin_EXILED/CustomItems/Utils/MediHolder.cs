@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using Exiled.API.Features.Items;
-using Exiled.Events.EventArgs.Player;
 using LabApi.Events.Arguments.PlayerEvents;
 using MEC;
 using Slafight_Plugin_EXILED.API.Core.Features;
@@ -8,7 +7,7 @@ using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomItems.Utils;
 
-public class MediHolder : CustomItem
+public class MediHolder : CustomUsableItem
 {
     public override string Name => "MediHolder";
     public override string Description => "弾薬スロットに拾った回復アイテムを収納でき、使用することができる。";
@@ -17,22 +16,11 @@ public class MediHolder : CustomItem
     public List<ItemType> HolderInventory = [];
     private int _selected;
     
-    protected override void OnCreated()
+    protected override void OnSelected(PlayerChangedItemEventArgs ev)
     {
-        Exiled.Events.Handlers.Player.ChangedItem += OnChangedItem;
-        Exiled.Events.Handlers.Player.PickingUpItem += OnPickingUpItem;
-        base.OnCreated();
-    }
+        Player player = Owner;
+        if (player == null) return;
 
-    protected override void OnReleased()
-    {
-        Exiled.Events.Handlers.Player.ChangedItem -= OnChangedItem;
-        Exiled.Events.Handlers.Player.PickingUpItem -= OnPickingUpItem;
-        base.OnReleased();
-    }
-
-    protected override void OnEquipped(Player player)
-    {
         PlayerScope.Of(player).Delay(1.25f, _ =>
         {
             HintCoroutine = PlayerScope.Of(player).RunLoop(0.1f, p =>
@@ -47,10 +35,9 @@ public class MediHolder : CustomItem
                 }
             });
         });
-        base.OnEquipped(player);
     }
 
-    protected override void OnDropping(PlayerDroppingItemEventArgs ev)
+    protected override void OnDropStarting(PlayerDroppingItemEventArgs ev)
     {
         if (!ev.Throw) return;
         ev.IsAllowed = false;
@@ -63,10 +50,9 @@ public class MediHolder : CustomItem
         {
             _selected++;
         }
-        base.OnDropping(ev);
     }
 
-    protected override void OnUsing(PlayerUsingItemEventArgs ev)
+    protected override void OnUseStarting(PlayerUsingItemEventArgs ev)
     {
         ev.IsAllowed = false;
         if (HolderInventory.Count <= 0)
@@ -86,39 +72,41 @@ public class MediHolder : CustomItem
                 usable.IsUsing = true;
             });
         }
-        base.OnUsing(ev);
     }
 
-    protected override void OnPickedUp(Player player)
+    protected override void OnPickupCompleted(PlayerPickedUpItemEventArgs ev)
     {
+        Player player = Owner;
+        if (player == null) return;
+
         foreach (var itemType in HolderInventory)
             AddAmmo(player, itemType);
-
-        base.OnPickedUp(player);
     }
 
-    protected override void OnDropped(Player player)
+    protected override void OnDropCompleted(PlayerDroppedItemEventArgs ev)
     {
+        Player player = ev.Player?.ReferenceHub is { } hub ? Player.Get(hub) : null;
+        if (player == null) return;
+
         foreach (var itemType in HolderInventory)
             RemoveAmmo(player, itemType);
         
         Timing.KillCoroutines(HintCoroutine);
         player.ShowHint("");
 
-        base.OnDropped(player);
     }
 
-    private void OnChangedItem(ChangedItemEventArgs ev)
+    protected override void OnDeselected(PlayerChangedItemEventArgs ev)
     {
-        if (ev.OldItem.Serial != Serial) return;
         Timing.KillCoroutines(HintCoroutine);
-        Owner.ShowHint("");
+        if (ev.Player?.ReferenceHub is { } hub)
+            Player.Get(hub)?.ShowHint("");
     }
 
-    private void OnPickingUpItem(PickingUpItemEventArgs ev)
+    protected override void OnOwnerPickupStarting(PlayerPickingUpItemEventArgs ev)
     {
-        if (ev.Pickup.Serial == Serial || ev.Player != Owner)
-            return;
+        if (ev.Pickup == null) return;
+        if (ev.Pickup.Serial == Serial) return;
 
         if (HolderInventory.Count >= 3)
             return;
@@ -136,7 +124,8 @@ public class MediHolder : CustomItem
         ev.IsAllowed = false;
 
         HolderInventory.Add(ev.Pickup.Type);
-        AddAmmo(ev.Player, ev.Pickup.Type);
+        if (Owner is { } owner)
+            AddAmmo(owner, ev.Pickup.Type);
 
         ev.Pickup.Destroy();
     }

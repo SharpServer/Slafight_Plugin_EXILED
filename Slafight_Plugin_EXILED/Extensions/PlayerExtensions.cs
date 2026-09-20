@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
+using InventorySystem;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Features;
 
@@ -85,4 +86,12 @@ public static class PlayerExtensions
 
     public static void ClearCustomInfo(this Player player)
         => CustomInfoDisplay.Clear(player);
+    
+    public static void SetAmmo(this Player player, ItemType ammoType, ushort amount)
+    {
+        ItemType itemType = ammoType;
+        if (itemType == ItemType.None)
+            return;
+        player.Inventory.ServerSetAmmo(itemType, (int) amount);
+    }
 }
