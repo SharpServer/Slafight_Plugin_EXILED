@@ -7,30 +7,30 @@ using Slafight_Plugin_EXILED.CustomTeams;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces.MTFs.Epsilon11;
 
-public class NtfLieutenant : CustomRole
+public class NtfContainmentSpecialist : CustomRole
 {
-    public override string Name => "Nine-tailed Fox Lieutenant";
+    public override string Name => "Nine-tailed Fox Containment Specialist";
     public override CustomTeam Team => CustomTeam.Get<FoundationTeam>();
-    public override RoleTypeId BaseRole => RoleTypeId.NtfSergeant;
+    public override RoleTypeId BaseRole => RoleTypeId.NtfSpecialist;
     public override float? MaxHealth => 100f;
-    public override int ForceRolePower => 3;
+    public override int ForceRolePower => 2;
     public override IReadOnlyList<ItemType> Items =>
     [
         ItemType.KeycardMTFOperative,
-        ItemType.GunCrossvec,
         ItemType.Medkit,
-        ItemType.GrenadeFlash,
+        ItemType.Painkillers,
         ItemType.Radio,
         ItemType.ArmorCombat
     ];
     public override IReadOnlyList<Type> CustomItems =>
     [
-        typeof(GunDisarmerRifle)
+        typeof(GunAnomalyDetainer),
+        typeof(GunM82)
     ];
     public override IReadOnlyDictionary<ItemType, ushort> Ammo =>
         new Dictionary<ItemType, ushort>
         {
-            [ItemType.Ammo9x19] = 80,
+            [ItemType.Ammo9x19] = 40,
             [ItemType.Ammo556x45] = 120,
         };
 }

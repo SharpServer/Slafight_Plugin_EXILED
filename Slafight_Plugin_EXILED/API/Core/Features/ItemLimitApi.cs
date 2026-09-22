@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Exiled.API.Features;
-using InventorySystem.Items;
 
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 

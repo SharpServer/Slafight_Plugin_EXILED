@@ -28,6 +28,12 @@ public class NtfCaptain : CustomRole
     [
         typeof(MediHolder)
     ];
+    public override IReadOnlyDictionary<ItemType, ushort> Ammo =>
+        new Dictionary<ItemType, ushort>
+        {
+            [ItemType.Ammo9x19] = 40,
+            [ItemType.Ammo556x45] = 160,
+        };
     
     protected override void OnSpawned()
     {

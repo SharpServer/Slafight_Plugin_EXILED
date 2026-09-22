@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;
+using Slafight_Plugin_EXILED.CustomRoles.FoundationForces.MTFs.Epsilon11;
 
 namespace Slafight_Plugin_EXILED.SpawnSets.FoundationForces;
 
@@ -74,21 +75,13 @@ public sealed class NtfWaveSet : SpawnSet
     /// </remarks>
     public override IReadOnlyList<SpawnSetRoleDefinition> SpawnRoles =>
     [
-        // 隊長は必ず 1 人。部隊システムではこの役職が TopLead になる。
-        SpawnSetRoleDefinition.Vanilla(RoleTypeId.NtfCaptain, count: 1, isForced: true),
-
-        // 幹部は上限 2 人ずつ。埋まれば自動的に候補から外れる。
-        SpawnSetRoleDefinition.Vanilla(RoleTypeId.NtfSergeant, count: 2, weight: 1.5f),
-        SpawnSetRoleDefinition.Vanilla(RoleTypeId.NtfSpecialist, count: 2, weight: 1.5f),
-
-        // 残りは二等兵。
-        SpawnSetRoleDefinition.Vanilla(RoleTypeId.NtfPrivate, count: 99, weight: 4f),
-
-        // ▼ カスタム役職を実装したらここを開ける (master の MTF_NtfNormal 相当)
-        // SpawnSetRoleDefinition.Custom<NtfGeneral>(count: 1),
-        // SpawnSetRoleDefinition.Custom<NtfLieutenant>(count: 2, weight: 2f),
-        // SpawnSetRoleDefinition.Custom<NtfDetainer>(count: 1),
-        // SpawnSetRoleDefinition.Custom<NtfFieldMedic>(count: 1),
-        // SpawnSetRoleDefinition.Custom<NtfGunslinger>(count: 1),
+        SpawnSetRoleDefinition.Custom<NtfGeneral>(1, false, 0.5f),
+        SpawnSetRoleDefinition.Custom<NtfCaptain>(1, true),
+        SpawnSetRoleDefinition.Custom<NtfSergeant>(2, false, 1.5f),
+        SpawnSetRoleDefinition.Custom<NtfLieutenant>(1, false, 1.42f),
+        SpawnSetRoleDefinition.Custom<NtfMedicalSpecialist>(1, false, 1.15f),
+        SpawnSetRoleDefinition.Custom<NtfContainmentSpecialist>(1, false, 1.15f),
+        SpawnSetRoleDefinition.Custom<NtfCombatSpecialist>(1, false, 1.15f),
+        SpawnSetRoleDefinition.Custom<NtfPrivate>(99, false, 4f),
     ];
 }

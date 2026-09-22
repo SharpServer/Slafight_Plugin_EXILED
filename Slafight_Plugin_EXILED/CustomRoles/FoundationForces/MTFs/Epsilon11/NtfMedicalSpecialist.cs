@@ -5,43 +5,44 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Extensions;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.CustomItems.Utils;
-using Slafight_Plugin_EXILED.CustomItems.Weapons;
 using Slafight_Plugin_EXILED.CustomTeams;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces.MTFs.Epsilon11;
 
-public class NtfGeneral : CustomRole
+public class NtfMedicalSpecialist : CustomRole
 {
-    public override string Name => "Nine-tailed Fox General";
+    public override string Name => "Nine-tailed Fox Medical Specialist";
     public override CustomTeam Team => CustomTeam.Get<FoundationTeam>();
-    public override RoleTypeId BaseRole => RoleTypeId.NtfCaptain;
+    public override RoleTypeId BaseRole => RoleTypeId.NtfSpecialist;
     public override float? MaxHealth => 100f;
-    public override int ForceRolePower => 6;
+    public override int ForceRolePower => 2;
     public override IReadOnlyList<ItemType> Items =>
     [
-        ItemType.KeycardMTFCaptain,
-        ItemType.GrenadeHE,
+        ItemType.KeycardMTFOperative,
+        ItemType.GunCrossvec,
         ItemType.Radio,
-        ItemType.ArmorHeavy
+        ItemType.ArmorCombat
     ];
     public override IReadOnlyList<Type> CustomItems =>
     [
-        typeof(GunFRMGX),
         typeof(MediHolder)
     ];
     public override IReadOnlyDictionary<ItemType, ushort> Ammo =>
         new Dictionary<ItemType, ushort>
         {
-            [ItemType.Ammo9x19] = 80,
-            [ItemType.Ammo556x45] = 160,
+            [ItemType.Ammo9x19] = 160,
+            [ItemType.Ammo556x45] = 40,
         };
-
+    
     protected override void OnSpawned()
     {
         Player.GetCustomItems<MediHolder>().FirstOrDefault()?.HolderInventory = 
         [
-            ItemType.Adrenaline,
-            ItemType.Medkit
+            ItemType.Medkit,
+            ItemType.Medkit,
+            ItemType.Painkillers,
+            ItemType.Painkillers,
+            ItemType.Painkillers,
         ];
         base.OnSpawned();
     }

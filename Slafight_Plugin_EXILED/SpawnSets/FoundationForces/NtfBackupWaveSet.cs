@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;
+using Slafight_Plugin_EXILED.CustomRoles.FoundationForces.MTFs.Epsilon11;
 
 namespace Slafight_Plugin_EXILED.SpawnSets.FoundationForces;
 
@@ -54,15 +55,8 @@ public sealed class NtfBackupWaveSet : SpawnSet
     /// <remarks>予備部隊なので隊長は出ず、軍曹が率います。</remarks>
     public override IReadOnlyList<SpawnSetRoleDefinition> SpawnRoles =>
     [
-        // 予備部隊の長は軍曹。部隊システムではこの役職が TopLead になる。
-        SpawnSetRoleDefinition.Vanilla(RoleTypeId.NtfSergeant, count: 1, isForced: true),
-
-        SpawnSetRoleDefinition.Vanilla(RoleTypeId.NtfSpecialist, count: 1, weight: 1.5f),
-        SpawnSetRoleDefinition.Vanilla(RoleTypeId.NtfPrivate, count: 99, weight: 4f),
-
-        // ▼ カスタム役職を実装したらここを開ける (master の MTF_NtfBackup 相当)
-        // SpawnSetRoleDefinition.Custom<NtfDetainer>(count: 1),
-        // SpawnSetRoleDefinition.Custom<NtfFieldMedic>(count: 1),
-        // SpawnSetRoleDefinition.Custom<NtfGunslinger>(count: 1),
+        SpawnSetRoleDefinition.Custom<NtfSergeant>(1, true),
+        SpawnSetRoleDefinition.Custom<NtfGenericSpecialist>(1, false, 1.5f),
+        SpawnSetRoleDefinition.Custom<NtfPrivate>(99, false, 4f),
     ];
 }

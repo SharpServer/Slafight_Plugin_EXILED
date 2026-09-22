@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using CustomPlayerEffects;
-using Exiled.API.Enums;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;

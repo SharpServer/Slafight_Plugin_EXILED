@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Exiled.API.Features;
-using Exiled.API.Features.Items;
 using LabApi.Events.Arguments.PlayerEvents;
 using LabApi.Events.Arguments.Scp914Events;
 using LabApi.Events.Arguments.ServerEvents;
