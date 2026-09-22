@@ -1197,12 +1197,15 @@ public class PlayerHUD : EventHandlerBase
             );
 
             // カスタムアイテム情報
-            if (CustomItem.Of(currentItem.Serial) is { } custom)
+            if (CustomItem.Is(currentItem.Serial, out CustomItem custom))
             {
                 sb.AppendLine(
                     $"<color=#88ffcc>[CustomItem]</color> " +
                     $"<color=#aaaaaa>Type:</color> {custom.GetType().Name}  " +
                     $"<color=#aaaaaa>Display:</color> {custom.Name}");
+
+                if (custom is CustomHybrid hybrid)
+                    sb.Append(hybrid.GetDebugStateFor(player, currentItem.Serial));
             }
 
             // ── Firearm 情報 ───────────────────────────────────────────
@@ -1269,7 +1272,7 @@ public class PlayerHUD : EventHandlerBase
             foreach (var it in items)
             {
                 bool isCurrent = it.Serial == currentItem.Serial;
-                bool isCItem   = CustomItem.Of(it.Serial) is not null;
+                bool isCItem   = CustomItem.Is(it.Serial, out _);
                 string tag     = isCItem ? "<color=#88ffcc>[C]</color>" : "";
                 string cur     = isCurrent ? "<color=yellow>▶</color>" : "  ";
                 sb.Append($" {cur}{tag}{it.Type}");

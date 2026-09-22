@@ -108,6 +108,15 @@ public sealed class InputHandler : EventHandlerBase
 
         if (!player.IsAlive) return;
 
+        if (keybind.SettingId == ServerSpecifics.ItemModeSwitchKeybindSettingId)
+        {
+            if (player.CurrentItem is { } currentItem &&
+                CustomItem.Of(currentItem.Serial) is CustomHybrid hybrid)
+                hybrid.TrySwitchModeFromInput(currentItem.Serial, player);
+
+            return;
+        }
+
         if (keybind.SettingId == ServerSpecifics.AbilityUseKeybindSettingId)
         {
             UseActiveAbility(player);

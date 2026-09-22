@@ -68,10 +68,17 @@ public abstract class CustomItem
 
     private SchematicObject? pickupSchematic;
 
+    private ushort trackedSerial;
+
+    // CustomHybrid のモード定義が、実際に紐付いた物理アイテムを参照するための文脈。
+    private ushort hybridContextSerial;
+    private Action hybridDestroyAction;
+    private Action hybridRefreshPickupSchematicAction;
+
     /// <summary>
     /// このアイテムのシリアルです。生成時に決まります。
     /// </summary>
-    public ushort Serial { get; private set; }
+    public ushort Serial => trackedSerial != 0 ? trackedSerial : hybridContextSerial;
 
     /// <summary>
     /// 土台になるバニラアイテムです。
@@ -157,12 +164,13 @@ public abstract class CustomItem
     {
         get
         {
-            if (Serial == 0) return null;
+            ushort serial = Serial;
+            if (serial == 0) return null;
 
             // シリアルキャッシュは生成直後だとまだ埋まっていないことがある。
             // EXILED が保持している実体から取得すれば LabApi 側のラッパーも同期的に作られる。
-            return Item.Get(Serial) ??
-                   (ExiledItem.Get(Serial) is { } item ? Item.Get(item.Base) : null);
+            return Item.Get(serial) ??
+                   (ExiledItem.Get(serial) is { } item ? Item.Get(item.Base) : null);
         }
     }
 
@@ -173,10 +181,11 @@ public abstract class CustomItem
     {
         get
         {
-            if (Serial == 0) return null;
+            ushort serial = Serial;
+            if (serial == 0) return null;
 
-            return Pickup.Get(Serial) ??
-                   (Exiled.API.Features.Pickups.Pickup.Get(Serial) is { } pickup
+            return Pickup.Get(serial) ??
+                   (Exiled.API.Features.Pickups.Pickup.Get(serial) is { } pickup
                        ? Pickup.Get(pickup.Base)
                        : null);
         }
@@ -256,16 +265,104 @@ public abstract class CustomItem
     public static CustomItem Of(ushort serial) =>
         BySerial.TryGetValue(serial, out CustomItem item) ? item : null;
 
+    /// <summary>
+    /// このシリアルのカスタムアイテムを <typeparamref name="T"/> として返します。
+    /// 別の種類か、カスタムアイテムでなければ null。
+    /// </summary>
+    public static T Of<T>(ushort serial) where T : CustomItem => Of(serial) as T;
+
     /// <inheritdoc cref="Of(ushort)"/>
     public static CustomItem Of(Item item) => item is null ? null : Of(item.Serial);
 
+    /// <inheritdoc cref="Of{T}(ushort)"/>
+    public static T Of<T>(Item item) where T : CustomItem => item is null ? null : Of<T>(item.Serial);
+
     /// <inheritdoc cref="Of(ushort)"/>
     public static CustomItem Of(Pickup pickup) => pickup is null ? null : Of(pickup.Serial);
+
+    /// <inheritdoc cref="Of{T}(ushort)"/>
+    public static T Of<T>(Pickup pickup) where T : CustomItem => pickup is null ? null : Of<T>(pickup.Serial);
+
+    /// <summary>
+    /// このシリアルがカスタムアイテムなら、そのインスタンスを返します。
+    /// </summary>
+    public static bool TryGet(ushort serial, out CustomItem customItem)
+    {
+        customItem = Of(serial);
+        return customItem is not null;
+    }
+
+    /// <summary>
+    /// このシリアルが <typeparamref name="T"/> のカスタムアイテムなら、
+    /// 型付けされたインスタンスを返します。
+    /// </summary>
+    public static bool TryGet<T>(ushort serial, out T customItem) where T : CustomItem
+    {
+        customItem = Of<T>(serial);
+        return customItem is not null;
+    }
+
+    /// <inheritdoc cref="TryGet(ushort, out CustomItem)"/>
+    public static bool TryGet(Item item, out CustomItem customItem) =>
+        TryGet(item?.Serial ?? 0, out customItem);
+
+    /// <inheritdoc cref="TryGet{T}(ushort, out T)"/>
+    public static bool TryGet<T>(Item item, out T customItem) where T : CustomItem =>
+        TryGet(item?.Serial ?? 0, out customItem);
+
+    /// <inheritdoc cref="TryGet(ushort, out CustomItem)"/>
+    public static bool TryGet(Pickup pickup, out CustomItem customItem) =>
+        TryGet(pickup?.Serial ?? 0, out customItem);
+
+    /// <inheritdoc cref="TryGet{T}(ushort, out T)"/>
+    public static bool TryGet<T>(Pickup pickup, out T customItem) where T : CustomItem =>
+        TryGet(pickup?.Serial ?? 0, out customItem);
 
     /// <summary>
     /// このシリアルが T のカスタムアイテムかどうか。
     /// </summary>
     public static bool Is<T>(ushort serial) where T : CustomItem => Of(serial) is T;
+
+    /// <summary>
+    /// このシリアルが何らかのカスタムアイテムなら、そのインスタンスを返します。
+    /// </summary>
+    public static bool Is(ushort serial, out CustomItem customItem) => TryGet(serial, out customItem);
+
+    /// <summary>
+    /// このシリアルが <typeparamref name="T"/> なら、型付けされたインスタンスを返します。
+    /// </summary>
+    public static bool Is<T>(ushort serial, out T customItem) where T : CustomItem =>
+        TryGet(serial, out customItem);
+
+    /// <summary>
+    /// このシリアルが実行時に指定した型なら、そのインスタンスを返します。
+    /// 派生型も一致します。
+    /// </summary>
+    public static bool Is(ushort serial, Type customItemType, out CustomItem customItem)
+    {
+        customItem = Of(serial);
+        return customItemType is not null && customItem is not null && customItemType.IsInstanceOfType(customItem);
+    }
+
+    /// <inheritdoc cref="Is(ushort, out CustomItem)"/>
+    public static bool Is(Item item, out CustomItem customItem) => TryGet(item, out customItem);
+
+    /// <inheritdoc cref="Is{T}(ushort, out T)"/>
+    public static bool Is<T>(Item item, out T customItem) where T : CustomItem => TryGet(item, out customItem);
+
+    /// <inheritdoc cref="Is(ushort, Type, out CustomItem)"/>
+    public static bool Is(Item item, Type customItemType, out CustomItem customItem) =>
+        Is(item?.Serial ?? 0, customItemType, out customItem);
+
+    /// <inheritdoc cref="Is(ushort, out CustomItem)"/>
+    public static bool Is(Pickup pickup, out CustomItem customItem) => TryGet(pickup, out customItem);
+
+    /// <inheritdoc cref="Is{T}(ushort, out T)"/>
+    public static bool Is<T>(Pickup pickup, out T customItem) where T : CustomItem => TryGet(pickup, out customItem);
+
+    /// <inheritdoc cref="Is(ushort, Type, out CustomItem)"/>
+    public static bool Is(Pickup pickup, Type customItemType, out CustomItem customItem) =>
+        Is(pickup?.Serial ?? 0, customItemType, out customItem);
 
     /// <summary>
     /// プレイヤーに新しいカスタムアイテムを渡します。
@@ -308,13 +405,16 @@ public abstract class CustomItem
     /// </summary>
     public void Release()
     {
-        if (Serial == 0) return;
+        if (trackedSerial == 0) return;
 
         DetachPickupLight();
         DetachPickupSchematic();
-        BySerial.Remove(Serial);
+        BySerial.Remove(trackedSerial);
         Invoke(OnTrackingStopped, nameof(OnTrackingStopped));
-        Serial = 0;
+        trackedSerial = 0;
+        hybridContextSerial = 0;
+        hybridDestroyAction = null;
+        hybridRefreshPickupSchematicAction = null;
     }
 
     /// <summary>
@@ -322,12 +422,16 @@ public abstract class CustomItem
     /// </summary>
     public void Destroy()
     {
+        ushort serial = Serial;
         Pickup?.Destroy();
 
-        if (Owner is { } owner && ExiledItem.Get(Serial) is { } held)
+        if (Owner is { } owner && ExiledItem.Get(serial) is { } held)
             owner.RemoveItem(held);
 
-        Release();
+        if (trackedSerial != 0)
+            Release();
+        else
+            hybridDestroyAction?.Invoke();
     }
 
     /// <summary>シリアルへの追跡を開始した直後に呼ばれます。</summary>
@@ -536,6 +640,24 @@ public abstract class CustomItem
     }
 
     /// <summary>
+    /// Hybrid のモード切替などで、現在の物理アイテムの状態を保存します。
+    /// 既定では保存する状態はありません。
+    /// </summary>
+    protected virtual object OnCaptureState(Item item) => null;
+
+    /// <summary><see cref="OnCaptureState"/> で保存した状態を復元します。</summary>
+    protected virtual void OnRestoreState(Item item, object state)
+    {
+    }
+
+    /// <summary>
+    /// Hybrid のモード切替で、このモードが手持ちになった直後に呼ばれます。
+    /// </summary>
+    protected virtual void OnModeActivated(Item item)
+    {
+    }
+
+    /// <summary>
     /// インベントリ内の実体に対する見た目・性能の調整です。
     /// </summary>
     protected virtual void Customize(Item item)
@@ -573,6 +695,12 @@ public abstract class CustomItem
     /// </summary>
     protected void RefreshPickupSchematic()
     {
+        if (trackedSerial == 0 && hybridRefreshPickupSchematicAction != null)
+        {
+            hybridRefreshPickupSchematicAction();
+            return;
+        }
+
         DetachPickupSchematic();
         AttachPickupSchematic();
     }
@@ -782,9 +910,92 @@ public abstract class CustomItem
         target.ShowHint(text, duration);
     }
 
+    // CustomHybrid がモード定義へ基底フックを中継するための内部 shim。
+    internal void SetHybridContext(
+        ushort serial,
+        Action destroyAction = null,
+        Action refreshPickupSchematicAction = null)
+    {
+        hybridContextSerial = serial;
+        hybridDestroyAction = destroyAction;
+        hybridRefreshPickupSchematicAction = refreshPickupSchematicAction;
+    }
+
+    internal void Rebind(ushort serial)
+    {
+        if (serial == 0) return;
+        if (trackedSerial == serial) return;
+
+        if (trackedSerial != 0)
+        {
+            DetachPickupLight();
+            DetachPickupSchematic();
+            BySerial.Remove(trackedSerial);
+            trackedSerial = 0;
+        }
+
+        Attach(serial);
+    }
+
+    internal void CallOnTrackingStarted() => OnTrackingStarted();
+    internal void CallOnTrackingStopped() => OnTrackingStopped();
+    internal void CallOnPickupSpawned(Pickup pickup) => OnPickupSpawned(pickup);
+    internal void CallOnPickupDestroyed(PickupDestroyedEventArgs ev) => OnPickupDestroyed(ev);
+    internal void CallOnPickupStarting(PlayerPickingUpItemEventArgs ev) => OnPickupStarting(ev);
+    internal void CallOnArmorPickupStarting(PlayerPickingUpArmorEventArgs ev) => OnArmorPickupStarting(ev);
+    internal void CallOnCandyPickupStarting(PlayerPickingUpScp330EventArgs ev) => OnCandyPickupStarting(ev);
+    internal void CallOnOwnerPickupStarting(PlayerPickingUpItemEventArgs ev) => OnOwnerPickupStarting(ev);
+    internal void CallOnPickupCompleted(PlayerPickedUpItemEventArgs ev) => OnPickupCompleted(ev);
+    internal void CallOnArmorPickupCompleted(PlayerPickedUpArmorEventArgs ev) => OnArmorPickupCompleted(ev);
+    internal void CallOnCandyPickupCompleted(PlayerPickedUpScp330EventArgs ev) => OnCandyPickupCompleted(ev);
+    internal void CallOnDropStarting(PlayerDroppingItemEventArgs ev) => OnDropStarting(ev);
+    internal void CallOnDropCompleted(PlayerDroppedItemEventArgs ev) => OnDropCompleted(ev);
+    internal void CallOnSelected(PlayerChangedItemEventArgs ev) => OnSelected(ev);
+    internal void CallOnDeselected(PlayerChangedItemEventArgs ev) => OnDeselected(ev);
+    internal void CallOnUseStarting(PlayerUsingItemEventArgs ev) => OnUseStarting(ev);
+    internal void CallOnUseEffectsApplying(PlayerItemUsageEffectsApplyingEventArgs ev) => OnUseEffectsApplying(ev);
+    internal void CallOnUseCompleted(PlayerUsedItemEventArgs ev) => OnUseCompleted(ev);
+    internal void CallOnUseCancelling(PlayerCancellingUsingItemEventArgs ev) => OnUseCancelling(ev);
+    internal void CallOnUseCancelled(PlayerCancelledUsingItemEventArgs ev) => OnUseCancelled(ev);
+    internal void CallOnShotStarting(PlayerShootingWeaponEventArgs ev) => OnShotStarting(ev);
+    internal void CallOnShotCompleted(PlayerShotWeaponEventArgs ev) => OnShotCompleted(ev);
+    internal void CallOnDryFireStarting(PlayerDryFiringWeaponEventArgs ev) => OnDryFireStarting(ev);
+    internal void CallOnDryFireCompleted(PlayerDryFiredWeaponEventArgs ev) => OnDryFireCompleted(ev);
+    internal void CallOnReloadStarting(PlayerReloadingWeaponEventArgs ev) => OnReloadStarting(ev);
+    internal void CallOnReloadCompleted(PlayerReloadedWeaponEventArgs ev) => OnReloadCompleted(ev);
+    internal void CallOnAttachmentsChanging(PlayerChangingAttachmentsEventArgs ev) => OnAttachmentsChanging(ev);
+    internal void CallOnAttachmentsChanged(PlayerChangedAttachmentsEventArgs ev) => OnAttachmentsChanged(ev);
+    internal void CallOnHurtingPlayer(PlayerHurtingEventArgs ev) => OnHurtingPlayer(ev);
+    internal void CallOnOwnerHurting(PlayerHurtingEventArgs ev) => OnOwnerHurting(ev);
+    internal void CallOnOwnerDying(PlayerDyingEventArgs ev) => OnOwnerDying(ev);
+    internal void CallOnProjectileThrowStarting(PlayerThrowingProjectileEventArgs ev) => OnProjectileThrowStarting(ev);
+    internal void CallOnProjectileThrown(PlayerThrewProjectileEventArgs ev) => OnProjectileThrown(ev);
+    internal void CallOnKeycardInspectionStarting(PlayerInspectingKeycardEventArgs ev) => OnKeycardInspectionStarting(ev);
+    internal void CallOnKeycardInspected(PlayerInspectedKeycardEventArgs ev) => OnKeycardInspected(ev);
+    internal void CallOnScp914ProcessingPickup(Scp914ProcessingPickupEventArgs ev) => OnScp914ProcessingPickup(ev);
+    internal void CallOnScp914ProcessingInventoryItem(Scp914ProcessingInventoryItemEventArgs ev) => OnScp914ProcessingInventoryItem(ev);
+    internal void CallCustomize(Item item) => Customize(item);
+    internal void CallCustomizeNewItem(Item item) => CustomizeNewItem(item);
+    internal void CallCustomize(Pickup pickup) => Customize(pickup);
+    internal Pickup CallCreatePickup(Vector3 position, Quaternion rotation, Vector3 scale) => CreatePickup(position, rotation, scale);
+    internal object CallOnCaptureState(Item item) => OnCaptureState(item);
+    internal void CallOnRestoreState(Item item, object state) => OnRestoreState(item, state);
+    internal void CallOnModeActivated(Item item) => OnModeActivated(item);
+    internal string CallPickupHint() => PickupHint;
+    internal string CallSelectedHint() => SelectedHint;
+    internal float CallPickupHintDuration() => PickupHintDuration;
+    internal float CallSelectedHintDuration() => SelectedHintDuration;
+    internal bool CallPickupLightEnabled() => PickupLightEnabled;
+    internal Color CallPickupLightColor() => PickupLightColor;
+    internal float CallPickupLightIntensity() => PickupLightIntensity;
+    internal float CallPickupLightRange() => PickupLightRange;
+    internal LightShadows CallPickupLightShadowType() => PickupLightShadowType;
+    internal string CallPickupSchematicName() => PickupSchematicName;
+    internal Vector3 CallPickupSchematicScale() => PickupSchematicScale;
+
     private void Attach(ushort serial)
     {
-        Serial = serial;
+        trackedSerial = serial;
 
         // 同じシリアルを別のカスタムアイテムが持っていたら明け渡す。
         if (BySerial.TryGetValue(serial, out CustomItem previous) && !ReferenceEquals(previous, this))

@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Exiled.API.Features.Items;
 using InventorySystem.Items.Firearms.Attachments;
+using InventorySystem.Items.Firearms.Modules;
 using LabApi.Events.Arguments.PlayerEvents;
 using UnityEngine;
 
@@ -19,6 +21,18 @@ namespace Slafight_Plugin_EXILED.API.Core.Features;
 public abstract class CustomFirearm : CustomItem
 {
     private static readonly IReadOnlyList<AttachmentName> NoAttachments = Array.Empty<AttachmentName>();
+
+    private sealed class FirearmState
+    {
+        public FirearmState(int magazineTotal, int barrelAmmo)
+        {
+            MagazineTotal = magazineTotal;
+            BarrelAmmo = barrelAmmo;
+        }
+
+        public int MagazineTotal { get; }
+        public int BarrelAmmo { get; }
+    }
 
     /// <summary>基礎ダメージ。null ならバニラ値を維持します。</summary>
     protected virtual float? Damage => null;
@@ -137,6 +151,35 @@ public abstract class CustomFirearm : CustomItem
         firearm.MagazineAmmo = Math.Max(0, Math.Min(initial, maximum));
     }
 
+    /// <summary>
+    /// Hybrid のモード切替で、銃ごとの装填状態を次のシリアルへ引き継ぎます。
+    /// </summary>
+    protected override object OnCaptureState(LabApi.Features.Wrappers.Item item)
+    {
+        if (ExiledItem.Get(item.Base) is not Firearm firearm)
+            return null;
+
+        return new FirearmState(firearm.MagazineAmmo + GetChambered(firearm), firearm.BarrelAmmo);
+    }
+
+    protected override void OnRestoreState(LabApi.Features.Wrappers.Item item, object state)
+    {
+        if (ExiledItem.Get(item.Base) is not Firearm firearm || state is not FirearmState saved)
+            return;
+
+        firearm.MagazineAmmo = Math.Max(0, saved.MagazineTotal);
+        firearm.BarrelAmmo = Math.Max(0, saved.BarrelAmmo);
+    }
+
+    /// <summary>
+    /// 強制持ち替え後の自動火器を cock し、復元した総弾数から薬室へ 1 発送ります。
+    /// </summary>
+    protected override void OnModeActivated(LabApi.Features.Wrappers.Item item)
+    {
+        if (ExiledItem.Get(item.Base) is Firearm firearm)
+            GetAutomaticModule(firearm)?.ServerCycleAction();
+    }
+
     /// <summary>地面の銃へ、Pickup が保持できる宣言値を適用します。</summary>
     protected virtual void Apply(FirearmPickup pickup)
     {
@@ -152,4 +195,10 @@ public abstract class CustomFirearm : CustomItem
             pickup.MaxAmmo = Math.Max(0, capacity);
         pickup.AmmoDrain = Math.Max(1, AmmoDrain);
     }
+
+    private static AutomaticActionModule GetAutomaticModule(Firearm firearm)
+        => firearm.Base.Modules.OfType<AutomaticActionModule>().FirstOrDefault();
+
+    private static int GetChambered(Firearm firearm)
+        => GetAutomaticModule(firearm)?.AmmoStored ?? 0;
 }

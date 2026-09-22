@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Exiled.API.Enums;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Features;
@@ -17,14 +18,20 @@ public class NtfGeneral : CustomRole
     public override IReadOnlyList<ItemType> Items =>
     [
         ItemType.KeycardMTFCaptain,
-        ItemType.Adrenaline,
-        ItemType.Medkit,
         ItemType.GrenadeHE,
         ItemType.Radio,
         ItemType.ArmorHeavy
     ];
     public override IReadOnlyList<Type> CustomItems =>
     [
-        typeof(GunFRMGX)
+        typeof(GunFRMGX),
+        typeof(MediHolder)
     ];
+
+    protected override void OnSpawned()
+    {
+        
+        
+        base.OnSpawned();
+    }
 }

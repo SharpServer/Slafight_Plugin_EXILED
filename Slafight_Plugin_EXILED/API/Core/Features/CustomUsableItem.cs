@@ -1,3 +1,4 @@
+using System;
 using LabApi.Events.Arguments.PlayerEvents;
 
 namespace Slafight_Plugin_EXILED.API.Core.Features;
@@ -9,6 +10,16 @@ namespace Slafight_Plugin_EXILED.API.Core.Features;
 public abstract class CustomUsableItem : CustomItem
 {
     private int usesRemaining;
+
+    private sealed class UsableState
+    {
+        public UsableState(int usesRemaining)
+        {
+            UsesRemaining = usesRemaining;
+        }
+
+        public int UsesRemaining { get; }
+    }
 
     /// <summary>最大使用回数。0 以下なら回数を管理しません。</summary>
     protected virtual int MaximumUses => 0;
@@ -26,6 +37,15 @@ public abstract class CustomUsableItem : CustomItem
     {
         usesRemaining = MaximumUses;
         base.OnTrackingStarted();
+    }
+
+    protected override object OnCaptureState(LabApi.Features.Wrappers.Item item)
+        => MaximumUses > 0 ? new UsableState(usesRemaining) : null;
+
+    protected override void OnRestoreState(LabApi.Features.Wrappers.Item item, object state)
+    {
+        if (MaximumUses > 0 && state is UsableState saved)
+            usesRemaining = Math.Max(0, Math.Min(MaximumUses, saved.UsesRemaining));
     }
 
     protected override void OnUseStarting(PlayerUsingItemEventArgs ev)

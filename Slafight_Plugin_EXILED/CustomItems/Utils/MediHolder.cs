@@ -111,7 +111,7 @@ public class MediHolder : CustomUsableItem
         if (HolderInventory.Count >= 3)
             return;
 
-        if (Is<CustomItem>(ev.Pickup.Serial))
+        if (Is(ev.Pickup, out _))
             return;
 
         if (ev.Pickup.Type is not (
