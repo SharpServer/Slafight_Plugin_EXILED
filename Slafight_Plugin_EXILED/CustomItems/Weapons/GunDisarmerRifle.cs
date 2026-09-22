@@ -41,7 +41,7 @@ public sealed class GunDisarmerRifle : CustomFirearm
 
     protected override void OnPickupStarting(PlayerPickingUpItemEventArgs ev)
     {
-        reloadAfterPickup = ev?.Pickup?.GetPreviousOwner() != ev?.Player.AsExiled();
+        reloadAfterPickup = ev.Pickup?.GetPreviousOwner() != ev.Player.AsExiled();
         base.OnPickupStarting(ev);
     }
 
@@ -61,7 +61,7 @@ public sealed class GunDisarmerRifle : CustomFirearm
 
     protected override void OnHurtingPlayer(PlayerHurtingEventArgs ev)
     {
-        if (ev?.Player?.ReferenceHub is null || ev.Attacker?.ReferenceHub is null)
+        if (ev.Attacker?.ReferenceHub is null)
         {
             base.OnHurtingPlayer(ev);
             return;
