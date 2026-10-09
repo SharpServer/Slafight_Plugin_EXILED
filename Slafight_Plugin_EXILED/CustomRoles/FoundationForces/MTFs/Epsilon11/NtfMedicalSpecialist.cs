@@ -12,6 +12,8 @@ namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces.MTFs.Epsilon11;
 public class NtfMedicalSpecialist : CustomRole
 {
     public override string Name => "Nine-tailed Fox Medical Specialist";
+
+    public override string CustomInfo => Name;
     public override CustomTeam Team => CustomTeam.Get<FoundationTeam>();
     public override RoleTypeId BaseRole => RoleTypeId.NtfSpecialist;
     public override float? MaxHealth => 100f;

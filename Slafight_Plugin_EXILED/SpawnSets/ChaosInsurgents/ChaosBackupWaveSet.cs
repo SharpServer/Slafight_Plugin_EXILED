@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using Exiled.API.Features;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;
+using Slafight_Plugin_EXILED.CustomMaps;
 
 namespace Slafight_Plugin_EXILED.SpawnSets.ChaosInsurgents;
 
@@ -22,9 +24,6 @@ public sealed class ChaosBackupWaveSet : SpawnSet
     /// <inheritdoc />
     public override bool IsMiniWave => true;
 
-    /// <summary>
-    /// master の <c>FoundationEnemyMiniWaveWeights</c> に準拠しています。
-    /// </summary>
     public override int RespawnWeight => 100;
 
     /// <inheritdoc />
@@ -39,16 +38,15 @@ public sealed class ChaosBackupWaveSet : SpawnSet
          $"全職員に通達。Gate Aに{spawnCount}人の<color=#228b22>カオス・インサージェンシー</color>部隊が検出されました。" +
          "<split>見つけ次第終了してください。");
 
-    /// <summary>
-    /// master の <c>GOI_ChaosBackup</c> UnitPack に準拠した構成です。
-    /// </summary>
     public override IReadOnlyList<SpawnSetRoleDefinition> SpawnRoles =>
     [
         SpawnSetRoleDefinition.Vanilla(RoleTypeId.ChaosMarauder, count: 2, weight: 1.5f),
         SpawnSetRoleDefinition.Vanilla(RoleTypeId.ChaosRifleman, count: 99, weight: 4f),
-
-        // ▼ カスタム役職を実装したらここを開ける (master の GOI_ChaosBackup 相当)
-        // SpawnSetRoleDefinition.Custom<ChaosSignal>(count: 1, isForced: true),
-        // SpawnSetRoleDefinition.Custom<ChaosPenal>(count: 1),
     ];
+
+    protected override void OnSpawning()
+    {
+        Respawn.SummonChaosInsurgencyVan();
+        base.OnSpawning();
+    }
 }

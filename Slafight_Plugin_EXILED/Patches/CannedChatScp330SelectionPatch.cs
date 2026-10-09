@@ -2,6 +2,7 @@ using HarmonyLib;
 using InventorySystem.Items.Usables.Scp330;
 using Mirror;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomItems.Accesibilities.InventoryChat;
 
 namespace Slafight_Plugin_EXILED.Patches;
 

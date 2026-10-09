@@ -1,10 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Exiled.API.Features.Items;
 using InventorySystem.Items.Firearms.Attachments;
-using InventorySystem.Items.Firearms.Modules;
 using LabApi.Events.Arguments.PlayerEvents;
+using Slafight_Plugin_EXILED.API.Core.Extensions;
 using UnityEngine;
 
 using ExiledItem = Exiled.API.Features.Items.Item;
@@ -21,18 +20,6 @@ namespace Slafight_Plugin_EXILED.API.Core.Features;
 public abstract class CustomFirearm : CustomItem
 {
     private static readonly IReadOnlyList<AttachmentName> NoAttachments = Array.Empty<AttachmentName>();
-
-    private sealed class FirearmState
-    {
-        public FirearmState(int magazineTotal, int barrelAmmo)
-        {
-            MagazineTotal = magazineTotal;
-            BarrelAmmo = barrelAmmo;
-        }
-
-        public int MagazineTotal { get; }
-        public int BarrelAmmo { get; }
-    }
 
     /// <summary>基礎ダメージ。null ならバニラ値を維持します。</summary>
     protected virtual float? Damage => null;
@@ -63,6 +50,10 @@ public abstract class CustomFirearm : CustomItem
 
     /// <summary>プレイヤーによるアタッチメント変更を許可するか。</summary>
     protected virtual bool AllowAttachmentChanges => true;
+
+    /// <summary>弾種・弾倉容量・初期装填・発射時の消費弾数です。</summary>
+    protected virtual FirearmAmmoSettings AmmoSettings =>
+        new(MagazineCapacity, InitialMagazineAmmo, ammoDrain: AmmoDrain);
 
     /// <summary>Pickup の見た目の大きさ。</summary>
     protected virtual Vector3 PickupScale => Vector3.one;
@@ -117,9 +108,26 @@ public abstract class CustomFirearm : CustomItem
         base.OnAttachmentsChanging(ev);
     }
 
+    protected override void OnAttachmentsChanged(PlayerChangedAttachmentsEventArgs ev)
+    {
+        // The capacity is effective, so a player's magazine attachment change must
+        // not add its modifier to our configured capacity a second time.
+        if (ExiledItem.Get(ev.FirearmItem.Base) is Firearm firearm)
+            firearm.ApplyAmmoSettings(AmmoSettings);
+
+        base.OnAttachmentsChanged(ev);
+    }
+
     /// <summary>インベントリ内の銃へ宣言値を適用します。</summary>
     protected virtual void Apply(Firearm firearm)
     {
+        if (Attachments.Count > 0)
+        {
+            if (ClearAttachmentsBeforeApplying)
+                firearm.ClearAttachments();
+            firearm.AddAttachment(Attachments);
+        }
+
         if (Damage is { } damage)
             firearm.Damage = damage;
         if (Inaccuracy is { } inaccuracy)
@@ -128,27 +136,13 @@ public abstract class CustomFirearm : CustomItem
             firearm.Penetration = penetration;
         if (DamageFalloffDistance is { } falloff)
             firearm.DamageFalloffDistance = falloff;
-        if (MagazineCapacity is { } capacity)
-            firearm.MaxMagazineAmmo = Math.Max(0, capacity);
-
-        firearm.AmmoDrain = Math.Max(1, AmmoDrain);
-
-        if (Attachments.Count == 0)
-            return;
-
-        if (ClearAttachmentsBeforeApplying)
-            firearm.ClearAttachments();
-        firearm.AddAttachment(Attachments);
+        firearm.ApplyAmmoSettings(AmmoSettings);
     }
 
     /// <summary>新規作成した銃だけに初期状態を適用します。</summary>
     protected virtual void Initialize(Firearm firearm)
     {
-        if (InitialMagazineAmmo is not { } initial)
-            return;
-
-        int maximum = MagazineCapacity ?? firearm.MaxMagazineAmmo;
-        firearm.MagazineAmmo = Math.Max(0, Math.Min(initial, maximum));
+        firearm.InitializeAmmo(AmmoSettings);
     }
 
     /// <summary>
@@ -156,28 +150,26 @@ public abstract class CustomFirearm : CustomItem
     /// </summary>
     protected override object OnCaptureState(LabApi.Features.Wrappers.Item item)
     {
-        if (ExiledItem.Get(item.Base) is not Firearm firearm)
-            return null;
-
-        return new FirearmState(firearm.MagazineAmmo + GetChambered(firearm), firearm.BarrelAmmo);
+        return ExiledItem.Get(item.Base) is Firearm firearm
+            ? firearm.CaptureAmmoState()
+            : null;
     }
 
     protected override void OnRestoreState(LabApi.Features.Wrappers.Item item, object state)
     {
-        if (ExiledItem.Get(item.Base) is not Firearm firearm || state is not FirearmState saved)
+        if (ExiledItem.Get(item.Base) is not Firearm firearm || state is not FirearmAmmoState saved)
             return;
 
-        firearm.MagazineAmmo = Math.Max(0, saved.MagazineTotal);
-        firearm.BarrelAmmo = Math.Max(0, saved.BarrelAmmo);
+        firearm.RestoreAmmoState(saved);
     }
 
     /// <summary>
-    /// 強制持ち替え後の自動火器を cock し、復元した総弾数から薬室へ 1 発送ります。
+    /// 強制持ち替え後の自動火器を cock し、復元した弾数から薬室へ装填します。
     /// </summary>
     protected override void OnModeActivated(LabApi.Features.Wrappers.Item item)
     {
         if (ExiledItem.Get(item.Base) is Firearm firearm)
-            GetAutomaticModule(firearm)?.ServerCycleAction();
+            firearm.PrepareForUse();
     }
 
     /// <summary>地面の銃へ、Pickup が保持できる宣言値を適用します。</summary>
@@ -191,14 +183,6 @@ public abstract class CustomFirearm : CustomItem
             pickup.Penetration = penetration;
         if (DamageFalloffDistance is { } falloff)
             pickup.DamageFalloffDistance = falloff;
-        if (MagazineCapacity is { } capacity)
-            pickup.MaxAmmo = Math.Max(0, capacity);
-        pickup.AmmoDrain = Math.Max(1, AmmoDrain);
+        pickup.ApplyAmmoSettings(AmmoSettings);
     }
-
-    private static AutomaticActionModule GetAutomaticModule(Firearm firearm)
-        => firearm.Base.Modules.OfType<AutomaticActionModule>().FirstOrDefault();
-
-    private static int GetChambered(Firearm firearm)
-        => GetAutomaticModule(firearm)?.AmmoStored ?? 0;
 }

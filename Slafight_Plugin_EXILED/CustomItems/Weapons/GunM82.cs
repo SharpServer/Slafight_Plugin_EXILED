@@ -26,11 +26,11 @@ public sealed class GunM82 : CustomFirearm
     public override string Description => "E11が所持する対物ライフル";
     public override ItemType BaseType => ItemType.GunE11SR;
     protected override float? Damage => 35f;
-    protected override int? MagazineCapacity => 30;
+    protected override FirearmAmmoSettings AmmoSettings =>
+        new(magazineCapacity: 30, ammoItemType: ItemType.Ammo556x45, ammoDrain: 30);
     protected override Vector3 PickupScale => new(1f, 1f, 2.25f);
     protected override bool PickupLightEnabled => true;
     protected override Color PickupLightColor => Color.cyan;
-    protected override int AmmoDrain => 30;
     protected override IReadOnlyList<AttachmentName> Attachments => FixedAttachments;
     protected override bool AllowAttachmentChanges => false;
 

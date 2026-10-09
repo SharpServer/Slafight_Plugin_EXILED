@@ -8,6 +8,8 @@ namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces.MTFs.Epsilon11;
 public class NtfPrivate : CustomRole
 {
     public override string Name => "Nine-tailed Fox Private";
+
+    public override string CustomInfo => Name;
     public override CustomTeam Team => CustomTeam.Get<FoundationTeam>();
     public override RoleTypeId BaseRole => RoleTypeId.NtfPrivate;
     public override float? MaxHealth => 100f;

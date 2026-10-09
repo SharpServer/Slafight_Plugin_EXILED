@@ -25,7 +25,8 @@ public sealed class GunDisarmerRifle : CustomFirearm
 
     protected override float? Damage => 1f;
 
-    protected override int? MagazineCapacity => 1;
+    protected override FirearmAmmoSettings AmmoSettings =>
+        new(magazineCapacity: 1, ammoItemType: ItemType.Ammo556x45);
 
     protected override Vector3 PickupScale => new(1f, 1f, 1.045f);
 

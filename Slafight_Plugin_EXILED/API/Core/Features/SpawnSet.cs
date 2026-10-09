@@ -208,13 +208,33 @@ public abstract class SpawnSet
         // 途中で return してもラウンドロックを必ず戻す。
         try
         {
-            return SpawnInternal();
+            OnSpawning();
+
+            List<Player> spawned = SpawnInternal();
+
+            OnSpawned();
+
+            return spawned;
         }
         finally
         {
             if (!alreadyLocked)
                 Round.IsLocked = false;
         }
+    }
+
+    /// <summary>
+    /// 役職の割り当てを始める直前に呼ばれます。
+    /// </summary>
+    protected virtual void OnSpawning()
+    {
+    }
+
+    /// <summary>
+    /// 役職の割り当てが終わった直後に呼ばれます。割り当て人数が 0 人でも呼ばれます。
+    /// </summary>
+    protected virtual void OnSpawned()
+    {
     }
 
     private List<Player> SpawnInternal()

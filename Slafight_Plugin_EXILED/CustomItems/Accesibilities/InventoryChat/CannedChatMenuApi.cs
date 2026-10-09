@@ -15,12 +15,13 @@ using Mirror;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using Hint = HintServiceMeow.Core.Models.Hints.Hint;
 using PlayerHandlers = Exiled.Events.Handlers.Player;
 using ServerHandlers = Exiled.Events.Handlers.Server;
 
-namespace Slafight_Plugin_EXILED.API.Features;
+namespace Slafight_Plugin_EXILED.CustomItems.Accesibilities.InventoryChat;
 
 /// <summary>
 /// SCP-330 の6分割セレクターを一時的な階層型定型文メニューとして使う API です。

@@ -13,5 +13,5 @@ public class GunFRMGX : CustomFirearm
     protected override Vector3 PickupScale => new(1.08f, 1f, 1.35f);
 
     protected override float? Damage => 28f;
-    protected override int? MagazineCapacity => 80;
+    protected override FirearmAmmoSettings AmmoSettings => new(magazineCapacity: 80);
 }

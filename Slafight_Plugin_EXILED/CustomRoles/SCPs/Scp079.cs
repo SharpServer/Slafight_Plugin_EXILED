@@ -10,6 +10,8 @@ public sealed class Scp079 : CustomRole
 {
     public override string Name => "SCP-079";
 
+    public override string CustomInfo => Name;
+
     public override string Description => "施設システムを通して周囲へ語りかけます。";
 
     public override CustomTeam Team => CustomTeam.Get<ScpTeam>();

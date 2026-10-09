@@ -34,7 +34,8 @@ public sealed class GunAnomalyDetainer : CustomFirearm
     public override ItemType BaseType => ItemType.GunE11SR;
     public override Rarity Rarity => Rarity.Rare;
     protected override float? Damage => 20f;
-    protected override int? MagazineCapacity => 5;
+    protected override FirearmAmmoSettings AmmoSettings =>
+        new(magazineCapacity: 5, initialMagazineAmmo: 5, ammoItemType: ItemType.Ammo556x45);
     protected override Vector3 PickupScale => new(1f, 1f, 1.1f);
     protected override IReadOnlyList<AttachmentName> Attachments => FixedAttachments;
     protected override bool AllowAttachmentChanges => false;

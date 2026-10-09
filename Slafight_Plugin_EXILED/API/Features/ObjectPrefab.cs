@@ -744,7 +744,7 @@ public abstract class ObjectPrefab : IObjectPrefab
         _scheduledCallbacks.Clear();
     }
 
-    public void SyncManagedObjects()
+    public virtual void SyncManagedObjects()
     {
         if (_isDestroyed)
             return;

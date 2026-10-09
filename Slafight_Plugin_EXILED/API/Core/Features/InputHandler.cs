@@ -6,6 +6,7 @@ using Exiled.Permissions.Extensions;
 using Slafight_Plugin_EXILED.API.Core.Commands;
 using Slafight_Plugin_EXILED.API.Core.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.CustomItems.Accesibilities.InventoryChat;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.ProximityChat;
 using UserSettings.ServerSpecific;
