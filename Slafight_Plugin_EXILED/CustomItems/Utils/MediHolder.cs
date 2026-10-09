@@ -3,6 +3,7 @@ using Exiled.API.Features.Items;
 using LabApi.Events.Arguments.PlayerEvents;
 using MEC;
 using Slafight_Plugin_EXILED.API.Core.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using Player = Exiled.API.Features.Player;
 
 namespace Slafight_Plugin_EXILED.CustomItems.Utils;
@@ -15,32 +16,79 @@ public class MediHolder : CustomUsableItem
     public CoroutineHandle HintCoroutine;
     public List<ItemType> HolderInventory = [];
     private int _selected;
+    private int _hintVersion;
+    private Player _hintPlayer;
+    private bool _hintVisible;
     
     protected override void OnSelected(PlayerChangedItemEventArgs ev)
     {
+        StopHint();
         Player player = Owner;
-        if (player == null) return;
+        if (!player.IsSafePlayer()) return;
 
-        PlayerScope.Of(player).Delay(1.25f, _ =>
+        var scope = PlayerScope.Of(player);
+        _hintPlayer = player;
+        HintCoroutine = scope.Track(Timing.RunCoroutine(DisplayHint(scope, _hintVersion)));
+    }
+
+    private IEnumerator<float> DisplayHint(PlayerScope scope, int version)
+    {
+        try
         {
-            HintCoroutine = PlayerScope.Of(player).RunLoop(0.1f, p =>
+            // Keep the initial delay and display loop under the same cancellable handle.
+            yield return Timing.WaitForSeconds(1.25f);
+            while (version == _hintVersion && !scope.IsDisposed &&
+                   scope.Player.IsSafePlayer() && scope.Player.IsAlive &&
+                   scope.Player.GetNetId() == scope.NetId &&
+                   ReferenceEquals(Owner, scope.Player) &&
+                   scope.Player.CurrentItem?.Serial == Serial && ReferenceEquals(Of(Serial), this))
             {
-                if (HolderInventory.Count > 0)
-                {
-                    p.ShowHint($"<size=26><<color=yellow>{HolderInventory[_selected]}</color>></size>");
-                }
-                else
-                {
-                    p.ShowHint($"<size=26><<color=yellow>無し</color>></size>");
-                }
-            });
-        });
+                NormalizeSelection();
+                string selected = HolderInventory.Count > 0 ? HolderInventory[_selected].ToString() : "無し";
+                _hintVisible = true;
+                // Let the last frame expire even if a lifecycle event bypasses normal cleanup.
+                scope.Player.ShowHint($"<size=26><<color=yellow>{selected}</color>></size>", 0.3f);
+                yield return Timing.WaitForSeconds(0.1f);
+            }
+        }
+        finally
+        {
+            // A cancelled, older session must never clear a newly selected holder's display.
+            if (version == _hintVersion)
+                ClearHint();
+        }
+    }
+
+    private void StopHint()
+    {
+        _hintVersion++;
+        Timing.KillCoroutines(HintCoroutine);
+        ClearHint();
+    }
+
+    private void ClearHint()
+    {
+        var player = _hintPlayer;
+        bool wasVisible = _hintVisible;
+        HintCoroutine = default;
+        _hintPlayer = null;
+        _hintVisible = false;
+
+        if (wasVisible && player.IsSafePlayer())
+            player.ShowHint(string.Empty);
+    }
+
+    private void NormalizeSelection()
+    {
+        if (_selected < 0 || _selected >= HolderInventory.Count)
+            _selected = 0;
     }
 
     protected override void OnDropStarting(PlayerDroppingItemEventArgs ev)
     {
         if (!ev.Throw) return;
         ev.IsAllowed = false;
+        NormalizeSelection();
         var count = _selected + 1;
         if (HolderInventory.Count <= count)
         {
@@ -55,19 +103,25 @@ public class MediHolder : CustomUsableItem
     protected override void OnUseStarting(PlayerUsingItemEventArgs ev)
     {
         ev.IsAllowed = false;
+        Player player = Owner;
+        if (!player.IsSafePlayer()) return;
+        NormalizeSelection();
         if (HolderInventory.Count <= 0)
         {
-            Owner.ShowHint("<size=26>アイテムが何も入っていません！</size>");
+            player.ShowHint("<size=26>アイテムが何も入っていません！</size>");
             return;
         }
 
-        Owner.CurrentItem = Exiled.API.Features.Items.Item.Create(HolderInventory[_selected]);
-        if (Owner.CurrentItem is Usable usable)
+        player.CurrentItem = Exiled.API.Features.Items.Item.Create(HolderInventory[_selected]);
+        if (player.CurrentItem is Usable usable)
         {
             HolderInventory.RemoveAt(_selected);
             _selected = 0;
-            PlayerScope.Of(Owner).Delay(1f, _ =>
+            PlayerScope.Of(player).Delay(1f, p =>
             {
+                if (!p.IsAlive || !ReferenceEquals(p.CurrentItem?.Base, usable.Base))
+                    return;
+
                 usable.MaxCancellableTime = 0f;
                 usable.IsUsing = true;
             });
@@ -85,22 +139,20 @@ public class MediHolder : CustomUsableItem
 
     protected override void OnDropCompleted(PlayerDroppedItemEventArgs ev)
     {
+        StopHint();
         Player player = ev.Player?.ReferenceHub is { } hub ? Player.Get(hub) : null;
         if (player == null) return;
 
         foreach (var itemType in HolderInventory)
             RemoveAmmo(player, itemType);
-        
-        Timing.KillCoroutines(HintCoroutine);
-        player.ShowHint("");
-
     }
 
-    protected override void OnDeselected(PlayerChangedItemEventArgs ev)
+    protected override void OnDeselected(PlayerChangedItemEventArgs ev) => StopHint();
+
+    protected override void OnTrackingStopped()
     {
-        Timing.KillCoroutines(HintCoroutine);
-        if (ev.Player?.ReferenceHub is { } hub)
-            Player.Get(hub)?.ShowHint("");
+        StopHint();
+        base.OnTrackingStopped();
     }
 
     protected override void OnOwnerPickupStarting(PlayerPickingUpItemEventArgs ev)
