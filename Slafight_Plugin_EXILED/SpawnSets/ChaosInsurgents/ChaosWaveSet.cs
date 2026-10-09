@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using Exiled.API.Features;
 using PlayerRoles;
+using Slafight_Plugin_EXILED.API.Core.Enums;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;
-using Slafight_Plugin_EXILED.CustomMaps;
 
 namespace Slafight_Plugin_EXILED.SpawnSets.ChaosInsurgents;
 
@@ -22,6 +21,8 @@ public sealed class ChaosWaveSet : SpawnSet
 
     public override float RespawnRatio => 1.0f;
 
+    public override SpawnVehicle Vehicle => SpawnVehicle.ChaosVan;
+
     public override string Theme => "./WaveThemes/_w_chaos.ogg";
 
     public override (string Cassie, string Subtitle) Announcement(int spawnCount, string unitName) =>
@@ -35,10 +36,4 @@ public sealed class ChaosWaveSet : SpawnSet
         SpawnSetRoleDefinition.Vanilla(RoleTypeId.ChaosMarauder, count: 2, weight: 1.5f),
         SpawnSetRoleDefinition.Vanilla(RoleTypeId.ChaosRifleman, count: 99, weight: 4f),
     ];
-
-    protected override void OnSpawning()
-    {
-        Respawn.SummonChaosInsurgencyVan();
-        base.OnSpawning();
-    }
 }

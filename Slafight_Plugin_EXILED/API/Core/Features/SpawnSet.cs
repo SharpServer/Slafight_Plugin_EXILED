@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
 using PlayerRoles;
+using Slafight_Plugin_EXILED.API.Core.Enums;
 using Slafight_Plugin_EXILED.API.Core.Extensions;
 using Slafight_Plugin_EXILED.API.Core.Structs;
 using Slafight_Plugin_EXILED.Extensions;
@@ -117,6 +118,13 @@ public abstract class SpawnSet
     public virtual string Theme => null;
 
     /// <summary>
+    /// 役職を 1 人以上割り当てたときに再生する車両演出です。既定は車両なし。
+    /// バニラが抽選した陣営ではなく、実際に出す SpawnSet の指定を使います。
+    /// 手動実行・ミニウェーブでも同じ指定が適用されます。
+    /// </summary>
+    public virtual SpawnVehicle Vehicle => SpawnVehicle.None;
+
+    /// <summary>
     /// 出撃時のアナウンスです。既定は無し。
     /// </summary>
     /// <remarks>
@@ -212,6 +220,9 @@ public abstract class SpawnSet
 
             List<Player> spawned = SpawnInternal();
 
+            if (spawned.Count > 0)
+                PlayVehicle();
+
             OnSpawned();
 
             return spawned;
@@ -235,6 +246,32 @@ public abstract class SpawnSet
     /// </summary>
     protected virtual void OnSpawned()
     {
+    }
+
+    private void PlayVehicle()
+    {
+        // 演出の失敗で割り当て済みプレイヤーや Spawned 通知を失わないようにする。
+        try
+        {
+            switch (Vehicle)
+            {
+                case SpawnVehicle.None:
+                    break;
+                case SpawnVehicle.NtfChopper:
+                    Respawn.SummonNtfChopper();
+                    break;
+                case SpawnVehicle.ChaosVan:
+                    Respawn.SummonChaosInsurgencyVan();
+                    break;
+                default:
+                    Log.Warn($"[Slafight] SpawnSet '{Name}' の車両指定が不正です: {Vehicle}");
+                    break;
+            }
+        }
+        catch (Exception exception)
+        {
+            Log.Error($"[Slafight] SpawnSet '{Name}' の車両演出で例外が発生しました: {exception}");
+        }
     }
 
     private List<Player> SpawnInternal()

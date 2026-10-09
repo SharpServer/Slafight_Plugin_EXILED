@@ -1,9 +1,8 @@
 using System.Collections.Generic;
-using Exiled.API.Features;
 using PlayerRoles;
+using Slafight_Plugin_EXILED.API.Core.Enums;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;
-using Slafight_Plugin_EXILED.CustomMaps;
 using Slafight_Plugin_EXILED.CustomRoles.FoundationForces.MTFs.Epsilon11;
 
 namespace Slafight_Plugin_EXILED.SpawnSets.FoundationForces;
@@ -28,6 +27,8 @@ public sealed class NtfBackupWaveSet : SpawnSet
 
     public override float RespawnRatio => 1.0f;
 
+    public override SpawnVehicle Vehicle => SpawnVehicle.NtfChopper;
+
     public override string Theme => "./WaveThemes/_w_ntf.ogg";
 
     public override (string Cassie, string Subtitle) Announcement(int spawnCount, string unitName) =>
@@ -40,10 +41,4 @@ public sealed class NtfBackupWaveSet : SpawnSet
         SpawnSetRoleDefinition.Custom<NtfGenericSpecialist>(1, false, 1.5f),
         SpawnSetRoleDefinition.Custom<NtfPrivate>(99, false, 4f),
     ];
-
-    protected override void OnSpawning()
-    {
-        Respawn.SummonNtfChopper();
-        base.OnSpawning();
-    }
 }

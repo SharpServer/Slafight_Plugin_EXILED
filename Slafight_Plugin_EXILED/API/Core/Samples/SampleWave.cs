@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using PlayerRoles;
+using Slafight_Plugin_EXILED.API.Core.Enums;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;
 
@@ -26,6 +27,10 @@ public sealed class SampleWave : SpawnSet
     public override Faction RespawnFaction => Faction.FoundationStaff;
 
     public override int RespawnWeight => 0;
+
+    // 車両なしなら override 不要 (SpawnVehicle.None)。カオス車両は ChaosVan を指定します。
+    // バニラが先に出す演出は SpawnSystem が抑えるので、OnSpawning から召喚する必要はありません。
+    public override SpawnVehicle Vehicle => SpawnVehicle.NtfChopper;
 
     /// <summary>
     /// 待機者の 6 割だけ出します。0 人になることはありません。

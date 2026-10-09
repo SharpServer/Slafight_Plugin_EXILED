@@ -32,6 +32,9 @@ public sealed class SpawnSystem : EventHandlerBase
 
     private static bool spawning;
 
+    /// <summary>登録済みの SpawnSystem が車両演出を引き受けているか。</summary>
+    internal static bool ControlsVehicleEffects { get; private set; }
+
     /// <summary>
     /// 割り当て中の波に配る部隊番号です。<see cref="Summon"/> の間だけ入ります。
     /// </summary>
@@ -73,14 +76,17 @@ public sealed class SpawnSystem : EventHandlerBase
         ServerHandlers.RespawningTeam += OnRespawningTeam;
         ServerHandlers.RestartingRound += ResetRuntimeState;
         ServerHandlers.WaitingForPlayers += ResetRuntimeState;
+        ControlsVehicleEffects = true;
     }
 
     /// <inheritdoc />
     public override void UnregisterEvents()
     {
+        ControlsVehicleEffects = false;
         ServerHandlers.RespawningTeam -= OnRespawningTeam;
         ServerHandlers.RestartingRound -= ResetRuntimeState;
         ServerHandlers.WaitingForPlayers -= ResetRuntimeState;
+        ResetRuntimeState();
     }
 
     /// <summary>
