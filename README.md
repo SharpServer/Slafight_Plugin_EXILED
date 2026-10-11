@@ -56,8 +56,7 @@ Slafightの現行構成は、以下のSharp Server管理リポジトリで構成
 
 正確なコンパイル参照は
 [`Slafight_Plugin_EXILED.csproj`](Slafight_Plugin_EXILED/Slafight_Plugin_EXILED.csproj)
-を確認してください。古いMapEditorReborn／AdvancedMERTools構成の導入例は現行
-ランタイムを表していません。
+を確認してください。
 
 ## ランタイム配置
 
