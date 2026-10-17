@@ -73,5 +73,6 @@ public static class RoleTableContextRegistry
     {
         Register(new NormalRoleTableContext());
         Register(new AprilRoleTableContext());
+        Register(new HalloweenRoleTableContext());
     }
 }
