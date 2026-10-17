@@ -34,6 +34,9 @@ public sealed class SeasonalTermSet
     /// <summary>残存 SCP 数の字幕。{0} に数が入る。</summary>
     public string RemainingScpTranslated { get; set; } = "現在、収容違反中のSCPは{0}体です。";
 
+    /// <summary>残存 SCP 数の読み上げを丸ごと差し替える場合に指定する (引数は残存 SCP 数)。</summary>
+    public Func<int, string>? RemainingScpCassieOverride { get; set; }
+
     /// <summary>残存 SCP が 0 体のときの字幕。</summary>
     public string NoScpLeftTranslated { get; set; } = "施設内に<color=#008F1E>危険な勢力</color>が存在します。警戒してください。";
 
@@ -46,8 +49,8 @@ public sealed class SeasonalTermSet
     public string NtfColor { get; set; } = "#5bc5ff";
     public string NtfArrivalBody { get; set; } = "残りの全職員は、機動部隊が目的地に到着するまで標準プロトコルに従い避難してください。";
 
-    /// <summary>NTF 本隊の Cassie 全文を差し替える場合に指定する (引数は残存 SCP 数)。クリスマスの XMAS_* 音声など。</summary>
-    public Func<int, string>? NtfArrivalCassieOverride { get; set; }
+    /// <summary>NTF 本隊の Cassie (残存 SCP 数の手前まで) を差し替える場合に指定する。クリスマスの XMAS_* 音声など。</summary>
+    public string? NtfArrivalCassieOverride { get; set; }
 
     // ===== カオス・インサージェンシー =====
 
@@ -131,7 +134,7 @@ public static class SeasonalTerms
     public static int CountScps() => Player.List.Count(p =>
         p.IsSafePlayer() && p.IsAlive && p.Role.Type != RoleTypeId.Scp0492 && p.GetTeam() == CTeam.SCPs);
 
-    /// <summary>バニラ NTF 放送と同じ形式の残存 SCP 数クローズ。</summary>
+    /// <summary>バニラ NTF 放送と同じ形式の残存 SCP 数クローズ。機動部隊の到着放送の末尾に付く。</summary>
     public static void GetRemainingScpClause(SeasonalTermSet terms, int count, out string cassie, out string translated)
     {
         switch (count)
@@ -149,6 +152,9 @@ public static class SeasonalTerms
                 translated = string.Format(terms.RemainingScpTranslated, count);
                 break;
         }
+
+        if (terms.RemainingScpCassieOverride != null)
+            cassie = terms.RemainingScpCassieOverride(count);
     }
 
     private static SeasonalTermSet CreateHalloween()
@@ -181,7 +187,8 @@ public static class SeasonalTerms
     private static SeasonalTermSet CreateChristmas() => new()
     {
         // バニラ同様、XMAS 音声は部隊名と SCP 数のみを読み上げる (本来は部隊名の位置に designation が入る)
-        NtfArrivalCassieOverride = count => $"XMAS_EPSILON11 Ninetailedfox XMAS_HASENTERED {count} XMAS_SCPSUBJECTS",
+        NtfArrivalCassieOverride = "XMAS_EPSILON11 Ninetailedfox XMAS_HASENTERED",
+        RemainingScpCassieOverride = count => $"{count} XMAS_SCPSUBJECTS",
 
         AccentColor = ServerColors.Red,
         NtfArrivalNote = "メリークリスマス。サンタクロースを名乗る不審者を発見した場合は、直ちに機動部隊へ報告してください。",

@@ -15,10 +15,9 @@ public static class CassieHelper
             return;
         }
 
-        Exiled.API.Features.Cassie.MessageTranslated(
+        AnnounceMtf(
             "MtfUnit Epsilon 11 Designated Ninetailedfox HasEntered AllRemaining",
-            "<color=#5bc5ff>機動部隊Epsilon-11 \"九尾狐\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。",
-            true);
+            "<color=#5bc5ff>機動部隊Epsilon-11 \"九尾狐\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。");
     }
 
     public static void AnnounceNtfBackup()
@@ -29,84 +28,74 @@ public static class CassieHelper
             return;
         }
 
-        Exiled.API.Features.Cassie.MessageTranslated(
+        AnnounceMtf(
             "Ninetailedfox Backup unit has entered the facility .",
-            "<color=#5bc5ff>九尾狐 予備部隊</color>が施設に到着しました。",
-            true);
+            "<color=#5bc5ff>九尾狐 予備部隊</color>が施設に到着しました。");
     }
 
     public static void AnnounceHdArrival()
     {
-        Exiled.API.Features.Cassie.MessageTranslated(
+        AnnounceMtf(
             "MtfUnit Nu 7 Designated Her man down HasEntered AllRemaining This Forces Work Epsilon 11 Task and operated by O5 Command . for Big Containment Breachs .",
             $"<b><color=#353535>機動部隊Nu-7 \"下される鉄槌 - ハンマーダウン\"</color></b>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。" +
-            $"<split>本部隊は<color=#5bc5ff>Epsilon-11 \"九尾狐\"</color>の任務の代替として大規模な収容違反の対応の為O5評議会に招集されました。",
-            true);
+            $"<split>本部隊は<color=#5bc5ff>Epsilon-11 \"九尾狐\"</color>の任務の代替として大規模な収容違反の対応の為O5評議会に招集されました。");
     }
 
     public static void AnnounceHdBackup()
     {
-        Exiled.API.Features.Cassie.MessageTranslated(
+        AnnounceMtf(
             "Her man down Backup unit has entered the facility .",
-            "<b><color=#353535>下される鉄槌 - ハンマーダウン 予備部隊</color></b>が施設に到着しました。",
-            true);
+            "<b><color=#353535>下される鉄槌 - ハンマーダウン 予備部隊</color></b>が施設に到着しました。");
     }
 
     public static void AnnounceSneArrival()
     {
-        Exiled.API.Features.Cassie.MessageTranslated(
+        AnnounceMtf(
             "MtfUnit Eta 10 designated See no E be l HasEntered AllRemaining . This forces work for the anti- me mu termination",
             $"<color=#FF1493>機動部隊Eta-10 \"シー・ノー・イーヴル\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。<split>" +
-            $"この部隊は反ミーム存在の終了の為に招集されました。",
-            true);
+            $"この部隊は反ミーム存在の終了の為に招集されました。");
     }
 
     public static void AnnounceSneBackup()
     {
-        Exiled.API.Features.Cassie.MessageTranslated(
+        AnnounceMtf(
             "See no E be l Backup unit has entered the facility .",
-            "<color=#FF1493>シー・ノー・イーヴル 予備部隊</color>が施設に到着しました。",
-            true);
+            "<color=#FF1493>シー・ノー・イーヴル 予備部隊</color>が施設に到着しました。");
     }
 
     public static void AnnounceLwsArrival()
     {
-        Exiled.API.Features.Cassie.MessageTranslated(
+        AnnounceMtf(
             "MtfUnit Omega 1 designated Low Left Hand HasEntered AllRemaining .",
-            $"<color={ServerColors.Silver}><b>機動部隊Omega-1 \"Law's Left Hand\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。",
-            true);
+            $"<color={ServerColors.Silver}><b>機動部隊Omega-1 \"Law's Left Hand\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。");
     }
 
     public static void AnnounceLwsBackup()
     {
-        Exiled.API.Features.Cassie.MessageTranslated(
+        AnnounceMtf(
             "Low Left Hand Backup unit has entered the facility .",
-            $"<color={ServerColors.Silver}><b>Law's Left Hand 予備部隊</color>が施設に到着しました。",
-            true);
+            $"<color={ServerColors.Silver}><b>Law's Left Hand 予備部隊</color>が施設に到着しました。");
     }
 
     public static void AnnounceRrhArrival()
     {
-        Exiled.API.Features.Cassie.MessageTranslated(
+        AnnounceMtf(
             "MtfUnit Alpha 1 designated Red Right Hand HasEntered AllRemaining .",
-            $"<color={ServerColors.Red}><b>機動部隊Alpha-1 \"Red Right Hand\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。",
-            true);
+            $"<color={ServerColors.Red}><b>機動部隊Alpha-1 \"Red Right Hand\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。");
     }
 
     public static void AnnounceRrhBackup()
     {
-        Exiled.API.Features.Cassie.MessageTranslated(
+        AnnounceMtf(
             "Red Right Hand Backup unit has entered the facility .",
-            $"<color={ServerColors.Red}><b>Red Right Hand 予備部隊</color>が施設に到着しました。",
-            true);
+            $"<color={ServerColors.Red}><b>Red Right Hand 予備部隊</color>が施設に到着しました。");
     }
 
     public static void AnnouncePdxArrival()
     {
-        Exiled.API.Features.Cassie.MessageTranslated(
+        AnnounceMtf(
             "MtfUnit Omega 7 designated hand r _SUFFIX_PLURAL_REGULAR o _SUFFIX_PLURAL_SYLLABIC HasEntered AllRemaining .",
-            $"<color={ServerColors.Carmine}><b>機動部隊Omega-7 \"Pandra's Box\"</color>が施設に到着しました。",
-            true);
+            $"<color={ServerColors.Carmine}><b>機動部隊Omega-7 \"Pandra's Box\"</color>が施設に到着しました。");
     }
 
     public static void AnnounceChaos(int count, bool isBackup = false)
@@ -133,18 +122,16 @@ public static class CassieHelper
 
     public static void AnnounceLastOperationArrival()
     {
-        Exiled.API.Features.Cassie.MessageTranslated(
+        AnnounceMtf(
             "MtfUnit Alpha 0 designated Last Operation HasEntered AllRemaining .",
-            "<color=red>機動部隊Alpha-0 \"最終指令\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。",
-            true);
+            "<color=red>機動部隊Alpha-0 \"最終指令\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。");
     }
 
     public static void AnnounceLastOperationBackup()
     {
-        Exiled.API.Features.Cassie.MessageTranslated(
+        AnnounceMtf(
             "Last Operation Backup unit has entered the facility .",
-            "<color=red>最終指令 予備部隊</color>が施設に到着しました。",
-            true);
+            "<color=red>最終指令 予備部隊</color>が施設に到着しました。");
     }
 
     public static void AnnounceGoCEnter(int count)
@@ -163,28 +150,35 @@ public static class CassieHelper
             true);
     }
 
+    /// <summary>
+    /// 機動部隊の到着放送を流す。部隊に関係なく、バニラ同様に最後へ残存 SCP 数を付ける。
+    /// </summary>
+    private static void AnnounceMtf(string cassie, string translated)
+    {
+        SeasonalTerms.GetRemainingScpClause(SeasonalTerms.Current, SeasonalTerms.CountScps(), out var scpCassie, out var scpTranslated);
+        Exiled.API.Features.Cassie.MessageTranslated(
+            $"{cassie} {scpCassie}",
+            $"{translated}<split>{scpTranslated}",
+            true);
+    }
+
     // ============ 季節放送 ============ //
     // 文面は SeasonalTerms (バニラ日本語訳の NTF / カオス放送ベース) から組み立てる。
 
     private static void AnnounceSeasonalNtfArrival(SeasonalTermSet terms)
     {
-        int scps = SeasonalTerms.CountScps();
-        SeasonalTerms.GetRemainingScpClause(terms, scps, out var scpCassie, out var scpTranslated);
-        Exiled.API.Features.Cassie.MessageTranslated(
-            terms.NtfArrivalCassieOverride?.Invoke(scps) ?? $"{terms.NtfCassie} HasEntered AllRemaining {scpCassie}",
-            $"<color={terms.NtfColor}>{terms.NtfName}</color>が施設に到着しました。<split>{terms.NtfArrivalBody}<split>{scpTranslated}" +
-            SeasonalNote(terms, terms.NtfArrivalNote),
-            true);
+        AnnounceMtf(
+            terms.NtfArrivalCassieOverride ?? $"{terms.NtfCassie} HasEntered AllRemaining",
+            $"<color={terms.NtfColor}>{terms.NtfName}</color>が施設に到着しました。<split>{terms.NtfArrivalBody}" +
+            SeasonalNote(terms, terms.NtfArrivalNote));
     }
 
     private static void AnnounceSeasonalNtfBackup(SeasonalTermSet terms)
     {
-        SeasonalTerms.GetRemainingScpClause(terms, SeasonalTerms.CountScps(), out var scpCassie, out var scpTranslated);
-        Exiled.API.Features.Cassie.MessageTranslated(
-            $"{terms.NtfBackupCassie} HasEntered {scpCassie}",
-            $"<color={terms.NtfColor}>{terms.NtfBackupName}</color>が施設に到着しました。<split>{scpTranslated}" +
-            SeasonalNote(terms, terms.NtfBackupNote),
-            true);
+        AnnounceMtf(
+            $"{terms.NtfBackupCassie} HasEntered",
+            $"<color={terms.NtfColor}>{terms.NtfBackupName}</color>が施設に到着しました。" +
+            SeasonalNote(terms, terms.NtfBackupNote));
     }
 
     private static void AnnounceSeasonalChaos(SeasonalTermSet terms, int count, bool isBackup)
