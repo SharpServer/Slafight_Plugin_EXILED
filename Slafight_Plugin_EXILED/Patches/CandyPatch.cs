@@ -1,30 +1,28 @@
 using System;
 using System.Collections.Generic;
-using System.Reflection.Emit;
 using Exiled.API.Features;
 using HarmonyLib;
 using InventorySystem.Items.Usables.Scp330;
+using MapGeneration.Holidays;
 
 namespace Slafight_Plugin_EXILED.Patches;
 
 [HarmonyPatch(typeof(Scp330Candies), nameof(Scp330Candies.Candies), MethodType.Getter)]
 public static class CandyPatch
 {
-    private static ICandy[] DetectedCandies;
-    
-    private static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> _)
-    {
-        // ここで一度だけ Exiled 側のキャンディを全部集める
-        DetectedCandies = FixCandies();
+    private static ICandy[] _normalSet;
+    private static ICandy[] _halloweenSet;
 
-        return
-        [
-            new (OpCodes.Ldsfld, AccessTools.Field(typeof(CandyPatch), nameof(DetectedCandies))),
-            new (OpCodes.Ret)
-        ];
+    private static bool Prefix(ref ICandy[] __result)
+    {
+        bool halloween = HolidayUtils.IsHolidayActive(HolidayType.Halloween);
+        __result = halloween
+            ? _halloweenSet ??= FixCandies(true)
+            : _normalSet ??= FixCandies(false);
+        return false;
     }
 
-    private static ICandy[] FixCandies()
+    private static ICandy[] FixCandies(bool preferHaunted)
     {
         var asm = typeof(Scp330Candies).Assembly;
 
@@ -62,25 +60,18 @@ public static class CandyPatch
             }
         }
 
-        // Kind ごとに「通常があれば通常」「なければ Haunted」を採用
-        var result = new List<ICandy>();
+        // ハロウィン中は Haunted を優先、それ以外は通常を優先（通常が無い Kind のみ Haunted）
+        var primary = preferHaunted ? haunteds : normals;
+        var fallback = preferHaunted ? normals : haunteds;
+        var result = new List<ICandy>(primary.Values);
 
-        // 通常キャンディーが存在する Kind は通常だけ
-        foreach (var kv in normals)
+        foreach (var kv in fallback)
         {
-            result.Add(kv.Value);
-            Log.Info($"[CandyPatch] Use normal candy: {kv.Key} ({kv.Value.GetType().FullName})");
+            if (!primary.ContainsKey(kv.Key))
+                result.Add(kv.Value);
         }
 
-        // 通常が存在せず Haunted だけの Kind は Haunted を採用（茶色など）
-        foreach (var kv in haunteds)
-        {
-            if (normals.ContainsKey(kv.Key))
-                continue; // その色は既に通常を使っているのでスキップ
-
-            result.Add(kv.Value);
-            Log.Info($"[CandyPatch] Use haunted-only candy: {kv.Key} ({kv.Value.GetType().FullName})");
-        }
+        Log.Info($"[CandyPatch] preferHaunted={preferHaunted}: {string.Join(", ", result.ConvertAll(c => $"{c.Kind}({c.GetType().Name})"))}");
 
         return result.ToArray();
     }
