@@ -114,6 +114,7 @@ internal static class RoleHintsDictionary
         [CRoleTypeId.Janitor]      = ("<color=#ee7600>Janitor</color>",       NeutChaosTeam, "施設から脱出せよ。また、汚物をグレネードで清掃せよ。"),
         [CRoleTypeId.CandySubject] = ("<color=#ee7600>Candy Subject</color>", NeutChaosTeam, "キャンディーを活用しながら、施設から脱出せよ。"),
         [CRoleTypeId.Bloodfiend]   = ("<color=#ee7600>Bloodfiend</color>",    NeutChaosTeam, "ナイフを使って血を満たせ！"),
+        [CRoleTypeId.Vampire]      = ("<color=#ee7600>Vampire</color>",    NeutChaosTeam, "ナイフを使って血を満たし、傀儡を生み出せ！"),
 
         // ── GoC ───────────────────────────────────────────────────────────
         [CRoleTypeId.GoCOperative]      = ("<color=#0000c8>Broken Dagger: Operative</color>",     GoCTeam, GoCObj),

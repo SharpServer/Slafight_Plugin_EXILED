@@ -8,8 +8,10 @@ using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerRoles;
 using ProjectMER.Features.Objects;
+using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.API.Interface;
+using Slafight_Plugin_EXILED.CustomMaps.Core;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.MainHandlers;
 using Slafight_Plugin_EXILED.SpecialEvents;
@@ -29,13 +31,13 @@ public class WaitingForPlayersChanges : IBootstrapHandler
 
     private static readonly Vector3 WaitingRoomPosition = new(246.92f, 198.50f, -60.89f);
 
-    public const string WaitingMusicClipName = "finalflash.ogg";
+    public static string WaitingMusicClipName = "finalflash.ogg";
     private const string WaitingMusicAudioPlayerPrefix = "WaitingForPlayers_RoomMusic_";
     private const float WaitingMusicStartDelay = 1.5f; // メニューテーマが消えるまで待つ
     private const float WaitingMusicFadeInDuration = 3f;
 
     // 実ファイルは未用意。差し替えるまでは LoadClip/Play が失敗し警告ログのみ出る。
-    public const string RoundStartOutroClipName = "finalflash_outro.ogg";
+    public static string RoundStartOutroClipName = "finalflash_outro.ogg";
     private const string RoundStartOutroAudioPlayerPrefix = "WaitingForPlayers_RoundStartOutro_";
 
     private const float RoundStartTriggerRemainingTime = 1f;
@@ -110,6 +112,7 @@ public class WaitingForPlayersChanges : IBootstrapHandler
 
     private static void OnWaitingForPlayers()
     {
+        SongSet();
         GameObject.Find("StartRound")?.transform.localScale = Vector3.zero;
         ResetWaitingRoomTextRefs();
         TutorialWaitingPlayers.Clear();
@@ -121,6 +124,15 @@ public class WaitingForPlayersChanges : IBootstrapHandler
         KillRoundStartTransitionCoroutines();
         KillRoundStartResumeCallback();
         _handle = Timing.RunCoroutine(Coroutine());
+    }
+
+    private static void SongSet()
+    {
+        if (MapFlags.GetSeason() is SeasonTypeId.Halloween)
+        {
+            WaitingMusicClipName = "H_i0.ogg";
+            RoundStartOutroClipName = "H_i1.ogg";
+        }
     }
 
     private static void ResetWaitingRoomTextRefs()
