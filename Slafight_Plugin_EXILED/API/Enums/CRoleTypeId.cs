@@ -101,6 +101,7 @@ public enum CRoleTypeId
     CandySubject,
     Bloodfiend,
     StrongMan,
+    Vampire,
 
     // ==== GoC ==== //
     GoCSquadLeader,

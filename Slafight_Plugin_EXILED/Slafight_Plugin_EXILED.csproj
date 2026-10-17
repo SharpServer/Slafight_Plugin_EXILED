@@ -148,7 +148,7 @@
 
     <Target Name="CopyToExiledPlugins" AfterTargets="Build" Condition="'$(ExiledAppDataDir)' != ''">
         <PropertyGroup>
-            <ExiledPluginsDir>$(ExiledAppDataDir)\EXILED\Plugins\7777</ExiledPluginsDir>
+            <ExiledPluginsDir>$(ExiledAppDataDir)\EXILED\Plugins\7778</ExiledPluginsDir>
             <ExiledDependenciesDir>$(ExiledAppDataDir)\EXILED\Plugins\dependencies</ExiledDependenciesDir>
         </PropertyGroup>
         <ItemGroup>

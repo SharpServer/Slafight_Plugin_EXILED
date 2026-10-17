@@ -31,25 +31,28 @@ public sealed class AprilRoleTableContext : RoleTableContext
         W(RoleTypeId.ClassD),
         W(CRoleTypeId.Janitor),
         W(CRoleTypeId.ChaosUndercoverAgent),
+        W(CRoleTypeId.Bloodfiend, 0.85f),
         W(CRoleTypeId.CandySubject, 1.05f)
     ];
 
     public override List<RoleLimitEntry> Limits { get; } =
     [
         L(CRoleTypeId.Janitor, 2),
+        L(CRoleTypeId.Bloodfiend, 1),
         L(CRoleTypeId.ChaosUndercoverAgent, 1),
         L(CRoleTypeId.CandySubject, 2),
 
         L(CRoleTypeId.ZoneManager, 2),
         L(CRoleTypeId.FacilityManager, 1),
-        L(CRoleTypeId.ObjectObserver, 1),
         L(CRoleTypeId.SiteNavigator, 1),
-        L(CRoleTypeId.CandyResearcher, 2),
+        L(CRoleTypeId.ObjectObserver, 1),
 
         L(CRoleTypeId.EvacuationGuard, 1),
         L(CRoleTypeId.SecurityChief, 1),
         L(CRoleTypeId.ChamberGuard, 1),
+        L(CRoleTypeId.SupplyManager, 2),
 
+        L(CRoleTypeId.Scp035, 1),
         L(CRoleTypeId.Scp682, 1)
     ];
 }

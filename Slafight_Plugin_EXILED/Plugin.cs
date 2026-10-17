@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
@@ -43,8 +44,9 @@ public class Plugin : Plugin<Config>
     public override string Name => "Slafight_Plugin_EXILED";
     public override string Author => "org.sharp-server.jp.scpsl";
     public override string Prefix => "Slafight_Plugin_EXILED";
-    public override Version Version => new(1, 9, 0, 2);
-    public override Version RequiredExiledVersion { get; } = new(9, 14, 2);
+    public override Version Version => new(1, 9, 0, 3);
+    public List<string> SpecificVersionTags => ["261009a"];
+    public override Version RequiredExiledVersion { get; } = new(9, 15, 2);
 
     public Harmony HarmonyInstance { get; private set; }
     // Enable & Disable

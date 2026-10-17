@@ -2,9 +2,12 @@ using CustomPlayerEffects;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp1509;
 using Exiled.Events.Handlers;
+using MEC;
+using PlayerRoles;
 using ProjectMER.Features.Extensions;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SlafightApiItems;
@@ -44,6 +47,17 @@ public class Bloodyknife : CItem
     private void OnResurrecting(ResurrectingEventArgs ev)
     {
         if (!Check(ev.Item)) return;
-        ev.IsAllowed = false;
+        if (ev.Player.GetCustomRole() is CRoleTypeId.Vampire)
+        {
+            ev.NewRole = RoleTypeId.ClassD;
+            Timing.CallDelayed(0.1f, () =>
+            {
+                ev.Target?.SetRole(CRoleTypeId.Bloodfiend);
+            });
+        }
+        else
+        {
+            ev.IsAllowed = false;
+        }
     }
 }

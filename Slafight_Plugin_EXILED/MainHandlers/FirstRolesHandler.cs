@@ -156,13 +156,26 @@ public class FirstRolesHandler : IBootstrapHandler
 
     private static void OnAssign()
     {
-        if (MapFlags.GetSeason() is SeasonTypeId.April)
+        switch (MapFlags.GetSeason())
         {
-            RoleTables.SetCurrentMode("April");
-        }
-        else
-        {
-            RoleTables.SetCurrentMode("Normal");
+            case SeasonTypeId.None:
+                RoleTables.SetCurrentMode("Normal");
+                break;
+            case SeasonTypeId.April:
+                RoleTables.SetCurrentMode("April");
+                break;
+            case SeasonTypeId.FifthFestival:
+                RoleTables.SetCurrentMode("Normal");
+                break;
+            case SeasonTypeId.Summer:
+                RoleTables.SetCurrentMode("Normal");
+                break;
+            case SeasonTypeId.Halloween:
+                RoleTables.SetCurrentMode("Halloween");
+                break;
+            case SeasonTypeId.Christmas:
+                RoleTables.SetCurrentMode("Normal");
+                break;
         }
     }
 }
