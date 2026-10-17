@@ -45,7 +45,7 @@ public class Plugin : Plugin<Config>
     public override string Author => "org.sharp-server.jp.scpsl";
     public override string Prefix => "Slafight_Plugin_EXILED";
     public override Version Version => new(1, 9, 0, 3);
-    public List<string> SpecificVersionTags => ["261009a"];
+    public List<string> SpecificVersionTags => [];
     public override Version RequiredExiledVersion { get; } = new(9, 15, 2);
 
     public Harmony HarmonyInstance { get; private set; }

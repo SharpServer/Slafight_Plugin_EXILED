@@ -72,7 +72,7 @@ public static class OmegaWarhead
         AlarmLight.SetOmegaAlarmForAll(true);
 
         foreach (Room room in Room.List)
-            room.Color = Color.blue;
+            room.FadeColor(Color.blue, FacilityLightHandler.WarheadFadeDuration);
 
         foreach (Door door in Door.List)
         {

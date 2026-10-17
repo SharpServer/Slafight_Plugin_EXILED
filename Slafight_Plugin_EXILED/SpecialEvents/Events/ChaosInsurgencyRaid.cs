@@ -95,7 +95,7 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
             "<b><color=#228b22>DELTA COMMAND</color></b>の最初の指令：全施設の消灯 ...承認");
 
         foreach (var room in Room.List)
-            room.Color = new Color(55 / 255f, 55 / 255f, 55 / 255f);
+            room.SetEventLight(new Color(55 / 255f, 55 / 255f, 55 / 255f));
         
         CTeam.SCPs.SetNightVisionTargetStateForTeam(true);
 
@@ -171,7 +171,7 @@ public class ChaosInsurgencyRaidEvent : SpecialEvent
         foreach (var room in Room.List)
         {
             room.AreLightsOff = false;
-            room.Color = new Color32(255, 0, 0, 255);
+            room.SetEventLight(new Color32(255, 0, 0, 255), FacilityLightHandler.WarheadFadeDuration);
         }
         
         CTeam.SCPs.SetNightVisionTargetStateForTeam(false);

@@ -1,3 +1,4 @@
+using Slafight_Plugin_EXILED.Changes;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -172,7 +173,7 @@ public class CandyWarriorsAttackEvent : SpecialEvent
         foreach (var room in Room.List)
         {
             room.AreLightsOff = false;
-            room.Color = roomColor;
+            room.SetEventLight(roomColor, FacilityLightHandler.WarheadFadeDuration);
         }
 
         foreach (var door in Door.List)
@@ -269,7 +270,7 @@ public class CandyWarriorsAttackEvent : SpecialEvent
             foreach (var room in Room.List)
             {
                 room.AreLightsOff = false;
-                room.Color = color;
+                room.SetEventLight(color);
             }
 
             yield return Timing.WaitForSeconds(30f);

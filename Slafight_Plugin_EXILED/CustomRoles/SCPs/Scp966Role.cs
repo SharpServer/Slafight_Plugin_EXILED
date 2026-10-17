@@ -9,6 +9,7 @@ using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp3114;
 using Exiled.Events.Handlers;
 using InventorySystem.Items.Usables.Scp1344;
+using MapGeneration.Holidays;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -36,8 +37,16 @@ public class Scp966Role : CRole
     [
         new(EffectType.NightVision, 255)
     ];
-    private const float BlackoutRadius = 15f;
-    private const float BlackoutCheckInterval = 0.5f;
+    private const float TintRadius = 15f;
+
+    // 周囲の部屋ライトの色変更: 基準色(0-255)を、ランダムに割る(暗く)か掛ける(明るく)。
+    private const float TintFadeDuration = 1f;
+    private const byte TintR = 155;
+    private const byte TintG = 22;
+    private const byte TintB = 4;
+    private const float TintDivideMax = 10f;
+    private const float TintMultiplyMax = 2f;
+    private const float TintCheckInterval = 0.5f;
 
     // 可視性の再評価周期。以前は 0.1 秒ごとに全プレイヤーへ部屋ライトの
     // 対象限定 RPC を差分なしで投げていた。
@@ -48,12 +57,14 @@ public class Scp966Role : CRole
     private readonly Dictionary<int, byte> _speedLevels = [];
     private readonly Dictionary<int, CoroutineHandle> _visibilityCoroutineHandles = [];
     private readonly Dictionary<int, CoroutineHandle> _speedCoroutineHandles = [];
+    private readonly Dictionary<int, CoroutineHandle> _flickerCoroutineHandles = [];
 
     // 観測者 ID -> 直近に送ったライト状態 (true = 消灯を送った)。
     // 変化したときだけ RPC を出すためのキャッシュ。
     private readonly Dictionary<int, bool> _lightStateByViewer = [];
-    private readonly HashSet<Room> _blackoutRooms = [];
-    private bool _blackoutCoroutineRunning;
+    private readonly HashSet<Room> _tintedRooms = [];
+    private readonly Dictionary<Room, Color> _originalRoomColors = [];
+    private bool _tintCoroutineRunning;
     
     public override void RegisterEvents()
     {
@@ -84,11 +95,12 @@ public class Scp966Role : CRole
         _speedLevels[player.Id] = 1;
         _visibilityCoroutineHandles[player.Id] = Timing.RunCoroutine(VisibilityCoroutine(player));
         _speedCoroutineHandles[player.Id] = Timing.RunCoroutine(SpeedCoroutine(player));
+        _flickerCoroutineHandles[player.Id] = Timing.RunCoroutine(FlickerCoroutine(player));
 
-        if (!_blackoutCoroutineRunning)
+        if (!_tintCoroutineRunning)
         {
-            _blackoutCoroutineRunning = true;
-            RoundScopedCoroutines.Run(BlackoutCoroutine());
+            _tintCoroutineRunning = true;
+            RoundScopedCoroutines.Run(TintCoroutine());
         }
         
         RoleSpecificTextProvider.Set(player, $"Speed Level: {_speedLevels[player.Id]} / 5");
@@ -180,7 +192,22 @@ public class Scp966Role : CRole
         }
     }
 
-    private IEnumerator<float> BlackoutCoroutine()
+    // 966 の居る部屋を、モードに関係なく定期的にちかちかさせる。
+    private IEnumerator<float> FlickerCoroutine(Player player)
+    {
+        while (true)
+        {
+            if (!Check(player)) yield break;
+            if (Round.IsLobby || player.ReferenceHub == null || player.IsDead)
+                yield break;
+
+            player.CurrentRoom?.TurnOffLights(Random.Range(1f, 3.5f));
+
+            yield return Timing.WaitForSeconds(Random.Range(0f, 7f));
+        }
+    }
+
+    private IEnumerator<float> TintCoroutine()
     {
         while (true)
         {
@@ -204,7 +231,7 @@ public class Scp966Role : CRole
 
                 foreach (var position in scpPositions)
                 {
-                    if ((room.Position - position).sqrMagnitude > BlackoutRadius * BlackoutRadius)
+                    if ((room.Position - position).sqrMagnitude > TintRadius * TintRadius)
                         continue;
 
                     roomsInRange.Add(room);
@@ -214,22 +241,22 @@ public class Scp966Role : CRole
 
             foreach (var room in roomsInRange)
             {
-                if (_blackoutRooms.Add(room))
-                    room.AreLightsOff = true;
+                if (_tintedRooms.Add(room))
+                    TintRoom(room);
             }
 
-            foreach (var room in _blackoutRooms.ToList())
+            foreach (var room in _tintedRooms.ToList())
             {
                 if (roomsInRange.Contains(room)) continue;
-                room.AreLightsOff = false;
-                _blackoutRooms.Remove(room);
+                RestoreRoom(room);
+                _tintedRooms.Remove(room);
             }
 
-            yield return Timing.WaitForSeconds(BlackoutCheckInterval);
+            yield return Timing.WaitForSeconds(TintCheckInterval);
         }
 
-        RestoreBlackoutRooms();
-        _blackoutCoroutineRunning = false;
+        RestoreTintedRooms();
+        _tintCoroutineRunning = false;
     }
 
     /// <summary>可視性ループが消灯を送ったままのプレイヤーを明るく戻す。</summary>
@@ -247,15 +274,46 @@ public class Scp966Role : CRole
         _lightStateByViewer.Clear();
     }
 
-    private void RestoreBlackoutRooms()
+    private void RestoreTintedRooms()
     {
-        foreach (var room in _blackoutRooms)
-        {
-            if (room != null)
-                room.AreLightsOff = false;
-        }
+        foreach (var room in _tintedRooms)
+            RestoreRoom(room);
 
-        _blackoutRooms.Clear();
+        _tintedRooms.Clear();
+        _originalRoomColors.Clear();
+    }
+
+    private void TintRoom(Room room)
+    {
+        _originalRoomColors[room] = room.Color;
+        room.FadeColor(RandomTintColor(), TintFadeDuration);
+    }
+
+    private void RestoreRoom(Room room)
+    {
+        if (room == null)
+            return;
+
+        if (_originalRoomColors.TryGetValue(room, out var original))
+        {
+            room.FadeColor(original, TintFadeDuration);
+            _originalRoomColors.Remove(room);
+        }
+    }
+
+    /// <summary>基準色を、ランダムに割る(暗く)か掛ける(明るく)かして返す。</summary>
+    private static Color RandomTintColor()
+    {
+        const float divideMax = TintDivideMax < 1f ? 1f : TintDivideMax;
+        const float multiplyMax = TintMultiplyMax < 1f ? 1f : TintMultiplyMax;
+        var factor = Random.value < 0.5f
+            ? 1f / Random.Range(1f, divideMax)
+            : Random.Range(1f, multiplyMax);
+
+        return new Color(
+            Mathf.Clamp01(TintR / 255f * factor),
+            Mathf.Clamp01(TintG / 255f * factor),
+            Mathf.Clamp01(TintB / 255f * factor));
     }
 
     private IEnumerator<float> SpeedCoroutine(Player player)
@@ -326,6 +384,10 @@ public class Scp966Role : CRole
         if (_speedCoroutineHandles.TryGetValue(player.Id, out var speedHandle))
             Timing.KillCoroutines(speedHandle);
 
+        if (_flickerCoroutineHandles.TryGetValue(player.Id, out var flickerHandle))
+            Timing.KillCoroutines(flickerHandle);
+
+        _flickerCoroutineHandles.Remove(player.Id);
         _visibilityCoroutineHandles.Remove(player.Id);
         _speedCoroutineHandles.Remove(player.Id);
         _invisibleEffectivePlayers.Remove(player.Id);

@@ -1,3 +1,4 @@
+using Slafight_Plugin_EXILED.Changes;
 using System;
 using System.Collections.Generic;
 using Exiled.API.Enums;
@@ -170,7 +171,7 @@ public class SnowWarriorsAttackEvent : SpecialEvent
         foreach (var room in Room.List)
         {
             room.AreLightsOff = false;
-            room.Color = new Color32(255, 255, 0, 255);
+            room.SetEventLight(new Color32(255, 255, 0, 255), FacilityLightHandler.WarheadFadeDuration);
         }
 
         foreach (var door in Door.List)
@@ -265,11 +266,11 @@ public class SnowWarriorsAttackEvent : SpecialEvent
             foreach (var room in Room.List)
             {
                 room.AreLightsOff = false;
-                room.Color = new Color32(
+                room.SetEventLight(new Color32(
                     (byte)Random.Range(0, 256),
                     (byte)Random.Range(0, 256),
                     (byte)Random.Range(0, 256),
-                    255);
+                    255));
             }
 
             yield return Timing.WaitForSeconds(30f);

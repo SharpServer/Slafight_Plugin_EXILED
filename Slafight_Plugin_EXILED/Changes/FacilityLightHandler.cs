@@ -4,8 +4,10 @@ using Exiled.API.Enums;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Warhead;
+using MapGeneration.Holidays;
 using MEC;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
@@ -19,6 +21,12 @@ public static class FacilityLightHandler
     private const byte NightVisionIntensity = 255;
     private const float NightVisionDuration = 2.5f;
     private const float NightVisionRefreshInterval = 1.5f;
+
+    /// <summary>Warhead 系の照明遷移は素早く切り替える。</summary>
+    public const float WarheadFadeDuration = 0.5f;
+
+    // Raid/Attack 系イベントが設定した部屋色。Warhead 停止などで通常色へ戻す際、これを優先する。
+    private static readonly Dictionary<Room, Color> EventRoomColors = [];
 
     private static readonly HashSet<int> ForceNightVisionPlayers = [];
     private static readonly HashSet<CTeam> ForceNightVisionTeams = [];
@@ -41,12 +49,14 @@ public static class FacilityLightHandler
         Warhead.Starting -= OnWarhead;
         Warhead.Stopping -= OnStopping;
         Timing.KillCoroutines(_forceNightVisionCoroutineHandle);
+        EventRoomColors.Clear();
         AlarmLight.CancelReplacement();
         ClearForcedNightVision();
     }
 
     private static void OnWaitingForPlayers()
     {
+        EventRoomColors.Clear();
         Timing.KillCoroutines(_forceNightVisionCoroutineHandle);
         AlarmLight.CancelReplacement();
         ClearForcedNightVision();
@@ -55,10 +65,10 @@ public static class FacilityLightHandler
     private static void OnRoundStarted()
     {
         _forceNightVisionCoroutineHandle = Timing.RunCoroutine(ForceNightVisionCoroutine());
-        Timing.CallDelayed(0.5f, InitLight);
+        Timing.CallDelayed(0.5f, () => InitLight());
     }
 
-    private static void InitLight()
+    private static void InitLight(float duration = RoomColorFader.DefaultDuration)
     {
         ColorUtility.TryParseHtmlString("#c1eaff", out var surface);
         ColorUtility.TryParseHtmlString("#9bddff", out var facility);
@@ -71,44 +81,65 @@ public static class FacilityLightHandler
             if (room == null)
                 continue;
 
+            if (EventRoomColors.TryGetValue(room, out var eventColor))
+            {
+                room.FadeColor(eventColor, duration);
+                continue;
+            }
+
             switch (room.Zone)
             {
                 case ZoneType.Surface:
-                    room.Color = surface;
+                    room.FadeColor(surface, duration);
                     break;
                 case ZoneType.Entrance:
-                    room.Color = room.Type switch
+                    room.FadeColor(room.Type switch
                     {
                         RoomType.EzIntercom => intercom,
                         RoomType.EzVent or RoomType.EzShelter => alert,
                         _ => facility
-                    };
+                    }, duration);
                     break;
                 case ZoneType.HeavyContainment:
-                    room.Color = facility;
+                    room.FadeColor(facility, duration);
                     break;
                 case ZoneType.LightContainment:
-                    room.Color = room.Type == RoomType.LczAirlock ? alert : lightContainment;
+                    room.FadeColor(room.Type == RoomType.LczAirlock ? alert : lightContainment, duration);
                     break;
             }
         }
     }
 
-    public static void TurnToNormal() => InitLight();
+    /// <summary>イベント照明を解除して通常色へ戻す。</summary>
+    public static void TurnToNormal()
+    {
+        EventRoomColors.Clear();
+        InitLight();
+    }
+
+    /// <summary>イベント用の部屋色を設定する。Warhead 停止時もこの色へ戻る。</summary>
+    public static void SetEventLight(this Room room, Color color, float duration = RoomColorFader.DefaultDuration)
+    {
+        if (room == null)
+            return;
+
+        EventRoomColors[room] = color;
+        room.FadeColor(color, duration);
+    }
 
     public static void OnWarhead(StartingEventArgs ev)
     {
         if (!ev.IsAllowed) return;
         ColorUtility.TryParseHtmlString("#ff1500", out var color);
         foreach (var room in Room.List)
-            room.Color = color;
+            room.FadeColor(color, WarheadFadeDuration);
         AlarmLight.SetAlarmForAll(true);
     }
 
     public static void OnStopping(StoppingEventArgs ev)
     {
         if (!ev.IsAllowed) return;
-        InitLight();
+        InitLight(WarheadFadeDuration);
         AlarmLight.SetAlarmForAll(false);
     }
 

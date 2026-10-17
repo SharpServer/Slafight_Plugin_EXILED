@@ -1,3 +1,4 @@
+using Slafight_Plugin_EXILED.Changes;
 using System.Collections.Generic;
 using System.Linq;
 using CustomPlayerEffects;
@@ -112,7 +113,7 @@ public class FacilityTermination : SpecialEvent
 
         foreach (var room in Room.List)
         {
-            room.Color = Color.green;
+            room.SetEventLight(Color.green, FacilityLightHandler.WarheadFadeDuration);
             room.UnlockAll();
             foreach (var door in room.Doors)
             {

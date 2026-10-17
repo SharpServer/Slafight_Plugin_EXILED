@@ -808,7 +808,7 @@ public class WaterWarriorsRaidEvent : SpecialEvent
             if (room == null)
                 continue;
 
-            try { room.Color = entry.Value; }
+            try { room.FadeColor(entry.Value); }
             catch { /* ignore */ }
         }
 
