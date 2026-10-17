@@ -594,7 +594,8 @@ public abstract class CRole
     public CTeam TeamId => Team;
     public string Name => RoleName;
     public string RoleDescription => Description;
-    public string RoleDisplayName => DisplayName;
+    /// <summary>HUD 等に出す表示名。季節仕様 (例: ハロウィンの "Specter-173") を適用済み。</summary>
+    public string RoleDisplayName => SeasonalTerms.LocalizeScpText(DisplayName);
     public string? CustomInfo => SpawnCustomInfo;
     public CRoleVoiceSettings Voice => _resolvedVoiceSettings ??= VoiceSettings;
     public bool CanUseProximityChat => Voice.Proximity.IsAvailable;
@@ -841,6 +842,8 @@ public abstract class CRole
         ev.IsAllowed = false;
         RoleSpecificTextProvider.Clear(ev.Player);
         CleanupTeamNpc(ev.Player);
+        cassieString = SeasonalTerms.LocalizeScpCassie(cassieString ?? string.Empty);
+        localizedString = SeasonalTerms.LocalizeScpText(localizedString ?? string.Empty);
         Exiled.API.Features.Cassie.MessageTranslated(cassieString, localizedString);
     }
 
@@ -976,7 +979,7 @@ public abstract class CRole
                 hint = new Hint
                 {
                     Alignment = HintAlignment.Center, XCoordinate = 0, YCoordinate = 770,
-                    Text = $"<size=24><color={Team.GetTeamColor()}>{RoleName}</color>\n{Description}</size>", Id = HudConstId.CRoleSpawned
+                    Text = $"<size=24><color={Team.GetTeamColor()}>{SeasonalTerms.LocalizeScpText(RoleName)}</color>\n{Description}</size>", Id = HudConstId.CRoleSpawned
                 };
             }
             else

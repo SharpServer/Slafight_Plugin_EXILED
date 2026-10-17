@@ -736,7 +736,7 @@ public class ScpStatusHints : IBootstrapHandler
             cRole != null)
             return cRole.RoleDisplayName;
 
-        return context.Subject.Role?.Name ?? "Unknown";
+        return SeasonalTerms.LocalizeScpText(context.Subject.Role?.Name ?? "Unknown");
     }
 
     private static string ResolveSubjectColor(StatusHintLineContext context)

@@ -9,6 +9,12 @@ public static class CassieHelper
 {
     public static void AnnounceNtfArrival()
     {
+        if (SeasonalTerms.TryGetCurrent(out var terms))
+        {
+            AnnounceSeasonalNtfArrival(terms);
+            return;
+        }
+
         Exiled.API.Features.Cassie.MessageTranslated(
             "MtfUnit Epsilon 11 Designated Ninetailedfox HasEntered AllRemaining",
             "<color=#5bc5ff>機動部隊Epsilon-11 \"九尾狐\"</color>が施設に到着しました。残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。",
@@ -17,6 +23,12 @@ public static class CassieHelper
 
     public static void AnnounceNtfBackup()
     {
+        if (SeasonalTerms.TryGetCurrent(out var terms))
+        {
+            AnnounceSeasonalNtfBackup(terms);
+            return;
+        }
+
         Exiled.API.Features.Cassie.MessageTranslated(
             "Ninetailedfox Backup unit has entered the facility .",
             "<color=#5bc5ff>九尾狐 予備部隊</color>が施設に到着しました。",
@@ -97,8 +109,14 @@ public static class CassieHelper
             true);
     }
 
-    public static void AnnounceChaos(int count)
+    public static void AnnounceChaos(int count, bool isBackup = false)
     {
+        if (SeasonalTerms.TryGetCurrent(out var terms))
+        {
+            AnnounceSeasonalChaos(terms, count, isBackup);
+            return;
+        }
+
         Exiled.API.Features.Cassie.MessageTranslated(
             $"Attention All personnel . Detected {count} Chaos Insurgency Forces in Gate A . Please Terminate Them",
             $"全職員に通達。Gate Aに{count}人の<color=#228b22>カオス・インサージェンシー</color>部隊が検出されました。<split>見つけ次第終了してください。",
@@ -145,6 +163,52 @@ public static class CassieHelper
             true);
     }
 
+    // ============ 季節放送 ============ //
+    // 文面は SeasonalTerms (バニラ日本語訳の NTF / カオス放送ベース) から組み立てる。
+
+    private static void AnnounceSeasonalNtfArrival(SeasonalTermSet terms)
+    {
+        int scps = SeasonalTerms.CountScps();
+        SeasonalTerms.GetRemainingScpClause(terms, scps, out var scpCassie, out var scpTranslated);
+        Exiled.API.Features.Cassie.MessageTranslated(
+            terms.NtfArrivalCassieOverride?.Invoke(scps) ?? $"{terms.NtfCassie} HasEntered AllRemaining {scpCassie}",
+            $"<color={terms.NtfColor}>{terms.NtfName}</color>が施設に到着しました。<split>{terms.NtfArrivalBody}<split>{scpTranslated}" +
+            SeasonalNote(terms, terms.NtfArrivalNote),
+            true);
+    }
+
+    private static void AnnounceSeasonalNtfBackup(SeasonalTermSet terms)
+    {
+        SeasonalTerms.GetRemainingScpClause(terms, SeasonalTerms.CountScps(), out var scpCassie, out var scpTranslated);
+        Exiled.API.Features.Cassie.MessageTranslated(
+            $"{terms.NtfBackupCassie} HasEntered {scpCassie}",
+            $"<color={terms.NtfColor}>{terms.NtfBackupName}</color>が施設に到着しました。<split>{scpTranslated}" +
+            SeasonalNote(terms, terms.NtfBackupNote),
+            true);
+    }
+
+    private static void AnnounceSeasonalChaos(SeasonalTermSet terms, int count, bool isBackup)
+    {
+        if (isBackup)
+        {
+            Exiled.API.Features.Cassie.MessageTranslated(
+                $"{terms.ChaosCassiePrefix} Acquired {count} Additional HostileForces at Gate A . DefenseModuleUpdated",
+                $"ゲートAにて、新たに{count}体の<color=#228b22>敵対勢力</color>を確認しました。<split>防衛モデルを更新します。" +
+                SeasonalNote(terms, terms.ChaosBackupNote),
+                true);
+            return;
+        }
+
+        Exiled.API.Features.Cassie.MessageTranslated(
+            $"{terms.ChaosCassiePrefix} AttentionAllPersonnel . Detected {count} ChaosInsurgency Forces at Gate A . LethalForceAuthorized",
+            $"全職員に通達。ゲートAにて、{count}体の<color=#228b22>カオス・インサージェンシー</color>を検出しました。<split>殺傷を伴う武力行使を許可します。" +
+            SeasonalNote(terms, terms.ChaosArrivalNote),
+            true);
+    }
+
+    private static string SeasonalNote(SeasonalTermSet terms, string? note) =>
+        string.IsNullOrEmpty(note) ? string.Empty : $"<split><color={terms.AccentColor}>{note}</color>";
+
     // =================================== //
     public static void AnnounceSecurityTeamEnter(int count)
     {
@@ -176,6 +240,7 @@ public static class CassieHelper
     {
         if (ev.Player == null) return;
         if (clearCassie) Exiled.API.Features.Cassie.Clear();
+        SeasonalTerms.LocalizeScp(ref targetCassie, ref targetTranslated);
         Exiled.API.Features.Cassie.MessageTranslated(
             $"{targetCassie} {cause.Cassie}",
             $"{targetTranslated} {cause.Translated}",
@@ -223,9 +288,12 @@ public readonly struct TerminationCause
     public static TerminationCause ByTeam(CTeam team)
     {
         var info = team.GetTeamInfo();
+        var (cassie, name) = SeasonalTerms.Current.TeamOverrides.TryGetValue(team, out var seasonal)
+            ? seasonal
+            : (info.CassieString, info.TeamName);
         return new TerminationCause(
-            $"contained successfully by {info.CassieString}",
-            $"は、<color={info.TeamColor}>{info.TeamName}</color>によって正常に収容されました。");
+            $"contained successfully by {cassie}",
+            $"は、<color={info.TeamColor}>{name}</color>によって正常に収容されました。");
     }
 
     /// <summary>H.I.D Turret による終了として放送する。</summary>

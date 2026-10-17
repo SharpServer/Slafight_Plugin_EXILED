@@ -200,7 +200,7 @@ public class SpawningHandler : IBootstrapHandler, IDisposable
             case SpawnTypeId.GoiChaosNormal:
             case SpawnTypeId.GoiChaosBackup:
                 SpeakerApi.Play("./WaveThemes/_w_chaos.ogg", "WaveTheme", Vector3.zero, true, null, false, 999999999, 0);
-                CassieHelper.AnnounceChaos(spawnCount);
+                CassieHelper.AnnounceChaos(spawnCount, spawnType == SpawnTypeId.GoiChaosBackup);
                 break;
 
             case SpawnTypeId.GoiFifthistNormal:

@@ -434,6 +434,7 @@ public class PlayerHUD : IBootstrapHandler, IDisposable
                 (roleText, teamText, objectiveText) = GetTeamFallback(sourcePlayer);
             }
 
+            roleText = SeasonalTerms.LocalizeScpText(roleText);
             HintSync(SyncType.PHUD_Role,      roleText,      targetForHint);
             HintSync(SyncType.PHUD_Objective, objectiveText, targetForHint);
             HintSync(SyncType.PHUD_Team,      teamText,      targetForHint);

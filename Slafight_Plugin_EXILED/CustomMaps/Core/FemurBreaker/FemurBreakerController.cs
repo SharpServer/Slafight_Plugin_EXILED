@@ -188,8 +188,8 @@ internal sealed class FemurBreakerController
         if (hasScp106StillConnected)
         {
             Exiled.API.Features.Cassie.MessageTranslated(
-                "SCP 1 0 6 recontained successfully by femur breaker",
-                "<color=red>SCP-106</color>のFEMUR BREAKERによる再収容に成功しました。");
+                $"{SeasonalTerms.ScpCassie("106")} recontained successfully by femur breaker",
+                $"<color=red>{SeasonalTerms.ScpName("106")}</color>のFEMUR BREAKERによる再収容に成功しました。");
             return;
         }
 
