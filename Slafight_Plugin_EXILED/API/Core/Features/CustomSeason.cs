@@ -124,33 +124,32 @@ public abstract class CustomSeason
 
     /// <summary>
     /// NTF 本隊の出撃放送です。null なら波自身の既定文面が使われます。
+    /// 残存 SCP 数は <see cref="SpawnAnnouncer"/> が最後に付けるので含めません。
     /// </summary>
     /// <param name="unitName">この波に付いた部隊名 (<c>ALPHA-01</c> 形式)。無ければ null。</param>
     public virtual (string Cassie, string Subtitle)? NtfArrival(string unitName)
     {
         if (!IsSeasonal) return null;
 
-        RemainingScpClause(CountScps(), out string scpCassie, out string scpSubtitle);
         string designation = string.IsNullOrEmpty(unitName) ? string.Empty : $"-{unitName}";
 
         return (
-            $"{NtfCassie} {UnitCassie(unitName)} HasEntered AllRemaining {scpCassie}",
-            $"<color={NtfColor}>{NtfName}{designation}</color>が施設に到着しました。<split>{NtfArrivalBody}<split>{scpSubtitle}" +
+            $"{NtfCassie} {UnitCassie(unitName)} HasEntered AllRemaining",
+            $"<color={NtfColor}>{NtfName}{designation}</color>が施設に到着しました。<split>{NtfArrivalBody}" +
             Note(NtfArrivalNote));
     }
 
     /// <summary>
     /// NTF 予備部隊の出撃放送です。null なら波自身の既定文面が使われます。
+    /// 残存 SCP 数は <see cref="SpawnAnnouncer"/> が最後に付けるので含めません。
     /// </summary>
     public virtual (string Cassie, string Subtitle)? NtfBackup()
     {
         if (!IsSeasonal) return null;
 
-        RemainingScpClause(CountScps(), out string scpCassie, out string scpSubtitle);
-
         return (
-            $"{NtfBackupCassie} HasEntered {scpCassie}",
-            $"<color={NtfColor}>{NtfBackupName}</color>が施設に到着しました。<split>{scpSubtitle}" + Note(NtfBackupNote));
+            $"{NtfBackupCassie} HasEntered",
+            $"<color={NtfColor}>{NtfBackupName}</color>が施設に到着しました。" + Note(NtfBackupNote));
     }
 
     /// <summary>
@@ -207,25 +206,17 @@ public abstract class CustomSeason
     public static int CountScps() =>
         CustomTeam.Get<ScpTeam>().Members.Count(player => player.Role.Type != RoleTypeId.Scp0492);
 
-    /// <summary>バニラ NTF 放送と同じ形の、残存 SCP 数の読み上げと字幕です。</summary>
-    protected void RemainingScpClause(int count, out string cassie, out string subtitle)
+    /// <summary>
+    /// バニラ NTF 放送と同じ形の、残存 SCP 数の読み上げと字幕です。
+    /// 機動部隊の出撃アナウンスの最後に付きます (<see cref="SpawnSet.AnnouncesRemainingScps"/>)。
+    /// 季節は呼び名 (<see cref="ScpSubjectsCassie"/> など) を変えるか、読み上げごと override します。
+    /// </summary>
+    public virtual (string Cassie, string Subtitle) RemainingScps(int count) => count switch
     {
-        switch (count)
-        {
-            case 0:
-                cassie = "NoScpsLeft";
-                subtitle = NoScpLeftSubtitle;
-                break;
-            case 1:
-                cassie = $"AwaitingRecontainment 1 {ScpSubjectCassie}";
-                subtitle = RemainingScpSubtitle(1);
-                break;
-            default:
-                cassie = $"AwaitingRecontainment {count} {ScpSubjectsCassie}";
-                subtitle = RemainingScpSubtitle(count);
-                break;
-        }
-    }
+        0 => ("NoScpsLeft", NoScpLeftSubtitle),
+        1 => ($"AwaitingRecontainment 1 {ScpSubjectCassie}", RemainingScpSubtitle(1)),
+        _ => ($"AwaitingRecontainment {count} {ScpSubjectsCassie}", RemainingScpSubtitle(count)),
+    };
 
     /// <summary>部隊名 (<c>ALPHA-01</c>) を C.A.S.S.I.E 用の綴り (<c>NATO_A 01</c>) に直します。</summary>
     protected static string UnitCassie(string unitName)

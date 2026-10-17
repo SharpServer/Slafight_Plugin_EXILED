@@ -69,6 +69,13 @@ public sealed class SpawnAnnouncer : EventHandlerBase
     {
         (string cassie, string subtitle) = ev.Wave.Announcement(ev.SpawnCount, ev.UnitName);
 
+        if (cassie is { Length: > 0 } && ev.Wave.AnnouncesRemainingScps)
+        {
+            (string scpCassie, string scpSubtitle) = CustomSeason.Current.RemainingScps(CustomSeason.CountScps());
+            cassie = $"{cassie} {scpCassie}";
+            subtitle = $"{subtitle}<split>{scpSubtitle}";
+        }
+
         if (cassie is { Length: > 0 })
             CassieExtensions.CassieTranslated(cassie, subtitle ?? string.Empty, false);
 

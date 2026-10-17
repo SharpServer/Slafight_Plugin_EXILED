@@ -139,6 +139,12 @@ public abstract class SpawnSet
     public virtual (string Cassie, string Subtitle) Announcement(int spawnCount, string unitName) => default;
 
     /// <summary>
+    /// 出撃アナウンスの最後に、バニラ同様の残存 SCP 数を付けるか。
+    /// 既定は機動部隊 (FoundationStaff) の波すべてです。<see cref="Announcement"/> 側に書く必要はありません。
+    /// </summary>
+    public virtual bool AnnouncesRemainingScps => RespawnFaction is Faction.FoundationStaff;
+
+    /// <summary>
     /// この波が作る隊です。null なら陣営から自動で決まります。
     /// </summary>
     /// <remarks>
