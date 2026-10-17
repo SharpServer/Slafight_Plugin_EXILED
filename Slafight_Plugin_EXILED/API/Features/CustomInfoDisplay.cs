@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
+using Slafight_Plugin_EXILED.API.Core.Features;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
@@ -124,7 +125,8 @@ public static class CustomInfoDisplay
 
     private static void Render(Player player, string? customInfo, CustomInfoDisplayOptions options)
     {
-        string roleReplacement = ProcessText(options.RoleNameOverride ?? customInfo ?? GetRoleName(player));
+        string roleReplacement = ProcessText(
+            CustomSeason.Current.LocalizeScpText(options.RoleNameOverride ?? customInfo ?? GetRoleName(player)));
         string customName = ProcessCustomNameText(GetCustomName(player));
         string unitName = ProcessText(player.UnitName);
 

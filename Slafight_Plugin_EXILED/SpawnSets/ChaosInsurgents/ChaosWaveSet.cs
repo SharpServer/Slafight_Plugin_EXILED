@@ -26,6 +26,7 @@ public sealed class ChaosWaveSet : SpawnSet
     public override string Theme => "./WaveThemes/_w_chaos.ogg";
 
     public override (string Cassie, string Subtitle) Announcement(int spawnCount, string unitName) =>
+        CustomSeason.Current.ChaosArrival(spawnCount) ??
         ($"Attention All personnel . Detected {spawnCount} Chaos Insurgency Forces in Gate A . Please Terminate Them",
          $"全職員に通達。Gate Aに{spawnCount}人の<color=#228b22>カオス・インサージェンシー</color>部隊が検出されました。" +
          "<split>見つけ次第終了してください。");

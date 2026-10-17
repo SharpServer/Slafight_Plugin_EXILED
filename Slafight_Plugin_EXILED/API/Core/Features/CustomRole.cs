@@ -239,7 +239,7 @@ public abstract class CustomRole : IPlayerOwn
     /// 既定はチーム色を巻いた <see cref="Name"/> なので、
     /// 部隊ごとに色や太字を変える役職だけ override します。
     /// </summary>
-    public virtual string HudLabel => $"<color={Team?.Color ?? "#ffffff"}>{Name}</color>";
+    public virtual string HudLabel => $"<color={Team?.Color ?? "#ffffff"}>{CustomSeason.Current.LocalizeScpText(Name)}</color>";
 
     /// <summary>
     /// この役職で脱出したとき、何になるかです。null なら陣営 (<see cref="CustomTeam.Escape"/>) に任せます。

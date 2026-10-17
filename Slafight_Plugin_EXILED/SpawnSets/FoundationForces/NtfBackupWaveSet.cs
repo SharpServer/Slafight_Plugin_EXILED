@@ -32,6 +32,7 @@ public sealed class NtfBackupWaveSet : SpawnSet
     public override string Theme => "./WaveThemes/_w_ntf.ogg";
 
     public override (string Cassie, string Subtitle) Announcement(int spawnCount, string unitName) =>
+        CustomSeason.Current.NtfBackup() ??
         ("Ninetailedfox Backup unit has entered the facility .",
          "<color=#5bc5ff>九尾狐 予備部隊</color>が施設に到着しました。");
 

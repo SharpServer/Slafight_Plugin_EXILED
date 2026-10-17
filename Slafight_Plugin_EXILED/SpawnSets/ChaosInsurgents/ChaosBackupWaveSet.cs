@@ -35,6 +35,7 @@ public sealed class ChaosBackupWaveSet : SpawnSet
 
     /// <inheritdoc />
     public override (string Cassie, string Subtitle) Announcement(int spawnCount, string unitName) =>
+        CustomSeason.Current.ChaosBackup(spawnCount) ??
         ($"Attention All personnel . Detected {spawnCount} Chaos Insurgency Forces in Gate A . Please Terminate Them",
          $"全職員に通達。Gate Aに{spawnCount}人の<color=#228b22>カオス・インサージェンシー</color>部隊が検出されました。" +
          "<split>見つけ次第終了してください。");

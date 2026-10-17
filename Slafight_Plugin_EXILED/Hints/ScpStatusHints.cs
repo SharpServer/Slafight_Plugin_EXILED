@@ -691,9 +691,9 @@ public class ScpStatusHints : EventHandlerBase
             return SafeInvoke(context.Channel.SubjectNameBuilder, context, string.Empty);
 
         if (CustomRole.Of(context.Subject) is { } customRole)
-            return customRole.Name;
+            return CustomSeason.Current.LocalizeScpText(customRole.Name);
 
-        return context.Subject.Role?.Name ?? "Unknown";
+        return CustomSeason.Current.LocalizeScpText(context.Subject.Role?.Name ?? "Unknown");
     }
 
     private static string ResolveSubjectColor(StatusHintLineContext context)

@@ -176,6 +176,9 @@ public static class CassieHelper
     {
         if (ev.Player == null) return;
         if (clearCassie) Exiled.API.Features.Cassie.Clear();
+        CustomSeason season = CustomSeason.Current;
+        targetCassie = season.LocalizeScpCassie(targetCassie);
+        targetTranslated = season.LocalizeScpText(targetTranslated);
         Exiled.API.Features.Cassie.MessageTranslated(
             $"{targetCassie} {cause.Cassie}",
             $"{targetTranslated} {cause.Translated}",
@@ -224,9 +227,10 @@ public readonly struct TerminationCause
     /// <summary>指定チームによる正常な収容として放送する。</summary>
     public static TerminationCause ByTeam(CustomTeam team)
     {
+        CustomSeason season = CustomSeason.Current;
         return new TerminationCause(
-            $"contained successfully by {team.CassieName}",
-            $"は、<color={team.Color}>{team.Name}</color>によって正常に収容されました。");
+            $"contained successfully by {season.TeamCassieName(team)}",
+            $"は、<color={team.Color}>{season.TeamName(team)}</color>によって正常に収容されました。");
     }
 
     /// <summary>H.I.D Turret による終了として放送する。</summary>

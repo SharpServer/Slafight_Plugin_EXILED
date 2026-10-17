@@ -27,6 +27,7 @@ public sealed class NtfWaveSet : SpawnSet
     public override string Theme => "./WaveThemes/_w_ntf.ogg";
 
     public override (string Cassie, string Subtitle) Announcement(int spawnCount, string unitName) =>
+        CustomSeason.Current.NtfArrival(unitName) ??
         ("MtfUnit Epsilon 11 Designated Ninetailedfox HasEntered AllRemaining",
          "<color=#5bc5ff>機動部隊Epsilon-11 \"九尾狐\"</color>が施設に到着しました。" +
          "残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。");
