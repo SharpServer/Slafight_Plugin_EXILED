@@ -79,7 +79,7 @@ public static class ItemLimitApi
 
     internal static void EnterPickupCheck(ushort serial)
     {
-        pickupChecks ??= new List<ushort>();
+        pickupChecks ??= [];
         pickupChecks.Add(serial);
     }
 

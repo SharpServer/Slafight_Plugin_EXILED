@@ -263,7 +263,7 @@ public static class VoiceRoutingApi
     private static bool _registered;
 
     public static IReadOnlyCollection<VoiceRouteRule> RegisteredRules
-        => OrderedRules().Select(entry => entry.Rule).ToArray();
+        => [.. OrderedRules().Select(entry => entry.Rule)];
 
     public static void RegisterEvents()
     {
@@ -517,10 +517,12 @@ public static class VoiceRoutingApi
         if (Rules.Count == 0)
             return _orderedRules = EmptyRules;
 
-        return _orderedRules = Rules.Values
-            .OrderByDescending(entry => entry.Rule.Priority)
-            .ThenByDescending(entry => entry.Sequence)
-            .ToArray();
+        return _orderedRules =
+        [
+            .. Rules.Values
+                .OrderByDescending(entry => entry.Rule.Priority)
+                .ThenByDescending(entry => entry.Sequence)
+        ];
     }
 
     private static bool IsUsable(Player player)

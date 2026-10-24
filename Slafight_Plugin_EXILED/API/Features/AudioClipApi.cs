@@ -119,7 +119,7 @@ public static class AudioClipApi
     }
 
     public static IEnumerable<string> GetCachedClipNames()
-        => ClipCache.Keys.ToArray();
+        => [.. ClipCache.Keys];
 
     /// <summary>音声ファイルをモノラル 48kHz の PCM サンプル列へデコードする。</summary>
     public static float[] GetSamplesFromFile(string fileName, string? clipName = null)

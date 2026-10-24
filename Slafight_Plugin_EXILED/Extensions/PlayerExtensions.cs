@@ -12,7 +12,7 @@ public static class PlayerExtensions
 {
     public static IReadOnlyCollection<Player> ConnectedList()
     {
-        return Player.List.Where(p => p.IsSafePlayer()).ToList();
+        return [.. Player.List.Where(p => p.IsSafePlayer())];
     }
     
     /// <summary>

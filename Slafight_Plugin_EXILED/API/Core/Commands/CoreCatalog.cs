@@ -20,9 +20,10 @@ internal static class CoreCatalog
     /// 宣言されている <typeparamref name="TBase"/> の具象型を、名前順で返します。
     /// </summary>
     internal static IReadOnlyList<Type> Types<TBase>() =>
-        TypeParser.FindTypes<TBase>()
+    [
+        .. TypeParser.FindTypes<TBase>()
             .OrderBy(type => type.Name, StringComparer.Ordinal)
-            .ToArray();
+    ];
 
     /// <summary>
     /// 名前から型を引きます。引けなかったときは候補付きの理由を返します。

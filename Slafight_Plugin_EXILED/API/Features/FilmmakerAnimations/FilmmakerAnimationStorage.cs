@@ -107,12 +107,14 @@ public static class FilmmakerAnimationStorage
     {
         Directory.CreateDirectory(DirectoryPath);
 
-        return Directory.GetFiles(DirectoryPath, "*.json")
-            .Select(Path.GetFileNameWithoutExtension)
-            .Where(name => string.IsNullOrWhiteSpace(filter) ||
-                           name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
-            .OrderBy(name => name)
-            .ToArray();
+        return
+        [
+            .. Directory.GetFiles(DirectoryPath, "*.json")
+                .Select(Path.GetFileNameWithoutExtension)
+                .Where(name => string.IsNullOrWhiteSpace(filter) ||
+                               name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0)
+                .OrderBy(name => name)
+        ];
     }
 
     public static bool TryNormalizeName(string input, out string name, out string error)

@@ -19,7 +19,7 @@ namespace Slafight_Plugin_EXILED.API.Core.Features;
 /// </summary>
 public abstract class CustomFirearm : CustomItem
 {
-    private static readonly IReadOnlyList<AttachmentName> NoAttachments = Array.Empty<AttachmentName>();
+    private static readonly IReadOnlyList<AttachmentName> NoAttachments = [];
 
     /// <summary>基礎ダメージ。null ならバニラ値を維持します。</summary>
     protected virtual float? Damage => null;

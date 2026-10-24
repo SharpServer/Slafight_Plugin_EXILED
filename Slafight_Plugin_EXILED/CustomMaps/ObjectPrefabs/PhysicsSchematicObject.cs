@@ -48,10 +48,12 @@ public abstract class PhysicsSchematicObject : ObjectPrefab
     }
 
     /// <summary>この Prefab が所有する Rigidbody。破棄されたブロックは同期時に除外される。</summary>
-    protected IReadOnlyList<Rigidbody> PhysicsBodies => _physicsBlocks
-        .Where(block => block.Rigidbody != null)
-        .Select(block => block.Rigidbody)
-        .ToArray();
+    protected IReadOnlyList<Rigidbody> PhysicsBodies =>
+    [
+        .. _physicsBlocks
+            .Where(block => block.Rigidbody != null)
+            .Select(block => block.Rigidbody)
+    ];
 
     /// <summary>派生クラスで初期値や挙動を override でき、Prefab Option からも設定できる。</summary>
     public virtual float Mass { get; set; } = 1f;
@@ -338,11 +340,13 @@ public abstract class PhysicsSchematicObject : ObjectPrefab
         _physicsEnabled = false;
 
         GameObject? schematicRoot = Schematic != null ? Schematic.gameObject : null;
-        List<GameObject> detachedBlocks = _physicsBlocks
-            .Select(block => block.GameObject)
-            .Where(block => block != null && block != schematicRoot)
-            .Distinct()
-            .ToList();
+        List<GameObject> detachedBlocks =
+        [
+            .. _physicsBlocks
+                .Select(block => block.GameObject)
+                .Where(block => block != null && block != schematicRoot)
+                .Distinct()
+        ];
 
         _physicsBlocks.Clear();
         _wholeSchematicMode = false;
@@ -453,7 +457,7 @@ public abstract class PhysicsSchematicObject : ObjectPrefab
         Vector3 offset = Vector3.zero;
         if (!_wholeSchematicMode)
         {
-            Rigidbody[] bodies = PhysicsBodies.ToArray();
+            Rigidbody[] bodies = [.. PhysicsBodies];
             if (bodies.Length == 0)
                 return;
 
@@ -490,7 +494,7 @@ public abstract class PhysicsSchematicObject : ObjectPrefab
             }
             else if (!_wholeSchematicMode)
             {
-                Rigidbody[] bodies = PhysicsBodies.ToArray();
+                Rigidbody[] bodies = [.. PhysicsBodies];
                 if (bodies.Length > 0)
                 {
                     Vector3 center = Vector3.zero;

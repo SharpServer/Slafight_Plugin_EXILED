@@ -10,8 +10,7 @@ public class Scp049 : CustomRole
 {
     // SCP: Containment Breachの台詞を日本語化。cure/悪疫の語感はSCP財団日本語版に合わせる。
     // 出典・翻訳クレジット: docs/internal/communications.md
-    private static readonly CommunicationMenu DoctorMenu = new(new[]
-    {
+    private static readonly CommunicationMenu DoctorMenu = new([
         CannedChatNode.Category("遭遇",
             CannedChatNode.Phrase("挨拶", "ごきげんよう……。", "遭遇"),
             CannedChatNode.Phrase("来客", "おや、来客とは気づかなかった。ここを訪れる者は滅多にいないのでね。", "遭遇"),
@@ -27,8 +26,8 @@ public class Scp049 : CustomRole
         CannedChatNode.Category("追跡",
             CannedChatNode.Phrase("抵抗", "抵抗はやめたまえ。君を治療しに来たのだ。", "追跡"),
             CannedChatNode.Phrase("隠れるな", "隠れる必要はない。私は君を助けに来たのだ。", "追跡"),
-            CannedChatNode.Phrase("息遣い", "君の息遣いが聞こえるよ。", "追跡")),
-    });
+            CannedChatNode.Phrase("息遣い", "君の息遣いが聞こえるよ。", "追跡"))
+    ]);
 
     public override CommunicationPolicy Communication => CommunicationPolicy.Enabled(
         prefix: "SCP-049",

@@ -158,7 +158,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     /// <summary>
     /// Schematic 内で ObjectPrefabSchematicInfo により採用されたキーのスナップショット。
     /// </summary>
-    public IReadOnlyCollection<string> ManagedBlockKeys => _managedBlocks.Keys.ToArray();
+    public IReadOnlyCollection<string> ManagedBlockKeys => [.. _managedBlocks.Keys];
 
     /// <summary>
     /// 宣言すると Create 時に自動でスキマティックをスポーンする。
@@ -967,14 +967,16 @@ public abstract class ObjectPrefab : IObjectPrefab
                     }
                 }
 
-                candidates = properties.Values
-                    .OrderBy(property => property.Name, StringComparer.Ordinal)
-                    .ToArray();
+                candidates =
+                [
+                    .. properties.Values
+                        .OrderBy(property => property.Name, StringComparer.Ordinal)
+                ];
                 AutomaticOptionProperties[prefabType] = candidates;
             }
         }
 
-        return candidates.Where(IsAutomaticOptionProperty).ToArray();
+        return [.. candidates.Where(IsAutomaticOptionProperty)];
     }
 
     /// <summary>
@@ -1015,9 +1017,11 @@ public abstract class ObjectPrefab : IObjectPrefab
                     }
                 }
 
-                members = collected.Values
-                    .OrderBy(member => member.Name, StringComparer.Ordinal)
-                    .ToArray();
+                members =
+                [
+                    .. collected.Values
+                        .OrderBy(member => member.Name, StringComparer.Ordinal)
+                ];
                 DeclaredOptionMembers[prefabType] = members;
             }
         }
@@ -1340,14 +1344,14 @@ public static class ObjectPrefabInstances
     public static IReadOnlyList<ObjectPrefab> GetAllSnapshot()
     {
         lock (Sync)
-            return Instances.Values.ToArray();
+            return [.. Instances.Values];
     }
 
     /// <summary>Returns only instances with a positive ToySearchRadius.</summary>
     public static IReadOnlyList<ObjectPrefab> GetRadiusCandidatesSnapshot()
     {
         lock (Sync)
-            return RadiusLocations.Keys.Concat(LargeRadiusCandidates).ToArray();
+            return [.. RadiusLocations.Keys, .. LargeRadiusCandidates];
     }
 
     /// <summary>ToySearchRadiusが正のインスタンスのうち、指定した型（派生型を含む）に一致するものだけを返す。</summary>
@@ -1355,7 +1359,7 @@ public static class ObjectPrefabInstances
         where TPrefab : ObjectPrefab
     {
         lock (Sync)
-            return RadiusLocations.Keys.Concat(LargeRadiusCandidates).OfType<TPrefab>().ToArray();
+            return [.. RadiusLocations.Keys.Concat(LargeRadiusCandidates).OfType<TPrefab>()];
     }
 
     internal static void NotifyTagChanged(ObjectPrefab prefab, string previousTag, string currentTag)
@@ -1448,9 +1452,11 @@ public static class ObjectPrefabInstances
             if (!ByTag.TryGetValue(normalizedTag, out HashSet<ObjectPrefab>? tagged))
                 return [];
 
-            return tagged
-                .Where(prefab => MatchesSearchType(prefab.GetType(), referenceType, searchMode))
-                .ToArray();
+            return
+            [
+                .. tagged
+                    .Where(prefab => MatchesSearchType(prefab.GetType(), referenceType, searchMode))
+            ];
         }
     }
 
@@ -1499,7 +1505,7 @@ public static class ObjectPrefabInstances
         where TPrefab : ObjectPrefab
     {
         lock (Sync)
-            return Instances.Values.OfType<TPrefab>().ToArray();
+            return [.. Instances.Values.OfType<TPrefab>()];
     }
 
     public static void ClearAll()
@@ -1552,7 +1558,7 @@ public static class ObjectPrefabInstances
             return;
 
         if (!ByTag.TryGetValue(normalized, out HashSet<ObjectPrefab>? values))
-            ByTag[normalized] = values = new HashSet<ObjectPrefab>();
+            ByTag[normalized] = values = [];
         values.Add(prefab);
     }
 
@@ -1593,7 +1599,7 @@ public static class ObjectPrefabInstances
             var cell = new SpatialCell(x, y, z);
             occupied[index++] = cell;
             if (!RadiusCells.TryGetValue(cell, out HashSet<ObjectPrefab>? values))
-                RadiusCells[cell] = values = new HashSet<ObjectPrefab>();
+                RadiusCells[cell] = values = [];
             values.Add(prefab);
         }
 

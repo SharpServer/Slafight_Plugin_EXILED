@@ -265,13 +265,13 @@ public sealed class BossBar
         if (bars.Count == 0)
             return;
 
-        List<BossBar> activeBars = bars.Where(bar => bar.TryUpdateTrackedPlayer()).ToList();
+        List<BossBar> activeBars = [.. bars.Where(bar => bar.TryUpdateTrackedPlayer())];
         if (activeBars.Count == 0)
             return;
 
         foreach (Player player in Player.List.Where(p => p.IsSafePlayer()))
         {
-            List<BossBar> visibleBars = activeBars.Where(bar => bar.CanView(player)).ToList();
+            List<BossBar> visibleBars = [.. activeBars.Where(bar => bar.CanView(player))];
             if (visibleBars.Count == 0)
                 continue;
 
@@ -287,11 +287,13 @@ public sealed class BossBar
     {
         lock (SyncRoot)
         {
-            return ShownBars
-                .Where(bar => bar.IsShown)
-                .OrderBy(bar => bar.DisplayOrder)
-                .ThenBy(bar => bar._showOrder)
-                .ToList();
+            return
+            [
+                .. ShownBars
+                    .Where(bar => bar.IsShown)
+                    .OrderBy(bar => bar.DisplayOrder)
+                    .ThenBy(bar => bar._showOrder)
+            ];
         }
     }
 

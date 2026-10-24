@@ -38,7 +38,7 @@ public static class EscapeZones
     /// <summary>
     /// マップ由来ではない、手で足したぶんです。読み直しのたびに積み直します。
     /// </summary>
-    private static readonly List<Bounds> Added = new List<Bounds>();
+    private static readonly List<Bounds> Added = [];
 
     /// <summary>
     /// いま脱出できる場所です。

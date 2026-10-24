@@ -416,7 +416,7 @@ public sealed class SnakeImagePlayback : IDisposable
                 return;
 
             var segments = currentContext.Segments?.Count >= 2
-                ? new List<Vector2Int>(currentContext.Segments)
+                ? [.. currentContext.Segments]
                 : SnakeImageApi.CreateDefaultSnakeSegments();
 
             _keycard.ServerSendMessage(
@@ -442,7 +442,7 @@ public static class SnakeImageApi
     private static bool _eventsRegistered;
 
     public static IReadOnlyCollection<SnakeImagePlayback> Active =>
-        ActivePlaybacks.Values.ToArray();
+        [.. ActivePlaybacks.Values];
 
     internal static void RegisterEvents()
     {
@@ -636,7 +636,7 @@ public static class SnakeImageApi
             IReadOnlyList<Vector2Int> rendered =
                 options.CustomRenderer.Render(context) ??
                 throw new InvalidOperationException("The custom Snake frame renderer returned null.");
-            return EnsureRenderableSegments(new List<Vector2Int>(rendered));
+            return EnsureRenderableSegments([.. rendered]);
         }
 
         var mask = new bool[options.Height, options.Width];

@@ -114,11 +114,13 @@ public sealed class WaveCommand : CommandBase
         foreach (bool inContext in new[] { true, false })
         {
             builder.AppendLine(inContext ? "Context中 (自動抽選対象):" : "Context外 (手動実行可能):");
-            SpawnSet[] entries = SpawnContext.AllWaves
-                .Where(wave => (context.WeightOf(wave) > 0) == inContext &&
-                               CoreCatalog.Matches(wave.GetType(), filter))
-                .OrderBy(wave => wave.GetType().Name, StringComparer.Ordinal)
-                .ToArray();
+            SpawnSet[] entries =
+            [
+                .. SpawnContext.AllWaves
+                    .Where(wave => (context.WeightOf(wave) > 0) == inContext &&
+                                   CoreCatalog.Matches(wave.GetType(), filter))
+                    .OrderBy(wave => wave.GetType().Name, StringComparer.Ordinal)
+            ];
 
             if (entries.Length == 0)
                 builder.AppendLine("  (該当なし)");

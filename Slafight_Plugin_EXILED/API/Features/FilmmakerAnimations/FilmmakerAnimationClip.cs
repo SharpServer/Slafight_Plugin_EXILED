@@ -73,15 +73,21 @@ public sealed class FilmmakerAnimationClip
         var clip = new FilmmakerAnimationClip
         {
             Name = name,
-            Positions = FilmmakerTimelineManager.PositionTrack.Keyframes
-                .Select(k => FilmmakerVector3Keyframe.From(k.TimeFrames, k.BlendCurve, k.Value))
-                .ToList(),
-            Rotations = FilmmakerTimelineManager.RotationTrack.Keyframes
-                .Select(k => FilmmakerQuaternionKeyframe.From(k.TimeFrames, k.BlendCurve, k.Value))
-                .ToList(),
-            Zooms = FilmmakerTimelineManager.ZoomTrack.Keyframes
-                .Select(k => FilmmakerFloatKeyframe.From(k.TimeFrames, k.BlendCurve, k.Value))
-                .ToList(),
+            Positions =
+            [
+                .. FilmmakerTimelineManager.PositionTrack.Keyframes
+                    .Select(k => FilmmakerVector3Keyframe.From(k.TimeFrames, k.BlendCurve, k.Value))
+            ],
+            Rotations =
+            [
+                .. FilmmakerTimelineManager.RotationTrack.Keyframes
+                    .Select(k => FilmmakerQuaternionKeyframe.From(k.TimeFrames, k.BlendCurve, k.Value))
+            ],
+            Zooms =
+            [
+                .. FilmmakerTimelineManager.ZoomTrack.Keyframes
+                    .Select(k => FilmmakerFloatKeyframe.From(k.TimeFrames, k.BlendCurve, k.Value))
+            ],
         };
 
         clip.Normalize();
@@ -92,9 +98,9 @@ public sealed class FilmmakerAnimationClip
     {
         Version = Version <= 0 ? CurrentVersion : Version;
         FrameRate = EffectiveFrameRate;
-        Positions = (Positions ?? []).OrderBy(frame => frame.TimeFrames).ToList();
-        Rotations = (Rotations ?? []).OrderBy(frame => frame.TimeFrames).ToList();
-        Zooms = (Zooms ?? []).OrderBy(frame => frame.TimeFrames).ToList();
+        Positions = [.. (Positions ?? []).OrderBy(frame => frame.TimeFrames)];
+        Rotations = [.. (Rotations ?? []).OrderBy(frame => frame.TimeFrames)];
+        Zooms = [.. (Zooms ?? []).OrderBy(frame => frame.TimeFrames)];
         _normalized = true;
     }
 

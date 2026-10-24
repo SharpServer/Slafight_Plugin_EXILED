@@ -156,10 +156,12 @@ public static class ForceEvaluator
     {
         if (force?.Members is not { Count: > 0 }) return;
 
-        List<ForceMember> ranked = force.Members
-            .Where(member => member.IsAlive)
-            .OrderByDescending(member => ForceRolePower.Of(member.Player))
-            .ToList();
+        List<ForceMember> ranked =
+        [
+            .. force.Members
+                .Where(member => member.IsAlive)
+                .OrderByDescending(member => ForceRolePower.Of(member.Player))
+        ];
 
         if (ranked.Count == 0) return;
 
@@ -304,22 +306,27 @@ public static class ForceEvaluator
     {
         // 波で出ていないプレイヤー (ラウンド開始時の D クラスなど) はまだ隊員状態を持たない。
         // ここで作らないとギャングが一生編成されないので、対象陣営だけ作りに行く。
-        List<ForceMember> loose = Player.List
-            .Where(player => player.IsSafePlayer() && player.IsAlive && ForceKinds.IsForceTeam(player.Role.Team))
-            .Select(ForceRegistry.MemberOf)
-            .Where(member => member is { Force: null, IsAlive: true })
-            // 先に単独だった人から順に。Player.List の並び順で隊長が決まらないようにする。
-            .OrderBy(member => member.AloneSince ?? 0f)
-            .ToList();
+        List<ForceMember> loose =
+        [
+            .. Player.List
+                .Where(player => player.IsSafePlayer() && player.IsAlive && ForceKinds.IsForceTeam(player.Role.Team))
+                .Select(ForceRegistry.MemberOf)
+                .Where(member => member is { Force: null, IsAlive: true })
+                // 先に単独だった人から順に。Player.List の並び順で隊長が決まらないようにする。
+                .OrderBy(member => member.AloneSince ?? 0f)
+        ];
 
         while (loose.Count >= 2)
         {
             ForceMember seed = loose[0];
             loose.RemoveAt(0);
 
-            List<ForceMember> nearby = loose
-                .Where(member => (member.Player.Position - seed.Player.Position).sqrMagnitude <= SquadFormDistanceSqr)
-                .ToList();
+            List<ForceMember> nearby =
+            [
+                .. loose
+                    .Where(member =>
+                        (member.Player.Position - seed.Player.Position).sqrMagnitude <= SquadFormDistanceSqr)
+            ];
 
             if (nearby.Count == 0) continue;
 
@@ -567,11 +574,11 @@ public static class ForceEvaluator
         // 括り方は ForceVisibility の既定と揃えてある (CustomTeam があればそれ、無ければ型)。
         foreach (IGrouping<object, ForceBase> group in ForceRegistry.All.GroupBy(SideKeyOf).ToArray())
         {
-            List<ForceBase> forces = group.ToList();
+            List<ForceBase> forces = [.. group];
 
             if (forces.Any(force => force.IsMainForce && force.AliveCount > 0)) continue;
 
-            List<ForceBase> squads = forces.Where(force => force.AliveCount > 0).ToList();
+            List<ForceBase> squads = [.. forces.Where(force => force.AliveCount > 0)];
 
             if (squads.Count == 0) continue;
 

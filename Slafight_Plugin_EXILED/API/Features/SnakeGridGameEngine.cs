@@ -36,21 +36,21 @@ public sealed class SnakeGridGameEngine : ISnakeGameSession
     private static readonly IReadOnlyDictionary<char, string[]> Font =
         new Dictionary<char, string[]>
         {
-            ['D'] = new[] { "110", "101", "101", "101", "110" },
-            ['E'] = new[] { "111", "100", "110", "100", "111" },
-            ['I'] = new[] { "111", "010", "010", "010", "111" },
-            ['N'] = new[] { "101", "111", "111", "111", "101" },
-            ['W'] = new[] { "101", "101", "111", "111", "101" },
+            ['D'] = ["110", "101", "101", "101", "110"],
+            ['E'] = ["111", "100", "110", "100", "111"],
+            ['I'] = ["111", "010", "010", "010", "111"],
+            ['N'] = ["101", "111", "111", "111", "101"],
+            ['W'] = ["101", "101", "111", "111", "101"],
         };
 
     private static readonly Vector2Int[][] TetrisPieces =
-    {
-        new[] { new Vector2Int(0, 1), new Vector2Int(1, 1), new Vector2Int(2, 1), new Vector2Int(3, 1) },
-        new[] { new Vector2Int(0, 0), new Vector2Int(1, 0), new Vector2Int(0, 1), new Vector2Int(1, 1) },
-        new[] { new Vector2Int(0, 0), new Vector2Int(1, 0), new Vector2Int(2, 0), new Vector2Int(1, 1) },
-        new[] { new Vector2Int(0, 0), new Vector2Int(0, 1), new Vector2Int(0, 2), new Vector2Int(1, 2) },
-        new[] { new Vector2Int(1, 0), new Vector2Int(2, 0), new Vector2Int(0, 1), new Vector2Int(1, 1) },
-    };
+    [
+        [new Vector2Int(0, 1), new Vector2Int(1, 1), new Vector2Int(2, 1), new Vector2Int(3, 1)],
+        [new Vector2Int(0, 0), new Vector2Int(1, 0), new Vector2Int(0, 1), new Vector2Int(1, 1)],
+        [new Vector2Int(0, 0), new Vector2Int(1, 0), new Vector2Int(2, 0), new Vector2Int(1, 1)],
+        [new Vector2Int(0, 0), new Vector2Int(0, 1), new Vector2Int(0, 2), new Vector2Int(1, 2)],
+        [new Vector2Int(1, 0), new Vector2Int(2, 0), new Vector2Int(0, 1), new Vector2Int(1, 1)]
+    ];
 
     private readonly int _playerId;
     private readonly ChaosKeycardItem _keycard;
@@ -59,7 +59,7 @@ public sealed class SnakeGridGameEngine : ISnakeGameSession
 
     private readonly bool[,] _pacWalls = new bool[DisplayHeight, DisplayWidth];
     private readonly bool[,] _pacPellets = new bool[DisplayHeight, DisplayWidth];
-    private readonly List<PacGhost> _pacGhosts = new();
+    private readonly List<PacGhost> _pacGhosts = [];
     private Vector2Int _pacPlayer;
     private float _pacGhostTimer;
     private int _pacAnimationTick;
@@ -67,7 +67,7 @@ public sealed class SnakeGridGameEngine : ISnakeGameSession
     private bool _pacWon;
 
     private readonly bool[,] _tetrisBoard = new bool[TetrisHeight, TetrisWidth];
-    private Vector2Int[] _tetrisPiece = Array.Empty<Vector2Int>();
+    private Vector2Int[] _tetrisPiece = [];
     private Vector2Int _tetrisPosition;
     private float _tetrisFallTimer;
     private int _tetrisLines;
@@ -420,9 +420,11 @@ public sealed class SnakeGridGameEngine : ISnakeGameSession
             return;
         }
 
-        Vector2Int[] rotated = _tetrisPiece
-            .Select(cell => new Vector2Int(-cell.y, cell.x))
-            .ToArray();
+        Vector2Int[] rotated =
+        [
+            .. _tetrisPiece
+                .Select(cell => new Vector2Int(-cell.y, cell.x))
+        ];
         foreach (int kick in new[] { 0, -1, 1, -2, 2 })
         {
             Vector2Int position = _tetrisPosition + new Vector2Int(kick, 0);
@@ -488,9 +490,11 @@ public sealed class SnakeGridGameEngine : ISnakeGameSession
 
     private void SpawnTetrisPiece()
     {
-        _tetrisPiece = TetrisPieces[_random.Next(TetrisPieces.Length)]
-            .Select(cell => cell)
-            .ToArray();
+        _tetrisPiece =
+        [
+            .. TetrisPieces[_random.Next(TetrisPieces.Length)]
+                .Select(cell => cell)
+        ];
         _tetrisPosition = new Vector2Int(3, TetrisHeight - 3);
         if (!CanPlaceTetris(_tetrisPiece, _tetrisPosition))
             _tetrisEnded = true;
@@ -631,7 +635,7 @@ public sealed class SnakeGridGameEngine : ISnakeGameSession
 
         try
         {
-            KeyValuePair<ushort, SnakeEngine>[] sessions = ChaosKeycardItem.SnakeSessions.ToArray();
+            KeyValuePair<ushort, SnakeEngine>[] sessions = [.. ChaosKeycardItem.SnakeSessions];
             _keycard.ServerSendTargetRpc(owner, writer =>
             {
                 writer.WriteByte((byte)KeycardItem.MsgType.Custom);
@@ -695,7 +699,7 @@ public sealed class SnakeGridGameEngine : ISnakeGameSession
                 return;
 
             List<Vector2Int> segments = context.Segments?.Count >= 2
-                ? new List<Vector2Int>(context.Segments)
+                ? [.. context.Segments]
                 : SnakeImageApi.CreateDefaultSnakeSegments();
             _keycard.ServerSendMessage(
                 SnakeNetworkMessage.NewFullResync(
@@ -746,11 +750,13 @@ public sealed class SnakeGridGameEngine : ISnakeGameSession
         const int hiddenCoordinate = -120;
         const int hiddenMinimumSide = -120;
         const int hiddenMaximumSide = 120;
-        Vector2Int[][] rows = litPixels
-            .GroupBy(pixel => pixel.y)
-            .OrderBy(row => row.Key)
-            .Select(row => row.OrderBy(pixel => pixel.x).ToArray())
-            .ToArray();
+        Vector2Int[][] rows =
+        [
+            .. litPixels
+                .GroupBy(pixel => pixel.y)
+                .OrderBy(row => row.Key)
+                .Select(row => row.OrderBy(pixel => pixel.x).ToArray())
+        ];
         var result = new List<Vector2Int>(litPixels.Count + rows.Length * 2 + 2);
         bool startFromMinimum = true;
         int firstHiddenX = startFromMinimum ? hiddenMaximumSide : hiddenMinimumSide;

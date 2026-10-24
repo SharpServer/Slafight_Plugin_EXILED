@@ -46,7 +46,7 @@ public sealed class ModerationEventsHandler : EventHandlerBase
     private readonly Dictionary<string, Player> pendingKickIssuers = new Dictionary<string, Player>();
 
     /// <summary>Banned で処理済みの対象。直後に付随して発火する Kicked を二重通知しないための抑制用。Key: 対象の UserId。</summary>
-    private readonly HashSet<string> suppressNextKick = new HashSet<string>();
+    private readonly HashSet<string> suppressNextKick = [];
 
     /// <inheritdoc />
     public override void RegisterEvents()

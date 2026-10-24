@@ -314,6 +314,6 @@ public abstract class CustomTeam
             }
         }
 
-        return Instances.Values.ToArray();
+        return [.. Instances.Values];
     }
 }

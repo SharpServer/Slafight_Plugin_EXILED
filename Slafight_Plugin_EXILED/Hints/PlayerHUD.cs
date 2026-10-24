@@ -813,7 +813,7 @@ public class PlayerHUD : EventHandlerBase
         return new ServerSpecificUserSettings.KeybindHintContent(
             $"<size=22><color=#ffcc00>Ability {countText}</color> {abilityName} {statusText} Uses:{usesText}</size>\n" +
             $"<size=18>{controlText} | {slotSummary}</size>",
-            parameters.ToArray());
+            [.. parameters]);
     }
 
     private static string BuildAbilitySlotSummary(

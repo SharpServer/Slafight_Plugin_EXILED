@@ -29,8 +29,8 @@ internal static class VanSweepDebugDraw
     private const float LineWidth = 0.05f;
     private const int EdgesPerBox = 12;
 
-    private static readonly List<Primitive> Lines = new();
-    private static readonly List<(Vector3 start, Vector3 end)> Segments = new();
+    private static readonly List<Primitive> Lines = [];
+    private static readonly List<(Vector3 start, Vector3 end)> Segments = [];
     private static CoroutineHandle _handle;
 
     /// <summary>判定箱を描いているかどうか。</summary>

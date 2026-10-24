@@ -195,14 +195,16 @@ public static class YtDlpApi
             _ => "bestvideo*+bestaudio/best",
         };
 
-        return Run(
-                "--no-config --no-playlist --no-progress --no-warnings " +
-                $"-f \"{format}\" --get-url \"{EscapeArgument(url)}\"")
-            .StandardOutput
-            .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
-            .Select(line => line.Trim())
-            .Where(IsSupportedUrl)
-            .ToArray();
+        return
+        [
+            .. Run(
+                    "--no-config --no-playlist --no-progress --no-warnings " +
+                    $"-f \"{format}\" --get-url \"{EscapeArgument(url)}\"")
+                .StandardOutput
+                .Split(['\r', '\n'], StringSplitOptions.RemoveEmptyEntries)
+                .Select(line => line.Trim())
+                .Where(IsSupportedUrl)
+        ];
     }
 
     public static int ClearCache(TimeSpan? olderThan = null)

@@ -19,10 +19,16 @@ public sealed class UsefulDoorButton : UsefulDoorObject
     {
         if (Marker == null) return UDoorInteractionResult.InvalidContext;
         if (IsLocked) return UDoorInteractionResult.Locked;
-        int[] ids = TargetIds.Split(',').Select(value => int.TryParse(value, out int id) ? id : 0)
-            .Where(id => id != 0).Distinct().ToArray();
-        UsefulDoor[] doors = ObjectPrefabInstances.GetAllSnapshot().OfType<UsefulDoor>()
-            .Where(door => door.IsInSchematic(Marker.Schematic) && ids.Contains(door.AuthoringId)).ToArray();
+        int[] ids =
+        [
+            .. TargetIds.Split(',').Select(value => int.TryParse(value, out int id) ? id : 0)
+                .Where(id => id != 0).Distinct()
+        ];
+        UsefulDoor[] doors =
+        [
+            .. ObjectPrefabInstances.GetAllSnapshot().OfType<UsefulDoor>()
+                .Where(door => door.IsInSchematic(Marker.Schematic) && ids.Contains(door.AuthoringId))
+        ];
         if (doors.Length == 0) return UDoorInteractionResult.NoTarget;
         UDoorInteractionResult result = UDoorInteractionResult.NoChange;
         foreach (UsefulDoor door in doors)

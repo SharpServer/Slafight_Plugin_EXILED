@@ -132,7 +132,7 @@ public static class ObjectPrefabLoader
             return false;
         }
 
-        List<Room> roomsOfType = Room.List.Where(room => room.Type == data.RoomType).ToList();
+        List<Room> roomsOfType = [.. Room.List.Where(room => room.Type == data.RoomType)];
         if (roomsOfType.Count == 0)
         {
             Log.Warn($"[ObjectPrefabLoader] No rooms of type {data.RoomType} found for prefab '{input}'.");
@@ -141,7 +141,7 @@ public static class ObjectPrefabLoader
 
         int maxRoomsFromData = data.MaxRooms <= 0 ? roomsOfType.Count : data.MaxRooms;
         maxRooms = Mathf.Min(maxRoomsFromData, roomsOfType.Count);
-        rooms = roomsOfType.OrderBy(_ => Random.value).ToList();
+        rooms = [.. roomsOfType.OrderBy(_ => Random.value)];
         return true;
     }
 

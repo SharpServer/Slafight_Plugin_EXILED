@@ -71,13 +71,17 @@ public static class ForceHud
         ForceMember? member = viewer.GetForceMember();
         ForceBase? own = member?.Force;
 
-        List<string> rows = [Header(own)];
+        List<string> rows =
+        [
+            Header(own),
+            .. own is null ? LooseBlock(viewer) : SelfBlock(viewer, member!, own)
+        ];
 
-        rows.AddRange(own is null ? LooseBlock(viewer) : SelfBlock(viewer, member!, own));
-
-        List<ForceBase> visible = ForceVisibility.VisibleTo(viewer)
-            .Where(force => force.AliveCount > 0)
-            .ToList();
+        List<ForceBase> visible =
+        [
+            .. ForceVisibility.VisibleTo(viewer)
+                .Where(force => force.AliveCount > 0)
+        ];
 
         if (visible.Count > 0)
             rows.AddRange(ForceList(visible, own));
@@ -268,11 +272,13 @@ public static class ForceHud
     {
         yield return $"<size=18><color={MutedColor}>──────────</color></size>";
 
-        List<ForceBase> mains = visible
-            .Where(force => force.IsMainForce)
-            .OrderByDescending(force => ReferenceEquals(force, own))
-            .ThenByDescending(force => force.AliveCount)
-            .ToList();
+        List<ForceBase> mains =
+        [
+            .. visible
+                .Where(force => force.IsMainForce)
+                .OrderByDescending(force => ReferenceEquals(force, own))
+                .ThenByDescending(force => force.AliveCount)
+        ];
 
         int shown = 0;
 

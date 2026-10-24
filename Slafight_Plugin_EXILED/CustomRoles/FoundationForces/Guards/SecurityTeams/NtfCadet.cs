@@ -1,6 +1,8 @@
+using System;
 using System.Collections.Generic;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Features;
+using Slafight_Plugin_EXILED.CustomItems.Keycards;
 using Slafight_Plugin_EXILED.CustomTeams;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.FoundationForces.Guards.SecurityTeams;
@@ -23,6 +25,11 @@ public class NtfCadet : CustomRole
         ItemType.Medkit,
         ItemType.Radio,
         ItemType.ArmorCombat
+    ];
+
+    public override IReadOnlyList<Type> CustomItems { get; } =
+    [
+        typeof(EmergencyForceKeycard)
     ];
 
     public override IReadOnlyDictionary<ItemType, ushort> Ammo =>

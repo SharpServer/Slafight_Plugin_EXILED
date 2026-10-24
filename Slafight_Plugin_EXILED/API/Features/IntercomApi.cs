@@ -212,7 +212,7 @@ public static class IntercomApi
     }
 
     public static IReadOnlyCollection<string> GetDisplayOwners()
-        => DisplayOverrides.Keys.OrderBy(owner => owner, StringComparer.OrdinalIgnoreCase).ToArray();
+        => [.. DisplayOverrides.Keys.OrderBy(owner => owner, StringComparer.OrdinalIgnoreCase)];
 
     public static bool SetCooldown(double seconds)
     {
@@ -345,11 +345,13 @@ public static class IntercomApi
 
     public static IReadOnlyCollection<string> GetControlOwners(IntercomControlFlags flag = IntercomControlFlags.None)
     {
-        return ControlFlagsByOwner
-            .Where(pair => flag == IntercomControlFlags.None || (pair.Value & flag) != 0)
-            .Select(pair => pair.Key)
-            .OrderBy(owner => owner, StringComparer.OrdinalIgnoreCase)
-            .ToArray();
+        return
+        [
+            .. ControlFlagsByOwner
+                .Where(pair => flag == IntercomControlFlags.None || (pair.Value & flag) != 0)
+                .Select(pair => pair.Key)
+                .OrderBy(owner => owner, StringComparer.OrdinalIgnoreCase)
+        ];
     }
 
     public static bool SetOverride(Player? player, bool enabled, string? owner = null, float? durationSeconds = null)
@@ -442,7 +444,7 @@ public static class IntercomApi
         if (!IsValidPlayer(player) || !OverrideOwnersByPlayer.TryGetValue(player!.Id, out var state))
             return [];
 
-        return state.Owners.OrderBy(owner => owner, StringComparer.OrdinalIgnoreCase).ToArray();
+        return [.. state.Owners.OrderBy(owner => owner, StringComparer.OrdinalIgnoreCase)];
     }
 
     public static bool SetMuted(Player? player, bool muted, string? owner = null, float? durationSeconds = null)
@@ -525,7 +527,7 @@ public static class IntercomApi
         if (!IsValidPlayer(player) || !MuteOwnersByPlayer.TryGetValue(player!.Id, out var state))
             return [];
 
-        return state.Owners.OrderBy(owner => owner, StringComparer.OrdinalIgnoreCase).ToArray();
+        return [.. state.Owners.OrderBy(owner => owner, StringComparer.OrdinalIgnoreCase)];
     }
 
     public static IDisposable OverrideScope(Player player, string owner)

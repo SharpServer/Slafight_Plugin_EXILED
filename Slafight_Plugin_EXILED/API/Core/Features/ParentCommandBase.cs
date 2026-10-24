@@ -89,11 +89,13 @@ public abstract class ParentCommandBase : ParentCommand
     /// </summary>
     protected string BuildCatalog(ICommandSender sender)
     {
-        List<CommandBase> visible = AllCommands
-            .OfType<CommandBase>()
-            .Where(command => command.IsAllowedFor(sender))
-            .OrderBy(command => command.Command, StringComparer.OrdinalIgnoreCase)
-            .ToList();
+        List<CommandBase> visible =
+        [
+            .. AllCommands
+                .OfType<CommandBase>()
+                .Where(command => command.IsAllowedFor(sender))
+                .OrderBy(command => command.Command, StringComparer.OrdinalIgnoreCase)
+        ];
 
         if (visible.Count == 0)
             return $"{Title}: 実行できるコマンドがありません。";

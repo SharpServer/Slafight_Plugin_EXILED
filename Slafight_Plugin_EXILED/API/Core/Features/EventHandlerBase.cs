@@ -59,7 +59,7 @@ namespace Slafight_Plugin_EXILED.API.Core.Features;
 /// </example>
 public abstract class EventHandlerBase : CustomEventsHandler, IDisposable
 {
-    private static readonly List<EventHandlerBase> ActiveHandlers = new List<EventHandlerBase>();
+    private static readonly List<EventHandlerBase> ActiveHandlers = [];
 
     private static bool lifetimeHooked;
 

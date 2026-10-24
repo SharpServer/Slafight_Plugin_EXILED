@@ -30,11 +30,11 @@ namespace Slafight_Plugin_EXILED.API.Core.Features;
 /// </summary>
 public static class EventHandlerRegistry
 {
-    private static readonly List<Type> ManualTypes = new List<Type>();
-    private static readonly List<Type> RoundTypes = new List<Type>();
-    private static readonly List<EventHandlerBase> AutoHandlers = new List<EventHandlerBase>();
+    private static readonly List<Type> ManualTypes = [];
+    private static readonly List<Type> RoundTypes = [];
+    private static readonly List<EventHandlerBase> AutoHandlers = [];
 
-    private static readonly List<Assembly> PendingAssemblies = new List<Assembly>();
+    private static readonly List<Assembly> PendingAssemblies = [];
 
     private static bool initialized;
     private static bool scanned;
@@ -297,7 +297,7 @@ public static class EventHandlerRegistry
         }
         catch (ReflectionTypeLoadException exception)
         {
-            types = exception.Types.Where(type => type is not null).ToArray();
+            types = [.. exception.Types.Where(type => type is not null)];
             Log.Warn($"[Slafight] {assembly.GetName().Name} の一部の型を読み込めませんでした。読めた型だけを対象にします。");
         }
         catch (Exception exception)

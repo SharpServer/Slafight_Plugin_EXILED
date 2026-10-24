@@ -232,7 +232,7 @@ public static class SnakeMediaApi
     private static readonly Dictionary<ushort, SnakeMediaPlayback> ActivePlaybacks = new();
 
     public static IReadOnlyCollection<SnakeMediaPlayback> Active =>
-        ActivePlaybacks.Values.ToArray();
+        [.. ActivePlaybacks.Values];
 
     /// <summary>
     /// Convenience entry point for the common pixel-video use case. It enables

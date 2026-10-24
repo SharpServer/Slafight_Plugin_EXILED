@@ -161,7 +161,7 @@ public class ScpStatusHints : EventHandlerBase
 
         public HintLayoutKey Key { get; }
         public bool AllowMerge { get; }
-        public List<ChannelSegment> Segments { get; } = new();
+        public List<ChannelSegment> Segments { get; } = [];
 
         public int FontSize => Segments.Count == 0
             ? 24
@@ -202,7 +202,7 @@ public class ScpStatusHints : EventHandlerBase
         }
     }
 
-    public static IReadOnlyCollection<StatusHintChannel> RegisteredChannels => Channels.Values.ToList();
+    public static IReadOnlyCollection<StatusHintChannel> RegisteredChannels => [.. Channels.Values];
 
     /// <inheritdoc />
     public override void RegisterEvents()
@@ -566,14 +566,16 @@ public class ScpStatusHints : EventHandlerBase
 
         try
         {
-            return channel.SortMembers(members)
-                .Where(player => player != null)
-                .ToList();
+            return
+            [
+                .. channel.SortMembers(members)
+                    .Where(player => player != null)
+            ];
         }
         catch (Exception e)
         {
             Log.Warn($"[ScpStatusHints] SortMembers failed for channel {channel.Id}: {e.Message}");
-            return members.OrderBy(player => player.Id).ToList();
+            return [.. members.OrderBy(player => player.Id)];
         }
     }
 
@@ -594,7 +596,7 @@ public class ScpStatusHints : EventHandlerBase
         if (channel.MaxVisibleMembers > 0 && visibleMembers.Count > channel.MaxVisibleMembers)
         {
             hiddenMemberCount = visibleMembers.Count - channel.MaxVisibleMembers;
-            visibleMembers = visibleMembers.Take(channel.MaxVisibleMembers).ToList();
+            visibleMembers = [.. visibleMembers.Take(channel.MaxVisibleMembers)];
         }
 
         if (visibleMembers.Count == 0 && channel.HideWhenNoVisibleMembers)

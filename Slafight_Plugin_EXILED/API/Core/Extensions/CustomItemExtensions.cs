@@ -204,11 +204,11 @@ public static class CustomItemExtensions
 
     /// <summary>プレイヤーが所持している、追跡中のカスタムアイテムを列挙します。</summary>
     public static IEnumerable<CustomItem> GetCustomItems(this Player player) =>
-        player?.Items?.Select(GetCustomItem).Where(custom => custom is not null) ?? Enumerable.Empty<CustomItem>();
+        player?.Items?.Select(GetCustomItem).Where(custom => custom is not null) ?? [];
 
     /// <summary>プレイヤーが所持している、指定型のカスタムアイテムを列挙します。</summary>
     public static IEnumerable<T> GetCustomItems<T>(this Player player) where T : CustomItem =>
-        player?.Items?.Select(GetCustomItem<T>).Where(custom => custom is not null) ?? Enumerable.Empty<T>();
+        player?.Items?.Select(GetCustomItem<T>).Where(custom => custom is not null) ?? [];
 
     /// <summary>プレイヤーが何らかのカスタムアイテムを所持しているかどうか。</summary>
     public static bool HasCustomItem(this Player player) => player?.Items?.Any(IsCustomItem) == true;

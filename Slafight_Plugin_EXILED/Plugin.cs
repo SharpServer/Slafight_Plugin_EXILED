@@ -64,7 +64,7 @@ public class Plugin : Plugin<Config>
         // それはローダーの実行順に依存しているため名指しでも登録しておく。二重検出はしない。
         EventHandlerRegistry.RegisterAssembly(Assembly.GetExecutingAssembly());
 
-        ServerSpecificSettingsSync.DefinedSettings = ServerSpecifics.Settings().ToArray();
+        ServerSpecificSettingsSync.DefinedSettings = [.. ServerSpecifics.Settings()];
         ServerSpecificSettingsSync.SendToAll();
 
         // 再読込で id が衝突しないよう毎回変える。

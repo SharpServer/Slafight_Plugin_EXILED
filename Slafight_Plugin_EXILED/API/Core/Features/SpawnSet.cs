@@ -196,7 +196,7 @@ public abstract class SpawnSet
         if (candidates is null || candidates.Count == 0)
             return [];
 
-        forcedCandidates = new List<Player>(candidates);
+        forcedCandidates = [.. candidates];
 
         try
         {
@@ -301,19 +301,21 @@ public abstract class SpawnSet
 
         // TargetPlayers はシャッフル済みなので、先頭から必要人数を取るだけでランダム選出になる。
         if (allowed > 0 && candidates.Count > allowed)
-            candidates = candidates.Take(allowed).ToList();
+            candidates = [.. candidates.Take(allowed)];
 
-        List<SpawnRoleState> states = SpawnRoles
-            .Shuffled()
-            .Select(role => new SpawnRoleState(role))
-            .ToList();
+        List<SpawnRoleState> states =
+        [
+            .. SpawnRoles
+                .Shuffled()
+                .Select(role => new SpawnRoleState(role))
+        ];
 
         List<Player> spawned = [];
 
         // 必須の行を先に埋めてから、残りを回す。
-        AssignRoundRobin(states.Where(state => state.Definition.IsForced).ToList(), candidates, spawned);
+        AssignRoundRobin([.. states.Where(state => state.Definition.IsForced)], candidates, spawned);
 
-        List<SpawnRoleState> rest = states.Where(state => !state.Definition.IsForced).ToList();
+        List<SpawnRoleState> rest = [.. states.Where(state => !state.Definition.IsForced)];
 
         if (RoundRobin)
             AssignRoundRobin(rest, candidates, spawned);

@@ -22,8 +22,8 @@ internal sealed class RespawnVehiclePhysicsImpact : MonoBehaviour
     /// <summary>mesh bounds を取得できない場合の車体半幅(m)。実車相当に寄せた値。</summary>
     private static readonly Vector3 FallbackHalfExtents = new(1.1f, 1.3f, 2.9f);
 
-    private readonly HashSet<int> _impactedBodies = new();
-    private static readonly List<RespawnVehiclePhysicsImpact> Instances = new();
+    private readonly HashSet<int> _impactedBodies = [];
+    private static readonly List<RespawnVehiclePhysicsImpact> Instances = [];
     private Renderer[] _renderers;
     private string _vehicleName;
     private Bounds _previousBounds;

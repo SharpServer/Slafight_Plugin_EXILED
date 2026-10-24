@@ -47,20 +47,24 @@ public static class TypeParser
             ? StringComparison.OrdinalIgnoreCase
             : StringComparison.Ordinal;
 
-        List<Type> concrete = Concrete<TBase>().ToList();
+        List<Type> concrete = [.. Concrete<TBase>()];
 
-        List<Type> candidates = concrete
-            .Where(type =>
-                string.Equals(type.Name, value, comparison) ||
-                string.Equals(type.FullName, value, comparison))
-            .ToList();
+        List<Type> candidates =
+        [
+            .. concrete
+                .Where(type =>
+                    string.Equals(type.Name, value, comparison) ||
+                    string.Equals(type.FullName, value, comparison))
+        ];
 
         // 現在の名前が優先。昔の名前を先に見ると、改名後の型に旧名が奪われる。
         if (candidates.Count == 0)
         {
-            candidates = concrete
-                .Where(type => HasLegacyName(type, value, comparison))
-                .ToList();
+            candidates =
+            [
+                .. concrete
+                    .Where(type => HasLegacyName(type, value, comparison))
+            ];
         }
 
         if (candidates.Count == 1)
@@ -74,9 +78,11 @@ public static class TypeParser
             return false;
 
         // 完全修飾名での一致が 1 つだけなら、それが指名されたものとみなす。
-        List<Type> exact = candidates
-            .Where(type => string.Equals(type.FullName, value, comparison))
-            .ToList();
+        List<Type> exact =
+        [
+            .. candidates
+                .Where(type => string.Equals(type.FullName, value, comparison))
+        ];
 
         if (exact.Count == 1)
         {
@@ -124,18 +130,20 @@ public static class TypeParser
     /// </summary>
     public static IReadOnlyList<Type> FindTypes<TBase>()
     {
-        return Concrete<TBase>()
-            .Where(type =>
-                !type.IsGenericTypeDefinition &&
-                type.GetConstructor(Type.EmptyTypes) is not null)
-            .ToArray();
+        return
+        [
+            .. Concrete<TBase>()
+                .Where(type =>
+                    !type.IsGenericTypeDefinition &&
+                    type.GetConstructor(Type.EmptyTypes) is not null)
+        ];
     }
 
     /// <summary>
     /// <typeparamref name="TBase"/> を継承している具象型を、コンストラクタの有無を問わず返します。
     /// 「継承しているのに登録されていない」型を見つける用途に使います。
     /// </summary>
-    public static IReadOnlyList<Type> FindAllTypes<TBase>() => Concrete<TBase>().ToArray();
+    public static IReadOnlyList<Type> FindAllTypes<TBase>() => [.. Concrete<TBase>()];
 
     /// <summary>
     /// <typeparamref name="TBase"/> を継承している具象型を、決定的な順序で列挙します。
@@ -178,10 +186,12 @@ public static class TypeParser
         }
         catch (ReflectionTypeLoadException exception)
         {
-            return exception.Types
-                .Where(type => type is not null)
-                .Cast<Type>()
-                .ToArray();
+            return
+            [
+                .. exception.Types
+                    .Where(type => type is not null)
+                    .Cast<Type>()
+            ];
         }
     }
 }

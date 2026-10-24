@@ -201,11 +201,13 @@ public sealed class EscapeHandler : EventHandlerBase
         player.DropItems();
 
         // 落とした瞬間の足元にあるものだけが対象。前に置きっぱなしにした所持品は運ばない。
-        return Pickup.List
-            .Where(pickup => pickup is not null &&
-                             pickup.PreviousOwner == player &&
-                             (pickup.Position - origin).sqrMagnitude <= CarryRadiusSqr)
-            .ToList();
+        return
+        [
+            .. Pickup.List
+                .Where(pickup => pickup is not null &&
+                                 pickup.PreviousOwner == player &&
+                                 (pickup.Position - origin).sqrMagnitude <= CarryRadiusSqr)
+        ];
     }
 
     /// <summary>

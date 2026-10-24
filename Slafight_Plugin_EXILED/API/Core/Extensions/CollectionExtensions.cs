@@ -58,7 +58,7 @@ public static class CollectionExtensions
         if (source is null)
             throw new ArgumentNullException(nameof(source));
 
-        List<T> result = new List<T>(source);
+        List<T> result = [.. source];
         result.Shuffle();
 
         return result;
@@ -75,7 +75,7 @@ public static class CollectionExtensions
         if (random is null)
             throw new ArgumentNullException(nameof(random));
 
-        List<T> result = new List<T>(source);
+        List<T> result = [.. source];
         result.Shuffle(random);
 
         return result;

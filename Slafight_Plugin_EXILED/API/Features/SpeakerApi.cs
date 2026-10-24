@@ -799,7 +799,7 @@ public static class SpeakerApi
     }
 
     public static IEnumerable<string> GetAudioPlayerNames()
-        => PlaybacksByName.Keys.Concat(LivePlaybacksByName.Keys).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+        => [.. PlaybacksByName.Keys.Concat(LivePlaybacksByName.Keys).Distinct(StringComparer.OrdinalIgnoreCase)];
 
     private static LabSpeakerToy CreateSpeaker(
         Vector3 position,

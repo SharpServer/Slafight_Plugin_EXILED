@@ -267,7 +267,7 @@ public static class CustomStatusEffectsRegistry
 
             if (!allEffects.Any(e => e != null && e.GetType() == effectType))
             {
-                controller.AllEffects = allEffects.Concat([effect]).ToArray();
+                controller.AllEffects = [.. allEffects, effect];
                 allEffects = controller.AllEffects;
             }
 
@@ -323,7 +323,7 @@ public static class CustomStatusEffectsRegistry
                     if (array.Any(e => e != null && e.GetType() == effectType))
                         continue;
 
-                    StatusEffectBase[] newArray = array.Concat([effect]).ToArray();
+                    StatusEffectBase[] newArray = [.. array, effect];
                     field.SetValue(controller, newArray);
                 }
             }

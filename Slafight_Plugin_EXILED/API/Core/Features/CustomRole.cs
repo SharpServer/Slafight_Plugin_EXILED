@@ -311,13 +311,13 @@ public abstract class CustomRole : IPlayerOwn
     /// <remarks>
     /// 反復中に役職を外しても壊れないよう、その場でスナップショットを取ります。
     /// </remarks>
-    public static IReadOnlyList<T> AllOf<T>() where T : CustomRole => ActiveRoles.Values.OfType<T>().ToArray();
+    public static IReadOnlyList<T> AllOf<T>() where T : CustomRole => [.. ActiveRoles.Values.OfType<T>()];
 
     /// <summary>
     /// <typeparamref name="T"/> の役職を持っているプレイヤーです。
     /// </summary>
     public static IReadOnlyList<Player> PlayersOf<T>() where T : CustomRole =>
-        AllOf<T>().Select(role => role.Player).Where(player => player.IsSafePlayer()).ToArray();
+        [.. AllOf<T>().Select(role => role.Player).Where(player => player.IsSafePlayer())];
 
     /// <summary>
     /// 指定したアセンブリで定義された役職だけを解除します。

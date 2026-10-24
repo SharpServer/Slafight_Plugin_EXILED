@@ -136,12 +136,14 @@ public sealed class ListCommand : CommandBase
 
     private static string BuildHandlers(string filter)
     {
-        List<string> lines = EventHandlerBase.Active
-            .Select(handler => handler.GetType())
-            .Where(type => CoreCatalog.Matches(type, filter))
-            .Select(type => $"  <b>{type.Name}</b>")
-            .OrderBy(line => line, StringComparer.Ordinal)
-            .ToList();
+        List<string> lines =
+        [
+            .. EventHandlerBase.Active
+                .Select(handler => handler.GetType())
+                .Where(type => CoreCatalog.Matches(type, filter))
+                .Select(type => $"  <b>{type.Name}</b>")
+                .OrderBy(line => line, StringComparer.Ordinal)
+        ];
 
         StringBuilder builder = new StringBuilder();
         builder.AppendLine(CoreCatalog.Header("Handlers", lines.Count));

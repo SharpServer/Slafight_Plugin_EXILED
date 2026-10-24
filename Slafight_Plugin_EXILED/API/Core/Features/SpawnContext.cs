@@ -101,11 +101,13 @@ public abstract class SpawnContext
     /// <param name="chooseIndex">0 以上・引数未満の整数を返すもの。試験で固定したいときに差し替えます。</param>
     public SpawnSet Roll(Faction faction, bool miniWave, Func<int, int> chooseIndex)
     {
-        List<SpawnSet> candidates = AllWaves
-            .Where(wave => wave.RespawnFaction == faction &&
-                           wave.IsMiniWave == miniWave &&
-                           WeightOf(wave) > 0)
-            .ToList();
+        List<SpawnSet> candidates =
+        [
+            .. AllWaves
+                .Where(wave => wave.RespawnFaction == faction &&
+                               wave.IsMiniWave == miniWave &&
+                               WeightOf(wave) > 0)
+        ];
 
         if (candidates.Count == 0) return null;
 
@@ -140,7 +142,7 @@ public abstract class SpawnContext
             }
         }
 
-        return collected.ToArray();
+        return [.. collected];
     }
 }
 

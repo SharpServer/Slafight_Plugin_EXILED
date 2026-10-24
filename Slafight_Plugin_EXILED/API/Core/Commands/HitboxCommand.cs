@@ -151,7 +151,7 @@ public sealed class HitboxCommand : CommandBase
         if (!TryRaycastLook(executor, range, out RaycastHit hit, out response))
             return false;
 
-        Collider[] colliders = GetHitCollider(hit.collider).ToArray();
+        Collider[] colliders = [.. GetHitCollider(hit.collider)];
         if (colliders.Length == 0)
         {
             response = $"Hit object has no enabled colliders: {GetColliderName(hit.collider)}";
@@ -188,7 +188,7 @@ public sealed class HitboxCommand : CommandBase
         string filter = GetOptionStrippedText(arguments, 4);
 
         IEnumerable<Collider> Resolve() => GetNearbyColliders(executor, executor.Position, radius, filter, DefaultMaxCollidersPerSession);
-        Collider[] initial = Resolve().ToArray();
+        Collider[] initial = [.. Resolve()];
         if (initial.Length == 0)
         {
             response = string.IsNullOrWhiteSpace(filter)
@@ -227,7 +227,7 @@ public sealed class HitboxCommand : CommandBase
         bool simplifyPlayers = ParseSimplifyPlayers(arguments, preferences.SimplifyPlayers);
 
         IEnumerable<Collider> Resolve() => GetNearbyColliders(executor, executor.Position, radius, string.Empty, max);
-        Collider[] initial = Resolve().ToArray();
+        Collider[] initial = [.. Resolve()];
         if (initial.Length == 0)
         {
             response = $"No colliders found within {radius:0.#}m.";
@@ -271,7 +271,7 @@ public sealed class HitboxCommand : CommandBase
         bool simplifyPlayers = ParseSimplifyPlayers(arguments, preferences.SimplifyPlayers);
 
         IEnumerable<Collider> Resolve() => GetNamedColliders(filter, max);
-        Collider[] initial = Resolve().ToArray();
+        Collider[] initial = [.. Resolve()];
         if (initial.Length == 0)
         {
             response = $"No enabled colliders matching `{filter}`.";
@@ -313,7 +313,7 @@ public sealed class HitboxCommand : CommandBase
                 .SelectMany(p => GetPlayerColliders(p))
                 .Take(DefaultMaxCollidersPerSession);
 
-            Collider[] initialAll = ResolveAll().ToArray();
+            Collider[] initialAll = [.. ResolveAll()];
             if (initialAll.Length == 0)
             {
                 response = "No player colliders found.";
@@ -329,7 +329,7 @@ public sealed class HitboxCommand : CommandBase
             return false;
 
         IEnumerable<Collider> ResolveTarget() => GetPlayerColliders(target);
-        Collider[] initial = ResolveTarget().ToArray();
+        Collider[] initial = [.. ResolveTarget()];
         if (initial.Length == 0)
         {
             response = $"No player colliders found for {target.Nickname}.";
@@ -569,9 +569,11 @@ public sealed class HitboxCommand : CommandBase
             case "info":
             case "status":
             {
-                RespawnVehiclePhysicsImpact[] impacts = RespawnVehiclePhysicsImpact.ActiveInstances
-                    .Where(impact => impact != null)
-                    .ToArray();
+                RespawnVehiclePhysicsImpact[] impacts =
+                [
+                    .. RespawnVehiclePhysicsImpact.ActiveInstances
+                        .Where(impact => impact != null)
+                ];
 
                 if (impacts.Length == 0)
                 {
@@ -767,10 +769,12 @@ public sealed class HitboxCommand : CommandBase
 
     private static void RedrawSession(HitboxDrawSession session)
     {
-        Collider[] colliders = session.ResolveColliders()
-            .Where(IsDrawableCollider)
-            .Take(session.MaxColliders)
-            .ToArray();
+        Collider[] colliders =
+        [
+            .. session.ResolveColliders()
+                .Where(IsDrawableCollider)
+                .Take(session.MaxColliders)
+        ];
 
         session.LastDrawCount = RenderPrimitiveHitboxes(session, colliders);
         RefreshPrimitiveVisibilityIfNeeded(session);
@@ -815,14 +819,16 @@ public sealed class HitboxCommand : CommandBase
             return false;
         }
 
-        RaycastHit[] hits = Physics.RaycastAll(
-                executor.CameraTransform.position,
-                executor.CameraTransform.forward,
-                range,
-                ~0,
-                QueryTriggerInteraction.Collide)
-            .OrderBy(h => h.distance)
-            .ToArray();
+        RaycastHit[] hits =
+        [
+            .. Physics.RaycastAll(
+                    executor.CameraTransform.position,
+                    executor.CameraTransform.forward,
+                    range,
+                    ~0,
+                    QueryTriggerInteraction.Collide)
+                .OrderBy(h => h.distance)
+        ];
 
         foreach (RaycastHit candidate in hits)
         {
@@ -911,10 +917,12 @@ public sealed class HitboxCommand : CommandBase
             AddColliderSegments(collider, segments);
         }
 
-        segments = segments
-            .Where(s => IsValidSegment(s.start, s.end))
-            .Take(session.MaxColliders * PrimitiveSegmentsPerColliderBudget)
-            .ToList();
+        segments =
+        [
+            .. segments
+                .Where(s => IsValidSegment(s.start, s.end))
+                .Take(session.MaxColliders * PrimitiveSegmentsPerColliderBudget)
+        ];
 
         EnsurePrimitiveLineCount(session, segments.Count);
 

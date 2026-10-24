@@ -114,7 +114,7 @@ public readonly struct RoleVoiceRoute
         if (receiverTeams is null)
             throw new ArgumentNullException(nameof(receiverTeams));
 
-        HashSet<CustomTeam> receiverSet = new HashSet<CustomTeam>(receiverTeams);
+        HashSet<CustomTeam> receiverSet = [.. receiverTeams];
 
         return ToPlayers(
             receiver => (!aliveReceiversOnly || receiver.IsAlive) &&

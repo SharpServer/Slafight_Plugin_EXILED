@@ -389,7 +389,7 @@ public static class CannedChatMenuApi
         => session.Path.Count == 0 ? session.RootOptions : session.Path[session.Path.Count - 1].Children;
 
     private static List<CandyKindID> BuildCandySlots(int count)
-        => SlotCandies.Take(Math.Min(count, MaxOptions)).ToList();
+        => [.. SlotCandies.Take(Math.Min(count, MaxOptions))];
 
     private static ushort NextUnusedSerial(Inventory inventory)
     {
@@ -650,7 +650,7 @@ public static class CannedChatMenuApi
         public ushort PreviousHeldSerial { get; }
         public Scp330Bag Bag { get; }
         public IReadOnlyList<CannedChatNode> RootOptions { get; }
-        public List<CannedChatNode> Path { get; } = new();
+        public List<CannedChatNode> Path { get; } = [];
         public bool Transitioning { get; set; } = true;
     }
 
@@ -668,7 +668,7 @@ public static class CannedChatMenuApi
         public uint NetId { get; }
         public ReferenceHub Hub { get; }
         public IReadOnlyList<CannedChatNode> RootOptions { get; }
-        public List<CannedChatNode> Path { get; } = new();
+        public List<CannedChatNode> Path { get; } = [];
         public int SelectedIndex { get; set; }
     }
 
@@ -742,7 +742,7 @@ public sealed class CannedChatNode
         Action<Player>? action)
     {
         Label = label;
-        Children = children is null ? Array.Empty<CannedChatNode>() : Array.AsReadOnly(children.ToArray());
+        Children = children is null ? Array.Empty<CannedChatNode>() : Array.AsReadOnly([.. children]);
         Message = message;
         Channel = category;
         Action = action;

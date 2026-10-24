@@ -135,9 +135,11 @@ public abstract class GameMode
     /// </summary>
     public static GameMode Roll(Random random = null)
     {
-        List<GameMode> candidates = All()
-            .Where(mode => mode.Weight > 0 && mode.IsAvailable)
-            .ToList();
+        List<GameMode> candidates =
+        [
+            .. All()
+                .Where(mode => mode.Weight > 0 && mode.IsAvailable)
+        ];
 
         if (candidates.Count == 0) return null;
 

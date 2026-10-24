@@ -96,16 +96,20 @@ public static class CommunicationApi
         if (!policy.IsAvailable)
             return 0;
 
-        Player[] candidates = (recipients ?? Player.List)
+        Player[] candidates =
+        [
+            .. (recipients ?? Player.List)
             .Where(viewer => viewer is not null && viewer.IsSafePlayer() && viewer.IsAlive)
             .Distinct()
-            .ToArray();
+        ];
 
         float proximityRange = Mathf.Max(0f, policy.ProximityRange);
         float squaredProximityRange = proximityRange * proximityRange;
-        Player[] nearby = candidates
-            .Where(viewer => CanReceiveNearby(sender, viewer, squaredProximityRange))
-            .ToArray();
+        Player[] nearby =
+        [
+            .. candidates
+                .Where(viewer => CanReceiveNearby(sender, viewer, squaredProximityRange))
+        ];
         var nearbyNetIds = new HashSet<uint>(nearby.Select(viewer => viewer.NetId));
 
         int delivered = SendCore(
@@ -119,9 +123,11 @@ public static class CommunicationApi
         if (!policy.IsRadioAvailable || !TryGetUsableRadio(sender, out RadioItem senderRadio))
             return delivered;
 
-        Player[] radioOnly = candidates
-            .Where(viewer => !nearbyNetIds.Contains(viewer.NetId) && CanReceiveRadio(sender, senderRadio, viewer))
-            .ToArray();
+        Player[] radioOnly =
+        [
+            .. candidates
+                .Where(viewer => !nearbyNetIds.Contains(viewer.NetId) && CanReceiveRadio(sender, senderRadio, viewer))
+        ];
 
         delivered += SendCore(
             Safe(sender.Nickname),
@@ -155,10 +161,12 @@ public static class CommunicationApi
         float clampedRange = Mathf.Max(0f, range);
         float squaredRange = clampedRange * clampedRange;
         IEnumerable<Player> candidates = recipients ?? Player.List;
-        Player[] nearby = candidates
-            .Where(viewer => CanReceiveNearby(sender, viewer, squaredRange))
-            .Distinct()
-            .ToArray();
+        Player[] nearby =
+        [
+            .. candidates
+                .Where(viewer => CanReceiveNearby(sender, viewer, squaredRange))
+                .Distinct()
+        ];
 
         return SendCore(
             Safe(sender.Nickname),
@@ -202,10 +210,12 @@ public static class CommunicationApi
         float clampedRange = Mathf.Max(0f, range);
         float squaredRange = clampedRange * clampedRange;
         IEnumerable<Player> candidates = recipients ?? Player.List;
-        Player[] nearby = candidates
-            .Where(viewer => CanReceiveAt(origin, viewer, squaredRange))
-            .Distinct()
-            .ToArray();
+        Player[] nearby =
+        [
+            .. candidates
+                .Where(viewer => CanReceiveAt(origin, viewer, squaredRange))
+                .Distinct()
+        ];
 
         return SendCore(senderName, text, nearby, category, prefix, CommunicationRoute.Proximity);
     }
@@ -299,8 +309,11 @@ public static class CommunicationApi
             return false;
 
         // Leftでは既にNetIdが0の場合があるため、保存済みHubとの同一性で解決します。
-        uint[] keys = PlayerPolicies.Where(pair => ReferenceEquals(pair.Value.Hub, player.ReferenceHub))
-            .Select(pair => pair.Key).ToArray();
+        uint[] keys =
+        [
+            .. PlayerPolicies.Where(pair => ReferenceEquals(pair.Value.Hub, player.ReferenceHub))
+                .Select(pair => pair.Key)
+        ];
         foreach (uint key in keys)
             PlayerPolicies.Remove(key);
 
@@ -408,7 +421,7 @@ public static class CommunicationApi
 
         EntriesByViewer.Remove(player.NetId);
         if (Round.IsStarted)
-            Render(player, Array.Empty<CommunicationEntry>());
+            Render(player, []);
         else
             RemoveHints(player);
     }
@@ -492,7 +505,7 @@ public static class CommunicationApi
             HeaderX,
             HeaderY);
 
-        CommunicationEntry[] entries = source.Take(MaxVisibleRows).ToArray();
+        CommunicationEntry[] entries = [.. source.Take(MaxVisibleRows)];
         for (int index = 0; index < MaxVisibleRows; index++)
         {
             string id = $"{HudConstId.PlayerHUD_CommunicationRows}_{index}";
@@ -603,7 +616,7 @@ public static class CommunicationApi
         string normalized = string.Join(" ", text!
             .Replace('\r', ' ')
             .Replace('\n', ' ')
-            .Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries));
+            .Split([' '], StringSplitOptions.RemoveEmptyEntries));
 
         if (normalized.Length > MaxTextLength)
             normalized = normalized.Substring(0, MaxTextLength - 1) + "…";

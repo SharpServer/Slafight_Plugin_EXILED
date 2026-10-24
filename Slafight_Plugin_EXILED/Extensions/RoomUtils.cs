@@ -18,6 +18,6 @@ public static class RoomUtils
             RoomType.LczAirlock,
             RoomType.LczPlants
         ];
-        return Room.List.Where(r => safeRooms.Contains(r.Type) && r != null).ToList();
+        return [.. Room.List.Where(r => safeRooms.Contains(r.Type) && r != null)];
     }
 }

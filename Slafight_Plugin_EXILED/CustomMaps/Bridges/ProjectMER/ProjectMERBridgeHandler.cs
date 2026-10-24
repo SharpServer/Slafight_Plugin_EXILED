@@ -113,13 +113,16 @@ public sealed class ProjectMERBridgeHandler : EventHandlerBase, IObjectPrefabInf
 
     private void BuildPrefabMetadataCache()
     {
-        ObjectPrefabDescriptor[] descriptors = ObjectPrefabRegistry.All.ToArray();
-        prefabTypes = descriptors.Select(descriptor => new ObjectPrefabTypeInfo
-        {
-            Key = descriptor.Key,
-            DisplayName = descriptor.DisplayName,
-            Aliases = descriptor.Aliases,
-        }).ToArray();
+        ObjectPrefabDescriptor[] descriptors = [.. ObjectPrefabRegistry.All];
+        prefabTypes =
+        [
+            .. descriptors.Select(descriptor => new ObjectPrefabTypeInfo
+            {
+                Key = descriptor.Key,
+                DisplayName = descriptor.DisplayName,
+                Aliases = descriptor.Aliases,
+            })
+        ];
 
         optionDefinitions.Clear();
         foreach (ObjectPrefabDescriptor descriptor in descriptors)
@@ -130,15 +133,17 @@ public sealed class ProjectMERBridgeHandler : EventHandlerBase, IObjectPrefabInf
                 continue;
             }
 
-            optionDefinitions[descriptor.Key] = prefab.GetOptionDefinitions()
-                .Select(definition => new ObjectPrefabOptionInfo
-                {
-                    Name = definition.Name,
-                    ValueType = definition.ValueType,
-                    DefaultValue = definition.DefaultValue,
-                    ConstraintDescription = definition.ConstraintDescription,
-                })
-                .ToArray();
+            optionDefinitions[descriptor.Key] =
+            [
+                .. prefab.GetOptionDefinitions()
+                    .Select(definition => new ObjectPrefabOptionInfo
+                    {
+                        Name = definition.Name,
+                        ValueType = definition.ValueType,
+                        DefaultValue = definition.DefaultValue,
+                        ConstraintDescription = definition.ConstraintDescription,
+                    })
+            ];
         }
     }
 

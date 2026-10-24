@@ -129,11 +129,13 @@ public sealed class SpawnSystem : EventHandlerBase
     /// </remarks>
     private static List<Player> Candidates()
     {
-        return Player.List
-            .Where(player => player.IsSafePlayer() &&
-                             player.Role.Type is RoleTypeId.Spectator &&
-                             CustomRole.Of(player) is null)
-            .ToList();
+        return
+        [
+            .. Player.List
+                .Where(player => player.IsSafePlayer() &&
+                                 player.Role.Type is RoleTypeId.Spectator &&
+                                 CustomRole.Of(player) is null)
+        ];
     }
 
     private static void OnRespawningTeam(RespawningTeamEventArgs ev)

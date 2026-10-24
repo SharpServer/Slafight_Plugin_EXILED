@@ -44,7 +44,7 @@ public abstract class CustomHybrid : CustomItem
     }
 
     private readonly Dictionary<ushort, HybridState> states = new Dictionary<ushort, HybridState>();
-    private readonly HashSet<int> startedModes = new HashSet<int>();
+    private readonly HashSet<int> startedModes = [];
 
     private List<CustomHybridMode> subModes;
     private int pendingModeIndex;

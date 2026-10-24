@@ -28,8 +28,10 @@ public static class EnumUtils
 
     private static class EnumCache<T> where T : struct, Enum
     {
-        public static readonly T[] Values = Enum.GetValues(typeof(T))
-            .Cast<T>()
-            .ToArray();
+        public static readonly T[] Values =
+        [
+            .. Enum.GetValues(typeof(T))
+                .Cast<T>()
+        ];
     }
 }

@@ -165,7 +165,7 @@ public sealed class Option
         }
 
         _parts = parts;
-        _values = parts.Select(part => part.DefaultValue).ToArray();
+        _values = [.. parts.Select(part => part.DefaultValue)];
     }
 
     public IReadOnlyList<OptionPart> Parts => _parts;

@@ -32,7 +32,7 @@ public sealed class SnakeDoomEngine : ISnakeGameSession
     private const int StartingAmmo = 50;
 
     private static readonly string[] MapRows =
-    {
+    [
         "1111111111111111",
         "1P.....1.......1",
         "1..M...1..M....1",
@@ -48,21 +48,21 @@ public sealed class SnakeDoomEngine : ISnakeGameSession
         "1........1.....1",
         "1..M...........1",
         "1............E.1",
-        "1111111111111111",
-    };
+        "1111111111111111"
+    ];
 
     private static readonly IReadOnlyDictionary<char, string[]> Font = new Dictionary<char, string[]>
     {
-        ['A'] = new[] { "010", "101", "111", "101", "101" },
-        ['D'] = new[] { "110", "101", "101", "101", "110" },
-        ['E'] = new[] { "111", "100", "110", "100", "111" },
-        ['I'] = new[] { "111", "010", "010", "010", "111" },
-        ['N'] = new[] { "101", "111", "111", "111", "101" },
-        ['W'] = new[] { "101", "101", "111", "111", "101" },
+        ['A'] = ["010", "101", "111", "101", "101"],
+        ['D'] = ["110", "101", "101", "101", "110"],
+        ['E'] = ["111", "100", "110", "100", "111"],
+        ['I'] = ["111", "010", "010", "010", "111"],
+        ['N'] = ["101", "111", "111", "111", "101"],
+        ['W'] = ["101", "101", "111", "111", "101"],
     };
 
     private readonly int[,] _map = new int[MapRows.Length, MapRows[0].Length];
-    private readonly List<Enemy> _enemies = new();
+    private readonly List<Enemy> _enemies = [];
     private readonly int _playerId;
     private readonly Action<SnakeDoomEngine>? _onStopped;
     private readonly ChaosKeycardItem _keycard;
@@ -626,7 +626,7 @@ public sealed class SnakeDoomEngine : ISnakeGameSession
 
         try
         {
-            KeyValuePair<ushort, SnakeEngine>[] sessions = ChaosKeycardItem.SnakeSessions.ToArray();
+            KeyValuePair<ushort, SnakeEngine>[] sessions = [.. ChaosKeycardItem.SnakeSessions];
             _keycard.ServerSendTargetRpc(owner, writer =>
             {
                 writer.WriteByte((byte)KeycardItem.MsgType.Custom);
@@ -690,7 +690,7 @@ public sealed class SnakeDoomEngine : ISnakeGameSession
                 return;
 
             List<Vector2Int> segments = context.Segments?.Count >= 2
-                ? new List<Vector2Int>(context.Segments)
+                ? [.. context.Segments]
                 : SnakeImageApi.CreateDefaultSnakeSegments();
             _keycard.ServerSendMessage(
                 SnakeNetworkMessage.NewFullResync(
@@ -741,11 +741,13 @@ public sealed class SnakeDoomEngine : ISnakeGameSession
         const int hiddenCoordinate = -120;
         const int hiddenMinimumSide = -120;
         const int hiddenMaximumSide = 120;
-        Vector2Int[][] rows = litPixels
-            .GroupBy(pixel => pixel.y)
-            .OrderBy(row => row.Key)
-            .Select(row => row.OrderBy(pixel => pixel.x).ToArray())
-            .ToArray();
+        Vector2Int[][] rows =
+        [
+            .. litPixels
+                .GroupBy(pixel => pixel.y)
+                .OrderBy(row => row.Key)
+                .Select(row => row.OrderBy(pixel => pixel.x).ToArray())
+        ];
         var result = new List<Vector2Int>(litPixels.Count + rows.Length * 2 + 2);
         bool startFromMinimum = true;
         int firstHiddenX = startFromMinimum ? hiddenMaximumSide : hiddenMinimumSide;

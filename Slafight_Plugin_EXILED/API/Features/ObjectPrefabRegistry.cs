@@ -22,11 +22,12 @@ public sealed class ObjectPrefabDescriptor
         Key = key;
         DisplayName = displayName;
         PrefabType = prefabType;
-        Aliases = Array.AsReadOnly(aliases
-            .Where(alias => !string.IsNullOrWhiteSpace(alias))
-            .Select(alias => alias.Trim())
-            .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray());
+        Aliases = Array.AsReadOnly([
+            .. aliases
+                .Where(alias => !string.IsNullOrWhiteSpace(alias))
+                .Select(alias => alias.Trim())
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+        ]);
         _constructor = constructor;
     }
 
@@ -66,7 +67,7 @@ public static class ObjectPrefabRegistry
         {
             EnsureInitialized();
             lock (Sync)
-                return Array.AsReadOnly(ByKey.Values.OrderBy(descriptor => descriptor.Key, StringComparer.Ordinal).ToArray());
+                return Array.AsReadOnly([.. ByKey.Values.OrderBy(descriptor => descriptor.Key, StringComparer.Ordinal)]);
         }
     }
 
@@ -284,7 +285,7 @@ public static class ObjectPrefabRegistry
                 return;
 
             _initialized = true;
-            Type[] types = API.Core.Features.TypeParser.FindTypes<ObjectPrefab>().ToArray();
+            Type[] types = [.. API.Core.Features.TypeParser.FindTypes<ObjectPrefab>()];
 
             foreach (Type type in types)
             {

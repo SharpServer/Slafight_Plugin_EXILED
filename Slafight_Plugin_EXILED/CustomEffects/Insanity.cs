@@ -1010,7 +1010,7 @@ public partial class Insanity : CustomEffectBase, ICustomDisplayName, ICustomHea
         if (fragments.Count == 0)
             fragments.Add("■■■■■■■■");
 
-        _fragments = fragments.ToArray();
+        _fragments = [.. fragments];
         return _fragments;
     }
 
