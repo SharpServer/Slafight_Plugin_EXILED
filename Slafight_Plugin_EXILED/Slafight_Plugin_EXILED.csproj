@@ -55,7 +55,7 @@
     </Target>
 
     <ItemGroup>
-        <PackageReference Include="ExMod.Exiled" Version="9.14.2" />
+        <PackageReference Include="ExMod.Exiled" Version="9.15.2" />
         <PackageReference Include="Lib.Harmony" Version="2.2.2" />
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="10.0.1" />
         <PackageReference Include="System.Buffers" Version="4.6.1" />
@@ -147,11 +147,9 @@
 
     <ItemGroup>
       <Folder Include="CustomItems\Accesibilities\InventoryChat\" />
-      <Folder Include="CustomItems\Keycards\" />
       <Folder Include="CustomRoles\Bases\" />
       <Folder Include="CustomRoles\ChaosInsurgents\" />
       <Folder Include="CustomRoles\Fifthists\" />
-      <Folder Include="CustomRoles\FoundationForces\Guards\SecurityTeams\" />
       <Folder Include="CustomRoles\FoundationForces\MTFs\Eta10\" />
       <Folder Include="CustomRoles\FoundationForces\MTFs\Nu7\" />
       <Folder Include="CustomRoles\Neutrals\ClassD\" />

@@ -30,7 +30,7 @@ namespace Slafight_Plugin_EXILED.CustomItems.Accesibilities.InventoryChat;
 /// </summary>
 public static class CannedChatMenuApi
 {
-    private const int MaxOptions = 6;
+    private const int MaxOptions = CommunicationMenu.MaxOptions;
     private const float EquipDelay = 0.08f;
     private const int TextMenuY = 720;
 
@@ -57,19 +57,22 @@ public static class CannedChatMenuApi
 
     private static readonly Dictionary<uint, MenuSession> Sessions = new();
     private static readonly Dictionary<uint, TextMenuSession> TextSessions = new();
-    private static IReadOnlyList<CannedChatNode> rootOptions = BuildDefaultMenu();
+    private static CommunicationMenu defaultMenu = new(BuildDefaultMenu());
     private static int nextSessionToken;
 
     /// <summary>現在使われるルート選択肢です。最大6件です。</summary>
-    public static IReadOnlyList<CannedChatNode> RootOptions => rootOptions;
+    public static IReadOnlyList<CannedChatNode> RootOptions => defaultMenu.Options;
+
+    /// <summary>対象プレイヤーの現在の設定で使われるカテゴリと定型文です。</summary>
+    public static IReadOnlyList<CannedChatNode> GetRootOptions(Player player)
+        => (CommunicationApi.ResolvePolicy(player).Menu ?? defaultMenu).Options;
 
     /// <summary>別機能が独自の定型文ツリーへ差し替えるための登録口です。</summary>
     public static void SetRootOptions(IEnumerable<CannedChatNode> options)
     {
-        CannedChatNode[] next = options?.ToArray() ?? throw new ArgumentNullException(nameof(options));
-        ValidateOptions(next, "root");
+        var next = new CommunicationMenu(options);
         Shutdown();
-        rootOptions = next;
+        defaultMenu = next;
     }
 
     /// <summary>対象プレイヤーのメニューを開閉します。</summary>
@@ -92,13 +95,14 @@ public static class CannedChatMenuApi
         if (IsOpen(player))
             return true;
 
+        ResolvedCommunicationPolicy policy = CommunicationApi.ResolvePolicy(player);
+        IReadOnlyList<CannedChatNode> rootOptions = (policy.Menu ?? defaultMenu).Options;
         if (rootOptions.Count == 0)
         {
             player.ShowHint("<size=20>定型文が登録されていません。</size>", 2f);
             return false;
         }
 
-        ResolvedCommunicationPolicy policy = CommunicationApi.ResolvePolicy(player);
         if (!policy.IsAvailable)
         {
             player.ShowHint("<size=20>現在の陣営・役職では定型文通信を利用できません。</size>", 2f);
@@ -106,7 +110,7 @@ public static class CannedChatMenuApi
         }
 
         if (policy.MenuMode == CommunicationMenuMode.Text)
-            return OpenTextMenu(player);
+            return OpenTextMenu(player, rootOptions);
 
         ReferenceHub hub = player.ReferenceHub;
         Inventory inventory = hub.inventory;
@@ -131,7 +135,8 @@ public static class CannedChatMenuApi
             hub,
             serial,
             inventory.CurItem.SerialNumber,
-            bag);
+            bag,
+            rootOptions);
         Sessions.Add(hub.netId, session);
 
         RenderMenu(player, session);
@@ -294,10 +299,10 @@ public static class CannedChatMenuApi
         TextSessions.Clear();
     }
 
-    private static bool OpenTextMenu(Player player)
+    private static bool OpenTextMenu(Player player, IReadOnlyList<CannedChatNode> rootOptions)
     {
         ReferenceHub hub = player.ReferenceHub;
-        var session = new TextMenuSession(++nextSessionToken, hub);
+        var session = new TextMenuSession(++nextSessionToken, hub, rootOptions);
         TextSessions.Add(hub.netId, session);
         RenderTextMenu(player, session);
         return true;
@@ -378,10 +383,10 @@ public static class CannedChatMenuApi
     }
 
     private static IReadOnlyList<CannedChatNode> CurrentOptions(MenuSession session)
-        => session.Path.Count == 0 ? rootOptions : session.Path[session.Path.Count - 1].Children;
+        => session.Path.Count == 0 ? session.RootOptions : session.Path[session.Path.Count - 1].Children;
 
     private static IReadOnlyList<CannedChatNode> CurrentOptions(TextMenuSession session)
-        => session.Path.Count == 0 ? rootOptions : session.Path[session.Path.Count - 1].Children;
+        => session.Path.Count == 0 ? session.RootOptions : session.Path[session.Path.Count - 1].Children;
 
     private static List<CandyKindID> BuildCandySlots(int count)
         => SlotCandies.Take(Math.Min(count, MaxOptions)).ToList();
@@ -577,29 +582,6 @@ public static class CannedChatMenuApi
         }
     }
 
-    private static void ValidateOptions(IReadOnlyList<CannedChatNode> options, string path)
-    {
-        if (options.Count > MaxOptions)
-            throw new ArgumentException($"{path} has {options.Count} options; SCP-330 supports at most {MaxOptions}.");
-
-        foreach (CannedChatNode node in options)
-        {
-            if (node is null)
-                throw new ArgumentException($"{path} contains a null option.");
-
-            if (string.IsNullOrWhiteSpace(node.Label))
-                throw new ArgumentException($"{path} contains an option without a label.");
-
-            if (node.Children.Count > 0 && (node.Message is not null || node.Action is not null))
-                throw new ArgumentException($"{path}/{node.Label} cannot be both a category and an action.");
-
-            if (node.Children.Count == 0 && string.IsNullOrWhiteSpace(node.Message) && node.Action is null)
-                throw new ArgumentException($"{path}/{node.Label} has no children or action.");
-
-            ValidateOptions(node.Children, $"{path}/{node.Label}");
-        }
-    }
-
     private static IReadOnlyList<CannedChatNode> BuildDefaultMenu()
         =>
         [
@@ -649,11 +631,13 @@ public static class CannedChatMenuApi
             ReferenceHub hub,
             ushort bagSerial,
             ushort previousHeldSerial,
-            Scp330Bag bag)
+            Scp330Bag bag,
+            IReadOnlyList<CannedChatNode> rootOptions)
         {
             Token = token;
             NetId = hub.netId;
             Hub = hub;
+            RootOptions = rootOptions;
             BagSerial = bagSerial;
             PreviousHeldSerial = previousHeldSerial;
             Bag = bag;
@@ -665,22 +649,25 @@ public static class CannedChatMenuApi
         public ushort BagSerial { get; }
         public ushort PreviousHeldSerial { get; }
         public Scp330Bag Bag { get; }
+        public IReadOnlyList<CannedChatNode> RootOptions { get; }
         public List<CannedChatNode> Path { get; } = new();
         public bool Transitioning { get; set; } = true;
     }
 
     private sealed class TextMenuSession
     {
-        public TextMenuSession(int token, ReferenceHub hub)
+        public TextMenuSession(int token, ReferenceHub hub, IReadOnlyList<CannedChatNode> rootOptions)
         {
             Token = token;
             NetId = hub.netId;
             Hub = hub;
+            RootOptions = rootOptions;
         }
 
         public int Token { get; }
         public uint NetId { get; }
         public ReferenceHub Hub { get; }
+        public IReadOnlyList<CannedChatNode> RootOptions { get; }
         public List<CannedChatNode> Path { get; } = new();
         public int SelectedIndex { get; set; }
     }
@@ -755,7 +742,7 @@ public sealed class CannedChatNode
         Action<Player>? action)
     {
         Label = label;
-        Children = children ?? Array.Empty<CannedChatNode>();
+        Children = children is null ? Array.Empty<CannedChatNode>() : Array.AsReadOnly(children.ToArray());
         Message = message;
         Channel = category;
         Action = action;

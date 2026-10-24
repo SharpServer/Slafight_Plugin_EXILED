@@ -1,9 +1,11 @@
 #nullable enable
+using Slafight_Plugin_EXILED.API.Core.Features;
+
 namespace Slafight_Plugin_EXILED.API.Core.Structs;
 
 /// <summary>
-/// CustomTeam / CustomRole が名乗る定型文通信の上書きです。
-/// null の項目は下位の設定（バニラ陣営 → CustomTeam → CustomRole）を引き継ぎます。
+/// 陣営・ロール・ユーザー・プレイヤーに適用する定型文通信の上書きです。
+/// null の項目は下位の設定（バニラ陣営 → バニラロール → CustomTeam → CustomRole → ユーザー → プレイヤー）を引き継ぎます。
 /// </summary>
 public readonly struct CommunicationPolicy
 {
@@ -16,7 +18,8 @@ public readonly struct CommunicationPolicy
         string? radioLabel = null,
         float? proximityRange = null,
         bool? isRadioAvailable = null,
-        CommunicationMenuMode? menuMode = null)
+        CommunicationMenuMode? menuMode = null,
+        CommunicationMenu? menu = null)
     {
         IsAvailable = isAvailable;
         Prefix = prefix;
@@ -27,6 +30,7 @@ public readonly struct CommunicationPolicy
         ProximityRange = proximityRange;
         IsRadioAvailable = isRadioAvailable;
         MenuMode = menuMode;
+        Menu = menu;
     }
 
     /// <summary>通信機能を利用できるか。null なら下位設定を引き継ぎます。</summary>
@@ -58,6 +62,9 @@ public readonly struct CommunicationPolicy
     /// <summary>定型文の選択UI。null なら引き継ぎます。</summary>
     public CommunicationMenuMode? MenuMode { get; }
 
+    /// <summary>カテゴリと定型文のツリー。null なら下位設定、全層でnullなら共通メニューを使います。</summary>
+    public CommunicationMenu? Menu { get; }
+
     /// <summary>可否を引き継ぎます。prefix を指定すれば表記だけ上書きします。</summary>
     public static CommunicationPolicy Inherit(
         string? prefix = null,
@@ -67,7 +74,8 @@ public readonly struct CommunicationPolicy
         string? radioLabel = null,
         float? proximityRange = null,
         bool? isRadioAvailable = null,
-        CommunicationMenuMode? menuMode = null)
+        CommunicationMenuMode? menuMode = null,
+        CommunicationMenu? menu = null)
         => new(
             null,
             prefix,
@@ -77,7 +85,8 @@ public readonly struct CommunicationPolicy
             radioLabel,
             proximityRange,
             isRadioAvailable,
-            menuMode);
+            menuMode,
+            menu);
 
     /// <summary>この層で通信を許可します。</summary>
     public static CommunicationPolicy Enabled(
@@ -88,7 +97,8 @@ public readonly struct CommunicationPolicy
         string? radioLabel = null,
         float? proximityRange = null,
         bool? isRadioAvailable = null,
-        CommunicationMenuMode? menuMode = null)
+        CommunicationMenuMode? menuMode = null,
+        CommunicationMenu? menu = null)
         => new(
             true,
             prefix,
@@ -98,7 +108,8 @@ public readonly struct CommunicationPolicy
             radioLabel,
             proximityRange,
             isRadioAvailable,
-            menuMode);
+            menuMode,
+            menu);
 
     /// <summary>この層で通信を禁止します。</summary>
     public static CommunicationPolicy Disabled(string? prefix = null) => new(false, prefix);
@@ -116,7 +127,8 @@ public readonly struct ResolvedCommunicationPolicy
         string? radioLabel = "通信",
         float proximityRange = 8f,
         bool isRadioAvailable = true,
-        CommunicationMenuMode menuMode = CommunicationMenuMode.Scp330)
+        CommunicationMenuMode menuMode = CommunicationMenuMode.Scp330,
+        CommunicationMenu? menu = null)
     {
         IsAvailable = isAvailable;
         Prefix = prefix ?? string.Empty;
@@ -127,6 +139,7 @@ public readonly struct ResolvedCommunicationPolicy
         ProximityRange = proximityRange;
         IsRadioAvailable = isRadioAvailable;
         MenuMode = menuMode;
+        Menu = menu;
     }
 
     public bool IsAvailable { get; }
@@ -147,6 +160,8 @@ public readonly struct ResolvedCommunicationPolicy
 
     public CommunicationMenuMode MenuMode { get; }
 
+    public CommunicationMenu? Menu { get; }
+
     internal ResolvedCommunicationPolicy Apply(CommunicationPolicy policy)
         => new(
             policy.IsAvailable ?? IsAvailable,
@@ -157,7 +172,8 @@ public readonly struct ResolvedCommunicationPolicy
             policy.RadioLabel ?? RadioLabel,
             policy.ProximityRange ?? ProximityRange,
             policy.IsRadioAvailable ?? IsRadioAvailable,
-            policy.MenuMode ?? MenuMode);
+            policy.MenuMode ?? MenuMode,
+            policy.Menu ?? Menu);
 }
 
 /// <summary>定型文を選ぶために使うクライアントUIです。</summary>

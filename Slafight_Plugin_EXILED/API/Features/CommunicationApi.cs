@@ -8,6 +8,8 @@ using HintServiceMeow.Core.Enum;
 using HintServiceMeow.Core.Utilities;
 using InventorySystem;
 using InventorySystem.Items.Radio;
+using PlayerRoles;
+using Slafight_Plugin_EXILED.CustomItems.Accesibilities.InventoryChat;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -58,6 +60,10 @@ public static class CommunicationApi
 
     private static readonly Dictionary<PlayerTeam, ResolvedCommunicationPolicy> TeamPolicies =
         new(DefaultTeamPolicies);
+
+    private static readonly Dictionary<RoleTypeId, CommunicationPolicy> RolePolicies = new();
+    private static readonly Dictionary<string, CommunicationPolicy> UserPolicies = new(StringComparer.Ordinal);
+    private static readonly Dictionary<uint, (ReferenceHub Hub, CommunicationPolicy Policy)> PlayerPolicies = new();
 
     /// <summary>通信が正常に少なくとも1人へ配信された経路ごとに発火します。</summary>
     public static event Action<CommunicationEntry>? Sent;
@@ -208,7 +214,7 @@ public static class CommunicationApi
     public static bool CanUse(Player player) => ResolvePolicy(player).IsAvailable;
 
     /// <summary>
-    /// バニラ陣営 → CustomTeam → CustomRole の順に上書きを適用した設定を返します。
+    /// バニラ陣営 → バニラロール → CustomTeam → CustomRole → ユーザー → プレイヤー の順に上書きを適用した設定を返します。
     /// </summary>
     public static ResolvedCommunicationPolicy ResolvePolicy(Player player)
     {
@@ -217,6 +223,9 @@ public static class CommunicationApi
 
         if (!TeamPolicies.TryGetValue(player.Role.Team, out ResolvedCommunicationPolicy resolved))
             resolved = new ResolvedCommunicationPolicy(false, string.Empty);
+
+        if (RolePolicies.TryGetValue(player.Role.Type, out CommunicationPolicy rolePolicy))
+            resolved = resolved.Apply(rolePolicy);
 
         CustomRole? role = CustomRole.Of(player);
         CustomTeam? team = role?.Team ?? CustomTeam.Of(player);
@@ -227,7 +236,77 @@ public static class CommunicationApi
         if (role is not null)
             resolved = resolved.Apply(role.Communication);
 
+        if (!string.IsNullOrEmpty(player.UserId) && UserPolicies.TryGetValue(player.UserId, out CommunicationPolicy userPolicy))
+            resolved = resolved.Apply(userPolicy);
+
+        if (PlayerPolicies.TryGetValue(player.NetId, out var playerPolicy) &&
+            ReferenceEquals(playerPolicy.Hub, player.ReferenceHub))
+            resolved = resolved.Apply(playerPolicy.Policy);
+
         return resolved;
+    }
+
+    /// <summary>バニラロールへの上書きを登録・置換します。CustomRoleは自身のCommunicationで設定できます。</summary>
+    public static void SetRolePolicy(RoleTypeId role, CommunicationPolicy policy)
+    {
+        RolePolicies[role] = policy;
+        CannedChatMenuApi.Shutdown();
+    }
+
+    public static bool RemoveRolePolicy(RoleTypeId role)
+    {
+        if (!RolePolicies.Remove(role))
+            return false;
+
+        CannedChatMenuApi.Shutdown();
+        return true;
+    }
+
+    /// <summary>UserId単位の上書きを登録・置換します。再接続・ラウンド変更後も有効で、プラグイン終了時に消えます。</summary>
+    public static void SetUserPolicy(string userId, CommunicationPolicy policy)
+    {
+        if (string.IsNullOrWhiteSpace(userId))
+            throw new ArgumentException("UserId is required.", nameof(userId));
+
+        UserPolicies[userId] = policy;
+        foreach (Player player in Player.List.Where(player => player.UserId == userId).ToArray())
+            CannedChatMenuApi.Close(player);
+    }
+
+    public static bool RemoveUserPolicy(string userId)
+    {
+        if (string.IsNullOrWhiteSpace(userId) || !UserPolicies.Remove(userId))
+            return false;
+
+        foreach (Player player in Player.List.Where(player => player.UserId == userId).ToArray())
+            CannedChatMenuApi.Close(player);
+        return true;
+    }
+
+    /// <summary>現在のプレイヤーへの最優先上書きを登録・置換します。退出・ラウンドリセットで消えます。</summary>
+    public static void SetPlayerPolicy(Player player, CommunicationPolicy policy)
+    {
+        if (player is null || !player.IsSafePlayer())
+            throw new ArgumentException("A safe player is required.", nameof(player));
+
+        PlayerPolicies[player.NetId] = (player.ReferenceHub, policy);
+        CannedChatMenuApi.Close(player);
+    }
+
+    public static bool RemovePlayerPolicy(Player player)
+    {
+        if (player is null)
+            return false;
+
+        // Leftでは既にNetIdが0の場合があるため、保存済みHubとの同一性で解決します。
+        uint[] keys = PlayerPolicies.Where(pair => ReferenceEquals(pair.Value.Hub, player.ReferenceHub))
+            .Select(pair => pair.Key).ToArray();
+        foreach (uint key in keys)
+            PlayerPolicies.Remove(key);
+
+        if (keys.Length > 0)
+            CannedChatMenuApi.Close(player);
+        return keys.Length > 0;
     }
 
     /// <summary>指定したバニラ陣営の既定可否と Prefix を変更します。</summary>
@@ -235,6 +314,7 @@ public static class CommunicationApi
     {
         ResolvedCommunicationPolicy current = GetTeamPolicy(team);
         TeamPolicies[team] = current.Apply(new CommunicationPolicy(isAvailable, prefix));
+        CannedChatMenuApi.Shutdown();
     }
 
     /// <summary>指定したバニラ陣営へ詳細な通信設定を重ねます。</summary>
@@ -242,6 +322,7 @@ public static class CommunicationApi
     {
         ResolvedCommunicationPolicy current = GetTeamPolicy(team);
         TeamPolicies[team] = current.Apply(policy);
+        CannedChatMenuApi.Shutdown();
     }
 
     /// <summary>指定したバニラ陣営の現在の既定設定を返します。</summary>
@@ -256,6 +337,7 @@ public static class CommunicationApi
         TeamPolicies.Clear();
         foreach (KeyValuePair<PlayerTeam, ResolvedCommunicationPolicy> pair in DefaultTeamPolicies)
             TeamPolicies.Add(pair.Key, pair.Value);
+        CannedChatMenuApi.Shutdown();
     }
 
     private static int SendCore(
@@ -352,6 +434,7 @@ public static class CommunicationApi
             return;
 
         EntriesByViewer.Remove(player.NetId);
+        RemovePlayerPolicy(player);
     }
 
     internal static void Reset(bool removeHints = false)
@@ -363,6 +446,8 @@ public static class CommunicationApi
         }
 
         EntriesByViewer.Clear();
+        PlayerPolicies.Clear();
+        CannedChatMenuApi.Shutdown();
     }
 
     internal static void Shutdown()
@@ -372,6 +457,9 @@ public static class CommunicationApi
 
         EntriesByViewer.Clear();
         Sent = null;
+        PlayerPolicies.Clear();
+        UserPolicies.Clear();
+        RolePolicies.Clear();
         ResetTeamPolicies();
     }
 

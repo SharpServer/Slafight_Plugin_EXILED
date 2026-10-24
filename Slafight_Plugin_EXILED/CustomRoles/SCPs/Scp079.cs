@@ -9,13 +9,10 @@ namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 public sealed class Scp079 : CustomRole
 {
     public override string Name => "SCP-079";
-
     public override string CustomInfo => Name;
-
-    public override string Description => "施設システムを通して周囲へ語りかけます。";
-
+    public override string Description => "施設システムを通じ、周囲を混乱に陥れる。";
+    public override string Objective => "施設中に混沌をもたらし、味方の勢力を支援せよ。";
     public override CustomTeam Team => CustomTeam.Get<ScpTeam>();
-
     public override RoleTypeId BaseRole => RoleTypeId.Scp079;
 
     /// <summary>

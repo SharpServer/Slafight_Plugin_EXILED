@@ -47,7 +47,7 @@ public class Plugin : Plugin<Config>
 
     public List<string> SpecificVersionTags => ["261009a"];
 
-    public override Version RequiredExiledVersion { get; } = new(9, 14, 2);
+    public override Version RequiredExiledVersion { get; } = new(9, 15, 2);
 
     public Harmony HarmonyInstance { get; private set; }
 

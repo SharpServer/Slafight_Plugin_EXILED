@@ -12,6 +12,7 @@ using ProjectMER.Features.Objects;
 using ProjectMER.Features.Serializable;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Interface;
 using UnityEngine;
 using LabPlayer = LabApi.Features.Wrappers.Player;
 
@@ -53,7 +54,7 @@ public sealed class ProjectMERBridgeHandler : EventHandlerBase, IObjectPrefabInf
         BuildPrefabMetadataCache();
         BuildCustomItemTypeCache();
         ObjectPrefabInfoRegistry.Provider = this;
-        ItemSpawnpointCustomItemRegistry.Register(TrySpawnCustomItem, TryGiveCustomItem);
+        ItemSpawnpointCustomItemRegistry.Register(TrySpawnCustomItem, TryGiveCustomItem, TryGetCustomItemBaseType);
 
         // プラグインの再読込時だけ既存マーカーを一度回収する。通常経路は Spawned イベントのみ。
         foreach (SchematicObjectPrefabObject marker in
@@ -185,6 +186,14 @@ public sealed class ProjectMERBridgeHandler : EventHandlerBase, IObjectPrefabInf
         return false;
     }
 
+    private bool TryGetCustomItemBaseType(string key, out ItemType baseType)
+    {
+        baseType = ItemType.None;
+        if (!TryResolveCustomItem(key, out Type type)) return false;
+        baseType = ((CustomItem)Activator.CreateInstance(type, nonPublic: true)).BaseType;
+        return baseType != ItemType.None;
+    }
+
     private bool TrySpawnCustomItem(
         string customItemKey,
         SerializableItemSpawnpoint spawnpoint,
@@ -308,6 +317,8 @@ public sealed class ProjectMERBridgeHandler : EventHandlerBase, IObjectPrefabInf
         prefab.AutoDestroyTime = marker.AutoDestroyTime;
         prefab.ApplyOptions(marker.Options ?? []);
         prefab.Tag = marker.EffectiveTag;
+        if (prefab is IObjectPrefabMarkerReceiver receiver)
+            receiver.BindMarker(marker);
         prefab.SyncManagedObjects();
     }
 

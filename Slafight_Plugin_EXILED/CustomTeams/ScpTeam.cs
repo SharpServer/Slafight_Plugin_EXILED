@@ -1,4 +1,5 @@
 using Exiled.API.Features;
+using Exiled.Events.Patches.Generic;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Enums;
@@ -7,7 +8,7 @@ namespace Slafight_Plugin_EXILED.CustomTeams;
 
 public sealed class ScpTeam : CustomTeam
 {
-    public override string Name => "SCP";
+    public override string Name => "SCPs";
     public override string Color => ServerColors.Red;
     public override string CassieName => "SCP";
     public override VictoryCondition Victory => VictoryCondition.LastStanding(40);

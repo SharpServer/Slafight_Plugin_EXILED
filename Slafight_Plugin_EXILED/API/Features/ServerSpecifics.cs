@@ -94,7 +94,7 @@ public abstract class ServerSpecifics
                 KeyCode.Y,
                 true,
                 false,
-                hint: "定型文通信のSCP-330メニューを開閉します。Yを推奨します。")),
+                hint: "定型文通信メニューを開閉します。役職によって表示と内容が変わります。Yを推奨します。")),
 
 
         new SettingDefinition(
