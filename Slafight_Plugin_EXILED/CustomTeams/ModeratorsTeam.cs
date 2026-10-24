@@ -8,5 +8,7 @@ public sealed class ModeratorsTeam : CustomTeam
     public override string Name => "管理者";
     public override string Color => "#C0C0C0";
     public override string CassieName => "Moderators";
+    public override string Objective => "正しくモデレーション処置を行い、秩序を回復し安全なシャープ鯖を死守せよ。";
+
     protected override bool IncludesVanilla(Player player) => false;
 }

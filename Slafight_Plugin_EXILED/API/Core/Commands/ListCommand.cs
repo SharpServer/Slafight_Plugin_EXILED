@@ -43,7 +43,7 @@ public sealed class ListCommand : CommandBase
             "abilities" or "ability" => Build<AbilityBase>("Abilities", filter, DescribeAbility),
             "teams" or "team" => Build<CustomTeam>("Teams", filter, DescribeTeam),
             "modes" or "mode" => Build<GameMode>("Game Modes", filter, DescribeMode),
-            "waves" or "wave" => Build<SpawnSet>("Waves", filter, DescribeWave, OnlyWaves),
+            "waves" or "wave" => WaveCommand.BuildOverview(filter),
             "sets" or "set" => Build<SpawnSet>("Spawn Sets", filter, DescribeSet, OnlySets),
             "handlers" or "handler" => BuildHandlers(filter),
             _ => null,
@@ -90,8 +90,6 @@ public sealed class ListCommand : CommandBase
         return builder.ToString().TrimEnd();
     }
 
-    private static bool OnlyWaves(SpawnSet set) => set.RespawnWeight > 0;
-
     private static bool OnlySets(SpawnSet set) => set.RespawnWeight <= 0;
 
     private static string DescribeRole(CustomRole role)
@@ -127,14 +125,6 @@ public sealed class ListCommand : CommandBase
             : mode.IsAvailable ? $"重み {mode.Weight}" : $"重み {mode.Weight} / 条件未達";
 
         return $"{mode.Name} [{availability}]";
-    }
-
-    private static string DescribeWave(SpawnSet wave)
-    {
-        string kind = wave.IsMiniWave ? "増援" : "本隊";
-
-        return $"{wave.Name} [{wave.RespawnFaction} / {kind} / " +
-               $"重み {SpawnContext.Active.WeightOf(wave)} / 割合 {wave.RespawnRatio:P0}]";
     }
 
     private static string DescribeSet(SpawnSet set)

@@ -91,7 +91,7 @@ public abstract class SpawnSet
     // ───────────────────────────────
 
     /// <summary>
-    /// この波が属する陣営です。<see cref="RespawnWeight"/> が 0 なら使われません。
+    /// この波が属する陣営です。自動抽選では現在の Context の重みと併せて判定します。
     /// </summary>
     public virtual Faction RespawnFaction => Faction.Unclassified;
 
@@ -102,7 +102,7 @@ public abstract class SpawnSet
 
     /// <summary>
     /// リスポーン抽選での重みです。
-    /// <b>既定の 0 は「抽選に出ない」= 波ではない、という意味です。</b>
+    /// 既定の 0 は自動抽選に出ません。Context で重みを上書きでき、手動実行は常に可能です。
     /// 波として使いたい SpawnSet だけがここを override します。
     /// </summary>
     public virtual int RespawnWeight => 0;

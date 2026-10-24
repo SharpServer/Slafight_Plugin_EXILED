@@ -13,6 +13,7 @@ using HintServiceMeow.Core.Utilities;
 using MEC;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Features;
+using Slafight_Plugin_EXILED.API.Core.Extensions;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
@@ -486,17 +487,14 @@ public class PlayerHUD : EventHandlerBase
         if (!IsPlayerValid(player))
             return ("<color=#ffffff></color>", "<color=#ffffff>[Unknown]</color>", "[Unknown]");
 
-        string name = player.Role?.Name ?? "";
-        return player.Role?.Team switch
-        {
-            Team.ClassD          => ($"<color=#ee7600>{name}</color>", "<color=#ee7600>Neutral - Side Chaos</color>",       "施設から脱出せよ"),
-            Team.Scientists      => ($"<color=#faff86>{name}</color>", "<color=#faff86>Neutral - Side Foundation</color>",  "施設から脱出せよ"),
-            Team.ChaosInsurgency => ($"<color=#228b22>{name}</color>", "<color=#228b22>Chaos Insurgency</color>",           "Dクラス職員を救出し、施設を略奪せよ。"),
-            Team.FoundationForces=> ($"<color=#00b7eb>{name}</color>", "<color=#00b7eb>The Foundation</color>",             "研究員を救出し、施設の秩序を守護せよ。"),
-            Team.SCPs            => ($"<color=#c50000>{name}</color>", "<color=#c50000>The SCPs</color>",                   "己の本能・復讐心と利益の為に動け"),
-            Team.Flamingos       => ($"<color=#ff96de>{name}</color>", "<color=#ff96de>The Flamingos</color>",              "フラミンゴ！"),
-            _                    => ($"<color=#ffffff>{name}</color>", "<color=#ffffff>[Unknown]</color>",                  "[Unknown]"),
-        };
+        string role = player.GetColoredRoleName();
+        if (CustomTeam.Of(player) is { } team)
+            return (role, team.HudName, team.Objective);
+
+        // 陣営定義のない季節役職と観戦者などの表示だけを補う。
+        return player.Role?.Team == Team.Flamingos
+            ? (role, $"<color={ServerColors.Pink}>The Flamingos</color>", "フラミンゴ！")
+            : (role, $"<color={ServerColors.White}>[Unknown]</color>", "[Unknown]");
     }
 
     // =========================================================

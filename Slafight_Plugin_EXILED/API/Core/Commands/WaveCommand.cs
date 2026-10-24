@@ -104,20 +104,32 @@ public sealed class WaveCommand : CommandBase
         return true;
     }
 
-    private static string BuildOverview()
+    internal static string BuildOverview(string filter = null)
     {
         StringBuilder builder = new StringBuilder();
         SpawnContext context = SpawnContext.Active;
 
         builder.AppendLine(CoreCatalog.Header($"Waves (状況: {context.Name})", SpawnContext.AllWaves.Count));
 
-        foreach (SpawnSet wave in SpawnContext.AllWaves.OrderBy(wave => wave.GetType().Name, StringComparer.Ordinal))
+        foreach (bool inContext in new[] { true, false })
         {
-            string kind = wave.IsMiniWave ? "増援" : "本隊";
+            builder.AppendLine(inContext ? "Context中 (自動抽選対象):" : "Context外 (手動実行可能):");
+            SpawnSet[] entries = SpawnContext.AllWaves
+                .Where(wave => (context.WeightOf(wave) > 0) == inContext &&
+                               CoreCatalog.Matches(wave.GetType(), filter))
+                .OrderBy(wave => wave.GetType().Name, StringComparer.Ordinal)
+                .ToArray();
 
-            builder.AppendLine(
-                $"  <b>{wave.GetType().Name}</b> — {wave.Name} " +
-                $"[{wave.RespawnFaction} / {kind} / 重み {context.WeightOf(wave)} / 割合 {wave.RespawnRatio:P0}]");
+            if (entries.Length == 0)
+                builder.AppendLine("  (該当なし)");
+
+            foreach (SpawnSet wave in entries)
+            {
+                string kind = wave.IsMiniWave ? "増援" : "本隊";
+                builder.AppendLine(
+                    $"  <b>{wave.GetType().Name}</b> — {wave.Name} " +
+                    $"[{wave.RespawnFaction} / {kind} / 重み {context.WeightOf(wave)} / 割合 {wave.RespawnRatio:P0}]");
+            }
         }
 
         if (SpawnSystem.IsSuspended)

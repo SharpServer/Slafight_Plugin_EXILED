@@ -9,6 +9,7 @@ using MEC;
 using ProjectMER.Features;
 using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 using Log = Exiled.API.Features.Log;
@@ -62,13 +63,14 @@ public abstract class CustomItem
 {
     private static readonly Dictionary<ushort, CustomItem> BySerial = new Dictionary<ushort, CustomItem>();
 
-    private static bool hooked;
+    private static bool globalEventsRegistered;
 
     private LightSourceToy? pickupLight;
 
     private SchematicObject? pickupSchematic;
 
     private ushort trackedSerial;
+    private bool eventsRegistered;
 
     // CustomHybrid のモード定義が、実際に紐付いた物理アイテムを参照するための文脈。
     private ushort hybridContextSerial;
@@ -222,41 +224,7 @@ public abstract class CustomItem
     {
         OnRoundRestarted();
 
-        if (!hooked) return;
-
-        PlayerEvents.PickedUpItem -= OnAnyPickedUp;
-        PlayerEvents.PickedUpArmor -= OnAnyPickedUpArmor;
-        PlayerEvents.PickedUpScp330 -= OnAnyPickedUpScp330;
-        PlayerEvents.PickingUpItem -= OnAnyPickingUp;
-        PlayerEvents.PickingUpArmor -= OnAnyPickingUpArmor;
-        PlayerEvents.PickingUpScp330 -= OnAnyPickingUpScp330;
-        PlayerEvents.DroppingItem -= OnAnyDropping;
-        PlayerEvents.DroppedItem -= OnAnyDropped;
-        PlayerEvents.ChangedItem -= OnAnyChangedItem;
-        PlayerEvents.UsingItem -= OnAnyUsingItem;
-        PlayerEvents.ItemUsageEffectsApplying -= OnAnyUsageEffectsApplying;
-        PlayerEvents.UsedItem -= OnAnyUsedItem;
-        PlayerEvents.CancellingUsingItem -= OnAnyCancellingUse;
-        PlayerEvents.CancelledUsingItem -= OnAnyCancelledUse;
-        PlayerEvents.ShootingWeapon -= OnAnyShootingWeapon;
-        PlayerEvents.ShotWeapon -= OnAnyShotWeapon;
-        PlayerEvents.DryFiringWeapon -= OnAnyDryFiringWeapon;
-        PlayerEvents.DryFiredWeapon -= OnAnyDryFiredWeapon;
-        PlayerEvents.ReloadingWeapon -= OnAnyReloadingWeapon;
-        PlayerEvents.ReloadedWeapon -= OnAnyReloadedWeapon;
-        PlayerEvents.ChangingAttachments -= OnAnyChangingAttachments;
-        PlayerEvents.ChangedAttachments -= OnAnyChangedAttachments;
-        PlayerEvents.Hurting -= OnAnyHurting;
-        PlayerEvents.Dying -= OnAnyDying;
-        PlayerEvents.ThrowingProjectile -= OnAnyThrowingProjectile;
-        PlayerEvents.ThrewProjectile -= OnAnyThrewProjectile;
-        PlayerEvents.InspectingKeycard -= OnAnyInspectingKeycard;
-        PlayerEvents.InspectedKeycard -= OnAnyInspectedKeycard;
-        Scp914Events.ProcessingPickup -= OnAnyScp914ProcessingPickup;
-        Scp914Events.ProcessingInventoryItem -= OnAnyScp914ProcessingInventoryItem;
-        ServerEvents.PickupDestroyed -= OnAnyPickupDestroyed;
-        ServerEvents.RoundRestarted -= OnRoundRestarted;
-        hooked = false;
+        UnregisterGlobalEvents();
     }
 
     /// <summary>
@@ -410,7 +378,7 @@ public abstract class CustomItem
         DetachPickupLight();
         DetachPickupSchematic();
         BySerial.Remove(trackedSerial);
-        Invoke(OnTrackingStopped, nameof(OnTrackingStopped));
+        Invoke(StopTracking, nameof(OnTrackingStopped));
         trackedSerial = 0;
         hybridContextSerial = 0;
         hybridDestroyAction = null;
@@ -433,6 +401,39 @@ public abstract class CustomItem
         else
             hybridDestroyAction?.Invoke();
     }
+
+    /// <summary>
+    /// 追跡開始時に追加イベントを購読します。インスタンスごとに 1 回だけ呼ばれます。
+    /// シリアル変更では再購読せず、Release・破棄・ラウンド再開時に解除します。
+    /// </summary>
+    protected virtual void RegisterEvents() { }
+
+    /// <summary>RegisterEvents で購読したイベントを解除します。Serial はまだ参照できます。</summary>
+    protected virtual void UnregisterEvents() { }
+
+    /// <summary>このインスタンスのシリアルかを判定します。未追跡なら false。</summary>
+    public bool Check(ushort serial) => Serial != 0 && Serial == serial;
+
+    /// <summary>このインスタンスのアイテムかを判定します。</summary>
+    public bool Check(ExiledItem item) => item is not null && Check(item.Serial);
+
+    /// <summary>このインスタンスのピックアップかを判定します。</summary>
+    public bool Check(Exiled.API.Features.Pickups.Pickup pickup) => pickup is not null && Check(pickup.Serial);
+
+    /// <summary>LabAPI のアイテムをシリアルで判定します。</summary>
+    public bool Check(Item item) => item is not null && Check(item.Serial);
+
+    /// <summary>LabAPI のピックアップをシリアルで判定します。</summary>
+    public bool Check(Pickup pickup) => pickup is not null && Check(pickup.Serial);
+
+    /// <summary>プレイヤーが現在手に持っているアイテムが、このインスタンスかを判定します。</summary>
+    public bool Check(Player player) => player.IsSafePlayer() && Check(player.CurrentItem);
+
+    /// <summary>旧 API と同じ名前で、プレイヤーの装備中アイテムを判定します。</summary>
+    public bool CheckHeld(Player player) => Check(player);
+
+    /// <summary>LabAPI プレイヤーの装備中アイテムを判定します。</summary>
+    public bool Check(LabPlayer player) => player is not null && Check(ToExiled(player));
 
     /// <summary>シリアルへの追跡を開始した直後に呼ばれます。</summary>
     protected virtual void OnTrackingStarted()
@@ -937,8 +938,8 @@ public abstract class CustomItem
         Attach(serial);
     }
 
-    internal void CallOnTrackingStarted() => OnTrackingStarted();
-    internal void CallOnTrackingStopped() => OnTrackingStopped();
+    internal void CallOnTrackingStarted() => StartTracking();
+    internal void CallOnTrackingStopped() => StopTracking();
     internal void CallOnPickupSpawned(Pickup pickup) => OnPickupSpawned(pickup);
     internal void CallOnPickupDestroyed(PickupDestroyedEventArgs ev) => OnPickupDestroyed(ev);
     internal void CallOnPickupStarting(PlayerPickingUpItemEventArgs ev) => OnPickupStarting(ev);
@@ -1003,8 +1004,50 @@ public abstract class CustomItem
 
         BySerial[serial] = this;
 
-        Hook();
-        Invoke(OnTrackingStarted, nameof(OnTrackingStarted));
+        RegisterGlobalEvents();
+        Invoke(StartTracking, nameof(OnTrackingStarted));
+    }
+
+    private void StartTracking()
+    {
+        bool registering = !eventsRegistered;
+        try
+        {
+            if (registering)
+            {
+                // 部分的に購読して例外になった場合も解除する。
+                eventsRegistered = true;
+                RegisterEvents();
+            }
+
+            OnTrackingStarted();
+        }
+        catch
+        {
+            if (registering)
+            {
+                eventsRegistered = false;
+                Invoke(UnregisterEvents, nameof(UnregisterEvents));
+            }
+
+            throw;
+        }
+    }
+
+    private void StopTracking()
+    {
+        try
+        {
+            OnTrackingStopped();
+        }
+        finally
+        {
+            if (eventsRegistered)
+            {
+                eventsRegistered = false;
+                Invoke(UnregisterEvents, nameof(UnregisterEvents));
+            }
+        }
     }
 
     private void Invoke(Action action, string name)
@@ -1055,11 +1098,11 @@ public abstract class CustomItem
         ShowItemHint(player, PickupHint, PickupHintDuration);
     }
 
-    private static void Hook()
+    private static void RegisterGlobalEvents()
     {
-        if (hooked) return;
+        if (globalEventsRegistered) return;
 
-        hooked = true;
+        globalEventsRegistered = true;
 
         // 拾得は種類ごとに別イベント。PickedUpItem だけではアーマーとキャンディを取りこぼす。
         PlayerEvents.PickingUpItem += OnAnyPickingUp;
@@ -1094,6 +1137,45 @@ public abstract class CustomItem
         Scp914Events.ProcessingInventoryItem += OnAnyScp914ProcessingInventoryItem;
         ServerEvents.PickupDestroyed += OnAnyPickupDestroyed;
         ServerEvents.RoundRestarted += OnRoundRestarted;
+    }
+
+    private static void UnregisterGlobalEvents()
+    {
+        if (!globalEventsRegistered) return;
+
+        PlayerEvents.PickedUpItem -= OnAnyPickedUp;
+        PlayerEvents.PickedUpArmor -= OnAnyPickedUpArmor;
+        PlayerEvents.PickedUpScp330 -= OnAnyPickedUpScp330;
+        PlayerEvents.PickingUpItem -= OnAnyPickingUp;
+        PlayerEvents.PickingUpArmor -= OnAnyPickingUpArmor;
+        PlayerEvents.PickingUpScp330 -= OnAnyPickingUpScp330;
+        PlayerEvents.DroppingItem -= OnAnyDropping;
+        PlayerEvents.DroppedItem -= OnAnyDropped;
+        PlayerEvents.ChangedItem -= OnAnyChangedItem;
+        PlayerEvents.UsingItem -= OnAnyUsingItem;
+        PlayerEvents.ItemUsageEffectsApplying -= OnAnyUsageEffectsApplying;
+        PlayerEvents.UsedItem -= OnAnyUsedItem;
+        PlayerEvents.CancellingUsingItem -= OnAnyCancellingUse;
+        PlayerEvents.CancelledUsingItem -= OnAnyCancelledUse;
+        PlayerEvents.ShootingWeapon -= OnAnyShootingWeapon;
+        PlayerEvents.ShotWeapon -= OnAnyShotWeapon;
+        PlayerEvents.DryFiringWeapon -= OnAnyDryFiringWeapon;
+        PlayerEvents.DryFiredWeapon -= OnAnyDryFiredWeapon;
+        PlayerEvents.ReloadingWeapon -= OnAnyReloadingWeapon;
+        PlayerEvents.ReloadedWeapon -= OnAnyReloadedWeapon;
+        PlayerEvents.ChangingAttachments -= OnAnyChangingAttachments;
+        PlayerEvents.ChangedAttachments -= OnAnyChangedAttachments;
+        PlayerEvents.Hurting -= OnAnyHurting;
+        PlayerEvents.Dying -= OnAnyDying;
+        PlayerEvents.ThrowingProjectile -= OnAnyThrowingProjectile;
+        PlayerEvents.ThrewProjectile -= OnAnyThrewProjectile;
+        PlayerEvents.InspectingKeycard -= OnAnyInspectingKeycard;
+        PlayerEvents.InspectedKeycard -= OnAnyInspectedKeycard;
+        Scp914Events.ProcessingPickup -= OnAnyScp914ProcessingPickup;
+        Scp914Events.ProcessingInventoryItem -= OnAnyScp914ProcessingInventoryItem;
+        ServerEvents.PickupDestroyed -= OnAnyPickupDestroyed;
+        ServerEvents.RoundRestarted -= OnRoundRestarted;
+        globalEventsRegistered = false;
     }
 
     private static void OnAnyPickingUp(PlayerPickingUpItemEventArgs ev)

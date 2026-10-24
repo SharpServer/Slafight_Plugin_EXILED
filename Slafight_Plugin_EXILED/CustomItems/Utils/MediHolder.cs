@@ -41,7 +41,7 @@ public class MediHolder : CustomUsableItem
                    scope.Player.IsSafePlayer() && scope.Player.IsAlive &&
                    scope.Player.GetNetId() == scope.NetId &&
                    ReferenceEquals(Owner, scope.Player) &&
-                   scope.Player.CurrentItem?.Serial == Serial && ReferenceEquals(Of(Serial), this))
+                   Check(scope.Player) && ReferenceEquals(Of(Serial), this))
             {
                 NormalizeSelection();
                 string selected = HolderInventory.Count > 0 ? HolderInventory[_selected].ToString() : "無し";
@@ -158,7 +158,7 @@ public class MediHolder : CustomUsableItem
     protected override void OnOwnerPickupStarting(PlayerPickingUpItemEventArgs ev)
     {
         if (ev.Pickup == null) return;
-        if (ev.Pickup.Serial == Serial) return;
+        if (Check(ev.Pickup)) return;
 
         if (HolderInventory.Count >= 3)
             return;

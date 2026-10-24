@@ -9,6 +9,7 @@ using LabApi.Events.Arguments.PlayerEvents;
 using PlayerRoles;
 using PlayerRoles.PlayableScps.HumeShield;
 using Slafight_Plugin_EXILED.API.Core.Interfaces;
+using Slafight_Plugin_EXILED.API.Core.Extensions;
 using Slafight_Plugin_EXILED.API.Core.Structs;
 using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.Extensions;
@@ -59,7 +60,8 @@ public abstract class CustomRole : IPlayerOwn
 
     private static readonly Dictionary<ItemType, ushort> EmptyAmmo = new Dictionary<ItemType, ushort>();
 
-    private static bool hooked;
+    private static bool globalEventsRegistered;
+    private bool eventsRegistered;
 
     // ShowStatus の置き場。表示層は Status を読むだけなので、ここに持たせて構わない。
     private string status;
@@ -239,7 +241,7 @@ public abstract class CustomRole : IPlayerOwn
     /// 既定はチーム色を巻いた <see cref="Name"/> なので、
     /// 部隊ごとに色や太字を変える役職だけ override します。
     /// </summary>
-    public virtual string HudLabel => $"<color={Team?.Color ?? "#ffffff"}>{CustomSeason.Current.LocalizeScpText(Name)}</color>";
+    public virtual string HudLabel => Team.Colorize(CustomSeason.Current.LocalizeScpText(Name));
 
     /// <summary>
     /// この役職で脱出したとき、何になるかです。null なら陣営 (<see cref="CustomTeam.Escape"/>) に任せます。
@@ -338,12 +340,7 @@ public abstract class CustomRole : IPlayerOwn
     {
         RemoveAll();
 
-        if (!hooked) return;
-
-        LabPlayerEvents.ChangedRole -= OnChangedRole;
-        PlayerHandlers.Left -= OnLeft;
-        ServerHandlers.RestartingRound -= RemoveAll;
-        hooked = false;
+        UnregisterGlobalEvents();
     }
 
     /// <summary>
@@ -472,9 +469,22 @@ public abstract class CustomRole : IPlayerOwn
         }
 
         ActiveRoles[netId] = this;
-        Hook();
+        RegisterGlobalEvents();
 
         Apply();
+
+        try
+        {
+            eventsRegistered = true;
+            RegisterEvents();
+        }
+        catch (Exception exception)
+        {
+            failure = $"{GetType().Name} のイベント登録に失敗しました: {exception.Message}";
+            Log.Error($"[Slafight] {failure}\n{exception}");
+            RemoveInternal(netId, this);
+            return false;
+        }
 
         try
         {
@@ -488,6 +498,22 @@ public abstract class CustomRole : IPlayerOwn
 
         return true;
     }
+
+    /// <summary>役職付与後・OnSpawned の前に追加イベントを購読します。</summary>
+    protected virtual void RegisterEvents() { }
+
+    /// <summary>役職解除・退出・ラウンド再開時に追加イベントを解除します。Player はまだ参照できます。</summary>
+    protected virtual void UnregisterEvents() { }
+
+    /// <summary>この役職インスタンスを現在持っているプレイヤーかを判定します。</summary>
+    public bool Check(Player player) => player.IsSafePlayer() &&
+        ReferenceEquals(player.ReferenceHub, Player?.ReferenceHub) && ReferenceEquals(Of(player), this);
+
+    /// <summary>ReferenceHub からこの役職の持ち主を判定します。</summary>
+    public bool Check(ReferenceHub hub) => hub != null && Check(Exiled.API.Features.Player.Get(hub));
+
+    /// <summary>LabAPI プレイヤーからこの役職の持ち主を判定します。</summary>
+    public bool Check(LabApi.Features.Wrappers.Player player) => player is not null && Check(player.ReferenceHub);
 
     /// <summary>
     /// スポーン完了後に呼ばれます。能力やループ処理はここで <see cref="Scope"/> に載せてください。
@@ -524,7 +550,7 @@ public abstract class CustomRole : IPlayerOwn
     protected virtual void ShowHint()
     {
         Player.ShowHint(
-            $"<size=24><color={Team?.Color ?? "#ffffff"}>{Name}</color>\n{Description}</size>",
+            $"<size=24>{Team.Colorize(Name)}\n{Description}</size>",
             HintDuration);
     }
 
@@ -689,6 +715,19 @@ public abstract class CustomRole : IPlayerOwn
 
         Player player = role.Player;
 
+        if (role.eventsRegistered)
+        {
+            role.eventsRegistered = false;
+            try
+            {
+                role.UnregisterEvents();
+            }
+            catch (Exception exception)
+            {
+                Log.Error($"[Slafight] {role.GetType().Name} の UnregisterEvents で例外が発生しました: {exception}");
+            }
+        }
+
         if (player is not null)
             PlayerScope.Close(player);
 
@@ -725,15 +764,25 @@ public abstract class CustomRole : IPlayerOwn
         ActiveRoles.Clear();
     }
 
-    private static void Hook()
+    private static void RegisterGlobalEvents()
     {
-        if (hooked) return;
+        if (globalEventsRegistered) return;
 
-        hooked = true;
+        globalEventsRegistered = true;
 
         LabPlayerEvents.ChangedRole += OnChangedRole;
         PlayerHandlers.Left += OnLeft;
         ServerHandlers.RestartingRound += RemoveAll;
+    }
+
+    private static void UnregisterGlobalEvents()
+    {
+        if (!globalEventsRegistered) return;
+
+        LabPlayerEvents.ChangedRole -= OnChangedRole;
+        PlayerHandlers.Left -= OnLeft;
+        ServerHandlers.RestartingRound -= RemoveAll;
+        globalEventsRegistered = false;
     }
 
     /// <remarks>

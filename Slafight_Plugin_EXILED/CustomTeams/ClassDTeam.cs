@@ -17,6 +17,8 @@ public sealed class ClassDTeam : CustomTeam
     [
         CustomTeam.Get<ChaosTeam>()
     ];
+    public override string Objective => "施設から脱出せよ";
+
     protected override bool IncludesVanilla(Player player) => player.Role.Type == RoleTypeId.ClassD;
 
     public override SpawnSetRoleDefinition? Escape(EscapeContext escape)

@@ -23,6 +23,12 @@ namespace Slafight_Plugin_EXILED.API.Core.Samples;
 /// </item>
 /// </list>
 /// </summary>
+/// <remarks>
+/// 追加イベントは RegisterEvents / UnregisterEvents で購読・解除できます。
+/// RegisterEvents は OnSpawned より前、UnregisterEvents は OnRemoved より前に呼ばれます。
+/// イベント内で Check(ev.Player) を使うと、この役職インスタンスの持ち主かを判定できます。
+/// 型全体の判定には CustomRole.Is&lt;SampleRole&gt;(player) を使います。
+/// </remarks>
 public sealed class SampleRole : CustomRole
 {
     /// <summary>

@@ -19,6 +19,8 @@ public sealed class ScientistTeam : CustomTeam
         CustomTeam.Get<FoundationTeam>(),
         CustomTeam.Get<GuardTeam>()
     ];
+    public override string Objective => "施設から脱出せよ";
+
     protected override bool IncludesVanilla(Player player) => player.Role.Type == RoleTypeId.Scientist;
 
     public override SpawnSetRoleDefinition? Escape(EscapeContext escape) =>

@@ -9,5 +9,7 @@ public sealed class O5Team : CustomTeam
     public override string Name => "O5評議会";
     public override string Color => ServerColors.Black;
     public override string CassieName => "O5 Command";
+    public override string Objective => "研究員を救出し、施設の秩序を守護せよ。";
+
     protected override bool IncludesVanilla(Player player) => false;
 }

@@ -18,6 +18,8 @@ public sealed class FoundationTeam : CustomTeam
         CustomTeam.Get<ScientistTeam>(),
         CustomTeam.Get<GuardTeam>()
     ];
+    public override string Objective => "研究員を救出し、施設の秩序を守護せよ。";
+
     protected override bool IncludesVanilla(Player player) => player.Role.Type is
         RoleTypeId.NtfPrivate or RoleTypeId.NtfSergeant or RoleTypeId.NtfSpecialist or RoleTypeId.NtfCaptain;
 }

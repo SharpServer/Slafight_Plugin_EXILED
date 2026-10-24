@@ -13,6 +13,8 @@ public sealed class ScpTeam : CustomTeam
     public override string CassieName => "SCP";
     public override VictoryCondition Victory => VictoryCondition.LastStanding(40);
 
+    public override string Objective => "己の本能・復讐心と利益の為に動け";
+
     protected override bool IncludesVanilla(Player player)
     {
         return player.Role.Type is

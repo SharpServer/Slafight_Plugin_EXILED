@@ -1,8 +1,5 @@
 using Exiled.API.Enums;
 using Exiled.API.Features.Items.Keycards;
-using Exiled.Events.EventArgs.Item;
-using Exiled.Events.EventArgs.Player;
-using InventorySystem.Items.Keycards;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Item = LabApi.Features.Wrappers.Item;
 
@@ -27,24 +24,4 @@ public class EmergencyForceKeycard : CustomKeycard
         base.Customize(item);
     }
 
-    // protected override void OnTrackingStarted()
-    // {
-    //     Exiled.Events.Handlers.Player.InteractingDoor += OnInteractingDoor;
-    //     base.OnTrackingStarted();
-    // }
-    //
-    // protected override void OnTrackingStopped()
-    // {
-    //     Exiled.Events.Handlers.Player.InteractingDoor -= OnInteractingDoor;
-    //     base.OnTrackingStopped();
-    // }
-    //
-    // private void OnInteractingDoor(InteractingDoorEventArgs ev)
-    // {
-    //     if (!ev.Door.IsGate) return;
-    //     if (ev.Player.CurrentItem?.Serial != Serial) return;
-    //     ev.IsAllowed = false;
-    //     ev.Door.IsOpen = !ev.Door.IsOpen;
-    //     ev.Door.PlaySound(DoorBeepType.InteractionAllowed);
-    // }
 }

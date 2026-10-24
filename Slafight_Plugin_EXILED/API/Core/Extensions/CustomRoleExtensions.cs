@@ -14,8 +14,7 @@ namespace Slafight_Plugin_EXILED.API.Core.Extensions;
 /// </summary>
 /// <remarks>
 /// <para>
-/// 中身はすべて <see cref="CustomRole"/> の静的メンバーへの委譲です。
-/// 判定の実体は 1 か所にしかないので、ここに条件が増えることはありません。
+/// 役職の判定は <see cref="CustomRole"/>、所属と色は <see cref="CustomTeam"/> に委譲します。
 /// </para>
 /// <para>
 /// 旧 API の <c>GetCustomRole</c> は <c>CRoleTypeId</c> という enum を返していました。
@@ -107,15 +106,21 @@ public static class CustomRoleExtensions
     }
 
     /// <summary>
-    /// 陣営色を巻いた役職名です。カスタム役職があれば <see cref="CustomRole.HudLabel"/> をそのまま使います。
+    /// 陣営定義の色を巻いた役職名です。陣営未定義ならバニラ色を使います。カスタム役職があれば <see cref="CustomRole.HudLabel"/> をそのまま使います。
     /// </summary>
     public static string GetColoredRoleName(this Player player)
     {
         if (!player.IsSafePlayer()) return string.Empty;
 
-        return CustomRole.Of(player) is { } role
-            ? role.HudLabel
-            : $"<color={((Color32)player.Role.Type.GetColor()).ToHex()}>{player.Role.Type.GetFullName()}</color>";
+        if (CustomRole.Of(player) is { } role)
+            return role.HudLabel;
+
+        string name = player.Role.Type.GetFullName();
+        if (CustomTeam.Of(player) is { } team)
+            return team.Colorize(name);
+
+        string color = ColorUtility.ToHtmlStringRGB(player.Role.Type.GetColor());
+        return $"<color=#{color}>{name}</color>";
     }
 
     /// <summary>

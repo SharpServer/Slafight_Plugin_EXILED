@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;
+using Slafight_Plugin_EXILED.API.Core.Extensions;
 using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.API.Core.Features;
@@ -134,9 +135,9 @@ public abstract class CustomTeam
     public virtual SpawnSetRoleDefinition? Escape(EscapeContext escape) => null;
 
     /// <summary>
-    /// 表示層が陣営欄に出す表記です。既定は表示名そのまま。
+    /// 表示層が陣営欄に出す表記です。既定は陣営色を付けた表示名。
     /// </summary>
-    public virtual string HudName => Name;
+    public virtual string HudName => this.Colorize(Name);
 
     /// <summary>
     /// 陣営の既定の目的です。役職が <see cref="CustomRole.Objective"/> を名乗らないときに使われます。

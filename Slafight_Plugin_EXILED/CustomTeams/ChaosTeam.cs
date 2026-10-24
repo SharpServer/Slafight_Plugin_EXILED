@@ -16,6 +16,8 @@ public sealed class ChaosTeam : CustomTeam
     [
         CustomTeam.Get<ClassDTeam>()
     ];
+    public override string Objective => "Dクラス職員を救出し、施設を略奪せよ。";
+
     protected override bool IncludesVanilla(Player player) => player.Role.Type is
         RoleTypeId.ChaosConscript or RoleTypeId.ChaosRifleman or RoleTypeId.ChaosRepressor;
 }

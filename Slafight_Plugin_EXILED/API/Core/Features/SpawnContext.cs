@@ -49,8 +49,8 @@ public abstract class SpawnContext
     /// </summary>
     /// <remarks>
     /// 波は状態を持たない宣言なので、1 度だけ生成して使い回します。
-    /// 「波かどうか」は <see cref="SpawnSet.RespawnWeight"/> が 0 でないかどうかだけで決まります。
-    /// 専用の基底クラスにも属性にも頼りません。
+    /// 重みが 0 以下の定義も保持します。抽選対象かどうかは現在の状況の重みで決まります。
+    /// 手動実行では重みに関係なくすべての定義を呼び出せます。
     /// </remarks>
     public static IReadOnlyList<SpawnSet> AllWaves => waves ??= BuildWaves();
 
@@ -132,9 +132,7 @@ public abstract class SpawnContext
             {
                 SpawnSet candidate = (SpawnSet)Activator.CreateInstance(type);
 
-                // 重み 0 は「波ではない」。ラウンド開始時の一括割り当てなどがこれに当たる。
-                if (candidate.RespawnWeight > 0)
-                    collected.Add(candidate);
+                collected.Add(candidate);
             }
             catch (Exception exception)
             {

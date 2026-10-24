@@ -11,5 +11,7 @@ public sealed class InitiativeTeam : CustomTeam
     public override string CassieName => "X Power Forces";
     public override bool UsesVanillaEnding => false;
     public override VictoryCondition Victory => VictoryCondition.LastStanding(10);
+    public override string Objective => "異なる神に属する奴らを一人残らず絶滅させろ";
+
     protected override bool IncludesVanilla(Player player) => false;
 }

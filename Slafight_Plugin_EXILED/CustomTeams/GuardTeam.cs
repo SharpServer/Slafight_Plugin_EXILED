@@ -17,5 +17,7 @@ public sealed class GuardTeam : CustomTeam
         CustomTeam.Get<FoundationTeam>(),
         CustomTeam.Get<ScientistTeam>()
     ];
+    public override string Objective => "研究員を救出し、施設の秩序を守護せよ。";
+
     protected override bool IncludesVanilla(Player player) => player.Role.Type == RoleTypeId.FacilityGuard;
 }

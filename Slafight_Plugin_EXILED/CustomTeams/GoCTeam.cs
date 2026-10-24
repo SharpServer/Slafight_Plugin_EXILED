@@ -10,5 +10,7 @@ public sealed class GoCTeam : CustomTeam
     public override string CassieName => "G O C";
     public override bool UsesVanillaEnding => false;
     public override VictoryCondition Victory => VictoryCondition.LastStanding(30);
+    public override string Objective => "人類第一に、財団に抵抗せよ。";
+
     protected override bool IncludesVanilla(Player player) => false;
 }
