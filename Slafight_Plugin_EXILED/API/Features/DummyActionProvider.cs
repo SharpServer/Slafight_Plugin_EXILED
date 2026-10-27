@@ -9,7 +9,10 @@ namespace Slafight_Plugin_EXILED.API.Features;
 /// <summary>
 /// Dummy (NPC) の RemoteAdmin アクションを動的に追加する <see cref="IRootDummyActionProvider"/> 実装です。
 /// </summary>
-/// <remarks>Hub の GameObject に常駐するので、ロール変更を跨いでアクションが残ります。</remarks>
+/// <remarks>
+/// Hub の GameObject に常駐するので、ロール変更を跨いでアクションが残ります。
+/// 全ダミーに付き、<see cref="DummyActions.Register"/> の共通アクションもここから出ます。
+/// </remarks>
 [DisallowMultipleComponent]
 public sealed class DummyActionProvider : MonoBehaviour, IRootDummyActionProvider
 {
@@ -34,6 +37,8 @@ public sealed class DummyActionProvider : MonoBehaviour, IRootDummyActionProvide
         public readonly List<ActionEntry> Actions = [];
     }
 
+    private static readonly HashSet<DummyActionProvider> Live = [];
+
     // 挿入順を保持するためListで管理する。
     private readonly List<Category> _categories = [];
 
@@ -52,9 +57,42 @@ public sealed class DummyActionProvider : MonoBehaviour, IRootDummyActionProvide
         }
     }
 
+    /// <summary>
+    /// 全ダミーのアクション一覧を作り直させます。共通アクションの登録・解除時に使います。
+    /// </summary>
+    internal static void MarkAllDirty()
+    {
+        foreach (var provider in Live)
+        {
+            if (provider != null)
+                provider.DummyActionsDirty = true;
+        }
+    }
+
+    private void Awake() => Live.Add(this);
+
+    private void OnDestroy() => Live.Remove(this);
+
     /// <inheritdoc/>
     public void PopulateDummyActions(Action<DummyAction> actionAdder, Action<string> categoryAdder)
     {
+        var owner = OwnerNpc;
+        string? currentModule = null;
+        foreach (var global in DummyActions.GlobalActions)
+        {
+            if (owner == null || !global.AppliesTo(owner))
+                continue;
+
+            if (currentModule != global.Module)
+            {
+                categoryAdder(global.Module);
+                currentModule = global.Module;
+            }
+
+            var captured = global;
+            actionAdder(new DummyAction(global.Name, () => Invoke(captured.Name, captured.Callback)));
+        }
+
         foreach (var category in _categories)
         {
             if (category.Actions.Count == 0)
@@ -64,7 +102,7 @@ public sealed class DummyActionProvider : MonoBehaviour, IRootDummyActionProvide
             foreach (var entry in category.Actions)
             {
                 var captured = entry;
-                actionAdder(new DummyAction(entry.Name, () => Invoke(captured)));
+                actionAdder(new DummyAction(entry.Name, () => Invoke(captured.Name, captured.Callback)));
             }
         }
 
@@ -75,12 +113,12 @@ public sealed class DummyActionProvider : MonoBehaviour, IRootDummyActionProvide
     /// アクション押下時に実行されます。現在のRemoteAdmin実行コンテキスト(押した管理者・選択Dummy)を解決し、
     /// 対象Dummyと合わせてコールバックへ渡します。
     /// </summary>
-    private void Invoke(ActionEntry entry)
+    private void Invoke(string name, Action<DummyActionContext> callback)
     {
         var target = OwnerNpc;
         if (target == null)
         {
-            Log.Warn($"[DummyActionProvider] アクション '{entry.Name}' の対象Npcを解決できなかったため実行をスキップしました。");
+            Log.Warn($"[DummyActionProvider] アクション '{name}' の対象Npcを解決できなかったため実行をスキップしました。");
             return;
         }
 
@@ -100,11 +138,11 @@ public sealed class DummyActionProvider : MonoBehaviour, IRootDummyActionProvide
 
         try
         {
-            entry.Callback(context);
+            callback(context);
         }
         catch (Exception ex)
         {
-            Log.Error($"[DummyActionProvider] アクション '{entry.Name}' の実行中に例外が発生しました: {ex}");
+            Log.Error($"[DummyActionProvider] アクション '{name}' の実行中に例外が発生しました: {ex}");
         }
     }
 
@@ -210,7 +248,7 @@ public sealed class DummyActionProvider : MonoBehaviour, IRootDummyActionProvide
     /// RemoteAdminのワイヤープロトコルを壊さないよう、表示名から予約文字を取り除きます。
     /// ','は区切り文字、"___"/"***"はそれぞれカテゴリ・Dummy境界の接頭辞として解釈されるため除去します。
     /// </summary>
-    private static string Sanitize(string value, string paramName)
+    internal static string Sanitize(string value, string paramName)
     {
         if (string.IsNullOrWhiteSpace(value))
             throw new ArgumentException("名前を空にはできません。", paramName);

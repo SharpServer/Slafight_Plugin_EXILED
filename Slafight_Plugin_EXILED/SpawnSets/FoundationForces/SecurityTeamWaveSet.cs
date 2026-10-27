@@ -28,7 +28,7 @@ public sealed class SecurityTeamWaveSet : SpawnSet
 
     protected override bool TriggerCondition() => WaveCount(Faction.FoundationStaff) == 0;
 
-    public override string Theme => "./WaveThemes/_w_ntf.ogg";
+    public override string Theme => "./WaveThemes/_w_security.ogg";
 
     protected override void BuildAnnouncement(SpawnAnnouncement a) =>
         a.Cassie("Attention All personnel . Security Team has entered the facility .")

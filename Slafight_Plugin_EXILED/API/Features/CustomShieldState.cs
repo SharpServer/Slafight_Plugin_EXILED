@@ -5,6 +5,7 @@ using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using MEC;
 using PlayerStatsSystem;
+using Slafight_Plugin_EXILED.API.Core.Features;
 using UnityEngine;
 using PlayerHandlers = Exiled.Events.Handlers.Player;
 using ServerHandlers = Exiled.Events.Handlers.Server;
@@ -327,7 +328,7 @@ public sealed class CustomShieldState
 
     private static void OnChangingRole(ChangingRoleEventArgs? ev)
     {
-        if (ev?.Player == null || !ev.IsAllowed) return;
+        if (ev?.Player == null || !ev.IsAllowed || RoleHold.IsHeld(ev.Player)) return;
         Clear(ev.Player);
     }
 

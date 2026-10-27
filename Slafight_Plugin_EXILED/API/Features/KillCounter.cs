@@ -3,6 +3,7 @@ using System.Linq;
 using Exiled.API.Features;
 using Exiled.Events.EventArgs.Player;
 using LabApi.Events.Arguments.PlayerEvents;
+using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.Extensions;
 using PlayerHandlers = Exiled.Events.Handlers.Player;
 using ServerHandlers = Exiled.Events.Handlers.Server;
@@ -111,7 +112,13 @@ public class KillCounter : Slafight_Plugin_EXILED.API.Core.Features.EventHandler
         => ClearPlayer(ev.Player);
 
     private static void OnChangedRole(PlayerChangedRoleEventArgs ev)
-        => ResetRoleSession(ev.Player?.PlayerId ?? 0);
+    {
+        // 演出の一時差し替えは役職の継続とみなす。
+        if (ev.Player?.ReferenceHub is { } hub && RoleHold.IsHeld(Player.Get(hub)))
+            return;
+
+        ResetRoleSession(ev.Player?.PlayerId ?? 0);
+    }
 
     private static void AddKill(int playerId)
     {

@@ -67,6 +67,7 @@ public class Plugin : Plugin<Config>
 
         EventHandlerRegistry.Shutdown();
         GameMode.Shutdown();
+        RoleHold.Shutdown();
         CustomRole.Shutdown();
         CustomItem.Shutdown();
         PlayerScope.Shutdown();

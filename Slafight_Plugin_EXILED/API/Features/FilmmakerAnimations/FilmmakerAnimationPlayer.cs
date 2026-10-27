@@ -24,6 +24,16 @@ public sealed class FilmmakerPlaybackOptions
     public float SpeedScale { get; set; } = 1f;
     public bool LockMovement { get; set; } = true;
     public bool Loop { get; set; }
+
+    /// <summary>
+    /// 動き出す前に最初の構図で止めておく秒数です。
+    /// </summary>
+    public float StartDelay { get; set; }
+
+    /// <summary>
+    /// 対象がダミーなら、クリップのアクション (<see cref="FilmmakerAnimationClip.Actions"/>) を時刻どおりに実行します。
+    /// </summary>
+    public bool InvokeActions { get; set; } = true;
 }
 
 public static class FilmmakerAnimationPlayer
@@ -64,7 +74,7 @@ public static class FilmmakerAnimationPlayer
         FilmmakerPlaybackOptions options,
         out string response)
     {
-        if (!FilmmakerAnimationStorage.TryLoad(animationName, out FilmmakerAnimationClip clip, out response))
+        if (!FilmmakerAnimation.TryResolve(animationName, out FilmmakerAnimationClip clip, out response))
             return false;
 
         return TryPlay(target, clip, options, out response);
@@ -190,6 +200,7 @@ public static class FilmmakerAnimationPlayer
         private bool _hasSourcePosition;
         private bool _hasSourceRotation;
         private bool _cleaned;
+        private int _nextAction;
 
         public PlaybackSession(Player target, FilmmakerAnimationClip clip, FilmmakerPlaybackOptions options)
         {
@@ -209,8 +220,9 @@ public static class FilmmakerAnimationPlayer
             _hasSourcePosition = _clip.TryGetFirstPosition(out _sourcePosition);
             _hasSourceRotation = _clip.TryGetFirstRotation(out _sourceRotation);
 
+            // 水平の向きだけを合わせる。縦の傾きまで混ぜると、置き直した動き全体が傾く。
             if (_hasSourceRotation)
-                _relativeRotationOffset = _baseRotation * Quaternion.Inverse(_sourceRotation);
+                _relativeRotationOffset = Quaternion.Euler(0f, _baseRotation.eulerAngles.y - _sourceRotation.eulerAngles.y, 0f);
 
             if (_options.LockMovement)
             {
@@ -238,33 +250,54 @@ public static class FilmmakerAnimationPlayer
 
         private IEnumerator<float> Run()
         {
-            float frameDuration = 1f / _clip.EffectiveFrameRate;
             float duration = _clip.DurationSeconds;
             float elapsed = 0f;
+            float delay = Mathf.Max(0f, _options.StartDelay);
 
             try
             {
-                if (duration <= 0f)
+                if (duration <= 0f && delay <= 0f)
                     yield break;
 
+                // 毎フレーム実時間で進める。待ち時間で刻むと遅れが積もり、動きもカクつく。
                 while (true)
                 {
-                    yield return Timing.WaitForSeconds(frameDuration);
+                    yield return Timing.WaitForOneFrame;
 
-                    elapsed += frameDuration * _options.SpeedScale;
+                    if (delay > 0f)
+                    {
+                        delay -= Time.deltaTime;
+                        if (!ApplyFrame(0f, out string holdError))
+                        {
+                            Log.Debug($"[FilmmakerAnimationPlayer] Playback stopped for {_target?.Nickname}: {holdError}");
+                            yield break;
+                        }
+
+                        continue;
+                    }
+
+                    if (duration <= 0f)
+                        yield break;
+
+                    elapsed += Time.deltaTime * _options.SpeedScale;
                     if (elapsed >= duration)
                     {
                         if (_options.Loop)
                         {
+                            FireActions(duration);
                             elapsed %= duration;
+                            _nextAction = 0;
                         }
                         else
                         {
                             elapsed = duration;
                             ApplyFrame(elapsed, out _);
+                            FireActions(elapsed);
                             yield break;
                         }
                     }
+
+                    FireActions(elapsed);
 
                     if (!ApplyFrame(elapsed, out string error))
                     {
@@ -277,6 +310,26 @@ public static class FilmmakerAnimationPlayer
             {
                 Cleanup();
                 RemoveSession(_targetId, this);
+            }
+        }
+
+        /// <summary>
+        /// <paramref name="seconds"/> までに来ているアクションをダミーで実行します。
+        /// </summary>
+        private void FireActions(float seconds)
+        {
+            if (!_options.InvokeActions || _clip.Actions.Count == 0 || _target?.ReferenceHub is not { IsDummy: true })
+                return;
+
+            Npc dummy = Npc.Get(_target.ReferenceHub);
+            float frame = seconds * _clip.EffectiveFrameRate;
+
+            while (_nextAction < _clip.Actions.Count && _clip.Actions[_nextAction].TimeFrames <= frame)
+            {
+                FilmmakerActionKey action = _clip.Actions[_nextAction++];
+                string error = "ダミーを解決できません。";
+                if (dummy == null || !DummyActions.TryInvoke(dummy, action.Path, out error))
+                    Log.Debug($"[FilmmakerAnimationPlayer] {_target.Nickname}: {error}");
             }
         }
 

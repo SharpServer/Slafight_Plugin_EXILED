@@ -96,11 +96,19 @@
   links:
     - https://www.scpcbgame.com/
 
+- id: security-team-theme
+  title: SCP Foundation/Theme [Eternal Division]
+  category: 陣営スポーンBGM
+  author: Agents
+  license: 
+  links:
+    - https://www.youtube.com/watch?v=wkwFeHLZTW0
+
 - id: mtf-e11-theme
   title: MTF E-11 "NINE-TAILED FOX" - Operator
   category: 陣営スポーンBGM
   author: Camelidea
-  license: 要確認
+  license: 
   usage: MTF E-11スポーンBGM。
   links:
     - https://www.youtube.com/watch?v=ypcJWK6epCo

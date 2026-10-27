@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
 using PlayerRoles;
+using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.Extensions;
 
 namespace Slafight_Plugin_EXILED.ForceSystem;
@@ -141,6 +142,9 @@ public static class ForceRegistry
     private static bool IsStale(ForceMember member)
     {
         if (!member.IsAlive) return true;
+
+        // 演出で役職を一時的に差し替えているだけなら、所属はそのまま。
+        if (RoleHold.IsHeld(member.Player)) return false;
 
         if (member.Force is { } force) return !force.Accepts(member.Player);
 

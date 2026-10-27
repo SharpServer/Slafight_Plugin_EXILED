@@ -34,6 +34,26 @@ public static class PlayerVisibilitySyncProvider
         }
     }
 
+    /// <summary>
+    /// 全員 (後から入った人も含む) から見えなくします。役職が変わると解除されます。
+    /// </summary>
+    public static bool SetInvisible(Player owner, bool invisible)
+    {
+        try
+        {
+            if (!IsValid(owner) || owner.Role is not FpcRole fpcRole)
+                return false;
+
+            fpcRole.IsInvisible = invisible;
+            return true;
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"PlayerVisibilitySyncProvider: SetInvisible failed: {ex.Message}");
+            return false;
+        }
+    }
+
     public static void SetHiddenRule(Player owner, Func<Player, bool>? shouldHide)
     {
         try

@@ -677,6 +677,9 @@ public abstract class CustomRole : IPlayerOwn
         if (ev.Player?.ReferenceHub is not { } hub) return;
         if (Player.Get(hub) is not { } player) return;
 
+        // 演出の一時差し替えでは外さない。
+        if (RoleHold.IsSwapping(player)) return;
+
         // 自分が付けた役職から別の役職に変わったら解除する。
         if (Of(player) is { } role && ev.NewRole.RoleTypeId != role.BaseRole)
         {

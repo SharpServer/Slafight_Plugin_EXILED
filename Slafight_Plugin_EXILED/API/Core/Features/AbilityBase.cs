@@ -310,7 +310,7 @@ public abstract class AbilityBase
     /// </summary>
     protected virtual bool CanUse(out string failureReason)
     {
-        if (!Player.IsSafePlayer() || !Player.IsAlive)
+        if (!Player.IsSafePlayer() || !Player.IsAlive || RoleHold.IsHeld(Player))
         {
             failureReason = "この状態では使えません。";
 
