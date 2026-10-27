@@ -4,6 +4,7 @@
     <attachedFolders />
     <explicitIncludes>
       <Path>README.md</Path>
+      <Path>docs</Path>
     </explicitIncludes>
     <explicitExcludes />
   </component>
