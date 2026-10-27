@@ -6,14 +6,8 @@ using Slafight_Plugin_EXILED.API.Core.Features;
 namespace Slafight_Plugin_EXILED.API.Core.Commands;
 
 /// <summary>
-/// 宣言されている型を名前で引くための共通処理です。
+/// 宣言されている型をクラス名で引く共通処理です。見つからなければ候補を返します。
 /// </summary>
-/// <remarks>
-/// <b>一覧が出す名前は、そのまま他のコマンドの引数になります。</b>
-/// 引数はクラス名そのもので、別名の対応表は持ちません。
-/// 解決できなかったときに候補を返すのもここの役目で、
-/// 各コマンドが「見つかりません」の文言を書き散らさないようにしています。
-/// </remarks>
 internal static class CoreCatalog
 {
     /// <summary>
@@ -68,12 +62,8 @@ internal static class CoreCatalog
         type.Name.IndexOf(filter, StringComparison.OrdinalIgnoreCase) >= 0;
 
     /// <summary>
-    /// 型からインスタンスを 1 つ作ります。作れなければ null。
+    /// 一覧表示用に型からインスタンスを 1 つ作ります。作れなければ null。
     /// </summary>
-    /// <remarks>
-    /// 一覧表示のために宣言内容を読むだけの用途です。
-    /// ここで作った実体は使い捨てなので、副作用のある処理を走らせてはいけません。
-    /// </remarks>
     internal static T Probe<T>(Type type) where T : class
     {
         try

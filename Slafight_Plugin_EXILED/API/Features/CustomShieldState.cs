@@ -347,13 +347,8 @@ public sealed class CustomShieldState
 }
 
 /// <summary>
-/// <see cref="CustomShieldState"/>（カスタムシールド）の寿命を持ちます。
+/// <see cref="CustomShieldState"/> のイベント購読を受け持ちます。
 /// </summary>
-/// <remarks>
-/// <see cref="CustomShieldState"/> の実体は<b>プレイヤー 1 人ぶんのシールド状態</b>であって
-/// ハンドラではありません。これ自身に <c>EventHandlerBase</c> を継承させると、
-/// 自動登録がシールドを 1 個作ろうとしてしまいます。購読の面倒だけをここが見ます。
-/// </remarks>
 public sealed class CustomShieldStateLifecycle : Slafight_Plugin_EXILED.API.Core.Features.EventHandlerBase
 {
     /// <inheritdoc />

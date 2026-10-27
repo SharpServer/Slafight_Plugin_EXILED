@@ -6,15 +6,8 @@ using Slafight_Plugin_EXILED.Extensions;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// プレイヤーごとのデバッグ表示の切り替えです。
+/// プレイヤーごとのデバッグ表示の状態です。寿命は <see cref="PlayerScope"/> に従います。
 /// </summary>
-/// <remarks>
-/// <b>ここが唯一の状態です。</b>コマンドと Server Specifics のどちらから切り替えても
-/// 最後はここに入り、描画側 (<c>PlayerHUD</c> のデバッグループ) はここだけを見ます。
-///
-/// 寿命は <see cref="PlayerScope"/> に相乗りするので、退出・ラウンド再開で勝手に消えます。
-/// 専用のイベント購読も後始末も要りません。
-/// </remarks>
 public static class DebugMode
 {
     private static readonly HashSet<uint> Enabled = [];

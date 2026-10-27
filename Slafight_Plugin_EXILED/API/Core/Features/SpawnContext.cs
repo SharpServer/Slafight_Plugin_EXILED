@@ -7,29 +7,8 @@ using PlayerRoles;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// 「いまどの波が出やすいか」を決める状況です。
-///
-/// 波そのもの (<see cref="SpawnSet"/>) は自分の既定の重みだけを名乗り、
-/// 状況ごとの上書きはこちらが持ちます。
+/// 「いまどの波が出やすいか」を決める状況です。波ごとの重みを上書きします。
 /// </summary>
-/// <example>
-/// <code>
-/// public sealed class FacilityTerminationContext : SpawnContext
-/// {
-///     public override string Name => "Facility Termination";
-///
-///     // 挙げた波以外は 0。base に落とさないので、想定外の波が混ざらない。
-///     public override int WeightOf(SpawnSet wave) => wave switch
-///     {
-///         LastOperationWave => 100,
-///         ChaosRaidWave     => 30,
-///         _                 => 0,
-///     };
-/// }
-///
-/// SpawnContext.Activate&lt;FacilityTerminationContext&gt;();
-/// </code>
-/// </example>
 public abstract class SpawnContext
 {
     private static SpawnSet[] waves;
@@ -45,13 +24,8 @@ public abstract class SpawnContext
     public abstract string Name { get; }
 
     /// <summary>
-    /// 宣言されている波をすべて返します。
+    /// 宣言されている波をすべて返します。1 度だけ生成して使い回します。
     /// </summary>
-    /// <remarks>
-    /// 波は状態を持たない宣言なので、1 度だけ生成して使い回します。
-    /// 重みが 0 以下の定義も保持します。抽選対象かどうかは現在の状況の重みで決まります。
-    /// 手動実行では重みに関係なくすべての定義を呼び出せます。
-    /// </remarks>
     public static IReadOnlyList<SpawnSet> AllWaves => waves ??= BuildWaves();
 
     /// <summary>
@@ -96,7 +70,7 @@ public abstract class SpawnContext
     public virtual int WeightOf(SpawnSet wave) => wave?.RespawnWeight ?? 0;
 
     /// <summary>
-    /// 条件に合う波から重み付き抽選で 1 つ選びます。候補が無ければ null。
+    /// 条件に合う波から重み付き抽選で 1 つ選びます。<see cref="SpawnSet.CanTrigger"/> でない波は除きます。候補が無ければ null。
     /// </summary>
     /// <param name="chooseIndex">0 以上・引数未満の整数を返すもの。試験で固定したいときに差し替えます。</param>
     public SpawnSet Roll(Faction faction, bool miniWave, Func<int, int> chooseIndex)
@@ -106,7 +80,8 @@ public abstract class SpawnContext
             .. AllWaves
                 .Where(wave => wave.RespawnFaction == faction &&
                                wave.IsMiniWave == miniWave &&
-                               WeightOf(wave) > 0)
+                               WeightOf(wave) > 0 &&
+                               wave.CanTrigger)
         ];
 
         if (candidates.Count == 0) return null;

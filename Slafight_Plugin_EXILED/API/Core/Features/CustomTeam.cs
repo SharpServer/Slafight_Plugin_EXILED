@@ -9,30 +9,8 @@ using Slafight_Plugin_EXILED.Extensions;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// 陣営です。「誰が属するか」と「どう勝つか」を、チーム自身が持ちます。
-///
-/// enum も string キーもレジストリも要りません。<b>型そのものが同一性です。</b>
-/// 役職からは <see cref="Get{T}"/> でインスタンスを指してください。
+/// 陣営です。所属判定と勝利条件を持ち、型そのものが識別子になります。
 /// </summary>
-/// <example>
-/// <code>
-/// public sealed class ScpTeam : CustomTeam
-/// {
-///     public override string Name  => "SCP";
-///     public override string Color => ServerColors.Red;
-///
-///     protected override bool IncludesVanilla(Player player) => player.IsScp;
-///
-///     public override VictoryCondition Victory => VictoryCondition.LastStanding(priority: 10);
-/// }
-///
-/// // 役職側はインスタンスで指す
-/// public sealed class Scp049 : CustomRole
-/// {
-///     public override CustomTeam Team => CustomTeam.Get&lt;ScpTeam&gt;();
-/// }
-/// </code>
-/// </example>
 public abstract class CustomTeam
 {
     private static readonly Dictionary<Type, CustomTeam> Instances = new Dictionary<Type, CustomTeam>();
@@ -67,8 +45,15 @@ public abstract class CustomTeam
 
     /// <summary>
     /// C.A.S.S.I.E に読ませる綴りです。既定は表示名そのまま。
+    /// 季節で変えるなら <see cref="Seasonal.Of{T}"/> で書きます。
     /// </summary>
     public virtual string CassieName => Name;
+
+    /// <summary>
+    /// 放送の字幕に出す名前です。既定は <see cref="Name"/>。
+    /// HUD や勝利表示は変えずに、放送だけ季節で呼び名を変えたいときに使います。
+    /// </summary>
+    public virtual string SubtitleName => Name;
 
     /// <summary>
     /// 財団の通常勢力ではなく、独立勢力・敵対勢力として扱うか。
@@ -76,15 +61,8 @@ public abstract class CustomTeam
     public virtual bool IsGroupOfInterest => true;
 
     /// <summary>
-    /// この陣営の定型文通信設定です。可否はバニラ陣営の既定を引き継ぎ、
-    /// Prefix は既定でこのチームの <see cref="Name"/> になります。
+    /// この陣営の定型文通信設定です。Prefix の既定は <see cref="Name"/> です。
     /// </summary>
-    /// <example>
-    /// <code>
-    /// public override CommunicationPolicy Communication =>
-    ///     CommunicationPolicy.Enabled("第五教会");
-    /// </code>
-    /// </example>
     public virtual CommunicationPolicy Communication => CommunicationPolicy.Inherit(Name);
 
     /// <summary>
@@ -105,33 +83,9 @@ public abstract class CustomTeam
     public virtual SpawnSetRoleDefinition? Resurrection => null;
 
     /// <summary>
-    /// この陣営のプレイヤーが脱出したとき、何になるかです。null なら脱出しません。
+    /// この陣営のプレイヤーが脱出したときの行き先です。null なら脱出しません。
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// 行き先が護送してきた相手で変わるなら <paramref name="escape"/> に聞いてください。
-    /// 旧実装は「自陣営 × 護送元 × 優先度」を 25 行の表とレジストリと定義ソース走査で
-    /// 持っていましたが、行き先を知っているのは陣営自身なので表は要りません。
-    /// </para>
-    /// <para>
-    /// 陣営より先に役職 (<see cref="CustomRole.Escape"/>) に聞かれます。
-    /// どちらも名乗らなければ、バニラの脱出判定 (D クラス・研究員) がそのまま使われます。
-    /// </para>
-    /// </remarks>
-    /// <example>
-    /// <code>
-    /// public override SpawnSetRoleDefinition? Escape(EscapeContext escape)
-    /// {
-    ///     if (escape.IsEscortedByAllyOf&lt;FoundationTeam&gt;())
-    ///         return SpawnSetRoleDefinition.Vanilla(RoleTypeId.NtfPrivate);
-    ///
-    ///     if (escape.IsEscortedBy&lt;FifthistTeam&gt;())
-    ///         return SpawnSetRoleDefinition.Custom&lt;FifthistConvert&gt;();
-    ///
-    ///     return SpawnSetRoleDefinition.Vanilla(RoleTypeId.ChaosConscript);
-    /// }
-    /// </code>
-    /// </example>
+    /// <remarks>役職の <see cref="CustomRole.Escape"/> が優先されます。</remarks>
     public virtual SpawnSetRoleDefinition? Escape(EscapeContext escape) => null;
 
     /// <summary>
@@ -150,12 +104,8 @@ public abstract class CustomTeam
     public virtual bool ShowsRoster => false;
 
     /// <summary>
-    /// 味方一覧の末尾に添える、この陣営だけの状況表示です。
-    /// <paramref name="viewer"/> は画面の持ち主なので、距離などはここを基準にしてください。
+    /// 味方一覧の末尾に添える、この陣営の状況表示です。<paramref name="viewer"/> は画面の持ち主です。
     /// </summary>
-    /// <remarks>
-    /// 陣営ごとの表示を別のレジストリへ登録させず、何を出すかを知っている陣営自身に名乗らせます。
-    /// </remarks>
     public virtual string RosterFooter(Player viewer) => string.Empty;
 
     /// <summary>
@@ -259,17 +209,8 @@ public abstract class CustomTeam
     protected abstract bool IncludesVanilla(Player player);
 
     /// <summary>
-    /// このプレイヤーがこのチームに属するかを判定します。
+    /// このプレイヤーがこのチームに属するかを判定します。カスタム役職があればそのチーム、なければバニラ役職で判定します。
     /// </summary>
-    /// <remarks>
-    /// 判定は 1 本に決まっています。<b>カスタム役職を持っているならその役職が指すチーム、
-    /// 持っていないならバニラ役職からの判定</b>です。
-    /// ここを派生側に書かせると、役職 ID → チームの表がまた生えます。
-    ///
-    /// 旧実装の勝利条件が「SCP チームであり、かつ SCP-3005 でも SCP-999 でもない」という
-    /// 除外つきの述語だったのは、役職 ID → チームを表で引いていたからです。
-    /// 新実装では役職が自分でチームを名乗るので、除外ロジック自体が要りません。
-    /// </remarks>
     public bool Includes(Player player)
     {
         if (!player.IsSafePlayer()) return false;

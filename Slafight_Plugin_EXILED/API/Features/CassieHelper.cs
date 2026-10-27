@@ -157,10 +157,7 @@ public static class CassieHelper
     // =================================== //
 
     /// <summary>
-    /// 死因を自動判定して終了放送を行う。
-    /// 攻撃者がいればそのチームによる収容、地上での MicroHID なら H.I.D Turret、
-    /// それ以外は原因不明として放送される。
-    /// 死因を明示的に指定したい場合は <see cref="TerminationCause"/> を受け取るオーバーロードを使う。
+    /// 死因を自動判定して終了放送を行う。明示したい場合は <see cref="TerminationCause"/> を受け取るオーバーロードを使う。
     /// </summary>
     public static void AnnounceTermination(DyingEventArgs ev, string targetCassie, string targetTranslated, bool clearCassie = false)
     {
@@ -227,10 +224,9 @@ public readonly struct TerminationCause
     /// <summary>指定チームによる正常な収容として放送する。</summary>
     public static TerminationCause ByTeam(CustomTeam team)
     {
-        CustomSeason season = CustomSeason.Current;
         return new TerminationCause(
-            $"contained successfully by {season.TeamCassieName(team)}",
-            $"は、<color={team.Color}>{season.TeamName(team)}</color>によって正常に収容されました。");
+            $"contained successfully by {team.CassieName}",
+            $"は、<color={team.Color}>{team.SubtitleName}</color>によって正常に収容されました。");
     }
 
     /// <summary>H.I.D Turret による終了として放送する。</summary>

@@ -5,13 +5,8 @@ using Exiled.API.Features;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// プレイヤーのカテゴリ所持上限へ、複数の独立した加算値を安全に積む API です。
+/// カテゴリ所持上限へ独立した加算値を積む API です。返された <see cref="IDisposable"/> を破棄するとその加算だけ外れます。
 /// </summary>
-/// <remarks>
-/// 有効上限は、ゲーム設定とアーマー補正へ、この API のスタックと
-/// <see cref="CustomItem.IgnoreCategoryLimits"/> の自己除外枠を加えて求めます。
-/// 戻された <see cref="IDisposable"/> を破棄すれば、その加算だけが外れます。
-/// </remarks>
 public static class ItemLimitApi
 {
     private static readonly object SyncRoot = new();

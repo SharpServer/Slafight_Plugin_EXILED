@@ -5,23 +5,11 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
-/// 脱出できる場所です。バニラの <c>Escape.EscapeZones</c> へ触るのはここだけにしてください。
+/// 脱出できる場所です。バニラの <c>Escape.EscapeZones</c> へはここからだけ触ってください。
 /// </summary>
 /// <remarks>
-/// <para>
-/// <b>バニラの既定ゾーン (地上ゲート付近の一辺 25 m の立方体) は使いません。</b>
-/// 脱出できる場所はマップが決めます。ProjectMER のトリガーポイントに
-/// <see cref="MapTag"/> のタグを付ければ、そこが脱出点になります。
-/// </para>
-/// <para>
-/// 旧実装は脱出点を自前の座標リストで持ち、0.5 秒ごとに
-/// 全プレイヤー × 全脱出点を総当たりしていました。バニラの脱出ゾーンに積んでしまえば
-/// 内外判定は本体が毎フレームやるので、巡回コルーチンは要りません。
-/// </para>
-/// <para>
-/// 読み直し (<see cref="Rebuild"/>) はマップやスキマティックが変わるたびに走ります。
-/// イベントや役職が足した脱出点はマップ由来と別に覚えてあるので、読み直しで消えません。
-/// </para>
+/// バニラの既定ゾーンは使わず、<see cref="MapTag"/> を付けた ProjectMER のトリガーポイントを脱出点にします。
+/// イベントや役職が足した脱出点は <see cref="Rebuild"/> で消えません。
 /// </remarks>
 public static class EscapeZones
 {
@@ -31,7 +19,7 @@ public static class EscapeZones
     public const string MapTag = "EscapePoint";
 
     /// <summary>
-    /// 点で足したときの判定半径 (m) です。旧実装の判定距離と同じ値にしてあります。
+    /// 点で足したときの判定半径 (m) です。
     /// </summary>
     public const float DefaultRadius = 1.75f;
 
@@ -104,9 +92,6 @@ public static class EscapeZones
     /// <summary>
     /// バニラの既定ゾーンだけの状態に戻します。
     /// </summary>
-    /// <remarks>
-    /// プラグインを外したときに、脱出できない地図を残さないための後始末です。
-    /// </remarks>
     public static void Reset()
     {
         Added.Clear();

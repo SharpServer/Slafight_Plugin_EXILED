@@ -7,13 +7,8 @@ using Slafight_Plugin_EXILED.API.Enums;
 namespace Slafight_Plugin_EXILED.API.Core.Samples;
 
 /// <summary>
-/// SCP 側のカスタム役職の見本です。近接ボイスを名乗る役職はこちらが例になります。
+/// SCP 側のカスタム役職の見本です。SCP チャットを近接ボイスとして流します。
 /// </summary>
-/// <remarks>
-/// 近接ボイスは「ある発声チャンネルを近くの人にも届ける」仕組みです。
-/// この役職は SCP 土台なので <b>SCP チャット</b>を流します。
-/// 人間土台で無線を流す例は <see cref="SampleRole"/> を見てください。
-/// </remarks>
 public sealed class SampleScpRole : CustomRole
 {
     public override string Name => "Sample SCP";
@@ -51,5 +46,5 @@ public sealed class SampleScpTeam : CustomTeam
 
     public override VictoryCondition Victory => VictoryCondition.LastStanding(priority: 2);
 
-    protected override bool IncludesVanilla(Player player) => player.IsScp;
+    protected override bool IncludesVanilla(Player player) => false;
 }

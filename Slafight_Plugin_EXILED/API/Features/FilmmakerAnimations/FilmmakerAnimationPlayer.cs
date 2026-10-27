@@ -354,15 +354,8 @@ public static class FilmmakerAnimationPlayer
 }
 
 /// <summary>
-/// <see cref="FilmmakerAnimationPlayer"/>（スキマティックのアニメーション再生）の寿命を持ちます。
+/// <see cref="FilmmakerAnimationPlayer"/> の起動と停止を受け持ちます。
 /// </summary>
-/// <remarks>
-/// <see cref="FilmmakerAnimationPlayer"/> は static クラスなので自分で
-/// <c>EventHandlerBase</c> を継承できません。起動と停止だけをここが引き受けます。
-///
-/// このクラスはどこからも登録されていません。<c>EventHandlerBase</c> を
-/// 継承しているだけで <c>EventHandlerRegistry</c> が生成・購読させます。
-/// </remarks>
 public sealed class FilmmakerAnimationPlayerLifecycle : Slafight_Plugin_EXILED.API.Core.Features.EventHandlerBase
 {
     /// <inheritdoc />

@@ -23,42 +23,9 @@ using LightSourceToy = LabApi.Features.Wrappers.LightSourceToy;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// カスタムアイテムです。<b>アイテム 1 個につき 1 インスタンス</b>生成されます。
-/// フィールドをそのまま per-item 状態 (残弾・チャージ・使用回数など) として使えるので、
-/// シリアルをキーにした static 辞書を自分で用意する必要はありません。
-///
-/// 追跡キーはシリアル (<see cref="ushort"/>) です。
-/// シリアルはインベントリのアイテムと地面のピックアップで共通なので、
-/// 落とす・拾い直すをまたいでも同じインスタンスが付いてきます。
-///
-/// 識別子の文字列も専用 enum もありません。<b>型そのものが同一性です。</b>
+/// カスタムアイテムです。アイテム 1 個 (シリアル) につき 1 インスタンス生成され、型そのものが識別子になります。
 /// </summary>
-/// <remarks>
-/// <b>アイテムの実体とイベントだけは LabApi のものを使います。</b>
-/// アーマー・SCP-330・使用効果の差し替えなど、EXILED 側に相当イベントが無いものが
-/// あるためです。<see cref="Owner"/> をはじめプレイヤーを渡す口はすべて EXILED の
-/// <see cref="Player"/> に揃えてあるので、機能側が LabApi を意識する必要はありません。
-/// </remarks>
-/// <example>
-/// <code>
-/// public sealed class MediPistol : CustomItem
-/// {
-///     public override ItemType BaseType => ItemType.GunCOM18;
-///     public override string Name => "S41 医療用拳銃";
-///
-///     private int charges = 6;   // per-item 状態をそのままフィールドに持てる
-///
-///     protected override void OnShotCompleted(PlayerShotWeaponEventArgs ev)
-///     {
-///         if (charges-- &lt;= 0)
-///             Owner.ShowHint("チャージ切れ", 3f);
-///     }
-/// }
-///
-/// CustomItem.Give&lt;MediPistol&gt;(player);
-/// CustomItem.Spawn&lt;MediPistol&gt;(position);
-/// </code>
-/// </example>
+/// <remarks>実体とイベントは LabApi のものを使いますが、プレイヤーは EXILED の <see cref="Player"/> で渡します。</remarks>
 public abstract class CustomItem
 {
     private static readonly Dictionary<ushort, CustomItem> BySerial = new Dictionary<ushort, CustomItem>();
@@ -98,13 +65,8 @@ public abstract class CustomItem
     public virtual string Description => string.Empty;
 
     /// <summary>
-    /// このアイテム自身をカテゴリ所持上限へ数えないか。
-    /// true のアイテムを所持している間は、そのカテゴリの有効上限へ 1 枠が加算されます。
+    /// このアイテム自身をカテゴリ所持上限へ数えないか。総インベントリ上限は変わりません。
     /// </summary>
-    /// <remarks>
-    /// 総インベントリ 8 枠の上限は変更しません。これは銃器・医療品などの
-    /// <see cref="ItemCategory"/> ごとの制限だけを無視する設定です。
-    /// </remarks>
     public virtual bool IgnoreCategoryLimits => false;
 
     /// <summary>
@@ -142,13 +104,8 @@ public abstract class CustomItem
     protected virtual LightShadows PickupLightShadowType => LightShadows.None;
 
     /// <summary>
-    /// 地面のピックアップに重ねる ProjectMER スキマティック名です。null / 空なら重ねません。
+    /// ピックアップに重ねる ProjectMER スキマティック名です。null / 空なら重ねません。
     /// </summary>
-    /// <remarks>
-    /// バニラの見た目を借りているアイテムに、本来の姿を被せるためのものです。
-    /// 状態で見た目が変わるアイテム (レベルの上がる装置など) は、
-    /// ここを自分の状態から組み立てて <see cref="RefreshPickupSchematic"/> を呼んでください。
-    /// </remarks>
     protected virtual string PickupSchematicName => null;
 
     /// <summary>重ねるスキマティックの拡大率です。</summary>
@@ -338,9 +295,7 @@ public abstract class CustomItem
     public static T Give<T>(Player player) where T : CustomItem, new() => (T)Give(new T(), player);
 
     /// <summary>
-    /// 型を実行時に決めてプレイヤーに渡します。
-    /// マップデータや RA コマンドのように、文字列から型を引いてくる経路で使います
-    /// (<see cref="TypeParser.TryParse{TBase}"/> と組み合わせる)。
+    /// 実行時に決めた型のアイテムをプレイヤーに渡します。
     /// </summary>
     public static CustomItem Give(Type type, Player player) => Give(Instantiate(type), player);
 
@@ -524,11 +479,7 @@ public abstract class CustomItem
     }
 
     /// <summary>
-    /// 使用モーションが終わり、バニラの効果が適用される直前に呼ばれます。
-    /// <c>ev.IsAllowed = false</c> でバニラの効果を差し替えられます。
-    ///
-    /// 消費アイテムの効果を自前にしたい場合はここを使ってください。
-    /// なお <c>IsAllowed = false</c> にすると <see cref="OnUseCompleted"/> は呼ばれません。
+    /// バニラの使用効果が適用される直前に呼ばれます。<c>IsAllowed = false</c> で差し替えると <see cref="OnUseCompleted"/> は呼ばれません。
     /// </summary>
     protected virtual void OnUseEffectsApplying(PlayerItemUsageEffectsApplyingEventArgs ev)
     {
@@ -666,9 +617,7 @@ public abstract class CustomItem
     }
 
     /// <summary>
-    /// <see cref="Give{T}(Player)"/> で新規作成したインベントリアイテムを調整します。
-    /// 既定では <see cref="Customize(Item)"/> と同じ処理です。
-    /// 初期弾数など、新規作成時だけ設定する値がある派生型で上書きします。
+    /// <see cref="Give{T}(Player)"/> で新規作成したアイテムを調整します。既定は <see cref="Customize(Item)"/> と同じです。
     /// </summary>
     protected virtual void CustomizeNewItem(Item item) => Customize(item);
 
@@ -680,13 +629,8 @@ public abstract class CustomItem
     }
 
     /// <summary>
-    /// 地面へ出す Pickup を生成します。派生型は、状態を設定した実アイテムから
-    /// Pickup を作る必要がある場合にこのメソッドを上書きします。
+    /// 地面へ出す Pickup を生成します。Spawn は基底側が行うので、ここではしないでください。
     /// </summary>
-    /// <remarks>
-    /// 戻り値はまだネットワークへ Spawn してはいけません。基底側が
-    /// <see cref="Customize(Pickup)"/> の後に一度だけ Spawn します。
-    /// </remarks>
     protected virtual Pickup CreatePickup(Vector3 position, Quaternion rotation, Vector3 scale) =>
         Pickup.Create(BaseType, position, rotation, scale, networkSpawn: false);
 
@@ -820,19 +764,8 @@ public abstract class CustomItem
     }
 
     /// <summary>
-    /// 地面のピックアップにライトを付けます。既に付いていれば何もしません。
+    /// ピックアップにライトを付けます。位置は親からのローカル座標です。
     /// </summary>
-    /// <remarks>
-    /// ピックアップの transform にぶら下げるので、投げても転がっても追従します。
-    /// <c>AdminToyBase.LateUpdate</c> が毎フレーム位置を同期するため、
-    /// 旧実装のような追従コルーチンは要りません。
-    ///
-    /// <para>
-    /// 位置は <b>親からのローカル座標</b>です。<c>AdminToy.Create</c> は
-    /// 渡した位置をそのまま <c>localPosition</c> に入れるので、
-    /// ここにワールド座標を渡すとライトだけが遠くへ飛びます。
-    /// </para>
-    /// </remarks>
     private void AttachPickupLight()
     {
         if (!PickupLightEnabled || pickupLight is not null) return;

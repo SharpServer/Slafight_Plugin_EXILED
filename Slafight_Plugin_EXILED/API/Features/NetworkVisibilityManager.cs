@@ -32,9 +32,7 @@ public enum SpectatorVisibility
 // =========================================================
 
 /// <summary>
-/// 1つの NetworkIdentity に紐づく表示状態を保持するクラス。
-/// 外部から直接変更後、<see cref="NetworkVisibilityManager.ApplyShowState"/> を呼ぶか、
-/// UpdateShowState 系 API 経由で変更すること。
+/// 1 つの NetworkIdentity の表示状態です。変更後は <see cref="NetworkVisibilityManager.ApplyShowState"/> を呼ぶこと。
 /// </summary>
 public class NetworkShowState
 {
@@ -63,15 +61,12 @@ public class NetworkShowState
     // ---- 優先順位に従って表示すべきか判定 ----
 
     /// <summary>
-    /// 指定プレイヤーがこのオブジェクトを見るべきかを返す。<br/>
-    /// 優先順位：ExplicitHide > ExplicitShow > ShowToOwner > SpectatorVisibility > デフォルト Hide
+    /// 指定プレイヤーがこのオブジェクトを見るべきかを返す。
+    /// 優先順位: ExplicitHide > ExplicitShow > ShowToOwner > SpectatorVisibility > Hide
     /// </summary>
     /// <param name="player">判定対象のプレイヤー。</param>
-    /// <param name="allPlayers">全プレイヤーリスト（未使用だが拡張用に保持）。</param>
-    /// <param name="overrideIsSpectatingOwner">
-    /// null のとき実際の観戦状態を参照する。
-    /// ChangingSpectatedPlayer イベントで「変更後の状態」を先取りしたいときに渡す。
-    /// </param>
+    /// <param name="allPlayers">未使用。</param>
+    /// <param name="overrideIsSpectatingOwner">観戦状態の上書き。null なら実際の状態を見る。</param>
     public bool ShouldShow(
         Player player,
         IEnumerable<Player> allPlayers,
@@ -123,9 +118,7 @@ public class NetworkShowState
 // =========================================================
 
 /// <summary>
-/// NetworkIdentity を持つ任意のオブジェクト（Primitive / Light / AdminToy / Schematic等）の
-/// 表示を特定プレイヤーだけに限定するヘルパー群。
-/// PublicizedされたMirrorを用いて実装。UnsafeBlockをAllowに設定すること。
+/// NetworkIdentity を持つオブジェクトの表示を特定プレイヤーだけに限定するヘルパー群。
 /// </summary>
 public static class NetworkVisibilityManager
 {
@@ -149,9 +142,7 @@ public static class NetworkVisibilityManager
     // =========================================================
 
     /// <summary>
-    /// Show を最優先で拒否する追加判定。true を返した (identity, player) の組は Show されない。<br/>
-    /// WearsHandler の透明化連動が、Mirror の再送信や ShowState の再適用で
-    /// 意図せず上書きされないようにするために使う。
+    /// Show を最優先で拒否する追加判定。true を返した (identity, player) の組は Show されない。
     /// </summary>
     public static Func<NetworkIdentity, Player, bool>? ShowVeto { get; set; }
 
@@ -221,9 +212,7 @@ public static class NetworkVisibilityManager
     }
 
     /// <summary>
-    /// スポーン完了後に呼ばれる。ロール変更後に Mirror が全 NetworkIdentity を
-    /// 再送信するため、管理オブジェクトの表示状態を上書き補正する。
-    /// 観戦者が生者としてスポーンした場合も同様にリセットが必要。
+    /// スポーン後、Mirror の再送信で崩れた管理オブジェクトの表示状態を補正する。
     /// </summary>
     private static void OnSpawned(SpawnedEventArgs? ev)
     {
@@ -852,15 +841,8 @@ public static class NetworkVisibilityManager
 }
 
 /// <summary>
-/// <see cref="NetworkVisibilityManager"/>（プレイヤーごとの可視性制御）の寿命を持ちます。
+/// <see cref="NetworkVisibilityManager"/> の起動と停止を受け持ちます。
 /// </summary>
-/// <remarks>
-/// <see cref="NetworkVisibilityManager"/> は static クラスなので自分で
-/// <c>EventHandlerBase</c> を継承できません。起動と停止だけをここが引き受けます。
-///
-/// このクラスはどこからも登録されていません。<c>EventHandlerBase</c> を
-/// 継承しているだけで <c>EventHandlerRegistry</c> が生成・購読させます。
-/// </remarks>
 public sealed class NetworkVisibilityManagerLifecycle : Slafight_Plugin_EXILED.API.Core.Features.EventHandlerBase
 {
     /// <inheritdoc />

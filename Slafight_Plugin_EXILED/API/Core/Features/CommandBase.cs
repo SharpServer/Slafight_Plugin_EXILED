@@ -9,30 +9,7 @@ namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
 /// 権限チェックと送信者の解決を肩代わりするコマンド基底です。
-/// 派生クラスは <see cref="Command"/> と <see cref="OnExecute"/> を書くだけで済みます。
 /// </summary>
-/// <example>
-/// <code>
-/// [CommandHandler(typeof(RemoteAdminCommandHandler))]
-/// public class HealCommand : CommandBase
-/// {
-///     public override string Command => "heal";
-///
-///     protected override bool OnExecute(out string response)
-///     {
-///         if (Sender is null)
-///         {
-///             response = "プレイヤーからのみ実行できます。";
-///             return false;
-///         }
-///
-///         Sender.Heal(Sender.MaxHealth);
-///         response = "回復しました。";
-///         return true;
-///     }
-/// }
-/// </code>
-/// </example>
 public abstract class CommandBase : ICommand
 {
     public abstract string Command { get; }
@@ -42,11 +19,7 @@ public abstract class CommandBase : ICommand
     public virtual string Description { get; } = string.Empty;
 
     /// <summary>
-    /// このコマンドが属する親コマンドの型です。null ならトップレベルのコマンドになります。
-    ///
-    /// <see cref="ParentCommandBase"/> はこのプロパティだけを見て子を集めるので、
-    /// 親側に「登録する子の一覧」を書く必要はありません。
-    /// 旧実装の <c>RootCommand</c> が 29 行の <c>RegisterCommand</c> を抱えていたのがこれで消えます。
+    /// 親コマンドの型です。null ならトップレベルになります。
     /// </summary>
     public virtual Type Parent => null;
 
@@ -56,16 +29,8 @@ public abstract class CommandBase : ICommand
     public virtual string Usage => Command;
 
     /// <summary>
-    /// このコマンドに必要な権限ノードです。既定は <c>slperm.コマンド名</c>。
-    ///
-    /// 権限チェックを外したい場合は null または空文字を返してください。
+    /// 必要な権限ノードです。既定は <c>slperm.コマンド名</c>。null / 空ならチェックしません。
     /// </summary>
-    /// <remarks>
-    /// <b>接頭辞と判定先は EXILED のままにします。</b>
-    /// 運営の <c>permissions.yml</c> は EXILED の権限機構に <c>slperm.*</c> を並べたものなので、
-    /// LabAPI の権限やアセンブリ名を接頭辞にしたノードへ替えると、
-    /// 既存の設定がどのコマンドにも当たらなくなり、全部「権限がありません」で弾かれます。
-    /// </remarks>
     public virtual string Permission => $"slperm.{Command}";
 
     /// <summary>
@@ -161,13 +126,8 @@ public abstract class CommandBase : ICommand
     }
 
     /// <summary>
-    /// 指定位置の引数をプレイヤーとして解決します。
-    /// 省略・<c>@me</c> の場合は送信者自身になります。
+    /// 指定位置の引数をプレイヤーとして解決します。省略・<c>@me</c> なら送信者自身です。
     /// </summary>
-    /// <remarks>
-    /// ID の完全一致を先に試し、それ以外は EXILED の
-    /// <see cref="Player.Get(string)"/> (UserId / 名前) に任せます。
-    /// </remarks>
     protected bool TryGetPlayer(int index, out Player player)
     {
         if (!TryGetArgument(index, out string raw) ||

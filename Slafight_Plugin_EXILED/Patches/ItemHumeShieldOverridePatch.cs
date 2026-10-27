@@ -8,21 +8,8 @@ using PlayerStatsSystem;
 namespace Slafight_Plugin_EXILED.Patches;
 
 /// <summary>
-/// Prevents item-owned Hume Shield sessions from destroying an explicitly configured shield.
+/// 最大値が明示設定されたヒュームシールドを、SCP-127 / SCP-1509 のシールド処理が上書きしないようにします。
 /// </summary>
-/// <remarks>
-/// SCP-127 and SCP-1509 use the player's shared <see cref="HumeShieldStat"/> for their shield.
-/// Their session loops therefore clamp that stat to the item's maximum while equipped and drain
-/// it to zero after holstering. EXILED's <c>MaxHumeShield</c> setter marks the stat with
-/// <see cref="HumeShieldStat._maxValueOverride"/> specifically to make its configured maximum
-/// authoritative, but those item loops bypass the normal <see cref="HumeShieldStat.Update"/>
-/// handling and overwrite the current value directly.
-///
-/// Temporarily hide only those sessions from the item update. Keeping the sessions alive means
-/// vanilla behavior can resume if another plugin later releases its maximum override. The items
-/// themselves remain fully usable, while players without an explicit maximum retain the vanilla
-/// item shield.
-/// </remarks>
 internal static class ItemHumeShieldOverrideProtection
 {
     public static bool HasExplicitMaximum(HumeShieldStat stat) =>

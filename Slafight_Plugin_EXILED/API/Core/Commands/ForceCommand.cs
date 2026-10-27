@@ -7,12 +7,8 @@ using Slafight_Plugin_EXILED.ForceSystem;
 namespace Slafight_Plugin_EXILED.API.Core.Commands;
 
 /// <summary>
-/// いま存在する隊と、その隊員の階級・貢献度を確認します。
+/// いま存在する隊と、その隊員の階級・貢献度を表示します。
 /// </summary>
-/// <remarks>
-/// 部隊システムは HUD にしか出ないので、状態を目で確かめる口がここだけになります。
-/// 分隊が組めない・昇格しないといった不具合の切り分けに使います。
-/// </remarks>
 public sealed class ForceCommand : CommandBase
 {
     public override Type Parent => typeof(RootCommand);

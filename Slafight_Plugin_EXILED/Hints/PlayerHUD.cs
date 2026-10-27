@@ -32,50 +32,27 @@ public class PlayerHUD : EventHandlerBase
     /// <remarks>移行前の <c>SpecialEventsHandler.LocalizedEventName</c> の既定値と同じです。</remarks>
     private const string NoGameModeText = "無し";
 
-    /// <summary>部隊表示で並べる行数の上限です。</summary>
-    /// <remarks>
-    /// <c>ForceHud.Rows</c> が返しうる最大行数より多めに取ってあります。
-    /// 足りないと下の行が黙って消えるので、増やすときはこちらも上げてください。
-    /// </remarks>
+    /// <summary>部隊表示で並べる行数の上限です。<c>ForceHud.Rows</c> の最大行数以上にしてください。</summary>
     private const int ForceHudMaxRows = 18;
 
     /// <summary>部隊表示の文字の大きさです。</summary>
     private const int ForceHudFontSize = 23;
 
-    /// <summary>部隊表示の横位置です。0 が中央、負で左、正で右。</summary>
-    /// <remarks>
-    /// <c>Alignment.Left</c> と組で使います。<c>Center</c> だと HSM が
-    /// <c>&lt;align&gt;</c> を書かず、TMP の中央揃えが <c>&lt;pos&gt;</c> に勝つため位置が効きません。
-    /// 画面右上はバニラの <c>UnitNamingHud</c> が使うので、そこは避けています。
-    /// </remarks>
+    /// <summary>部隊表示の横位置です。0 が中央、負で左、正で右。<c>Alignment.Left</c> と組で使います。</summary>
     private const int ForceHudX = 0;
 
     /// <summary>部隊表示の 1 行目の縦位置です。0 が画面上端。</summary>
     private const int ForceHudTopY = 60;
 
-    /// <summary>デバッグ表示の横位置です。通常 HUD の左列に揃えます。</summary>
-    private const int DebugHudX = -350;
-
-    /// <summary>デバッグ表示の縦位置です。</summary>
-    private const int DebugHudY = 345;
-
-    /// <summary>デバッグ表示の文字の大きさです。</summary>
+    /// <summary>デバッグ表示ヒントの文字の大きさです。本文の大きさは <see cref="DebugHudOptions.TextSize"/>。</summary>
     private const int DebugHudFontSize = 24;
 
-    /// <summary>部隊表示の行送りです。</summary>
-    /// <remarks>
-    /// 各行は独立した Hint なので、HSM は行送りを自動計算しません。
-    /// <see cref="ForceHudFontSize"/> より少し大きい値にして行が重ならないようにします。
-    /// </remarks>
+    /// <summary>部隊表示の行送りです。<see cref="ForceHudFontSize"/> より少し大きくします。</summary>
     private const int ForceHudLineHeight = 26;
 
     /// <summary>
-    /// 現在動いている HUD です。表示を差し込む側 (<c>EffectedInfoTextProvider</c> など) が参照します。
+    /// 現在動いている HUD です。購読が始まった実体だけを指します。
     /// </summary>
-    /// <remarks>
-    /// 生成は <c>EventHandlerRegistry</c> が行います。ここは購読が始まった実体を指すだけで、
-    /// <c>Lifetime</c> を読むために作られて捨てられる実体は入りません。
-    /// </remarks>
     public static PlayerHUD? Instance { get; private set; }
 
     private CoroutineHandle _specificAbilityLoop;
@@ -178,10 +155,7 @@ public class PlayerHUD : EventHandlerBase
     }
 
     /// <summary>
-    /// 内容が変わったときだけ Text を書き、変化があったかを返す。
-    /// HintServiceMeow の <c>AbstractHint.Text</c> setter は同じ文字列を代入しても必ず更新イベントを出し、
-    /// SyncSpeed が Fastest ならその場でディスプレイ全体の再パースが走る。
-    /// 毎秒回る HUD ループから無条件に書くとこれが常時発火するため、必ずこの経路を使うこと。
+    /// 内容が変わったときだけ Text を書き、変化があったかを返す。HUD ループからの書き込みは必ずこれを通す。
     /// </summary>
     private static bool SetTextIfChanged(AbstractHint? hint, string? text)
     {
@@ -250,8 +224,12 @@ public class PlayerHUD : EventHandlerBase
         EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Specific, string.Empty, HintAlignment.Left, HintSyncSpeed.Fast, 23, XCordinate + 350, 880);
         EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Ability, string.Empty, HintAlignment.Left, HintSyncSpeed.Fast, 22, XCordinate + 350, 800);
         EnsurePlayerHudHint(display, HudConstId.PlayerHUD_EffectedInfo, string.Empty, HintAlignment.Center, HintSyncSpeed.Fast, 22, 0, 930);
-        EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Debug, string.Empty, HintAlignment.Left, HintSyncSpeed.Fast, DebugHudFontSize, DebugHudX, DebugHudY);
+        EnsureDebugHudHint(display, DebugHudOptions.Of(player));
     }
+
+    /// <summary>デバッグ表示のヒントを用意し、位置を個人設定へ合わせます。</summary>
+    private static void EnsureDebugHudHint(PlayerDisplay display, DebugHudOptions options)
+        => EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Debug, string.Empty, HintAlignment.Left, HintSyncSpeed.Fast, DebugHudFontSize, options.X, options.Y);
 
     private static string BuildServerInfoText()
     {
@@ -344,10 +322,6 @@ public class PlayerHUD : EventHandlerBase
 
     /// <summary>
     /// 全員分の HUD 構築をフレーム予算で分割して走らせる。
-    ///
-    /// HSM はヒントを1つ追加・変更するたびにディスプレイ全体の再パースを予約するため、
-    /// 「人数 x ヒント生成 + ロール情報の構築」をラウンド開始の同じフレームで一気にやると
-    /// そこで目に見える詰まりになる。ラウンド終了時の HUD 作り直しも同じ形。
     /// </summary>
     private void StartBulkSetup()
     {
@@ -573,18 +547,17 @@ public class PlayerHUD : EventHandlerBase
         var display = TryGetDisplay(player);
         if (display == null) return false;
 
+        var options = DebugHudOptions.Of(player);
+
+        // DebugModeはロビー中でも見たいので、PlayerHUDSetup(通常HUD群)は経由せず単独で作る。
+        // 既にあれば位置だけ設定へ合わせる（変わった項目だけ書き換わる）。
+        EnsureDebugHudHint(display, options);
         var debugHint = display.GetHint(HudConstId.PlayerHUD_Debug);
-        if (debugHint == null)
-        {
-            // DebugModeはロビー中でも見たいので、PlayerHUDSetup(通常HUD群)は経由せず単独で作る
-            EnsurePlayerHudHint(display, HudConstId.PlayerHUD_Debug, string.Empty, HintAlignment.Left, HintSyncSpeed.Fast, DebugHudFontSize, DebugHudX, DebugHudY);
-            debugHint = display.GetHint(HudConstId.PlayerHUD_Debug);
-            if (debugHint == null) return false;
-        }
+        if (debugHint == null) return false;
 
         try
         {
-            debugHint.Text = BuildDebugHud(player);
+            SetTextIfChanged(debugHint, BuildDebugHud(player, options));
             return true;
         }
         catch (Exception e)
@@ -597,13 +570,8 @@ public class PlayerHUD : EventHandlerBase
     }
 
     /// <summary>
-    /// デバッグ表示を消します。
+    /// デバッグ表示を消します。ヒントは作り直さず中身だけ空にします。
     /// </summary>
-    /// <remarks>
-    /// <b>OFF にしたら必ずここを通します。</b>デバッグループは ON の人しか触らないので、
-    /// 消さないと最後に描いた内容が画面に残り続けます。
-    /// ヒント自体は作り直さず、中身だけ空にします。
-    /// </remarks>
     /// <returns>消すべきものがあって消したなら true。</returns>
     public bool ClearDebugHud(Player player)
     {
@@ -753,14 +721,8 @@ public class PlayerHUD : EventHandlerBase
     }
 
     /// <summary>
-    /// 能力欄の中身です。
+    /// 能力欄の中身です。枠順は付与順、呼び名は <c>Rename</c> されたものを出します。
     /// </summary>
-    /// <remarks>
-    /// 表示の書式は移行前のままです。読む先だけが
-    /// 旧 <c>AbilityManager</c> / <c>AbilityLoadout</c> / <c>AbilityLocalization</c> から
-    /// <see cref="AbilityBase"/> に変わりました。枠順は付与順そのもので、
-    /// 呼び名は配った側が <c>Rename</c> したものが出ます。
-    /// </remarks>
     private static ServerSpecificUserSettings.KeybindHintContent BuildAbilityHud(Player target)
     {
         if (!IsPlayerValid(target))
@@ -944,16 +906,8 @@ public class PlayerHUD : EventHandlerBase
     }
 
     /// <summary>
-    /// 右上の部隊一覧を 1 秒ごとに描き直すループ。
+    /// 部隊一覧を 1 秒ごとに描き直すループ。1 行 = 1 Hint で、使わない行は <c>RemoveHint</c> で消します。
     /// </summary>
-    /// <remarks>
-    /// <b>1 行 = 1 Hint</b> に分けています。<c>HintAlignment.Right</c> は
-    /// HSM 側で <c>&lt;margin-right&gt;</c> とアスペクト比補正を通るため解像度で位置が動きます。
-    /// Center + <c>XCoordinate</c> なら <c>&lt;pos&gt;</c> だけで済み、どの解像度でも同じ列に揃います。
-    ///
-    /// 使わなくなった行は空文字にせず <c>RemoveHint</c> で消します。
-    /// 空の Hint を残すと、隊が減ったときに詰まらず穴が空いて見えます。
-    /// </remarks>
     private IEnumerator<float> ForceHudLoop()
     {
         yield return Timing.WaitForSeconds(1f);
@@ -1082,13 +1036,8 @@ public class PlayerHUD : EventHandlerBase
     }
     
     /// <summary>
-    /// 0.1 秒ごとに PHUD_Debug ヒントを <see cref="DebugMode"/> の状態へ合わせるループ。
+    /// 0.1 秒ごとに PHUD_Debug ヒントを <see cref="DebugMode"/> の状態へ合わせるループ。OFF 側も毎回書きます。
     /// </summary>
-    /// <remarks>
-    /// <b>ON 側だけでなく OFF 側も毎回書きます。</b>切り替え口はコマンドと
-    /// Server Specifics の 2 つあるので、切り替えた側から描画を叩く作りにすると
-    /// どちらかを足したときに消し忘れます。ここが状態を見て描き分ける唯一の場所です。
-    /// </remarks>
     private IEnumerator<float> DebugHudLoop()
     {
         yield return Timing.WaitForSeconds(0.5f);
@@ -1109,167 +1058,193 @@ public class PlayerHUD : EventHandlerBase
         }
     }
     
-    private static string BuildDebugHud(Player player)
+    private static string BuildDebugHud(Player player, DebugHudOptions options)
     {
         var sb = new StringBuilder();
-        sb.AppendLine("<size=18><color=#ffff00>[DEBUG MODE]</color>");
+        sb.AppendLine($"<size={options.TextSize}><color=#ffff00>[DEBUG MODE]</color>");
+
+        static string Bool(bool v) => v ? "<color=green>T</color>" : "<color=red>F</color>";
+
+        // 簡易表示では、字下げされた詳細行（と同等の補足行）を出さない
+        bool detailed = !options.Compact;
 
         // ── ロール・チーム情報 ────────────────────────────────────────
-        sb.AppendLine(
-            $"<color=#aaaaaa>Role:</color> {player.Role?.Name ?? "None"}  " +
-            $"<color=#aaaaaa>Team:</color> {player.Role?.Team.ToString() ?? "None"}  " +
-            $"<color=#aaaaaa>CRole:</color> {CustomRole.Of(player)?.Name ?? "None"}  " +
-            $"<color=#aaaaaa>CTeam:</color> {CustomTeam.Of(player)?.Name ?? "None"}"
-        );
+        if (options.Shows(DebugHudSection.Role))
+        {
+            sb.AppendLine(
+                $"<color=#aaaaaa>Role:</color> {player.Role?.Name ?? "None"}  " +
+                $"<color=#aaaaaa>Team:</color> {player.Role?.Team.ToString() ?? "None"}  " +
+                $"<color=#aaaaaa>CRole:</color> {CustomRole.Of(player)?.Name ?? "None"}  " +
+                $"<color=#aaaaaa>CTeam:</color> {CustomTeam.Of(player)?.Name ?? "None"}"
+            );
+        }
 
         // ── 座標・ルーム情報（リアルタイム） ─────────────────────────
-        var pos  = player.Position;
-        var room = player.CurrentRoom;
-        sb.AppendLine(
-            $"<color=#aaaaaa>World:</color> ({pos.x:F2}, {pos.y:F2}, {pos.z:F2})  " +
-            $"<color=#aaaaaa>Room:</color> {room?.Type.ToString() ?? "None"} " +
-            $"<color=#aaaaaa>Zone:</color> {player.Zone.ToString()}"
-        );
-        if (room != null)
+        if (options.Shows(DebugHudSection.Position))
         {
-            var invRot     = Quaternion.Inverse(room.Rotation);
-            var localPos   = invRot * (pos - room.Position);
-            var localEuler = invRot.eulerAngles;
-            var roomEuler  = room.Rotation.eulerAngles;
+            var pos  = player.Position;
+            var room = player.CurrentRoom;
             sb.AppendLine(
-                $"<color=#aaaaaa>Local:</color> ({localPos.x:F2}, {localPos.y:F2}, {localPos.z:F2})  " +
-                $"<color=#aaaaaa>LocalRot:</color> ({localEuler.x:F1}, {localEuler.y:F1}, {localEuler.z:F1})"
+                $"<color=#aaaaaa>World:</color> ({pos.x:F2}, {pos.y:F2}, {pos.z:F2})  " +
+                $"<color=#aaaaaa>Room:</color> {room?.Type.ToString() ?? "None"} " +
+                $"<color=#aaaaaa>Zone:</color> {player.Zone.ToString()}"
             );
-            sb.AppendLine(
-                $"<color=#aaaaaa>RoomRot:</color> ({roomEuler.x:F1}, {roomEuler.y:F1}, {roomEuler.z:F1})"
-            );
+            if (room != null)
+            {
+                var invRot     = Quaternion.Inverse(room.Rotation);
+                var localPos   = invRot * (pos - room.Position);
+                var localEuler = invRot.eulerAngles;
+                var roomEuler  = room.Rotation.eulerAngles;
+                sb.AppendLine(
+                    $"<color=#aaaaaa>Local:</color> ({localPos.x:F2}, {localPos.y:F2}, {localPos.z:F2})  " +
+                    $"<color=#aaaaaa>LocalRot:</color> ({localEuler.x:F1}, {localEuler.y:F1}, {localEuler.z:F1})"
+                );
+                if (detailed)
+                {
+                    sb.AppendLine(
+                        $"<color=#aaaaaa>RoomRot:</color> ({roomEuler.x:F1}, {roomEuler.y:F1}, {roomEuler.z:F1})"
+                    );
+                }
+            }
         }
 
         // ── ラウンド状態フラグ ────────────────────────────────────────
-        static string Bool(bool v) => v ? "<color=green>T</color>" : "<color=red>F</color>";
-        sb.AppendLine(
-            $"<color=#aaaaaa>Round:</color> " +
-            $"InProgress={Bool(Round.InProgress)}  " +
-            $"IsStarted={Bool(Round.IsStarted)}  " +
-            $"IsEnded={Bool(Round.IsEnded)}  " +
-            $"IsLobby={Bool(Round.IsLobby)}  " +
-            $"IsLocked={Bool(Round.IsLocked)}  " +
-            $"IsLobbyLocked={Bool(Round.IsLobbyLocked)}"
-        );
-        sb.AppendLine(
-            $"<color=#aaaaaa>Elapsed:</color> {Round.ElapsedTime:mm\\:ss}  " +
-            $"<color=#aaaaaa>UptimeRounds:</color> {Round.UptimeRounds}  " +
-            $"<color=#aaaaaa>All Players:</color> {Player.List.Count} " +
-            $"<color=#aaaaaa>Connected Players:</color> {Player.List.Count(p => !p.IsNPC && p.IsSafePlayer())} " +
-            $"<color=#aaaaaa>Npcs:</color> {Npc.List.Count} "
-        );
+        if (options.Shows(DebugHudSection.Round))
+        {
+            if (detailed)
+            {
+                sb.AppendLine(
+                    $"<color=#aaaaaa>Round:</color> " +
+                    $"InProgress={Bool(Round.InProgress)}  " +
+                    $"IsStarted={Bool(Round.IsStarted)}  " +
+                    $"IsEnded={Bool(Round.IsEnded)}  " +
+                    $"IsLobby={Bool(Round.IsLobby)}  " +
+                    $"IsLocked={Bool(Round.IsLocked)}  " +
+                    $"IsLobbyLocked={Bool(Round.IsLobbyLocked)}"
+                );
+            }
+            sb.AppendLine(
+                $"<color=#aaaaaa>Elapsed:</color> {Round.ElapsedTime:mm\\:ss}  " +
+                $"<color=#aaaaaa>UptimeRounds:</color> {Round.UptimeRounds}  " +
+                $"<color=#aaaaaa>All Players:</color> {Player.List.Count} " +
+                $"<color=#aaaaaa>Connected Players:</color> {Player.List.Count(p => !p.IsNPC && p.IsSafePlayer())} " +
+                $"<color=#aaaaaa>Npcs:</color> {Npc.List.Count} "
+            );
+        }
 
         // ── 核弾頭タイマー情報 ───────────────────────────────────────
-        if (Warhead.IsInProgress)
+        if (options.Shows(DebugHudSection.Warhead))
         {
-            sb.AppendLine(
-                $"<color=#ff4444>Warhead:</color> " +
-                $"DetonationTimer={Warhead.DetonationTimer:F1}  " +
-                $"RealTimer={Warhead.RealDetonationTimer:F1}  " +
-                $"IsLocked={Bool(Warhead.IsLocked)}"
-            );
+            if (Warhead.IsInProgress)
+            {
+                sb.AppendLine(
+                    $"<color=#ff4444>Warhead:</color> " +
+                    $"DetonationTimer={Warhead.DetonationTimer:F1}  " +
+                    $"RealTimer={Warhead.RealDetonationTimer:F1}  " +
+                    $"IsLocked={Bool(Warhead.IsLocked)}"
+                );
+            }
+            else
+            {
+                sb.AppendLine("<color=#666666>Warhead: Not active</color>");
+            }
         }
-        else
-        {
-            sb.AppendLine("<color=#666666>Warhead: Not active</color>");
-        }
-        
+
         // ── 装備中アイテム情報 ─────────────────────────────────────────
         var currentItem = player.CurrentItem;
-        if (currentItem == null)
+        if (options.Shows(DebugHudSection.Item))
         {
-            sb.AppendLine("<color=#666666>Item: -- (未装備)</color>");
+            if (currentItem == null)
+            {
+                sb.AppendLine("<color=#666666>Item: -- (未装備)</color>");
+            }
+            else
+            {
+                sb.AppendLine(
+                    $"<color=#aaaaaa>Item:</color> {currentItem.Type}  " +
+                    $"<color=#aaaaaa>Serial:</color> {currentItem.Serial}  " +
+                    $"<color=#aaaaaa>Category:</color> {currentItem.Category}  " +
+                    $"<color=#aaaaaa>Weight:</color> {currentItem.Weight:F2}"
+                );
+
+                // カスタムアイテム情報
+                if (CustomItem.Is(currentItem.Serial, out CustomItem custom))
+                {
+                    sb.AppendLine(
+                        $"<color=#88ffcc>[CustomItem]</color> " +
+                        $"<color=#aaaaaa>Type:</color> {custom.GetType().Name}  " +
+                        $"<color=#aaaaaa>Display:</color> {custom.Name}");
+
+                    if (detailed && custom is CustomHybrid hybrid)
+                        sb.Append(hybrid.GetDebugStateFor(player, currentItem.Serial));
+                }
+
+                // ── Firearm 情報 ───────────────────────────────────────────
+                // Type: 銃の種類 / Ammo: マガジン内の弾数/最大 / Barrel: 薬室内の弾数/最大 / Total: 銃内の合計弾数
+                // Dmg: 基本ダメージ / EffDmg: アタッチメント補正込みのダメージ / Pen: 貫通力(防具を抜く力)
+                // Inaccuracy: 拡散(大きいほど散る) / Falloff: 距離によるダメージ減衰の度合い
+                // Recoil: 連射武器の反動。Time=反動の戻り時間 Z=後ろへの押し Fov=視野の揺れ Up=上への跳ね Side=横ブレ
+                // Auto: フルオートか / Aiming: ADS中か / Reloading: リロード中か / NV: ナイトビジョン有効か / Light: ライト点灯中か
+                // Attachments: 装着中のアタッチメント
+                if (currentItem is Firearm firearm)
+                {
+                    sb.AppendLine(
+                        $"<color=#ffaa44>[Firearm]</color> " +
+                        $"<color=#aaaaaa>Type:</color> {firearm.FirearmType}  " +
+                        $"<color=#aaaaaa>Ammo:</color> {firearm.MagazineAmmo}/{firearm.MaxMagazineAmmo}  " +
+                        $"<color=#aaaaaa>Barrel:</color> {firearm.BarrelAmmo}/{firearm.MaxBarrelAmmo}  " +
+                        $"<color=#aaaaaa>Total:</color> {firearm.TotalAmmo}"
+                    );
+                    if (detailed)
+                    {
+                        sb.AppendLine(
+                            $"  <color=#aaaaaa>Dmg:</color> {firearm.Damage:F1}  " +
+                            $"<color=#aaaaaa>EffDmg:</color> {firearm.EffectiveDamage:F1}  " +
+                            $"<color=#aaaaaa>Pen:</color> {firearm.Penetration:F2}  " +
+                            $"<color=#aaaaaa>Inaccuracy:</color> {firearm.Inaccuracy:F3}  " +
+                            $"<color=#aaaaaa>Falloff:</color> {firearm.DamageFalloffDistance:F1}"
+                        );
+                        var recoil = firearm.Recoil;
+                        sb.AppendLine(
+                            $"  <color=#aaaaaa>Recoil:</color> Time={recoil.AnimationTime:F3}  " +
+                            $"Z={recoil.ZAxis:F2}  " +
+                            $"Fov={recoil.FovKick:F2}  " +
+                            $"Up={recoil.UpKick:F2}  " +
+                            $"Side={recoil.SideKick:F2}"
+                        );
+                        sb.AppendLine(
+                            $"  <color=#aaaaaa>Auto:</color> {Bool(firearm.IsAutomatic)}  " +
+                            $"<color=#aaaaaa>Aiming:</color> {Bool(firearm.Aiming)}  " +
+                            $"<color=#aaaaaa>Reloading:</color> {Bool(firearm.IsReloading)}  " +
+                            $"<color=#aaaaaa>NV:</color> {Bool(firearm.NightVisionEnabled)}  " +
+                            $"<color=#aaaaaa>Light:</color> {Bool(firearm.FlashlightEnabled)}"
+                        );
+                        // アタッチメント一覧
+                        var attachments = firearm.AttachmentIdentifiers.ToList();
+                        if (attachments.Count == 0)
+                        {
+                            sb.AppendLine("  <color=#666666>Attachments: None</color>");
+                        }
+                        else
+                        {
+                            sb.Append("  <color=#aaaaaa>Attachments:</color>");
+                            foreach (var att in attachments)
+                                sb.Append($" <color=#dddd88>{att.Name}</color>");
+                            sb.AppendLine();
+                        }
+                    }
+                }
+            }
         }
-        else
+
+        // ── インベントリ全体の簡易サマリ ──────────────────────────
+        if (options.Shows(DebugHudSection.Inventory))
         {
-            sb.AppendLine(
-                $"<color=#aaaaaa>Item:</color> {currentItem.Type}  " +
-                $"<color=#aaaaaa>Serial:</color> {currentItem.Serial}  " +
-                $"<color=#aaaaaa>Category:</color> {currentItem.Category}  " +
-                $"<color=#aaaaaa>Weight:</color> {currentItem.Weight:F2}"
-            );
-
-            // カスタムアイテム情報
-            if (CustomItem.Is(currentItem.Serial, out CustomItem custom))
-            {
-                sb.AppendLine(
-                    $"<color=#88ffcc>[CustomItem]</color> " +
-                    $"<color=#aaaaaa>Type:</color> {custom.GetType().Name}  " +
-                    $"<color=#aaaaaa>Display:</color> {custom.Name}");
-
-                if (custom is CustomHybrid hybrid)
-                    sb.Append(hybrid.GetDebugStateFor(player, currentItem.Serial));
-            }
-
-            // ── Firearm 情報 ───────────────────────────────────────────
-            if (currentItem is Firearm firearm)
-            {
-                sb.AppendLine(
-                    $"<color=#ffaa44>[Firearm]</color> " +
-                    $"<color=#aaaaaa>Type:</color> {firearm.FirearmType}  " +
-                    $"<color=#aaaaaa>Ammo:</color> {firearm.MagazineAmmo}/{firearm.MaxMagazineAmmo}  " +
-                    $"<color=#aaaaaa>Barrel:</color> {firearm.BarrelAmmo}/{firearm.MaxBarrelAmmo}  " +
-                    $"<color=#aaaaaa>Total:</color> {firearm.TotalAmmo}"
-                );
-                sb.AppendLine(
-                    $"  <color=#aaaaaa>Dmg:</color> {firearm.Damage:F1}  " +
-                    $"<color=#aaaaaa>EffDmg:</color> {firearm.EffectiveDamage:F1}  " +
-                    $"<color=#aaaaaa>Pen:</color> {firearm.Penetration:F2}  " +
-                    $"<color=#aaaaaa>Inaccuracy:</color> {firearm.Inaccuracy:F3}  " +
-                    $"<color=#aaaaaa>Falloff:</color> {firearm.DamageFalloffDistance:F1}"
-                );
-                var recoil = firearm.Recoil;
-                sb.AppendLine(
-                    $"  <color=#aaaaaa>Recoil:</color> Time={recoil.AnimationTime:F3}  " +
-                    $"Z={recoil.ZAxis:F2}  " +
-                    $"Fov={recoil.FovKick:F2}  " +
-                    $"Up={recoil.UpKick:F2}  " +
-                    $"Side={recoil.SideKick:F2}"
-                );
-                sb.AppendLine(
-                    $"  <color=#aaaaaa>Auto:</color> {Bool(firearm.IsAutomatic)}  " +
-                    $"<color=#aaaaaa>Aiming:</color> {Bool(firearm.Aiming)}  " +
-                    $"<color=#aaaaaa>Reloading:</color> {Bool(firearm.IsReloading)}  " +
-                    $"<color=#aaaaaa>NV:</color> {Bool(firearm.NightVisionEnabled)}  " +
-                    $"<color=#aaaaaa>Light:</color> {Bool(firearm.FlashlightEnabled)}"
-                );
-                // アタッチメント一覧
-                var attachments = firearm.AttachmentIdentifiers.ToList();
-                if (attachments.Count == 0)
-                {
-                    sb.AppendLine("  <color=#666666>Attachments: None</color>");
-                }
-                else
-                {
-                    sb.Append("  <color=#aaaaaa>Attachments:</color>");
-                    foreach (var att in attachments)
-                        sb.Append($" <color=#dddd88>{att.Name}</color>");
-                    sb.AppendLine();
-                }
-            }
-
-            // ── Armor 情報 ─────────────────────────────────────────────
-            if (currentItem is Armor armor)
-            {
-                sb.AppendLine(
-                    $"<color=#aaddff>[Armor]</color> " +
-                    $"<color=#aaaaaa>Vest:</color> {armor.VestEfficacy}  " +
-                    $"<color=#aaaaaa>Helmet:</color> {armor.HelmetEfficacy}  " +
-                    $"<color=#aaaaaa>Stamina×:</color> {armor.StaminaUseMultiplier:F2}"
-                );
-            }
-
-            // ── インベントリ全体の簡易サマリ ──────────────────────────
             var items = player.Items.ToList();
             sb.Append($"<color=#aaaaaa>Inventory ({items.Count}):</color>");
             foreach (var it in items)
             {
-                bool isCurrent = it.Serial == currentItem.Serial;
+                bool isCurrent = currentItem != null && it.Serial == currentItem.Serial;
                 bool isCItem   = CustomItem.Is(it.Serial, out _);
                 string tag     = isCItem ? "<color=#88ffcc>[C]</color>" : "";
                 string cur     = isCurrent ? "<color=yellow>▶</color>" : "  ";
@@ -1277,36 +1252,108 @@ public class PlayerHUD : EventHandlerBase
             }
             sb.AppendLine();
         }
-        
-        // ── 有効なエフェクト一覧 ─────────────────────────────────────
-        var activeEffects = player.ActiveEffects?.ToList();
-        if (activeEffects is null || activeEffects?.Count == 0)
+
+        // ── 着用中アーマー情報 ─────────────────────────────────────────
+        // Type: アーマーの種類 / Serial: シリアル / Weight: 重量
+        // Vest: 胴体の防御効率(%) / Helmet: 頭部の防御効率(%)
+        // StaminaUse: スタミナ消費倍率 / StaminaRegen: スタミナ回復倍率 / Speed: 移動速度倍率 / CivDownside: 民間人クラスへのデメリット倍率
+        // AmmoLimits: 弾薬の所持上限 / CategoryLimits: アイテムカテゴリの所持上限補正
+        if (options.Shows(DebugHudSection.Armor))
         {
-            sb.AppendLine("<color=#666666>Effects: None</color>");
-        }
-        else
-        {
-            sb.AppendLine("<color=#aaaaaa>Effects:</color>");
-            foreach (var effect in activeEffects!)
+            var armor = player.CurrentArmor;
+            if (armor == null)
             {
-                if (effect is null) continue;
-                string duration = effect.Duration > 0f
-                    ? $"{effect.TimeLeft:F0}"
-                    : "∞";
+                sb.AppendLine("<color=#666666>Armor: -- (未着用)</color>");
+            }
+            else
+            {
                 sb.AppendLine(
-                    $"- <color=#88ddff>{effect.GetType().Name,-24}</color>" +
-                    $"| Intensity: {effect.Intensity,-3} Duration: {duration}"
+                    $"<color=#aaddff>[Armor]</color> " +
+                    $"<color=#aaaaaa>Type:</color> {armor.Type}  " +
+                    $"<color=#aaaaaa>Serial:</color> {armor.Serial}  " +
+                    $"<color=#aaaaaa>Weight:</color> {armor.Weight:F2}" +
+                    (CustomItem.Is(armor.Serial, out CustomItem customArmor)
+                        ? $"  <color=#88ffcc>[CustomItem]</color> {customArmor.GetType().Name}"
+                        : string.Empty)
                 );
+                if (detailed)
+                {
+                    sb.AppendLine(
+                        $"  <color=#aaaaaa>Vest:</color> {armor.VestEfficacy}  " +
+                        $"<color=#aaaaaa>Helmet:</color> {armor.HelmetEfficacy}  " +
+                        $"<color=#aaaaaa>StaminaUse:</color> {armor.StaminaUseMultiplier:F2}  " +
+                        $"<color=#aaaaaa>StaminaRegen:</color> {armor.StaminaRegenMultiplier:F2}  " +
+                        $"<color=#aaaaaa>Speed:</color> {armor.MovementSpeedMultiplier:F2}  " +
+                        $"<color=#aaaaaa>CivDownside:</color> {armor.CivilianDownsideMultiplier:F2}"
+                    );
+                    var ammoLimits = armor.AmmoLimits.ToList();
+                    if (ammoLimits.Count == 0)
+                    {
+                        sb.AppendLine("  <color=#666666>AmmoLimits: None</color>");
+                    }
+                    else
+                    {
+                        sb.Append("  <color=#aaaaaa>AmmoLimits:</color>");
+                        foreach (var limit in ammoLimits)
+                            sb.Append($" <color=#dddd88>{limit.AmmoType}={limit.Limit}</color>");
+                        sb.AppendLine();
+                    }
+                    var categoryLimits = armor.CategoryLimits.ToList();
+                    if (categoryLimits.Count == 0)
+                    {
+                        sb.AppendLine("  <color=#666666>CategoryLimits: None</color>");
+                    }
+                    else
+                    {
+                        sb.Append("  <color=#aaaaaa>CategoryLimits:</color>");
+                        foreach (var limit in categoryLimits)
+                            sb.Append($" <color=#dddd88>{limit.Category}={limit.Limit}</color>");
+                        sb.AppendLine();
+                    }
+                }
+            }
+        }
+
+        // ── 有効なエフェクト一覧 ─────────────────────────────────────
+        if (options.Shows(DebugHudSection.Effects))
+        {
+            var activeEffects = player.ActiveEffects?.ToList();
+            if (activeEffects is null || activeEffects.Count == 0)
+            {
+                sb.AppendLine("<color=#666666>Effects: None</color>");
+            }
+            else if (!detailed)
+            {
+                sb.Append("<color=#aaaaaa>Effects:</color>");
+                foreach (var effect in activeEffects)
+                {
+                    if (effect is null) continue;
+                    sb.Append($" <color=#88ddff>{effect.GetType().Name}</color>");
+                }
+                sb.AppendLine();
+            }
+            else
+            {
+                sb.AppendLine("<color=#aaaaaa>Effects:</color>");
+                foreach (var effect in activeEffects)
+                {
+                    if (effect is null) continue;
+                    string duration = effect.Duration > 0f
+                        ? $"{effect.TimeLeft:F0}"
+                        : "∞";
+                    sb.AppendLine(
+                        $"- <color=#88ddff>{effect.GetType().Name,-24}</color>" +
+                        $"| Intensity: {effect.Intensity,-3} Duration: {duration}"
+                    );
+                }
             }
         }
 
         // ────────────────────────────────────────────────────────────
-        // ★ 新しい項目はここに追加するだけでOK
-        // 例:
-        // sb.AppendLine($"<color=#aaaaaa>HP:</color> {player.Health:F0}/{player.MaxHealth:F0}");
+        // ★ 新しい項目は DebugHudSection と ServerSpecifics の表示切替を足してからここに追加する
         // ────────────────────────────────────────────────────────────
 
         sb.Append("</size>");
         return sb.ToString();
-}
+    }
 }

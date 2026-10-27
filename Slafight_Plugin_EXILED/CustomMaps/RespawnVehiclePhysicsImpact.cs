@@ -74,9 +74,7 @@ internal sealed class RespawnVehiclePhysicsImpact : MonoBehaviour
     }
 
     /// <summary>
-    /// 車両の到着演出はクライアントのウェーブアニメーションなので、サーバー側の車両 Transform は
-    /// 動かない。実際の Bounds 変化を待つと衝突判定が一度も発火しないため、
-    /// 同じ大きさの箱を車庫位置の手前から走らせる擬似車両で確実に判定させる。
+    /// 擬似車両の判定箱を車庫手前から走らせ直す。サーバー側の車両は動かないため。
     /// </summary>
     private void RestartGhostSweep()
     {
@@ -93,36 +91,23 @@ internal sealed class RespawnVehiclePhysicsImpact : MonoBehaviour
     }
 
     /// <summary>
-    /// 箱の実寸(m)を手動で固定する場合の値。null なら mesh bounds から求める。
+    /// 箱の実寸 (m) の手動指定。null なら mesh bounds から求める。
     /// </summary>
-    /// <remarks>
-    /// `slc hitbox van size &lt;x&gt; &lt;y&gt; &lt;z&gt;` で設定します。
-    /// 実寸(全幅)ではなく半径ではないので、値そのものは車体の実寸です。
-    /// </remarks>
     public static Vector3? SizeOverride { get; set; }
 
     /// <summary>
-    /// 箱の中心を車両ローカル系へずらす量(m)。
+    /// 箱の中心を車両ローカル軸でずらす量 (m)。
     /// </summary>
-    /// <remarks>
-    /// `slc hitbox van offset &lt;x&gt; &lt;y&gt; &lt;z&gt;` で設定します。ワールド座標ではなく
-    /// 車両ローカル軸なので、車両がどこを向いていても「前に 1m」「上に 0.3m」で指定できます。
-    /// </remarks>
     public static Vector3 CenterOffset { get; set; } = Vector3.zero;
 
     /// <summary>
-    /// 走行中のスイープに固态化される前に、現在の判定箱を取得します。
+    /// 現在の判定箱を取得します。デバッグ描画と判定で同じ値を使うためです。
     /// </summary>
-    /// <remarks>
-    /// デバッグ描画と実際の判定が同じ値を使うための口です。
-    /// </remarks>
     public bool TryGetCurrentShape(out Vector3 center, out Vector3 halfExtents, out Quaternion rotation)
         => TryGetVehicleShape(out center, out halfExtents, out rotation);
 
     /// <summary>
-    /// 車両.Root のローカル空間で Collider 相当の箱を作る。
-    /// SkinnedMeshRenderer の bounds はアニメ全域を含むため実寸より遥かに大きくなるので、
-    /// クライアントアセットの mesh bounds（rest pose）を車両ルートへ変換して使う。
+    /// 車両ルートのローカル空間で判定箱を作る。mesh bounds (rest pose) を使う。
     /// </summary>
     private bool TryGetVehicleShape(out Vector3 center, out Vector3 halfExtents, out Quaternion rotation)
     {

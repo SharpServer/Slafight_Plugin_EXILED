@@ -7,14 +7,7 @@ namespace Slafight_Plugin_EXILED.API.Core.Features;
 /// <summary>
 /// Mirror へ直接メッセージを送るときの受信可否判定です。
 /// </summary>
-/// <remarks>
-/// 使うのは「EXILED や LabApi を通さず自分で <see cref="NetworkConnection"/> に書き込む」
-/// 場面だけです。普通のプレイヤー操作には要りません。そちらは
-/// <c>PlayerSafetyExtensions.IsSafePlayer</c> で足ります。
-///
-/// AGENTS.md のとおり <see cref="NetworkConnection.isReady"/> だけでは不十分で、
-/// 実クライアントは <see cref="ClientInstanceMode.ReadyClient"/> であることも必要です。
-/// </remarks>
+/// <remarks>実クライアントは isReady に加えて <see cref="ClientInstanceMode.ReadyClient"/> である必要があります。</remarks>
 public static class NetGuards
 {
     /// <summary>
@@ -35,9 +28,7 @@ public static class NetGuards
         player?.ReferenceHub is { } hub && IsReadyClient(hub);
 
     /// <summary>
-    /// 送信先として妥当かどうか。<see cref="IsReadyClient(ReferenceHub)"/> より緩く、
-    /// 「未認証でなく、接続が生きている」ことだけを見ます。
-    /// ロールシンクのように全ハブへ配る処理で使います。
+    /// 未認証でなく接続が生きているかだけを見ます。<see cref="IsReadyClient(ReferenceHub)"/> より緩い判定です。
     /// </summary>
     public static bool IsValidReceiver(ReferenceHub hub)
     {

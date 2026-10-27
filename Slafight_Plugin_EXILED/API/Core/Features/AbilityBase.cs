@@ -9,45 +9,16 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// プレイヤーが任意のタイミングで使う能力です。<b>プレイヤー 1 人につき 1 インスタンス</b>。
-/// クールダウンと使用回数は基底が持つので、派生クラスは効果だけ書けば済みます。
-///
-/// 入力 (キーバインドや Server Specific Settings) はここでは扱いません。
-/// 入力側から <see cref="TryUse"/> を呼んでください。
-///
-/// 寿命は <see cref="PlayerScope"/> に相乗りします。プレイヤーの退出・ラウンド再開で
-/// 自動的に失われるので、能力側に専用のイベントフックは要りません。
+/// プレイヤーが任意のタイミングで使う能力です。プレイヤー 1 人につき 1 インスタンス。
 /// </summary>
-/// <example>
-/// <code>
-/// public sealed class Dash : AbilityBase
-/// {
-///     public override string Name => "ダッシュ";
-///     public override float Cooldown => 15f;
-///
-///     protected override void OnUsed()
-///     {
-///         Player.Position += Player.GameObject.transform.forward * 5f;
-///     }
-/// }
-///
-/// // 付与と使用
-/// AbilityBase.Give&lt;Dash&gt;(player);
-/// AbilityBase.Get&lt;Dash&gt;(player)?.TryUse(out _);
-/// </code>
-/// </example>
+/// <remarks>クールダウンと使用回数は基底が持ちます。入力側から <see cref="TryUse"/> を呼んでください。</remarks>
 public abstract class AbilityBase
 {
     private static readonly Dictionary<uint, List<AbilityBase>> Granted = new Dictionary<uint, List<AbilityBase>>();
 
     /// <summary>
-    /// プレイヤーごとに、いま選んでいる能力の位置です。
+    /// プレイヤーごとに、いま選んでいる能力の位置です。付与順がそのまま枠順です。
     /// </summary>
-    /// <remarks>
-    /// 旧実装はこれを <c>AbilityManager.Loadouts</c> という別のマネージャと
-    /// <c>AbilityLoadout</c> という固定 3 枠の器に持たせていました。
-    /// 付与された順がそのまま枠順なので、器も枠数の上限も要りません。
-    /// </remarks>
     private static readonly Dictionary<uint, int> ActiveIndexes = new Dictionary<uint, int>();
 
     private float readyAt;
@@ -67,14 +38,8 @@ public abstract class AbilityBase
     public abstract string Name { get; }
 
     /// <summary>
-    /// 画面に出す名前です。既定は <see cref="Name"/>。
+    /// 画面に出す名前です。既定は <see cref="Name"/>。<see cref="Rename"/> で差し替えられます。
     /// </summary>
-    /// <remarks>
-    /// 同じ能力を別の呼び名で使う役職があります。呼び名を決めているのは
-    /// <b>能力ではなく配った役職の側</b>なので、能力に「誰が持っているか」を
-    /// 判定させず、配るときに <see cref="Rename"/> で名札を貼り替えます。
-    /// 旧実装の <c>AbilityLocalisation</c> が役職ごとの別名表を抱えていたのがこれで消えます。
-    /// </remarks>
     public string DisplayName => string.IsNullOrEmpty(renamed) ? Name : renamed;
 
     /// <summary>
@@ -110,10 +75,6 @@ public abstract class AbilityBase
     /// <summary>
     /// 切り替えられる選択肢です。空なら選択肢を持たない普通の能力です。
     /// </summary>
-    /// <remarks>
-    /// 選択肢は<b>それ自身が振る舞いを持ちます</b>。
-    /// <see cref="OnUsed"/> は <c>SelectedOption?.Use(Player)</c> と書くだけで済みます。
-    /// </remarks>
     public virtual IReadOnlyList<AbilityOption> Options => [];
 
     /// <summary>
@@ -130,10 +91,6 @@ public abstract class AbilityBase
     /// <summary>
     /// いま選ばれている選択肢です。選択肢を持たなければ null。
     /// </summary>
-    /// <remarks>
-    /// この能力はプレイヤー 1 人につき 1 インスタンスなので、
-    /// 選択状態はただのフィールドで足ります。誰の選択かを持ち回る必要はありません。
-    /// </remarks>
     public AbilityOption SelectedOption => Options.Count == 0 ? null : Options[SelectedOptionIndex];
 
     /// <summary>
@@ -301,11 +258,6 @@ public abstract class AbilityBase
     /// <summary>
     /// この 1 個の呼び名を差し替えます。null / 空を渡すと <see cref="Name"/> に戻ります。
     /// </summary>
-    /// <example>
-    /// <code>
-    /// AbilityBase.Give&lt;CreateSinkholeAbility&gt;(Player)?.Rename("怨みの沼");
-    /// </code>
-    /// </example>
     public void Rename(string name) => renamed = name;
 
     /// <summary>
@@ -401,10 +353,7 @@ public abstract class AbilityBase
     }
 
     /// <summary>
-    /// 取り上げられたときに呼ばれます。<see cref="OnGranted"/> と対になります。
-    ///
-    /// <see cref="Scope"/> に載せたものはプレイヤーの退出・ラウンド再開で勝手に止まりますが、
-    /// 能力だけを取り上げる場合はスコープが生きたままなので、ここで畳んでください。
+    /// 取り上げられたときに呼ばれます。<see cref="Scope"/> は生きたままなので、ここで畳んでください。
     /// </summary>
     protected virtual void OnRevoked()
     {

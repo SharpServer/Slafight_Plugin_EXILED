@@ -4,6 +4,7 @@ using Exiled.API.Features.Items;
 using InventorySystem.Items.Firearms.Attachments;
 using LabApi.Events.Arguments.PlayerEvents;
 using Slafight_Plugin_EXILED.API.Core.Extensions;
+using Slafight_Plugin_EXILED.API.Structs;
 using UnityEngine;
 
 using ExiledItem = Exiled.API.Features.Items.Item;
@@ -20,6 +21,9 @@ namespace Slafight_Plugin_EXILED.API.Core.Features;
 public abstract class CustomFirearm : CustomItem
 {
     private static readonly IReadOnlyList<AttachmentName> NoAttachments = [];
+    private static readonly IReadOnlyDictionary<GunSoundSelector, GunSoundOverride> NoGunSounds =
+        new Dictionary<GunSoundSelector, GunSoundOverride>();
+    private static readonly Dictionary<Type, GunSoundTable> GunSoundTables = new();
 
     /// <summary>基礎ダメージ。null ならバニラ値を維持します。</summary>
     protected virtual float? Damage => null;
@@ -33,8 +37,11 @@ public abstract class CustomFirearm : CustomItem
     /// <summary>ダメージ減衰距離。null ならバニラ値を維持します。</summary>
     protected virtual float? DamageFalloffDistance => null;
 
-    /// <summary>実効マガジン容量。null ならバニラ値を維持します。</summary>
+    /// <summary>マガジン容量。null ならバニラ値を維持します。</summary>
     protected virtual int? MagazineCapacity => null;
+
+    /// <summary>マガジン系アタッチメントの容量補正を <see cref="MagazineCapacity"/> に加算するか。</summary>
+    protected virtual bool AttachmentsModifyCapacity => true;
 
     /// <summary>生成直後の装填数。null なら容量またはバニラ値を使います。</summary>
     protected virtual int? InitialMagazineAmmo => MagazineCapacity;
@@ -53,16 +60,40 @@ public abstract class CustomFirearm : CustomItem
 
     /// <summary>弾種・弾倉容量・初期装填・発射時の消費弾数です。</summary>
     protected virtual FirearmAmmoSettings AmmoSettings =>
-        new(MagazineCapacity, InitialMagazineAmmo, ammoDrain: AmmoDrain);
+        new(MagazineCapacity, InitialMagazineAmmo, ammoDrain: AmmoDrain,
+            attachmentsModifyCapacity: AttachmentsModifyCapacity);
 
     /// <summary>Pickup の見た目の大きさ。</summary>
     protected virtual Vector3 PickupScale => Vector3.one;
+
+    /// <summary>
+    /// 銃声の差し替え定義です。型ごとに 1 度だけ評価されます。キーは <see cref="GunSoundSelector"/> を参照。
+    /// </summary>
+    protected virtual IReadOnlyDictionary<GunSoundSelector, GunSoundOverride> GunSounds => NoGunSounds;
+
+    /// <summary>鳴った音の AudioIndex・クリップ名・種類をログへ出します。開発用です。</summary>
+    protected virtual bool LogGunSounds => false;
+
+    /// <summary>この型の銃声差し替え表です。</summary>
+    internal GunSoundTable SoundTable
+    {
+        get
+        {
+            Type type = GetType();
+            if (!GunSoundTables.TryGetValue(type, out GunSoundTable table))
+                GunSoundTables[type] = table = GunSoundTable.Build(GunSounds, LogGunSounds);
+
+            return table;
+        }
+    }
 
     protected override void Customize(LabApi.Features.Wrappers.Item item)
     {
         if (ExiledItem.Get(item.Base) is Firearm firearm)
             Apply(firearm);
 
+        // 初回発砲より前に差し替え音を読み込んでおく。
+        _ = SoundTable;
         base.Customize(item);
     }
 
@@ -82,6 +113,7 @@ public abstract class CustomFirearm : CustomItem
             Apply(firearmPickup);
 
         pickup.Transform.localScale = Vector3.Scale(pickup.Transform.localScale, PickupScale);
+        _ = SoundTable;
         base.Customize(pickup);
     }
 

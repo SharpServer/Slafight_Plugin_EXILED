@@ -8,12 +8,8 @@ using Slafight_Plugin_EXILED.ProximityChat;
 namespace Slafight_Plugin_EXILED.API.Core.Commands;
 
 /// <summary>
-/// 土台がいま何を掴んでいるかを表示します。
+/// 自動登録されたハンドラや有効な役職・アイテムなど、土台の状態を表示します。
 /// </summary>
-/// <remarks>
-/// 自動登録が生きているか、ラウンド用ハンドラが作り直されたか、
-/// 役職やアイテムが取り残されていないかを、実機で確かめるための窓口です。
-/// </remarks>
 public sealed class StatusCommand : CommandBase
 {
     public override Type Parent => typeof(RootCommand);

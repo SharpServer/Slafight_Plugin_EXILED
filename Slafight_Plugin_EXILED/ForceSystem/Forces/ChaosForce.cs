@@ -3,26 +3,13 @@ using PlayerRoles;
 namespace Slafight_Plugin_EXILED.ForceSystem.Forces;
 
 /// <summary>
-/// カオス・インサージェンシーの隊です。
+/// カオス・インサージェンシーの隊です。SCP-914 で減点されず、継続所属の影響が「中」です。
 /// </summary>
-/// <remarks>
-/// 草案の派生システムどおり、標準との差分は 2 つだけです。
-/// <list type="bullet">
-/// <item>SCP-914 の使用が減点対象から外れる。</item>
-/// <item>継続所属時間の影響が「大」から「中」に抑えられる。</item>
-/// </list>
-/// この 2 つは <see cref="ForceBase"/> 側の <c>virtual</c> を override して表現します。
-/// </remarks>
 public sealed class ChaosForce : ForceBase
 {
     /// <summary>
     /// カオス側にバニラの部隊名はありません。
     /// </summary>
-    /// <remarks>
-    /// <see cref="Respawning.NamingRules.NamingRulesManager.AllNamingRules"/> は
-    /// <see cref="Team.FoundationForces"/> しか持たないため、
-    /// 名札には出せません。表示はこちらの HUD が受け持ちます。
-    /// </remarks>
     public override byte? UnitId => null;
 
     /// <inheritdoc />

@@ -6,18 +6,8 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// 波が出たときのアナウンスを流します。
+/// 波が出たときのアナウンスと出撃曲を流します。内容は <see cref="SpawnSet"/> が名乗ります。
 /// </summary>
-/// <remarks>
-/// <b>ここには波ごとの分岐がありません。</b>
-/// 何と言うか・何を流すかは波自身が
-/// <see cref="SpawnSet.Announcement"/> と <see cref="SpawnSet.Theme"/> で名乗ります。
-/// 旧実装は同じ処理を 24 分岐の switch 2 つで書いていました。
-/// 波を足すときにこのファイルを触る必要はありません。
-///
-/// このクラスはどこからも登録されていません。<see cref="EventHandlerBase"/> を
-/// 継承しているだけで <see cref="EventHandlerRegistry"/> が購読させます。
-/// </remarks>
 public sealed class SpawnAnnouncer : EventHandlerBase
 {
     /// <summary>
@@ -40,10 +30,6 @@ public sealed class SpawnAnnouncer : EventHandlerBase
     /// <summary>
     /// 出撃曲を全体に流します。
     /// </summary>
-    /// <remarks>
-    /// 位置を持たない全体再生です。引数は旧実装の呼び出しに合わせてあります
-    /// (最後まで鳴らして片付ける・非空間・実質無限の到達距離)。
-    /// </remarks>
     private static void PlayTheme(string theme)
     {
         try
@@ -67,17 +53,10 @@ public sealed class SpawnAnnouncer : EventHandlerBase
 
     private static void OnSpawned(SpawnedEventArgs ev)
     {
-        (string cassie, string subtitle) = ev.Wave.Announcement(ev.SpawnCount, ev.UnitName);
+        SpawnAnnouncement announcement = ev.Wave.ComposeAnnouncement(ev.SpawnCount, ev.UnitName, ev.Players);
 
-        if (cassie is { Length: > 0 } && ev.Wave.AnnouncesRemainingScps)
-        {
-            (string scpCassie, string scpSubtitle) = CustomSeason.Current.RemainingScps(CustomSeason.CountScps());
-            cassie = $"{cassie} {scpCassie}";
-            subtitle = $"{subtitle}<split>{scpSubtitle}";
-        }
-
-        if (cassie is { Length: > 0 })
-            CassieExtensions.CassieTranslated(cassie, subtitle ?? string.Empty, false);
+        if (!announcement.IsEmpty)
+            CassieExtensions.CassieTranslated(announcement.CassieText, announcement.SubtitleText, announcement.Bell);
 
         if (ev.Wave.Theme is { Length: > 0 } theme)
             PlayTheme(theme);

@@ -13,11 +13,6 @@ namespace Slafight_Plugin_EXILED.ForceSystem;
 /// <summary>
 /// 隊の状態を定期的に見直します。分隊の編成・解散・合流と、階級の昇進・昇格を担います。
 /// </summary>
-/// <remarks>
-/// ループは <see cref="RoundScope"/> に載せるので、ラウンド再開で必ず止まります。
-/// 距離は <c>Vector3.Distance</c> ではなく <c>sqrMagnitude</c> と二乗済みしきい値で比べます。
-/// 毎 tick 全隊員ぶん回るため、平方根を取る意味がありません。
-/// </remarks>
 public static class ForceEvaluator
 {
     /// <summary>本隊から離れて単独行動と見なす距離 (m)。</summary>
@@ -26,11 +21,7 @@ public static class ForceEvaluator
     /// <summary>単独行動どうしが分隊を組める距離 (m)。</summary>
     private const float SquadFormDistance = 15f;
 
-    /// <summary>単独行動が既存の隊に合流できる距離 (m)。</summary>
-    /// <remarks>
-    /// 離脱の <see cref="DetachDistance"/> より小さくしてあります。
-    /// 同じ距離だと、入った直後に離脱判定に掛かって出入りを繰り返します。
-    /// </remarks>
+    /// <summary>単独行動が既存の隊に合流できる距離 (m)。<see cref="DetachDistance"/> より小さくします。</summary>
     private const float JoinDistance = 15f;
 
     /// <summary>分隊が本隊に吸収され始める距離 (m)。</summary>
@@ -64,10 +55,6 @@ public static class ForceEvaluator
     }
 
     /// <summary>Member から SubLead へ昇進できる最小の隊員数。</summary>
-    /// <remarks>
-    /// 1〜2 人の隊では貢献度シェアが簡単に 100% になり、
-    /// 実質無条件で昇進してしまうため下限を設けています。
-    /// </remarks>
     internal const int MinMembersForPromotion = 3;
 
     /// <summary>Member から SubLead へ昇進できる最小の貢献度。</summary>
@@ -127,10 +114,6 @@ public static class ForceEvaluator
     /// <summary>
     /// 隊員の名札を描き直します。
     /// </summary>
-    /// <remarks>
-    /// 階級も所属も tick の中で変わるので、変化のたびに個別へ通知するより
-    /// ここでまとめて描き直すほうが漏れません。
-    /// </remarks>
     private static void RefreshNameplates()
     {
         foreach (Player player in Player.List)
@@ -146,12 +129,8 @@ public static class ForceEvaluator
     // ───────────────────────────────
 
     /// <summary>
-    /// 隊が作られた直後に TopLead と SubLead を決めます。
+    /// 隊が作られた直後に TopLead と SubLead を役職優先度で決めます。
     /// </summary>
-    /// <remarks>
-    /// 役職優先度がいちばん高い者が TopLead、その次の段が SubLead です。
-    /// 草案の「機動部隊の隊長/軍曹/二等兵などの編成」がそのまま階級に落ちます。
-    /// </remarks>
     internal static void AssignTopLead(ForceBase force)
     {
         if (force?.Members is not { Count: > 0 }) return;
@@ -184,11 +163,6 @@ public static class ForceEvaluator
     /// <summary>
     /// TopLead が居なくなっていたら次を立てます。
     /// </summary>
-    /// <remarks>
-    /// 草案どおり<b>役職優先</b>です。<see cref="ForceBase.BestBy"/> が
-    /// 役職優先度 → 貢献度の順で並べるので、元帥のような上位役職が居れば
-    /// 補佐の貢献度を無視して昇格します。
-    /// </remarks>
     private static void EnsureTopLead(ForceBase force)
     {
         if (force.TopLead is { IsAlive: true }) return;
@@ -208,12 +182,8 @@ public static class ForceEvaluator
     // ───────────────────────────────
 
     /// <summary>
-    /// 本隊から離れすぎた隊員を外します。
+    /// 本隊から離れすぎた隊員を外します。TopLead は外しません。
     /// </summary>
-    /// <remarks>
-    /// TopLead は一人でも本隊を形成し続けるので、離れても外しません。
-    /// 草案の「TopLead は例え一人でも常に本隊を形成します」がここです。
-    /// </remarks>
     private static void UpdateDetachment(ForceBase force)
     {
         if (force.TopLead is not { IsAlive: true } lead) return;
@@ -231,13 +201,8 @@ public static class ForceEvaluator
     }
 
     /// <summary>
-    /// 無所属の人を、近くの隊に合流させます。
+    /// 無所属の人を近くの隊に合流させます。本隊を優先します。
     /// </summary>
-    /// <remarks>
-    /// 隊の Id を共有していなくても、近くに居れば入れます。
-    /// はぐれた隊員が元の隊に戻れず、ずっと単独行動のままになるのを防ぎます。
-    /// 本隊を優先し、無ければ分隊に入ります。
-    /// </remarks>
     private static void JoinNearbyForces()
     {
         foreach (Player player in Player.List)
@@ -298,10 +263,6 @@ public static class ForceEvaluator
     /// <summary>
     /// 無所属どうしが近くに 2 人以上居たら分隊を組ませます。
     /// </summary>
-    /// <remarks>
-    /// 草案の「隊員の階級に関係なく、本隊から一定距離以上離れており、
-    /// なおかつ 2 人以上の Alone が共に行動しているとき」がこれです。
-    /// </remarks>
     private static void FormSquads()
     {
         // 波で出ていないプレイヤー (ラウンド開始時の D クラスなど) はまだ隊員状態を持たない。
@@ -355,12 +316,8 @@ public static class ForceEvaluator
     }
 
     /// <summary>
-    /// この人が分かれてきたと見なせる本隊です。無ければ null。
+    /// この人が分かれてきたと見なせる、同じ種類でいちばん近い本隊です。無ければ null。
     /// </summary>
-    /// <remarks>
-    /// 同じ種類の本隊のうち、いちばん近いものを親にします。
-    /// 距離で足切りはしません。施設内で離れていても、分かれた先は元の本隊だからです。
-    /// </remarks>
     private static ForceBase NearestParentFor(ForceMember seed)
     {
         Type kind = ForceKinds.For(seed.Player);
@@ -389,12 +346,8 @@ public static class ForceEvaluator
     }
 
     /// <summary>
-    /// 分隊の実体を作ります。呼称は元の隊に揃えます。
+    /// 分隊の実体を作ります。種類は元の隊に揃えます。
     /// </summary>
-    /// <remarks>
-    /// D クラスのギャングから分かれた分隊が「分隊」と名乗ると呼称が割れるので、
-    /// 種類は元の隊と同じものを使います。
-    /// </remarks>
     private static ForceBase CreateSquad(ForceMember seed)
     {
         ForceBase squad = ForceKinds.Create(seed.Player.Role.Team);
@@ -407,14 +360,8 @@ public static class ForceEvaluator
     }
 
     /// <summary>
-    /// 分隊の隊長を決めます。
+    /// 分隊の隊長を選び直します。SubLead は保持します。
     /// </summary>
-    /// <remarks>
-    /// 元の隊で率いていた人も、新しい分隊では選び直します。
-    /// 階級をそのまま持ち越すと、たまたま元隊長だった人が
-    /// 分隊でも自動的に隊長になってしまいます。
-    /// 補佐は草案どおり保持します。
-    /// </remarks>
     private static void PromoteSquadLead(ForceBase squad)
     {
         foreach (ForceMember member in squad.Members)
@@ -484,12 +431,8 @@ public static class ForceEvaluator
     }
 
     /// <summary>
-    /// 分隊を本隊に吸収します。
+    /// 分隊を本隊に吸収します。分隊の TopLead は SubLead に降ります。
     /// </summary>
-    /// <remarks>
-    /// 草案どおり、分隊で TopLead だった者は本隊では SubLead に降ります。
-    /// 分隊で SubLead だった者はそのまま SubLead を保ちます。
-    /// </remarks>
     private static void Merge(ForceBase squad, ForceBase main)
     {
         foreach (ForceMember member in squad.Members.ToArray())
@@ -556,16 +499,6 @@ public static class ForceEvaluator
     /// <summary>
     /// 本隊が消えた陣営で、いちばん貢献している分隊を本隊に昇格させます。
     /// </summary>
-    /// <remarks>
-    /// 草案どおりの順です。
-    /// <list type="number">
-    /// <item>SubLead を擁する分隊のうち、最高貢献の隊を選ぶ。</item>
-    /// <item>その中で最高貢献の SubLead を TopLead に昇格させる。</item>
-    /// <item>どこにも SubLead が居なければ、最高貢献の分隊の最高貢献 Member を昇格させる。</item>
-    /// </list>
-    /// 役職優先は <see cref="ForceBase.BestBy"/> に入っているので、
-    /// 隊長級の役職を持つ者が居ればそちらが優先されます。
-    /// </remarks>
     private static void PromoteSquads()
     {
         // 陣営ではなく「同じ側の隊」ごとに見る。Faction.FoundationEnemy には
@@ -627,12 +560,8 @@ public static class ForceEvaluator
     }
 
     /// <summary>
-    /// 「同じ側の隊」を束ねるキーです。
+    /// 「同じ側の隊」を束ねるキーです。<see cref="ForceVisibility"/> と同じ基準です。
     /// </summary>
-    /// <remarks>
-    /// <see cref="ForceVisibility"/> の既定ルールと同じ基準にしてあります。
-    /// 表示上は別々なのに昇格だけ混ざる、という食い違いを避けるためです。
-    /// </remarks>
     private static object SideKeyOf(ForceBase force) => force.Team ?? (object)force.GetType();
 
     // ───────────────────────────────
@@ -640,16 +569,8 @@ public static class ForceEvaluator
     // ───────────────────────────────
 
     /// <summary>
-    /// 隊員にバフを配ります。
+    /// 隊員にバフを配ります。tick より少し長い持続で掛け直すだけで、剥がしません。
     /// </summary>
-    /// <remarks>
-    /// <b>剥がす処理を書きません。</b>tick より少しだけ長い持続時間で掛け直すので、
-    /// 隊から外れれば数秒で自然に切れます。明示的に消すと、
-    /// 別の役職やアイテムが同じエフェクトを付けていたときにそれごと剥いでしまいます。
-    ///
-    /// 同じ理由で、既により強いものが掛かっているときは触りません。
-    /// 部隊バフが他の効果を格下げしないようにするためです。
-    /// </remarks>
     private static void ApplyBuffs()
     {
         foreach (ForceBase force in ForceRegistry.All.ToArray())

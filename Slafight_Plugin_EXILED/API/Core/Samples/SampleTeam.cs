@@ -6,12 +6,7 @@ using Slafight_Plugin_EXILED.API.Enums;
 namespace Slafight_Plugin_EXILED.API.Core.Samples;
 
 /// <summary>
-/// 陣営の書き方の見本です。
-///
-/// 見どころは <see cref="IncludesVanilla"/> が
-/// 「<b>カスタム役職を持たない</b>プレイヤーだけ」を判定していることです。
-/// カスタム役職を持つプレイヤーは、その役職が名乗る <see cref="CustomRole.Team"/> が答えになるので、
-/// ここに「ただし SCP-3005 は除く」のような例外を書く必要がありません。
+/// 陣営の書き方の見本です。<see cref="IncludesVanilla"/> はカスタム役職を持たないプレイヤーだけを判定します。
 /// </summary>
 public sealed class SampleTeam : CustomTeam
 {

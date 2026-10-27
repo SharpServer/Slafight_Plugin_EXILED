@@ -3,15 +3,8 @@ using PlayerRoles;
 namespace Slafight_Plugin_EXILED.ForceSystem.Forces;
 
 /// <summary>
-/// D クラス職員のギャングです。
+/// D クラス職員のギャングです。悪名高い行いが加点になり、継続所属の影響が「小」です。
 /// </summary>
-/// <remarks>
-/// 草案の派生システムどおり、呼称と貢献度のルールが標準と異なります。
-/// <list type="bullet">
-/// <item>キーカードを拾う・SCP-914 をいじるといった悪名高い行いが<b>加点</b>になる。</item>
-/// <item>継続所属時間の影響が「大」から「小」に抑えられる。</item>
-/// </list>
-/// </remarks>
 public sealed class ClassDGang : ForceBase
 {
     /// <inheritdoc />

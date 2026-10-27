@@ -16,16 +16,8 @@ public static class PlayerExtensions
     }
     
     /// <summary>
-    /// バニラ役職を割り当てます。
+    /// バニラ役職を割り当てます。カスタム役職は <c>CustomRole.Spawn&lt;T&gt;(player)</c> を使ってください。
     /// </summary>
-    /// <remarks>
-    /// 以前はここに「バニラ役職 → カスタム役職」の読み替え表 (30 分岐の switch) がありました。
-    /// <c>RoleTypeId.Scp173</c> を渡すと黙って <c>CRoleTypeId.Scp173</c> になる、という作りです。
-    ///
-    /// 新 API では役職は型そのもので指すため、この読み替えは要りません。
-    /// カスタム役職を出したいときは <c>CustomRole.Spawn&lt;T&gt;(player)</c> を、
-    /// バニラ役職を出したいときはこれを呼んでください。
-    /// </remarks>
     public static void SetRole(this Player player, RoleTypeId roleTypeId,
         RoleSpawnFlags roleSpawnFlags = RoleSpawnFlags.All)
     {

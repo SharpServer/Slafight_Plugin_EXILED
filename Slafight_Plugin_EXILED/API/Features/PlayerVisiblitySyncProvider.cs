@@ -6,9 +6,7 @@ using Exiled.API.Features.Roles;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
-/// Controls receiver-specific player visibility through EXILED's FPC visibility patch.
-/// This is intentionally separate from StatusEffect fake sync; effects do not reliably control
-/// whether another client receives a player's movement/role visibility data.
+/// EXILED の FPC 可視性パッチで、受信者ごとのプレイヤー可視性を制御します。
 /// </summary>
 public static class PlayerVisibilitySyncProvider
 {

@@ -11,13 +11,8 @@ using Utils;
 namespace Slafight_Plugin_EXILED.Patches;
 
 /// <summary>
-/// RemoteAdminの<c>action</c>コマンド(<see cref="ActionDummyCommand"/>)実行の前後で、
-/// 押した管理者と選択されたDummyを<see cref="DummyActionInvocation"/>に保持・破棄します。
+/// RA の <c>action</c> コマンド実行の前後で、押した管理者と選択された Dummy を <see cref="DummyActionInvocation"/> に保持・破棄します。
 /// </summary>
-/// <remarks>
-/// 本体はDummyアクションのコールバックをパラメータなしのSystem.Actionとして呼び出すため、
-/// 押下時のコンテキストをコールバックへ渡すにはこのパッチでホルダーへ供給するしかありません。
-/// </remarks>
 [HarmonyPatch(typeof(ActionDummyCommand), nameof(ActionDummyCommand.Execute))]
 internal static class DummyActionContextPatch
 {

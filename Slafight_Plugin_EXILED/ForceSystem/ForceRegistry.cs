@@ -7,12 +7,8 @@ using Slafight_Plugin_EXILED.Extensions;
 namespace Slafight_Plugin_EXILED.ForceSystem;
 
 /// <summary>
-/// いま生きている隊と隊員をまとめて持ちます。
+/// いま生きている隊と隊員をまとめて持ちます。隊員は netId で引きます。
 /// </summary>
-/// <remarks>
-/// 隊員の引きは netId キーです。AGENTS.md が求めるとおり、
-/// 破棄され得る <see cref="Player"/> を辞書のキーにしません。
-/// </remarks>
 public static class ForceRegistry
 {
     private static readonly List<ForceBase> Forces = [];
@@ -117,18 +113,8 @@ public static class ForceRegistry
         Forces.Where(force => !force.IsMainForce && ReferenceEquals(force.Parent, parent));
 
     /// <summary>
-    /// 役職が変わった人の所属を見直します。いまの役職に合わなくなっていれば捨てます。
+    /// 役職が変わった人の所属を見直します。いまの役職に合わなくなっていれば隊員状態ごと捨てます。
     /// </summary>
-    /// <remarks>
-    /// <b>死亡だけを見ていると足りません。</b>隊員が SCP-049-2 にされたり、
-    /// 管理者に SCP へ変えられたりした場合、生きたままなので
-    /// <see cref="ForceBase.PruneDead"/> では外れず、隊に残って分隊を率い、
-    /// バフまで受け取り続けます。役職が入れ替わった時点でここが捨てます。
-    ///
-    /// 階級と貢献度は「その役職でその隊に居たあいだ」のものなので、
-    /// 隊から外すだけでなく隊員状態ごと捨てます。残すと、部隊を率いていた人が
-    /// 別陣営で復帰した瞬間にまた隊長になります。
-    /// </remarks>
     internal static void Refresh(Player player)
     {
         if (player is null) return;
@@ -152,11 +138,6 @@ public static class ForceRegistry
     /// <summary>
     /// この隊員状態が、もう持ち主の役職と合っていないかどうか。
     /// </summary>
-    /// <remarks>
-    /// 隊に属しているなら、居られるかどうかは隊自身 (<see cref="ForceBase.Accepts"/>) が決めます。
-    /// 属していないなら、作られたときの種類 (<see cref="ForceMember.Kind"/>) から
-    /// 変わっていないかだけを見ます。
-    /// </remarks>
     private static bool IsStale(ForceMember member)
     {
         if (!member.IsAlive) return true;
@@ -167,13 +148,8 @@ public static class ForceRegistry
     }
 
     /// <summary>
-    /// 隊員状態を捨てます。所属していた隊からも外れます。
+    /// 隊員状態を捨て、所属していた隊から外し、名札を描き直します。
     /// </summary>
-    /// <remarks>
-    /// 名札もここで描き直します。隊名と階級は <c>CustomInfo</c> に焼き付いていて、
-    /// 隊員状態を失った人は以後 <see cref="ForceEvaluator"/> の描き直しが触らないので、
-    /// ここで消さないと SCP になっても「隊長」のまま残ります。
-    /// </remarks>
     private static void Discard(ForceMember member)
     {
         member.Force?.Remove(member);
@@ -185,12 +161,8 @@ public static class ForceRegistry
     }
 
     /// <summary>
-    /// 役職が変わった隊員・死亡した隊員・退出した隊員と、空になった隊を掃除します。
+    /// 役職が変わった・死亡した・退出した隊員と、空になった隊を掃除します。
     /// </summary>
-    /// <remarks>
-    /// <see cref="Refresh"/> の取りこぼし (役職変更イベントを通らない経路) をここで拾います。
-    /// 評価の tick ごとに回るので、遅くとも数秒で辻褄が合います。
-    /// </remarks>
     internal static void Prune()
     {
         foreach (KeyValuePair<uint, ForceMember> pair in MembersByNetId.ToArray())

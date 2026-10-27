@@ -6,6 +6,7 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Enums;
 using Slafight_Plugin_EXILED.API.Core.Extensions;
 using Slafight_Plugin_EXILED.API.Core.Structs;
+using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.Extensions;
 using Slafight_Plugin_EXILED.ForceSystem;
 using UnityEngine;
@@ -13,34 +14,15 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// 何人に、どの役職を、何人ずつ割り当てるかをまとめて宣言するものです。
-/// ラウンド開始時の一括割り当てや、イベント開始時の陣営配布に使います。
+/// どの役職を何人ずつ割り当てるかを宣言します。波も SpawnSet の派生として定義します。
 /// </summary>
-/// <remarks>
-/// <b>これは旧 <c>MainHandlers/SpawnSystem</c> 一式を置き換えるためのものです。</b>
-/// 波を表す中間基底クラスや <c>SpawnTypeId</c> のような enum を挟まないでください。
-/// 波は <see cref="SpawnSet"/> の派生クラスそのものとして宣言し、
-/// 陣営・重み・比率・テーマはその派生クラスのプロパティとして持たせます。
-/// enum と引き表に分けた瞬間、旧構造へ逆戻りします。
-/// </remarks>
-/// <example>
-/// <code>
-/// public class ChaosRaidSet : SpawnSet
-/// {
-///     public override string Name => "Chaos Raid";
-///
-///     public override int AllowedPlayerCount => 6;
-///
-///     public override IReadOnlyList&lt;SpawnSetRoleDefinition&gt; SpawnRoles =>
-///     [
-///         SpawnSetRoleDefinition.Custom&lt;ChaosCommando&gt;(count: 1, isForced: true),
-///         SpawnSetRoleDefinition.Vanilla(RoleTypeId.ChaosRifleman, count: 99),
-///     ];
-/// }
-/// </code>
-/// </example>
 public abstract class SpawnSet
 {
+    /// <summary>
+    /// このラウンドで 1 人以上割り当てた SpawnSet です。出た順。
+    /// </summary>
+    private static readonly List<SpawnSet> History = [];
+
     /// <summary>
     /// <see cref="SpawnFor"/> の間だけ差し替わる対象一覧です。
     /// </summary>
@@ -73,13 +55,8 @@ public abstract class SpawnSet
     public abstract IReadOnlyList<SpawnSetRoleDefinition> SpawnRoles { get; }
 
     /// <summary>
-    /// 役職を重み抽選ではなく、行ごとに 1 人ずつ順番に配るかどうか。
+    /// 重み抽選ではなく行ごとに 1 人ずつ順番に配るかどうか。<see cref="SpawnSetRoleDefinition.Weight"/> は無視されます。
     /// </summary>
-    /// <remarks>
-    /// 人数が少なくても各役職が 1 人ずつ揃うので、編成を安定させたい波に向きます。
-    /// <see cref="SpawnSetRoleDefinition.Weight"/> は無視され、
-    /// <see cref="SpawnSetRoleDefinition.Count"/> の上限だけが効きます。
-    /// </remarks>
     public virtual bool RoundRobin => false;
 
     // ───────────────────────────────
@@ -101,9 +78,7 @@ public abstract class SpawnSet
     public virtual bool IsMiniWave => false;
 
     /// <summary>
-    /// リスポーン抽選での重みです。
-    /// 既定の 0 は自動抽選に出ません。Context で重みを上書きでき、手動実行は常に可能です。
-    /// 波として使いたい SpawnSet だけがここを override します。
+    /// リスポーン抽選での重みです。0 なら自動抽選に出ません。
     /// </summary>
     public virtual int RespawnWeight => 0;
 
@@ -118,58 +93,135 @@ public abstract class SpawnSet
     public virtual string Theme => null;
 
     /// <summary>
-    /// 役職を 1 人以上割り当てたときに再生する車両演出です。既定は車両なし。
-    /// バニラが抽選した陣営ではなく、実際に出す SpawnSet の指定を使います。
-    /// 手動実行・ミニウェーブでも同じ指定が適用されます。
+    /// 1 人以上割り当てたときに再生する車両演出です。既定は車両なし。
     /// </summary>
     public virtual SpawnVehicle Vehicle => SpawnVehicle.None;
 
     /// <summary>
-    /// 出撃時のアナウンスです。既定は無し。
+    /// 出撃放送を組み立てます。何も積まなければ無音です。
+    /// 季節ごとの差し替えは <see cref="SpawnAnnouncement.Seasonal{T}"/> で書きます。残存 SCP 数は後ろに自動で付きます。
     /// </summary>
-    /// <remarks>
-    /// 旧実装はこれを 24 分岐の switch 2 つで引いていました。波が自分で名乗れば表は要りません。
-    /// </remarks>
-    /// <param name="spawnCount">実際に出た人数。</param>
-    /// <param name="unitName">
-    /// この波に付いた部隊名 (<c>ALPHA-01</c> 形式)。FoundationStaff の波でなければ null。
-    /// 読み上げに混ぜたい場合は <c>UnitNamingRule.TranslateToCassie</c> で
-    /// CASSIE 用の綴り (<c>NATO_A 01</c>) に直してください。
-    /// </param>
-    public virtual (string Cassie, string Subtitle) Announcement(int spawnCount, string unitName) => default;
+    protected virtual void BuildAnnouncement(SpawnAnnouncement announcement)
+    {
+    }
 
     /// <summary>
     /// 出撃アナウンスの最後に、バニラ同様の残存 SCP 数を付けるか。
-    /// 既定は機動部隊 (FoundationStaff) の波すべてです。<see cref="Announcement"/> 側に書く必要はありません。
+    /// 既定は機動部隊 (FoundationStaff) の波すべてです。
     /// </summary>
     public virtual bool AnnouncesRemainingScps => RespawnFaction is Faction.FoundationStaff;
 
     /// <summary>
-    /// この波が作る隊です。null なら陣営から自動で決まります。
+    /// 残存 SCP 数の放送です。<see cref="AnnouncesRemainingScps"/> のとき <see cref="BuildAnnouncement"/> の後に呼ばれます。
     /// </summary>
-    /// <remarks>
-    /// ほとんどの波は override 不要です。<c>ForceManager</c> が
-    /// <see cref="RespawnFaction"/> を見て機動部隊かカオスかを決めます。
-    /// 独自の派生システム (呼称や貢献度ルールが違う隊) に乗せたい波だけがここを名乗ります。
-    ///
-    /// 部隊システムに乗せたくない波は、<c>ForceBase</c> を返さずに
-    /// <see cref="RespawnFaction"/> を <see cref="Faction.Unclassified"/> のままにしてください。
-    /// </remarks>
+    protected virtual void BuildRemainingScps(SpawnAnnouncement announcement)
+    {
+        int count = announcement.RemainingScpCount;
+
+        string subtitle = count == 0
+            ? announcement.Seasonal("施設内に<color=#008F1E>危険な勢力</color>が存在します。警戒してください。")
+                .On(SeasonTypeId.Halloween, "施設内に潜在的な<color=#008F1E>脅威</color>が存在します。警戒してください。")
+            : announcement.Seasonal($"現在、収容違反中のSCPは{count}体です。")
+                .On(SeasonTypeId.Halloween, $"{count}体の幽霊は再収容が実施されていません。");
+
+        // バニラのクリスマス分岐と同じく、0 体でも数をそのまま読み上げる。
+        if (announcement.Is(SeasonTypeId.Christmas))
+        {
+            announcement.Say($"{count} XMAS_SCPSUBJECTS", subtitle);
+
+            return;
+        }
+
+        string subjects = announcement.Seasonal(count == 1 ? "ScpSubject" : "ScpSubjects")
+            .On(SeasonTypeId.Halloween, "HALLOWEEN_SPECTER");
+
+        announcement.Say(count == 0 ? "NoScpsLeft" : $"AwaitingRecontainment {count} {subjects}", subtitle);
+    }
+
+    /// <summary>
+    /// 出撃放送を完成させます。<see cref="BuildAnnouncement"/> → <see cref="BuildRemainingScps"/> の順に積みます。
+    /// </summary>
+    /// <param name="unitName">部隊名 (<c>ALPHA-01</c> 形式)。無ければ null。</param>
+    /// <param name="players">出たプレイヤー。プレビューなら null。</param>
+    public SpawnAnnouncement ComposeAnnouncement(int spawnCount, string unitName, IReadOnlyList<Player> players = null)
+    {
+        SpawnAnnouncement announcement = new SpawnAnnouncement(this, spawnCount, players, unitName);
+
+        try
+        {
+            BuildAnnouncement(announcement);
+
+            if (!announcement.IsEmpty && AnnouncesRemainingScps)
+                BuildRemainingScps(announcement);
+        }
+        catch (Exception exception)
+        {
+            Log.Error($"[Slafight] SpawnSet '{Name}' の出撃放送の組み立てで例外が発生しました: {exception}");
+            announcement.Clear();
+        }
+
+        return announcement;
+    }
+
+    /// <summary>
+    /// この波が作る隊です。null なら <see cref="RespawnFaction"/> から自動で決まります。
+    /// </summary>
     public virtual ForceBase CreateForce(byte? unitId, string unitName) => null;
 
     /// <summary>
-    /// この SpawnSet の割り当て対象になりうるプレイヤーです。
-    /// 既定では「まだ役職が割り当てられていない実プレイヤー」を返します。
+    /// 1 ラウンドに自動抽選で選ばれる回数の上限です。-1 なら無制限。
     /// </summary>
-    /// <remarks>
-    /// ラウンド開始時はバニラの役職割り当てより前に走るため、その時点のプレイヤーは
-    /// <see cref="RoleTypeId.Spectator"/> ではなく <see cref="RoleTypeId.None"/> (ロビー) です。
-    /// ラウンド中に呼ばれた場合は Spectator が対象になります。
-    /// Overwatch は <see cref="RoleTypeId.Overwatch"/> なのでここには含まれません。
-    ///
-    /// 既定は <c>IsSafePlayer</c> で実プレイヤーに絞ります。NPC も対象にしたい SpawnSet は
-    /// ここを override して明示的に広げてください。
-    /// </remarks>
+    public virtual int TriggerLimit => -1;
+
+    /// <summary>
+    /// このラウンドで出た回数です。1 人以上割り当てた回だけ数えます。
+    /// </summary>
+    public int TriggerCount => History.Count(set => set.GetType() == GetType());
+
+    /// <summary>
+    /// いま自動抽選に出せるか。<see cref="TriggerLimit"/> と <see cref="TriggerCondition"/> を見ます。
+    /// 手動実行と <see cref="SpawnOverride"/> では見ません。
+    /// </summary>
+    public bool CanTrigger
+    {
+        get
+        {
+            if (TriggerLimit >= 0 && TriggerCount >= TriggerLimit)
+                return false;
+
+            try
+            {
+                return TriggerCondition();
+            }
+            catch (Exception exception)
+            {
+                Log.Error($"[Slafight] SpawnSet '{Name}' の TriggerCondition で例外が発生しました: {exception}");
+
+                return false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// このラウンドで 1 人以上割り当てた SpawnSet です。出た順。
+    /// </summary>
+    public static IReadOnlyList<SpawnSet> SpawnedThisRound => History;
+
+    /// <summary>
+    /// このラウンドでこの陣営の波が出た回数です。
+    /// </summary>
+    /// <param name="miniWave">本隊 / 増援で絞ります。null ならどちらも数えます。</param>
+    public static int WaveCount(Faction faction, bool? miniWave = null) =>
+        History.Count(set => set.RespawnFaction == faction && (miniWave is null || set.IsMiniWave == miniWave));
+
+    /// <summary>
+    /// 自動抽選に出す追加条件です。例: <c>WaveCount(Faction.FoundationStaff) == 0</c> で初回の波だけ。
+    /// </summary>
+    protected virtual bool TriggerCondition() => true;
+
+    /// <summary>
+    /// 割り当て対象になりうるプレイヤーです。既定は役職未割り当ての実プレイヤー (NPC を除く) です。
+    /// </summary>
     protected virtual List<Player> TargetPlayers()
     {
         // Assign は「先頭から取れば無作為」を前提にしているので、
@@ -184,13 +236,9 @@ public abstract class SpawnSet
     }
 
     /// <summary>
-    /// 対象を指定して割り当てを実行します。リスポーンシステムから使います。
+    /// 対象を指定して割り当てを実行します。<see cref="RespawnRatio"/> はここでだけ効きます。
     /// </summary>
-    /// <remarks>
-    /// <see cref="RespawnRatio"/> はここでだけ効きます。
-    /// 渡した一覧は呼び出しの間だけ使われ、終われば元の <see cref="TargetPlayers"/> に戻ります。
-    /// </remarks>
-    /// <returns>実際に役職を割り当てたプレイヤー。割り当てた順。</returns>
+    /// <returns>割り当てたプレイヤー (割り当て順)。</returns>
     public List<Player> SpawnFor(IReadOnlyList<Player> candidates)
     {
         if (candidates is null || candidates.Count == 0)
@@ -227,7 +275,10 @@ public abstract class SpawnSet
             List<Player> spawned = SpawnInternal();
 
             if (spawned.Count > 0)
+            {
+                History.Add(this);
                 PlayVehicle();
+            }
 
             OnSpawned();
 
@@ -239,6 +290,11 @@ public abstract class SpawnSet
                 Round.IsLocked = false;
         }
     }
+
+    /// <summary>
+    /// 履歴を消します。ラウンドの切り替わりで呼びます。
+    /// </summary>
+    internal static void ClearHistory() => History.Clear();
 
     /// <summary>
     /// 役職の割り当てを始める直前に呼ばれます。
@@ -343,10 +399,6 @@ public abstract class SpawnSet
     /// <summary>
     /// 行ごとに 1 人ずつ順番に埋めます。
     /// </summary>
-    /// <remarks>
-    /// 重み抽選にしないのは、確率で漏れると「必ず埋める」にならないためです。
-    /// 埋まった行は次の巡から外れます。
-    /// </remarks>
     private void AssignRoundRobin(IReadOnlyList<SpawnRoleState> states, List<Player> candidates, List<Player> spawned)
     {
         if (states.Count == 0) return;
@@ -360,7 +412,7 @@ public abstract class SpawnSet
 
             foreach (SpawnRoleState state in states)
             {
-                if (!state.IsAvailable || candidates.Count == 0) continue;
+                if (candidates.Count == 0 || !CanTake(state, candidates, spawned)) continue;
 
                 if (!TryTake(state, candidates, spawned)) continue;
 
@@ -411,7 +463,7 @@ public abstract class SpawnSet
         while (candidates.Count > 0)
         {
             // 全行が壊れたら PickNext が null を返して抜けるので、回り続けない。
-            if (PickNext(states) is not { } state)
+            if (PickNext(states, candidates, spawned) is not { } state)
                 break;
 
             TryTake(state, candidates, spawned);
@@ -419,14 +471,8 @@ public abstract class SpawnSet
     }
 
     /// <summary>
-    /// 1 行ぶんの割り当てを行います。
+    /// 1 行ぶんを割り当てます。例外は握りつぶし、その行だけを諦めます。
     /// </summary>
-    /// <remarks>
-    /// <b>1 つの役職が落ちても割り当て全体を巻き添えにしません。</b>
-    /// ここで例外を通すと <see cref="Spawn"/> ごと抜けてしまい、
-    /// 「SCP だけ配られて人間側が誰も配られない」ような、
-    /// 原因の見えない中断になります。落ちた行だけを諦めて先へ進みます。
-    /// </remarks>
     private bool TrySpawn(SpawnRoleState state, Player target)
     {
         try
@@ -442,29 +488,47 @@ public abstract class SpawnSet
     }
 
     /// <summary>
-    /// まだ枠が残っている行から 1 つ選びます。<see cref="SpawnSetRoleDefinition.Weight"/> で
+    /// 枠が残っていて、条件 (<see cref="SpawnSetRoleDefinition.When"/>) も満たす行か。
+    /// </summary>
+    private bool CanTake(SpawnRoleState state, List<Player> candidates, List<Player> spawned)
+    {
+        if (!state.IsAvailable)
+            return false;
+
+        try
+        {
+            return state.Definition.Allows(
+                new SpawnRoleContext(this, spawned.Count, spawned.Count + candidates.Count, state.AssignedCount));
+        }
+        catch (Exception exception)
+        {
+            Log.Error($"[Slafight] SpawnSet '{Name}' の役職条件で例外が発生しました: {exception}");
+
+            // 条件が壊れた行は以後選ばない。
+            state.IsBroken = true;
+
+            return false;
+        }
+    }
+
+    /// <summary>
+    /// 選べる行から 1 つ選びます。<see cref="SpawnSetRoleDefinition.Weight"/> で
     /// 出やすさに差を付けられます。全部同じ重みなら等確率です。
     /// </summary>
-    private static SpawnRoleState PickNext(IReadOnlyList<SpawnRoleState> states)
+    private SpawnRoleState PickNext(IReadOnlyList<SpawnRoleState> states, List<Player> candidates, List<Player> spawned)
     {
-        float total = 0f;
+        // 条件は 1 回の抽選につき 1 度だけ評価する。
+        List<SpawnRoleState> eligible = [.. states.Where(state => CanTake(state, candidates, spawned))];
 
-        foreach (SpawnRoleState state in states)
-        {
-            if (state.IsAvailable)
-                total += Mathf.Max(0f, state.Definition.Weight);
-        }
+        float total = eligible.Sum(state => Mathf.Max(0f, state.Definition.Weight));
 
         if (total <= 0f)
             return null;
 
         float roll = UnityEngine.Random.value * total;
 
-        foreach (SpawnRoleState state in states)
+        foreach (SpawnRoleState state in eligible)
         {
-            if (!state.IsAvailable)
-                continue;
-
             roll -= Mathf.Max(0f, state.Definition.Weight);
 
             if (roll <= 0f)
@@ -472,7 +536,7 @@ public abstract class SpawnSet
         }
 
         // 浮動小数の誤差で漏れたときの保険。
-        return states.LastOrDefault(state => state.IsAvailable);
+        return eligible.LastOrDefault(state => state.Definition.Weight > 0f);
     }
 
     private sealed class SpawnRoleState(SpawnSetRoleDefinition definition)

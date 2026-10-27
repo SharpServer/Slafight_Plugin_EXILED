@@ -110,9 +110,7 @@ public sealed class SnakeImageOptions
     public bool StopOnSnakeInput { get; set; } = true;
 
     /// <summary>
-    /// Replaces the owning client's locally controlled Snake session with a
-    /// server-controlled session before sending the first frame. This is needed
-    /// when the owner must see server-authored full-resync messages.
+    /// 最初のフレーム送信前に、持ち主のローカル Snake セッションをサーバー制御のものへ置き換えるか。
     /// </summary>
     public bool TakeOverOwnerSession { get; set; }
 
@@ -900,15 +898,8 @@ public static class SnakeImageApi
 }
 
 /// <summary>
-/// <see cref="SnakeImageApi"/>（カオスキーカードの Snake 描画）の寿命を持ちます。
+/// <see cref="SnakeImageApi"/> の起動と停止を受け持ちます。
 /// </summary>
-/// <remarks>
-/// <see cref="SnakeImageApi"/> は static クラスなので自分で
-/// <c>EventHandlerBase</c> を継承できません。起動と停止だけをここが引き受けます。
-///
-/// このクラスはどこからも登録されていません。<c>EventHandlerBase</c> を
-/// 継承しているだけで <c>EventHandlerRegistry</c> が生成・購読させます。
-/// </remarks>
 public sealed class SnakeImageApiLifecycle : Slafight_Plugin_EXILED.API.Core.Features.EventHandlerBase
 {
     /// <inheritdoc />

@@ -302,17 +302,8 @@ public class ScpStatusHints : EventHandlerBase
     }
 
     /// <summary>
-    /// 味方一覧を出すと名乗っている陣営のチャンネルを登録します。
+    /// 味方一覧を出す陣営 (<see cref="CustomTeam.ShowsRoster"/>) のチャンネルを登録します。
     /// </summary>
-    /// <remarks>
-    /// <b>陣営ごとの分岐はありません。</b>
-    /// 一覧を出すか (<see cref="CustomTeam.ShowsRoster"/>)、見出しに何と出すか
-    /// (<see cref="CustomTeam.HudName"/>)、末尾に何を添えるか
-    /// (<see cref="CustomTeam.RosterFooter"/>) は陣営自身が名乗ります。
-    /// 陣営を足すのにこのファイルを触る必要はありません。
-    ///
-    /// 以前はここで SCP / 第五教会 / Warriors の 3 つを直接組み立てていました。
-    /// </remarks>
     private static void RegisterDefaultChannels()
     {
         foreach (CustomTeam team in CustomTeam.All)

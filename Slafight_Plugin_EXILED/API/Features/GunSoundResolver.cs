@@ -11,32 +11,8 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
-/// <c>SendingGunSound</c> / <c>ReceivingGunSound</c> の AudioIndex を、
-/// 実行時のゲームオブジェクトから意味付きの情報へ解決する。
+/// 銃声パケットの AudioIndex を、実行時のクリップと銃の状態から音の種類へ解決する。
 /// </summary>
-/// <remarks>
-/// <para>
-/// 判定材料はすべてゲーム側の実データ:
-/// </para>
-/// <list type="bullet">
-/// <item>
-/// AudioIndex は <c>AudioModule.ServerSendToNearbyPlayers</c> に渡される
-/// <c>_clipToIndex[clip]</c> の値、すなわち <c>AudioModule._registeredClips</c> のインデックス。
-/// 同じリストを引き直せば元の <see cref="AudioClip"/> が取れる。
-/// </item>
-/// <item>
-/// 取れた <see cref="AudioClip"/> を各アクションモジュールの名前付きフィールド
-/// （<c>AutomaticActionModule._dryfireSound</c> 等）と参照比較して種類を決める。
-/// </item>
-/// <item>
-/// 発砲音だけは <c>AudioModule.PlayGunshot</c> が唯一の
-/// <see cref="MixerChannel.Weapons"/> 利用者なので、チャンネルで判定する。
-/// </item>
-/// </list>
-/// <para>
-/// このため AudioIndex → 音の種類 の固定表を持つ必要がない。
-/// </para>
-/// </remarks>
 public static class GunSoundResolver
 {
     /// <summary>
@@ -60,14 +36,8 @@ public static class GunSoundResolver
     }
 
     /// <summary>
-    /// この音の種類を解決する。どれにも当てはまらなければ null。
+    /// この音の種類を解決する。名前付きクリップとの一致を状態より優先する。どれにも当てはまらなければ null。
     /// </summary>
-    /// <remarks>
-    /// 判定順は「名前付きクリップとの参照比較」→「モジュールの現在状態」。
-    /// 前者の方が具体的なので優先する。たとえばリボルバーのリロード中にコッキング音が鳴った場合、
-    /// <see cref="GunSoundKind.Reload"/> ではなく
-    /// <see cref="GunSoundKind.RevolverCocking"/> として扱われる。
-    /// </remarks>
     public static GunSoundKind? Resolve(Firearm? firearm, int audioIndex, MixerChannel channel)
     {
         // PlayGunshot だけが Weapons チャンネルを使うので、クリップを見る必要がない。
@@ -85,16 +55,8 @@ public static class GunSoundResolver
     }
 
     /// <summary>
-    /// 銃の現在状態から種類を判定する。
-    /// アニメーションイベント由来でゲーム側にも名前が無い音（マガジン・ボルト等）を、
-    /// 「今リロード中か」といった状態でまとめて分類するために使う。
+    /// 銃の現在状態 (リロード中など) から種類を判定する。
     /// </summary>
-    /// <remarks>
-    /// リロード / アンロード / 抜き出しの状態はいずれもサーバー側で更新される
-    /// （<c>ServerTryReload</c> が <c>IsReloading</c> を立て、アニメーションイベントの
-    /// <c>StopReloadingAndUnloading</c> が下ろす）。音の送出も同じアニメーションイベント経由なので、
-    /// 音が飛ぶ瞬間の状態を見れば分類できる。
-    /// </remarks>
     private static GunSoundKind? ResolveByModuleState(Firearm firearm)
     {
         foreach (var module in firearm.Base.Modules)
@@ -136,9 +98,7 @@ public static class GunSoundResolver
     }
 
     /// <summary>
-    /// <paramref name="firearm"/> の <c>AudioModule._registeredClips</c> を全件ダンプする。
-    /// AudioIndex とクリップ名の対応をその場で調べられるので、
-    /// <c>OverrideSoundsByClip</c> / <c>OverrideSoundsByIndex</c> に書く値を撃たずに確認できる。
+    /// <paramref name="firearm"/> の登録クリップを AudioIndex 付きで全件返す。
     /// </summary>
     public static IReadOnlyList<ClipEntry> DumpClips(Firearm? firearm)
     {

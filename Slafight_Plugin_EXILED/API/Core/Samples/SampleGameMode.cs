@@ -4,13 +4,7 @@ using Slafight_Plugin_EXILED.API.Core.Features;
 namespace Slafight_Plugin_EXILED.API.Core.Samples;
 
 /// <summary>
-/// ゲームモード (旧 SpecialEvent) の書き方の見本です。
-///
-/// 見どころは、<b>打ち切り判定を自分で持っていない</b>ことです。
-/// 旧実装では各イベントが世代カウンタ (EventPID) を抱え、
-/// コルーチンの合間に自分で照合していました。
-/// ここでは <see cref="GameMode.Scope"/> に載せるか
-/// <see cref="GameMode.IsCanceled"/> を見るだけで済みます。
+/// ゲームモードの書き方の見本です。
 /// </summary>
 public sealed class SampleGameMode : GameMode
 {

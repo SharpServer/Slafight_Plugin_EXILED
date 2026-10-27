@@ -6,34 +6,23 @@ using Slafight_Plugin_EXILED.API.Core.Features;
 namespace Slafight_Plugin_EXILED.API.Core.Structs;
 
 /// <summary>
-/// <see cref="SpawnSet"/> に並べる 1 行分の役職定義です。
-///
-/// カスタム役職は<b>型</b>で指定します。割り当てのたびに新しいインスタンスが作られるので、
-/// 同じ役職が複数人に出ても per-player 状態が混ざりません。
+/// <see cref="SpawnSet"/> に並べる 1 行分の役職定義です。count が人数上限、Weight が出やすさです。
 /// </summary>
-/// <remarks>
-/// <paramref name="count"/> が人数上限、<c>Weight</c> が出やすさを兼ねます。
-/// 旧実装が別々に持っていた「重み表」と「上限表」がこの 1 行に畳まれています。
-/// </remarks>
-/// <example>
-/// <code>
-/// public override IReadOnlyList&lt;SpawnSetRoleDefinition&gt; SpawnRoles =>
-/// [
-///     SpawnSetRoleDefinition.Custom&lt;ChaosSniper&gt;(count: 2),
-///     SpawnSetRoleDefinition.Vanilla(RoleTypeId.ChaosRifleman, count: 99),
-///
-///     // 出やすさに差を付けたいときは weight を変える
-///     SpawnSetRoleDefinition.Custom&lt;Scp096Anger&gt;(count: 1, weight: 0.2f),
-/// ];
-/// </code>
-/// </example>
 public readonly struct SpawnSetRoleDefinition
 {
     private readonly Func<Player, bool> spawn;
 
-    private SpawnSetRoleDefinition(Func<Player, bool> spawn, int count, bool isForced, float weight)
+    private readonly Func<SpawnRoleContext, bool> condition;
+
+    private SpawnSetRoleDefinition(
+        Func<Player, bool> spawn,
+        int count,
+        bool isForced,
+        float weight,
+        Func<SpawnRoleContext, bool> condition = null)
     {
         this.spawn = spawn;
+        this.condition = condition;
         Count = count;
         IsForced = isForced;
         Weight = weight;
@@ -45,13 +34,8 @@ public readonly struct SpawnSetRoleDefinition
     public int Count { get; }
 
     /// <summary>
-    /// 他の行より先に必ず埋めるかどうかです。
+    /// 重み抽選を通さず、他の行より先に 1 人ずつ確保するかどうかです。
     /// </summary>
-    /// <remarks>
-    /// 重み抽選を通らず、1 人ずつ順番に確保されます。
-    /// <see cref="Count"/> が大きい行に付けると、他の行に人が回りません。
-    /// 「残りを全部この役職にする」なら <see cref="Weight"/> を上げてください。
-    /// </remarks>
     public bool IsForced { get; }
 
     /// <summary>
@@ -96,6 +80,40 @@ public readonly struct SpawnSetRoleDefinition
             isForced,
             weight);
     }
+
+    /// <summary>
+    /// 条件を満たす間だけ抽選枠に入れます。重ねると AND になります。
+    /// </summary>
+    public SpawnSetRoleDefinition When(Func<SpawnRoleContext, bool> predicate)
+    {
+        if (predicate is null)
+            return this;
+
+        Func<SpawnRoleContext, bool> previous = condition;
+
+        return new SpawnSetRoleDefinition(
+            spawn,
+            Count,
+            IsForced,
+            Weight,
+            previous is null ? predicate : context => previous(context) && predicate(context));
+    }
+
+    /// <summary>
+    /// この実行で <paramref name="count"/> 人割り当てた後から抽選枠に入れます。
+    /// <c>AfterSpawned(1)</c> なら 2 人目以降。
+    /// </summary>
+    public SpawnSetRoleDefinition AfterSpawned(int count) => When(context => context.SpawnedCount >= count);
+
+    /// <summary>
+    /// この実行の総人数が <paramref name="count"/> 人以上のときだけ抽選枠に入れます。
+    /// </summary>
+    public SpawnSetRoleDefinition MinPlanned(int count) => When(context => context.PlannedCount >= count);
+
+    /// <summary>
+    /// 条件を満たしているか。条件が無ければ常に true。
+    /// </summary>
+    public bool Allows(SpawnRoleContext context) => condition is null || condition(context);
 
     /// <summary>
     /// 割り当てを実行します。

@@ -1,27 +1,11 @@
 namespace Slafight_Plugin_EXILED.API.Enums;
 
 /// <summary>
-/// 各銃器の <c>AudioModule._registeredClips</c> に登録されている AudioClip 名。
-/// <c>CItemWeapon.OverrideSounds</c> のキーとしてそのまま書ける。
+/// 各銃器に登録されている AudioClip 名。<c>CustomFirearm.GunSounds</c> のキーとして使える。
 /// </summary>
 /// <remarks>
-/// <para>
-/// enum ではなく const 文字列にしてあるのは、定数の値そのものが照合に使う実名だから。
-/// enum にすると「メンバー名 → 実名」の対応表を別に持つことになり、二重管理で壊れやすい。
-/// </para>
-/// <para>
-/// 値は 2026-07-30 に <c>GunSoundTestbench</c> で採取した実機ダンプそのまま。
-/// 採取手順は <c>docs/internal/gun-sound-capture-checklist.md</c> を参照。
-/// <b>ゲーム更新でクリップ構成が変わる可能性があるので、鳴らない場合はまず採取し直すこと。</b>
-/// </para>
-/// <para>
-/// コメントの数字はその銃での AudioIndex。<c>(Kind)</c> 付きのものは
-/// <see cref="GunSoundKind"/> でも指定できる（そちらの方が銃に依存しないので推奨）。
-/// </para>
-/// <para>
-/// 銃をまたいで共有されているクリップが多い（<see cref="Shared"/> 参照）。
-/// クリップ名から銃は特定できないので注意。
-/// </para>
+/// 2026-07-30 の実機ダンプ。鳴らない場合は採取し直すこと (<c>docs/internal/gun-sound-capture-checklist.md</c>)。
+/// コメントの数字は AudioIndex。
 /// </remarks>
 public static class GunSoundClips
 {

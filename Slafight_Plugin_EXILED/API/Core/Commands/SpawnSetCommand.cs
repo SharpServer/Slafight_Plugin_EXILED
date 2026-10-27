@@ -6,12 +6,8 @@ using Slafight_Plugin_EXILED.API.Core.Features;
 namespace Slafight_Plugin_EXILED.API.Core.Commands;
 
 /// <summary>
-/// 役職の一括割り当て (<see cref="SpawnSet"/>) を一覧・実行します。
+/// 波ではない <see cref="SpawnSet"/> を一覧・実行します。波は <see cref="WaveCommand"/> が扱います。
 /// </summary>
-/// <remarks>
-/// リスポーンウェーブは <see cref="WaveCommand"/> が扱います。
-/// ここが扱うのは、ラウンド開始時の配布のように<b>波ではない</b> SpawnSet です。
-/// </remarks>
 public sealed class SpawnSetCommand : CommandBase
 {
     public override Type Parent => typeof(RootCommand);

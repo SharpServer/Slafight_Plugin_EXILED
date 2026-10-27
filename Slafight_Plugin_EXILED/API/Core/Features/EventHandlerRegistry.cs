@@ -12,22 +12,12 @@ using ServerHandlers = Exiled.Events.Handlers.Server;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// <see cref="EventHandlerBase"/> の派生クラスを自動で見つけて生成・購読させる仕組みです。
-///
-/// <see cref="Plugin.OnEnabled"/> が <see cref="Initialize"/> を呼ぶので、
-/// 機能側は何も書く必要がありません。<b>ハンドラのクラスを作るだけで購読されます。</b>
-///
-/// 自動登録の対象になる条件:
-/// <list type="bullet">
-/// <item><see cref="EventHandlerBase"/> を継承した abstract でないクラス</item>
-/// <item>public な引数なしコンストラクタを持つ</item>
-/// <item><see cref="NoAutoRegisterAttribute"/> が付いていない</item>
-/// </list>
-///
-/// <see cref="EventHandlerBase.Lifetime"/> が
-/// <see cref="HandlerLifetime.Manual"/> なら起動時に 1 度だけ生成され、
-/// <see cref="HandlerLifetime.Round"/> ならラウンド開始ごとに生成し直されます。
+/// <see cref="EventHandlerBase"/> の派生クラスを自動で見つけて生成・購読させます。
 /// </summary>
+/// <remarks>
+/// 対象は public な引数なしコンストラクタを持ち、<see cref="NoAutoRegisterAttribute"/> の無い具象クラスです。
+/// <see cref="HandlerLifetime.Round"/> ならラウンドごとに作り直します。
+/// </remarks>
 public static class EventHandlerRegistry
 {
     private static readonly List<Type> ManualTypes = [];
@@ -46,13 +36,8 @@ public static class EventHandlerRegistry
     public static IReadOnlyList<EventHandlerBase> AutoRegistered => AutoHandlers;
 
     /// <summary>
-    /// 自動登録を開始します。全プラグインの読み込み完了を待ってから走査します。
+    /// 自動登録を開始します。全プラグインの読み込み完了 (<c>ServerEvents.PluginsEnabled</c>) を待って走査します。
     /// </summary>
-    /// <remarks>
-    /// 走査の起点だけ LabApi の <c>ServerEvents.PluginsEnabled</c> を使います。
-    /// EXILED には「全プラグインのロード完了」に相当するイベントがないためです。
-    /// EXILED は LabAPI の上に乗っているので併用に問題はありません。
-    /// </remarks>
     public static void Initialize()
     {
         if (initialized) return;
@@ -112,13 +97,8 @@ public static class EventHandlerRegistry
     }
 
     /// <summary>
-    /// 自動登録の条件を満たさなかった派生クラスを報告します。
+    /// 自動登録の条件を満たさなかった派生クラスを警告します。
     /// </summary>
-    /// <remarks>
-    /// public な引数なしコンストラクタが無い型は自動登録できません。
-    /// 黙って捨てると<b>継承しただけで動かない</b>状態になり、原因が分からなくなります。
-    /// 意図的に外すなら <see cref="NoAutoRegisterAttribute"/> を付けてください。
-    /// </remarks>
     private static void WarnAboutSkipped()
     {
         foreach (Type type in TypeParser.FindAllTypes<EventHandlerBase>())
@@ -135,15 +115,8 @@ public static class EventHandlerRegistry
     }
 
     /// <summary>
-    /// 指定したアセンブリのハンドラを明示的に登録します。
+    /// 指定したアセンブリのハンドラを明示的に登録します。通常は不要で、二重に呼んでも安全です。
     /// </summary>
-    /// <remarks>
-    /// 通常は不要です。<c>PluginsEnabled</c> の時点で EXILED がロードするプラグインも
-    /// AppDomain に載っているため <see cref="Scan"/> が拾います。
-    ///
-    /// ただしそれはローダーの実行順に依存しているので、名指しで登録できる経路も用意しています。
-    /// 二重に呼んでも同じ型が二度登録されることはありません。
-    /// </remarks>
     public static void RegisterAssembly(Assembly assembly)
     {
         if (assembly is null) return;

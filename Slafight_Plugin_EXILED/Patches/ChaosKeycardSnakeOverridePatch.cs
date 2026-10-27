@@ -7,10 +7,7 @@ using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.Patches;
 
 /// <summary>
-/// Prevents the inspected card's original client-local SnakeEngine from
-/// modifying a server-authoritative image session. Direction commands remain
-/// available for Entertainment games; only native Snake state deltas are
-/// discarded while an owner-session takeover is active.
+/// セッション乗っ取り中は、クライアントの SnakeEngine による Snake 状態の変更を捨てます。
 /// </summary>
 [HarmonyPatch(
     typeof(ChaosKeycardItem),

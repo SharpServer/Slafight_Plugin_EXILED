@@ -3,6 +3,7 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Enums;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;
+using Slafight_Plugin_EXILED.API.Enums;
 
 namespace Slafight_Plugin_EXILED.SpawnSets.ChaosInsurgents;
 
@@ -25,11 +26,16 @@ public sealed class ChaosWaveSet : SpawnSet
 
     public override string Theme => "./WaveThemes/_w_chaos.ogg";
 
-    public override (string Cassie, string Subtitle) Announcement(int spawnCount, string unitName) =>
-        CustomSeason.Current.ChaosArrival(spawnCount) ??
-        ($"Attention All personnel . Detected {spawnCount} Chaos Insurgency Forces in Gate A . Please Terminate Them",
-         $"全職員に通達。Gate Aに{spawnCount}人の<color=#228b22>カオス・インサージェンシー</color>部隊が検出されました。" +
-         "<split>見つけ次第終了してください。");
+    protected override void BuildAnnouncement(SpawnAnnouncement a)
+    {
+        string noise = a.Seasonal("").On(SeasonTypeId.Halloween, "$pitch_.3 .g4 .g6 $pitch_1");
+
+        a.Cassie(noise, $"Attention All personnel . Detected {a.SpawnCount} Chaos Insurgency Forces in Gate A . Please Terminate Them")
+            .Subtitle($"全職員に通達。Gate Aに{a.SpawnCount}人の{SpawnAnnouncement.Colored("カオス・インサージェンシー", "#228b22")}部隊が検出されました。")
+            .Line("見つけ次第終了してください。")
+            .Note(SeasonTypeId.Christmas, "彼らはプレゼントを届けに来たのではありません。")
+            .Note(SeasonTypeId.Halloween, "彼らの目的はお菓子ではありません。");
+    }
 
     public override IReadOnlyList<SpawnSetRoleDefinition> SpawnRoles =>
     [

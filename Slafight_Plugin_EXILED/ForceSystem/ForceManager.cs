@@ -13,14 +13,6 @@ namespace Slafight_Plugin_EXILED.ForceSystem;
 /// <summary>
 /// 部隊システムの入口です。波が出たら隊を作り、評価ループを回します。
 /// </summary>
-/// <remarks>
-/// クラス名が名前空間 (<c>Slafight_Plugin_EXILED.ForceSystem</c>) と衝突しないよう
-/// <c>ForceSystem</c> ではなく <c>ForceManager</c> にしてあります。
-/// 同名だと外から <c>ForceSystem.Something</c> が曖昧になります。
-///
-/// <see cref="EventHandlerBase"/> を継承しているだけで
-/// <c>EventHandlerRegistry</c> が生成・購読します。<c>Plugin.cs</c> には何も書きません。
-/// </remarks>
 public sealed class ForceManager : EventHandlerBase
 {
     /// <inheritdoc />
@@ -52,12 +44,8 @@ public sealed class ForceManager : EventHandlerBase
     }
 
     /// <summary>
-    /// ラウンドが始まったら評価ループを起こします。
+    /// ラウンド開始時に評価ループを起こします。
     /// </summary>
-    /// <remarks>
-    /// <see cref="RoundScope"/> に載せるので、ラウンド再開で必ず止まります。
-    /// 自前でコルーチンハンドルを抱えません。
-    /// </remarks>
     private static void OnRoundStarted() => ForceEvaluator.Start();
 
     private static void OnRestartingRound() => ForceRegistry.Reset();
@@ -65,12 +53,6 @@ public sealed class ForceManager : EventHandlerBase
     /// <summary>
     /// 役職が変わった人の所属を見直します。
     /// </summary>
-    /// <remarks>
-    /// <c>Player.Spawned</c> は役職が入れ替わった<b>後</b>に配られるので、
-    /// ここで見る <c>Role</c> は新しいほうです。SCP にされた元隊員のように
-    /// 「生きているのに部隊システムの対象外」を捨てられるのはこの時点だけで、
-    /// 死亡だけを見る <c>PruneDead</c> では外れません。
-    /// </remarks>
     private static void OnRoleSpawned(ExiledSpawnedEventArgs ev)
     {
         if (ev?.Player is not { } player) return;
@@ -81,11 +63,6 @@ public sealed class ForceManager : EventHandlerBase
     /// <summary>
     /// 波が出たら、その波ぶんの隊を 1 つ作ります。
     /// </summary>
-    /// <remarks>
-    /// <see cref="SpawnedEventArgs.UnitId"/> は <see cref="SpawnSystem"/> が
-    /// この波の全員に配った番号です。NTF の波でなければ null なので、
-    /// そのときは名前だけこちらで作ります。
-    /// </remarks>
     private static void OnSpawned(SpawnedEventArgs ev)
     {
         if (ev?.Players is not { Count: > 0 }) return;
@@ -111,10 +88,6 @@ public sealed class ForceManager : EventHandlerBase
     /// <summary>
     /// 陣営に合った隊を作ります。部隊システムの対象外なら null。
     /// </summary>
-    /// <remarks>
-    /// 派生システムの選択はここだけです。草案が「GoC や第五教会は後ほど決定」と
-    /// しているので、まだ足しません。
-    /// </remarks>
     private static ForceBase Create(Faction faction, byte? unitId, string unitName)
     {
         switch (faction)

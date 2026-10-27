@@ -12,21 +12,8 @@ using LabPickup = LabApi.Features.Wrappers.Pickup;
 namespace Slafight_Plugin_EXILED.API.Core.Extensions;
 
 /// <summary>
-/// アイテム、ピックアップ、プレイヤーから追跡中の <see cref="CustomItem"/> を
-/// 直接判定・取得するための糖衣です。
+/// アイテム・ピックアップ・プレイヤーから <see cref="CustomItem"/> を判定・取得する拡張です。
 /// </summary>
-/// <example>
-/// <code>
-/// if (item.TryGetCustomItem&lt;MediPistol&gt;(out var pistol))
-///     pistol.Refill();
-///
-/// if (player.TryGetCurrentCustomItem(out CustomItem custom))
-///     Log.Info(custom.Name);
-///
-/// if (player.HasCustomItem&lt;MediPistol&gt;(out var ownedPistol))
-///     ownedPistol.Refill();
-/// </code>
-/// </example>
 public static class CustomItemExtensions
 {
     // EXILED Item

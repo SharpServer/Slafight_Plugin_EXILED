@@ -5,18 +5,8 @@ using Exiled.API.Features;
 namespace Slafight_Plugin_EXILED.API.Core.Structs;
 
 /// <summary>
-/// 役職スポーン時に付与する効果の宣言です。
-/// 効果は型で指定します。文字列名も enum も使いません。
+/// 役職スポーン時に付与する効果の宣言です。効果は型で指定します。
 /// </summary>
-/// <example>
-/// <code>
-/// public override IReadOnlyList&lt;RoleEffect&gt; Effects =>
-/// [
-///     RoleEffect.Of&lt;MovementBoost&gt;(intensity: 20),
-///     RoleEffect.Of&lt;Scp207&gt;(intensity: 2, duration: 30f),
-/// ];
-/// </code>
-/// </example>
 public readonly struct RoleEffect
 {
     private readonly Action<Player> apply;

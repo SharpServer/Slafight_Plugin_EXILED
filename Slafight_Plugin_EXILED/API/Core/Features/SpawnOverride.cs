@@ -6,21 +6,8 @@ using Exiled.API.Enums;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// 「次に条件が合ったウェーブを、この波に差し替える」という 1 回きりの予約です。
+/// 次に条件が合ったウェーブを、この波に差し替える 1 回きりの予約です。
 /// </summary>
-/// <example>
-/// <code>
-/// // 次の財団側ウェーブを警備部隊にする
-/// Guid handle = SpawnSystem.AddOverride(new SpawnOverride(new SecurityTeamWave())
-/// {
-///     SourceFaction = Faction.FoundationStaff,
-///     Priority = 1000,
-/// });
-///
-/// // 気が変わったら取り消す
-/// SpawnSystem.RemoveOverride(handle);
-/// </code>
-/// </example>
 public sealed class SpawnOverride(SpawnSet wave)
 {
     /// <summary>

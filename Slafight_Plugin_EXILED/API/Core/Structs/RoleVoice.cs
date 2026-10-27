@@ -8,26 +8,10 @@ using VoiceChat;
 namespace Slafight_Plugin_EXILED.API.Core.Structs;
 
 /// <summary>
-/// 役職が名乗る近接ボイスの扱いです。
+/// 役職が名乗る近接ボイスの設定です。<see cref="SourceChannel"/> の声を周囲にも空間音声で届けます。
 /// </summary>
 /// <remarks>
-/// <para>
-/// 近接ボイスは「<b>ある発声チャンネルを、近くに居る人にも空間音声として届ける</b>」仕組みです。
-/// どのチャンネルを流すかは <see cref="SourceChannel"/> で役職が決めます。
-/// 既定は <see cref="VoiceChatChannel.ScpChat"/> — SCP 同士の会話を周囲にも聞かせる、という
-/// 一番よくある使い方です。
-/// </para>
-/// <para>
-/// <b>土台の役職がそのチャンネルで話せることが前提です。</b>
-/// 人間ベースの役職に <see cref="VoiceChatChannel.ScpChat"/> を指定しても発声経路が無いので
-/// 何も起きず、「使えます」の案内だけが出ます。人間なら
-/// <see cref="VoiceChatChannel.Radio"/> や <see cref="VoiceChatChannel.Intercom"/> を、
-/// 幽霊役なら <see cref="VoiceChatChannel.Spectator"/> を指してください。
-/// </para>
-/// <para>
-/// <see cref="VoiceChatChannel.Proximity"/> は指定しないでください。
-/// 人間の通常の声は元から空間音声なので、二重に鳴るだけです。
-/// </para>
+/// 土台の役職がそのチャンネルで話せる必要があります。<see cref="VoiceChatChannel.Proximity"/> は指定しないでください。
 /// </remarks>
 public readonly struct RoleProximitySettings
 {
@@ -137,11 +121,6 @@ public readonly struct RoleVoiceRoute
 /// <summary>
 /// 役職が名乗る声の設定一式です。経路は並び順に判定されます。
 /// </summary>
-/// <example>
-/// <code>
-/// public override RoleVoiceSettings Voice => RoleVoiceSettings.WithProximity();
-/// </code>
-/// </example>
 public readonly struct RoleVoiceSettings
 {
     private static readonly IReadOnlyList<RoleVoiceRoute> EmptyRoutes = [];
@@ -167,8 +146,6 @@ public readonly struct RoleVoiceSettings
 
     /// <summary>
     /// 近接ボイスだけ使えるようにします。
-    /// 流すチャンネルは土台の役職が実際に話せるものを指してください
-    /// (<see cref="RoleProximitySettings"/> の注記を参照)。
     /// </summary>
     public static RoleVoiceSettings WithProximity(
         bool enabledByDefault = true,

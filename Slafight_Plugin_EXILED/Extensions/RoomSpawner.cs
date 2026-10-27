@@ -10,13 +10,12 @@ namespace Slafight_Plugin_EXILED.Extensions;
 public static class RoomSpawner
 {
     /// <summary>
-    /// 指定Room内でローカル座標・角度にプレイヤーを配置します。
-    /// カスタムマップやイベントスポーンに使用。
+    /// 指定 Room 内のローカル座標・角度にプレイヤーを配置します。
     /// </summary>
-    /// <param name="player">配置するプレイヤー</param>
-    /// <param name="roomType">対象RoomType</param>
-    /// <param name="localOffset">部屋ローカル座標オフセット (例: new Vector3(0, 1.5f, 2f))</param>
-    /// <param name="localRotation">部屋ローカル回転 (EulerAngles, 例: new Vector3(0, 90f, 0))</param>
+    /// <param name="player">配置するプレイヤー。</param>
+    /// <param name="roomType">対象 RoomType。</param>
+    /// <param name="localOffset">部屋ローカル座標オフセット。</param>
+    /// <param name="localRotation">部屋ローカル回転 (EulerAngles)。</param>
     public static void SpawnInRoom(Player player, RoomType roomType, Vector3 localOffset, Vector3 localRotation = default)
     {
         Room targetRoom = Room.Get(roomType);

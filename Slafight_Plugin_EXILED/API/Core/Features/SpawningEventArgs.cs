@@ -16,7 +16,7 @@ public sealed class SpawningEventArgs(
     byte? unitId) : EventArgs
 {
     /// <summary>
-    /// 出そうとしている波です。<b>差し替えられます。</b>
+    /// 出そうとしている波です。差し替えられます。
     /// </summary>
     public SpawnSet Wave { get; set; } = wave;
 
@@ -36,14 +36,8 @@ public sealed class SpawningEventArgs(
     public RespawningTeamEventArgs Source { get; } = source;
 
     /// <summary>
-    /// この波に割り当てる予定の部隊番号 (UnitId) です。
-    /// <see cref="SpawnSet.RespawnFaction"/> が <c>FoundationStaff</c> でなければ null。
+    /// この波に割り当てる予定の部隊番号です。まだ確定していません。FoundationStaff の波でなければ null。
     /// </summary>
-    /// <remarks>
-    /// <b>まだ確定していません。</b>ここで <see cref="Wave"/> を別陣営の波に差し替えたり
-    /// <see cref="IsAllowed"/> を false にしたりすれば、この番号は使われません。
-    /// 実際に配られた番号は <see cref="SpawnedEventArgs.UnitId"/> を見てください。
-    /// </remarks>
     public byte? UnitId { get; } = unitId;
 
     /// <summary>

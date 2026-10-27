@@ -14,49 +14,9 @@ using ServerHandlers = Exiled.Events.Handlers.Server;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// EXILED と LabApi の両方のイベントを購読できるイベントハンドラの基底クラスです。
-///
-/// 購読方法は 2 通りあり、どちらも同じインスタンスで併用できます。
-/// <list type="number">
-/// <item><see cref="RegisterEvents"/> / <see cref="UnregisterEvents"/> を override して
-/// EXILED や LabApi の static イベントに += / -= する。</item>
-/// <item><see cref="CustomEventsHandler"/> の OnXxx メソッドを override する
-/// (LabApi 側で自動的に購読・解除される)。</item>
-/// </list>
-///
-/// 派生クラスを書くだけで <see cref="EventHandlerRegistry"/> が自動的に生成・購読します。
-/// <b><see cref="Plugin"/> 側に登録処理を書く必要はありません。</b>
-/// 自分で生成したい場合は <see cref="NoAutoRegisterAttribute"/> を付けた上で
-/// <see cref="Create{T}"/> や <see cref="Enable"/> を使ってください。
-///
-/// <see cref="Lifetime"/> や <see cref="Owner"/> を指定すれば、ラウンド再開時や
-/// 所有プレイヤーの退出時に自動で <see cref="Dispose"/> されます。
+/// EXILED と LabApi のイベントを購読するハンドラの基底です。派生するだけで <see cref="EventHandlerRegistry"/> が自動登録します。
 /// </summary>
-/// <example>
-/// <code>
-/// // これだけで購読される。どこにも登録処理を書く必要はない。
-/// public class SampleHandler : EventHandlerBase
-/// {
-///     public override HandlerLifetime Lifetime => HandlerLifetime.Round;
-///
-///     // EXILED 側
-///     public override void RegisterEvents()
-///     {
-///         Exiled.Events.Handlers.Player.UsingItem += OnUsingItem;
-///     }
-///
-///     public override void UnregisterEvents()
-///     {
-///         Exiled.Events.Handlers.Player.UsingItem -= OnUsingItem;
-///     }
-///
-///     // LabApi 側 (CustomEventsHandler の override。登録・解除は不要)
-///     public override void OnPlayerDeath(PlayerDeathEventArgs ev) { }
-///
-///     private void OnUsingItem(UsingItemEventArgs ev) { }
-/// }
-/// </code>
-/// </example>
+/// <remarks>自動登録を避けるには <see cref="NoAutoRegisterAttribute"/> を付けてください。</remarks>
 public abstract class EventHandlerBase : CustomEventsHandler, IDisposable
 {
     private static readonly List<EventHandlerBase> ActiveHandlers = [];
@@ -64,9 +24,7 @@ public abstract class EventHandlerBase : CustomEventsHandler, IDisposable
     private static bool lifetimeHooked;
 
     /// <summary>
-    /// 一度でも有効化されたか。<see cref="EventHandlerRegistry"/> は
-    /// <see cref="Lifetime"/> を読むためだけにインスタンスを作って捨てるので、
-    /// その「試しに作っただけ」の実体で <see cref="OnDisposed"/> を走らせないための印です。
+    /// 一度でも有効化されたか。<see cref="Lifetime"/> を読むためだけの実体で <see cref="OnDisposed"/> を走らせないための印です。
     /// </summary>
     private bool wasEnabled;
 
@@ -91,9 +49,7 @@ public abstract class EventHandlerBase : CustomEventsHandler, IDisposable
     public virtual HandlerLifetime Lifetime => HandlerLifetime.Manual;
 
     /// <summary>
-    /// このハンドラの所有プレイヤー。null 以外を返した場合、そのプレイヤーが
-    /// サーバーから退出した時点で自動的に <see cref="Dispose"/> されます。
-    /// 既定では <see cref="IPlayerOwn"/> を実装していればその Player を使います。
+    /// 所有プレイヤーです。退出時に自動で <see cref="Dispose"/> されます。既定は <see cref="IPlayerOwn"/> の Player です。
     /// </summary>
     public virtual Player Owner => (this as IPlayerOwn)?.Player;
 
@@ -285,11 +241,7 @@ public abstract class EventHandlerBase : CustomEventsHandler, IDisposable
         }
     }
 
-    /// <remarks>
-    /// ここは遅延実行ではなく退出イベントそのものなので、まだ生きている
-    /// <see cref="ReferenceHub"/> を直接比べます。netId で比べると、
-    /// 既に破棄されたハブ同士が 0 で一致して無関係なハンドラを巻き込みます。
-    /// </remarks>
+    /// <remarks>netId ではなく <see cref="ReferenceHub"/> を直接比べます。</remarks>
     private static void OnLifetimePlayerLeft(LeftEventArgs ev)
     {
         if (ev.Player?.ReferenceHub is not { } hub) return;

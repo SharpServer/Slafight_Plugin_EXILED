@@ -4,15 +4,9 @@ using System.Collections.Generic;
 namespace Slafight_Plugin_EXILED.API.Enums;
 
 /// <summary>
-/// 名札 (CustomInfo) に使える色です。
+/// 名札 (CustomInfo) に使える色です。バニラの <c>Misc.AcceptedColours</c> と同じ 24 色です。
 /// </summary>
-/// <remarks>
-/// バニラの <c>Misc.AcceptedColours</c> と同じ 24 色です。
-/// <c>NicknameSync.ValidateCustomInfo</c> が <c>&lt;color=#RRGGBB&gt;</c> の 6 桁を
-/// このリストと<b>大文字で</b>照合するので、ここに無い色や小文字の指定は名札ごと弾かれます。
-/// 色名 (<c>&lt;color=red&gt;</c>) も長さが合わず通りません。
-/// HUD (HintServiceMeow) にはこの制限はありません。
-/// </remarks>
+/// <remarks>ここに無い色や小文字の指定は名札ごと弾かれます。HUD には制限はありません。</remarks>
 public static class ServerColors
 {
     public const string Pink = "#FF96DE";

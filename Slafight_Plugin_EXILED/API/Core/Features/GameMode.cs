@@ -10,29 +10,8 @@ using ServerHandlers = Exiled.Events.Handlers.Server;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// そのラウンド 1 回だけ走る特殊ルールです (旧 <c>SpecialEvent</c>)。
-///
-/// 打ち切り判定は基底が持ちます。コルーチンの中で <see cref="IsCanceled"/> を見るか、
-/// <see cref="Scope"/> に載せておけばラウンド終了で勝手に止まります。
-/// <b>旧実装のように各イベントが世代カウンタ (EventPID) を自前で持つ必要はありません。</b>
+/// そのラウンド 1 回だけ走る特殊ルールです。<see cref="Scope"/> に載せた処理はラウンド終了で止まります。
 /// </summary>
-/// <example>
-/// <code>
-/// public sealed class ChaosRaid : GameMode
-/// {
-///     public override string Name => "Chaos Insurgency Raid";
-///
-///     public override int MinimumPlayers => 8;
-///
-///     protected override void OnStarted()
-///     {
-///         new ChaosRaidSet().Spawn();
-///
-///         Scope.Delay(120f, () => Cassie.Message("evacuate"));
-///     }
-/// }
-/// </code>
-/// </example>
 public abstract class GameMode
 {
     private static bool hooked;
@@ -81,13 +60,8 @@ public abstract class GameMode
     // 導入演出を作るときに、その実装と一緒に足してください。
 
     /// <summary>
-    /// このモードが動いている間、勝利表示を差し替える文言です。null なら陣営のものを使います。
+    /// このモード中に勝利表示を差し替える文言です。null なら陣営のものを使います。
     /// </summary>
-    /// <remarks>
-    /// 同じ陣営でもモードによって名乗りが変わることがあります
-    /// (「戦士達の勝利」を、季節ごとに「雪の戦士達の勝利」などへ)。
-    /// 陣営側に季節を持たせるとモードの都合が陣営に漏れるので、名乗るのはモードの側です。
-    /// </remarks>
     public virtual string VictoryText(CustomTeam winner) => null;
 
     /// <summary>
@@ -96,10 +70,7 @@ public abstract class GameMode
     public bool IsRunning => ReferenceEquals(Current, this);
 
     /// <summary>
-    /// このモードがもう有効でないかどうか。
-    /// 遅延処理やコルーチンの先頭でこれを見て打ち切ってください。
-    ///
-    /// 別のモードに差し替わった場合と、ラウンドが終わった場合の両方で true になります。
+    /// このモードがもう有効でないかどうか。差し替え時とラウンド終了時に true になります。
     /// </summary>
     public bool IsCanceled => !IsRunning;
 

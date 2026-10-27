@@ -3,21 +3,13 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Enums;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;
+using Slafight_Plugin_EXILED.API.Enums;
 
 namespace Slafight_Plugin_EXILED.API.Core.Samples;
 
 /// <summary>
-/// リスポーンウェーブの書き方の見本です。
-///
-/// <b>これは <see cref="SpawnSet"/> の派生クラスそのものです。</b>
-/// 波専用の基底クラスも、波を指す enum も経由していません。
-/// 陣営・重み・割合・アナウンスは、この波が自分で名乗ります。
+/// リスポーンウェーブの書き方の見本です。重み 0 なので抽選には出ません (<c>slc wave SampleWave</c> で手動実行)。
 /// </summary>
-/// <remarks>
-/// <see cref="SpawnSet.RespawnWeight"/> が 0 より大きい <see cref="SpawnSet"/> が抽選対象の波になります。
-/// この見本は本番の抽選に混ざらないよう 0 にしてあるので、実際には出ません。
-/// 試すときは <c>slc wave SampleWave</c> で重みに関係なく出せます。
-/// </remarks>
 public sealed class SampleWave : SpawnSet
 {
     public override string Name => "Sample Wave";
@@ -37,9 +29,18 @@ public sealed class SampleWave : SpawnSet
     /// </summary>
     public override float RespawnRatio => 0.6f;
 
-    public override (string Cassie, string Subtitle) Announcement(int spawnCount, string unitName) =>
-        ("MtfUnit Epsilon 11 Designated Sample HasEntered AllRemaining",
-         $"<color=#00b7eb>見本部隊</color>が施設に到着しました。({spawnCount}名)");
+    /// <summary>
+    /// 出撃放送です。残存 SCP 数は自動で後ろに付きます。
+    /// </summary>
+    protected override void BuildAnnouncement(SpawnAnnouncement a)
+    {
+        // 季節で変えたい語だけ Seasonal(...).On(...) で差し替える。
+        string unitName = a.Seasonal("見本部隊").On(SeasonTypeId.Halloween, "お化け見本部隊");
+
+        a.Cassie("MtfUnit Epsilon 11 Designated Sample", a.UnitCassie, "HasEntered AllRemaining")
+            .Subtitle($"{SpawnAnnouncement.Colored(unitName + a.UnitSuffix, "#00b7eb")}が施設に到着しました。({a.SpawnCount}名)")
+            .Note(SeasonTypeId.Christmas, "見本部隊もクリスマス仕様です。");
+    }
 
     public override IReadOnlyList<SpawnSetRoleDefinition> SpawnRoles =>
     [

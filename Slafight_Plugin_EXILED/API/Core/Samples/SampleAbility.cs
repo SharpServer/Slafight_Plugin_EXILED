@@ -3,12 +3,7 @@ using Slafight_Plugin_EXILED.API.Core.Features;
 namespace Slafight_Plugin_EXILED.API.Core.Samples;
 
 /// <summary>
-/// 能力の書き方の見本です。
-///
-/// 見どころは、この中に<b>入力の話が一切出てこない</b>ことです。
-/// どのキーで撃つかは <see cref="InputHandler"/> の仕事で、
-/// 能力が持つのは「使えるか」と「効果は何か」だけです。
-/// クールダウンと使用回数の管理も基底が引き受けます。
+/// 能力の書き方の見本です。入力は <see cref="InputHandler"/> が扱います。
 /// </summary>
 public sealed class SampleAbility : AbilityBase
 {

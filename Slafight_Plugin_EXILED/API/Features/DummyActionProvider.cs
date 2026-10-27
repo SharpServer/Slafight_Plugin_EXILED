@@ -7,17 +7,9 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
-/// Dummy(NPC)のRemoteAdmin用アクションを動的に追加するための<see cref="IRootDummyActionProvider"/>実装です。
-/// ReferenceHubのGameObjectにアタッチして使用します。
+/// Dummy (NPC) の RemoteAdmin アクションを動的に追加する <see cref="IRootDummyActionProvider"/> 実装です。
 /// </summary>
-/// <remarks>
-/// ゲーム本体のDummyアクションは<see cref="IRootDummyActionProvider"/>を実装したコンポーネントから収集されます
-/// (<see cref="DummyActionCollector"/>参照)。このコンポーネントはHubのGameObject直下に常駐するため、
-/// ロール変更を跨いでアクションが保持されます。<br/>
-/// アクションのコールバックは<c>ActionDummyCommand</c>(権限<c>FacilityManagement</c>)経由でサーバー側から
-/// 引数無しで呼び出されます。押下した管理者の情報は本体から渡されない仕様のため、
-/// 操作対象はこのDummy自身(<see cref="Action{Npc}"/>オーバーロードで受け取れる)に限られます。
-/// </remarks>
+/// <remarks>Hub の GameObject に常駐するので、ロール変更を跨いでアクションが残ります。</remarks>
 [DisallowMultipleComponent]
 public sealed class DummyActionProvider : MonoBehaviour, IRootDummyActionProvider
 {

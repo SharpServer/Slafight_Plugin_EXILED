@@ -16,30 +16,9 @@ using ServerHandlers = Exiled.Events.Handlers.Server;
 namespace Slafight_Plugin_EXILED.Handlers;
 
 /// <summary>
-/// 通報 (F7チーター報告 / ローカル通報)、チームキル (FF)、Kick/Ban を検知し、
-/// <see cref="ModerationBridge"/> 経由で Discord Bot 側へ通知します。
+/// 通報・チームキル・Kick/Ban を検知し、<see cref="ModerationBridge"/> 経由で Discord Bot へ通知します。
 /// </summary>
-/// <remarks>
-/// <para>
-/// RA の "ban" コマンドは Kick(duration=0) / Ban(duration&gt;0) 双方とも内部的に
-/// <c>BanPlayer.BanUser</c> を経由するため、EXILED の Kicked/Banned をフックすれば
-/// モデレーターツール経由・RAコンソール経由の両方を捕捉できます (デコンパイルで確認済み)。
-/// </para>
-/// <para>
-/// 注意: 実際の Ban (duration&gt;0) でも BanUser の最後で <c>ServerConsole.Disconnect</c> が
-/// 直接呼ばれるため、Banned に加えて Kicked も必ず発火します (デコンパイルで確認済み)。
-/// そのままだと同じ操作が Ban通知と Kick通知の二重で飛ぶので、Banned 側で対象を記録して
-/// Kicked 側で抑制します。
-/// </para>
-/// <para>
-/// Kicked(post) には実行者情報が無いため、Kicking(pre, 実行者を含む) を一時対応付けて合成します
-/// (実際の Kick = duration 0 はこの経路のみを通り、Banned は発火しません)。
-/// </para>
-/// <para>
-/// 送信先のチャンネルは Bot 側 (bot.py) が payload の <c>port</c> で振り分けます。
-/// このサーバーの分だけが対応するチャンネルへ出るので、ここでサーバーを気にする必要はありません。
-/// </para>
-/// </remarks>
+/// <remarks>Ban では Kicked も発火するので、Banned 側で記録して Kick 通知を抑制します。</remarks>
 public sealed class ModerationEventsHandler : EventHandlerBase
 {
     /// <summary>Kicking(pre) で捕捉した実行者を Kicked(post) 発火まで一時保持します。Key: 対象の UserId。</summary>
@@ -193,11 +172,7 @@ public sealed class ModerationEventsHandler : EventHandlerBase
         });
     }
 
-    /// <remarks>
-    /// 味方判定は <see cref="CustomTeam.AreAllies"/> に任せます (カスタム陣営があればそれ、
-    /// 無ければバニラの <c>Role.Side</c>)。master 版にあった CTeam の比較表はもう要りません。
-    /// 陣営を持たない役職 (観戦者・チュートリアル等) は FF の対象外です。
-    /// </remarks>
+    /// <remarks>味方判定は <see cref="CustomTeam.AreAllies"/> に任せます。陣営を持たない役職は対象外です。</remarks>
     private void OnDying(DyingEventArgs ev)
     {
         Player attacker = ev.Attacker;

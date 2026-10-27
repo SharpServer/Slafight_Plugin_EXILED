@@ -7,9 +7,7 @@ using Random = System.Random;
 namespace Slafight_Plugin_EXILED.Extensions;
 
 /// <summary>
-/// 「壊れた画面」風テキストを 1 パスで組み立てるユーティリティ。
-/// 色タグ文字列は静的にキャッシュ済みで、1 文字ごとの <see cref="ColorUtility"/> 呼び出しや
-/// 中間 string を作らないため、毎 tick 呼び出しても負荷が乗りにくい。
+/// 「壊れた画面」風テキストを 1 パスで組み立てるユーティリティ。毎 tick 呼んでも軽い。
 /// </summary>
 public static class GlitchText
 {
@@ -72,10 +70,9 @@ public static class GlitchText
     }
 
     /// <summary>
-    /// 複数の元テキストを繋ぎながら 1 行ぶんのグリッチ文字列を書き出すための状態機械。
-    /// <see cref="Feed(string)"/> を複数回呼んでから <see cref="End"/> を呼ぶこと。
-    /// ミュータブルな struct なので、必ずローカル変数として使う（フィールドにコピーしない）。
+    /// 1 行ぶんのグリッチ文字列を書き出す状態機械。<see cref="Feed(string)"/> の後に <see cref="End"/> を呼ぶ。
     /// </summary>
+    /// <remarks>ミュータブルな struct なので、ローカル変数としてだけ使うこと。</remarks>
     public struct GlitchWriter
     {
         private readonly StringBuilder _sb;

@@ -9,17 +9,8 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.ForceSystem;
 
 /// <summary>
-/// 「隊」1 つを表します。本隊も分隊もこの型です。
+/// 「隊」1 つを表します。本隊と分隊は <see cref="IsMainForce"/> で区別します。
 /// </summary>
-/// <remarks>
-/// <b>本隊と分隊で型を分けません。</b><see cref="IsMainForce"/> の付け替えだけで、
-/// 草案の「分隊は本隊へ昇格しうる」「本隊は分隊を吸収しうる」が表現できます。
-/// 型を分けると昇格のたびに実体を作り直すことになり、貢献度と所属時間が切れます。
-///
-/// 呼称 (<see cref="TopLeadName"/> など) をこのクラスの virtual として持たせているのは、
-/// 草案が派生システムの違いとして「部隊の呼称の仕方」を挙げているためです。
-/// 隊が自分で名乗れば表示層に引き表が要りません。
-/// </remarks>
 public abstract class ForceBase
 {
     private readonly List<ForceMember> members = [];
@@ -29,21 +20,13 @@ public abstract class ForceBase
     private int issuedSquads;
 
     /// <summary>
-    /// この隊の表示名です。<c>ALPHA-01</c> のような形式です。
+    /// この隊の表示名 (<c>ALPHA-01</c> など) です。初回参照時に決まり、以後は変わりません。
     /// </summary>
-    /// <remarks>
-    /// 初めて読まれたときに <see cref="BuildName"/> で作られ、以後は変わりません。
-    /// 遅延なのは、<see cref="IsMainForce"/> が確定してから名前を決められるようにするためです。
-    /// </remarks>
     public string Name => name ??= ForceNaming.Sanitize(IsMainForce ? BuildMainName() : BuildSquadName());
 
     /// <summary>
-    /// 同じ種類・同じ区分 (本隊/分隊) の中で何番目に作られたかです。1 始まり。
+    /// 同じ種類・区分の中での通し番号です。1 始まり。分隊は親の本隊ごとに数えます。
     /// </summary>
-    /// <remarks>
-    /// 「第 3 分隊」のような通し番号の名前に使います。
-    /// 親を持つ分隊は<b>その本隊ごと</b>の番号、持たない隊は種類ごとの通し番号です。
-    /// </remarks>
     public int Ordinal { get; internal set; }
 
     /// <summary>
@@ -59,49 +42,23 @@ public abstract class ForceBase
     protected virtual string BuildMainName() => ForceNaming.IssueLocalName();
 
     /// <summary>
-    /// 分隊の名前を作ります。
+    /// 分隊の名前を作ります。既定は本隊と同じ形式です。返り値は自動で無害化されます。
     /// </summary>
-    /// <remarks>
-    /// 既定は本隊と同じ形式です。本隊と分けたい隊はここだけ override してください。
-    /// 返り値は自動で無害化されます。
-    /// </remarks>
-    /// <example>
-    /// <code>
-    /// protected override string BuildSquadName() => $"第{Ordinal}{SquadName}";
-    /// </code>
-    /// </example>
     protected virtual string BuildSquadName() => ForceNaming.IssueLocalName();
 
     /// <summary>
     /// バニラの部隊番号です。NTF の本隊だけが持ち、それ以外は null。
     /// </summary>
-    /// <remarks>
-    /// null でないときだけ、隊員の名札にバニラの <c>(ALPHA-01)</c> が出ます。
-    /// 非 NTF の隊と分隊は <see cref="Name"/> しか持たず、表示はこちらで描きます。
-    /// </remarks>
     public abstract byte? UnitId { get; }
 
     /// <summary>
-    /// この隊が属する陣営です。
+    /// この隊が属する陣営です。同じ側かどうかの判定には <see cref="ForceVisibility"/> を使ってください。
     /// </summary>
-    /// <remarks>
-    /// <see cref="Faction.FoundationEnemy"/> にはカオスと D クラスが<b>両方</b>入ります。
-    /// 「どの隊とどの隊が同じ側か」を判断するのにこれ 1 つでは足りないので、
-    /// 表示の絞り込みには <see cref="ForceVisibility"/> を使ってください。
-    /// </remarks>
     public abstract Faction Faction { get; }
 
     /// <summary>
-    /// この隊が属する <see cref="CustomTeam"/> です。名乗らなければ null。
+    /// この隊が属する <see cref="CustomTeam"/> です。名乗らなければ null。表示の仕分けにだけ使います。
     /// </summary>
-    /// <remarks>
-    /// <see cref="ForceVisibility"/> の既定ルールがこれを見ます。
-    /// 名乗っていれば <see cref="CustomTeam.IsSameSide"/> で仕分けられ、
-    /// 名乗っていなければ隊の型 (機動部隊・カオス・ギャング) で仕分けられます。
-    ///
-    /// <b>陣営判定そのものには使われません。</b>同士討ちの判定などは
-    /// 従来どおり <c>IsAllyOf</c> が担います。ここは表示の分け方だけを決めます。
-    /// </remarks>
     public virtual CustomTeam Team => null;
 
     /// <summary>
@@ -110,12 +67,8 @@ public abstract class ForceBase
     public bool IsMainForce { get; internal set; } = true;
 
     /// <summary>
-    /// 分隊のとき、元になった本隊です。本隊なら null。
+    /// 分隊のとき、元になった本隊です。本隊なら null。本隊が消えると null に戻ります。
     /// </summary>
-    /// <remarks>
-    /// 本隊が消えても分隊は残ります。そのときここは null に戻り、
-    /// 隊の昇格の対象になります。
-    /// </remarks>
     public ForceBase Parent { get; internal set; }
 
     /// <summary>
@@ -232,12 +185,8 @@ public abstract class ForceBase
     public virtual ForceImpact Scp914KeycardPenalty => ForceImpact.Small;
 
     /// <summary>
-    /// SCP-914 にキーカードを通したことの加点です。
+    /// SCP-914 にキーカードを通したときの加点です。既定は加点なし。
     /// </summary>
-    /// <remarks>
-    /// 標準では加点しません。草案で「悪名高いことをして貢献度を稼ぐ」とされている
-    /// D クラスのギャングだけがここを上書きします。
-    /// </remarks>
     public virtual ForceImpact Scp914KeycardReward => ForceImpact.None;
 
     /// <summary>
@@ -277,10 +226,6 @@ public abstract class ForceBase
     /// <summary>
     /// この隊が配る自然回復の強さです。0 なら付けません。
     /// </summary>
-    /// <remarks>
-    /// 草案の「隊員の合計数によって強さや効果数が変動します」の
-    /// 「効果数」にあたります。人数が増えると効果の種類そのものが増えます。
-    /// </remarks>
     public virtual byte Regeneration()
     {
         int need = IsMainForce ? 6 : 4;
@@ -293,11 +238,6 @@ public abstract class ForceBase
     /// <summary>
     /// この隊が配る攻撃力上昇の強さです。0 なら付けません。
     /// </summary>
-    /// <remarks>
-    /// <c>DamageBoost</c> は 1 撃あたりの固定加算なので、
-    /// 移動速度より控えめにしないと撃ち合いが壊れます。
-    /// 分隊は草案どおり <see cref="ForceClassLevel.SubLead"/> が居るときだけ効きます。
-    /// </remarks>
     public virtual byte DamageBoost()
     {
         if (IsMainForce)
@@ -311,15 +251,8 @@ public abstract class ForceBase
     // ───────────────────────────────
 
     /// <summary>
-    /// この人が、いまの役職のままこの隊に居られるかどうか。
+    /// この人がいまの役職のままこの隊に居られるかどうか。false なら隊から外されます。
     /// </summary>
-    /// <remarks>
-    /// 既定は「いまの陣営から決まる隊の種類 (<see cref="ForceKinds"/>) がこの隊と同じであること」です。
-    /// 隊員が SCP や研究員に変えられても、死んでいなければ隊からは外れません。
-    /// これが false になった隊員は <see cref="ForceRegistry"/> が隊から外し、階級と貢献度ごと捨てます。
-    ///
-    /// 陣営の表に載らない独自の役職を抱える隊は、ここを override してください。
-    /// </remarks>
     public virtual bool Accepts(Player player) =>
         player is not null && ForceKinds.For(player) == GetType();
 

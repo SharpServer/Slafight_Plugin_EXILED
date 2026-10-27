@@ -13,24 +13,7 @@ namespace Slafight_Plugin_EXILED;
 /// <summary>
 /// Slafight 本体です。
 /// </summary>
-/// <remarks>
-/// <b>機能の登録をここに並べてはいけません。</b>
-/// <see cref="EventHandlerBase"/> の派生クラスを書けば
-/// <see cref="EventHandlerRegistry"/> が自動的に生成・購読します。
-///
-/// ここに書いてよいのは、自動登録では表現できない次の 3 つだけです。
-/// <list type="number">
-/// <item>Harmony のパッチ適用 / 解除</item>
-/// <item>外部ツール (ffmpeg / yt-dlp) の初期化</item>
-/// <item>Server Specific Settings の配布</item>
-/// </list>
-///
-/// 以前の <c>OnEnabled</c> / <c>OnDisabled</c> は手書きの
-/// <c>Register()</c> / <c>Unregister()</c> を約 45 対抱えており、
-/// 反射式の <c>AutoHandlerBootstrapRegister</c> と 2 系統が併存していました。
-/// ここに <c>Register()</c> を足したくなったら、それは
-/// <see cref="EventHandlerBase"/> で書くべきものだという合図です。
-/// </remarks>
+/// <remarks>機能は <see cref="EventHandlerBase"/> 派生で書き、ここには Harmony・外部ツール・SSS の初期化だけを置きます。</remarks>
 public class Plugin : Plugin<Config>
 {
     public const string ServerName = "シャープ鯖";
@@ -64,8 +47,11 @@ public class Plugin : Plugin<Config>
         // それはローダーの実行順に依存しているため名指しでも登録しておく。二重検出はしない。
         EventHandlerRegistry.RegisterAssembly(Assembly.GetExecutingAssembly());
 
+        // 参加時の一括送信は止め、ServerSpecificsPageSync が人ごとのページを送る。
         ServerSpecificSettingsSync.DefinedSettings = [.. ServerSpecifics.Settings()];
-        ServerSpecificSettingsSync.SendToAll();
+        ServerSpecificSettingsSync.SendOnJoinFilter = _ => false;
+        foreach (Player player in Player.List)
+            ServerSpecifics.SendAll(player);
 
         // 再読込で id が衝突しないよう毎回変える。
         HarmonyInstance = new Harmony($"{Name}.{DateTime.UtcNow.Ticks}");
@@ -88,6 +74,7 @@ public class Plugin : Plugin<Config>
 
         InternalNpcRegistry.Clear();
 
+        ServerSpecificSettingsSync.SendOnJoinFilter = null;
         ServerSpecificSettingsSync.DefinedSettings = [];
         ServerSpecificSettingsSync.SendToAll();
 

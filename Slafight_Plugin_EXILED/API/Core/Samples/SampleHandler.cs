@@ -9,16 +9,7 @@ using PlayerHandlers = Exiled.Events.Handlers.Player;
 namespace Slafight_Plugin_EXILED.API.Core.Samples;
 
 /// <summary>
-/// イベントハンドラの書き方の見本です。
-///
-/// <b>このクラスはどこからも登録されていません。</b>
-/// <see cref="EventHandlerBase"/> を継承しているというだけで
-/// <see cref="EventHandlerRegistry"/> が見つけて生成・購読します。
-/// <c>Plugin.cs</c> に <c>Register()</c> を足す必要はありません。
-///
-/// <see cref="Lifetime"/> が <see cref="HandlerLifetime.Round"/> なので、
-/// ラウンド再開で自動的に破棄され、次のラウンド開始で作り直されます。
-/// 解除漏れを人間が気にする必要はありません。
+/// イベントハンドラの書き方の見本です。継承するだけで自動登録され、ラウンドごとに作り直されます。
 /// </summary>
 public sealed class SampleHandler : EventHandlerBase
 {

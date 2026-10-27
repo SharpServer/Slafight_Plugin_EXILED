@@ -9,21 +9,8 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.Hints;
 
 /// <summary>
-/// 右上の部隊表示を組みます。
+/// 部隊表示を組みます。見える隊は <see cref="ForceVisibility"/> が決めます。
 /// </summary>
-/// <remarks>
-/// <b>バニラの部隊名 HUD はサーバーから触れません。</b>
-/// <c>Respawning.NamingRules.UnitNamingHud</c> はサーバー側アセンブリでは本体が空の
-/// クライアント専用 MonoBehaviour なので、こちらで描き直すしかありません。
-///
-/// 何が見えるかは <see cref="ForceVisibility"/> が決めます。既定では
-/// <see cref="ForceBase.Team"/> (無ければ隊の型) が同じ側の隊だけが並びます。
-///
-/// 表示の方針は<b>「部隊システムが今なにをしているかが読み取れること」</b>です。
-/// 隊名と人数だけだと、バフが乗っているのか・分隊が組めるのかが分からず、
-/// 動いていないのと区別が付きません。そこで自分の状態・受けている効果・
-/// 次に何が起きるかを併記します。
-/// </remarks>
 public static class ForceHud
 {
     /// <summary>隊の一覧に並べる最大行数です。</summary>
@@ -45,22 +32,14 @@ public static class ForceHud
     private const string WarnColor = "#ff8f5b";
 
     /// <summary>
-    /// 名前をそのまま出せる形にします。
+    /// タグ記号を全角にして、名前をリッチテキストとして解釈させないようにします。
     /// </summary>
-    /// <remarks>
-    /// ニックネームにタグの記号が入っているとリッチテキストとして解釈され、
-    /// 以降の行まで崩れます。全角に置き換えて無害化します。
-    /// </remarks>
     private static string Safe(string? text) =>
         string.IsNullOrEmpty(text) ? string.Empty : text!.Replace("<", "＜").Replace(">", "＞");
 
     /// <summary>
-    /// このプレイヤーに見せる行を返します。何も無ければ空の一覧。
+    /// このプレイヤーに見せる行を返します (1 行 = 1 Hint)。何も無ければ空の一覧。
     /// </summary>
-    /// <remarks>
-    /// 1 行 = 1 Hint に分けて描くため、連結済みの 1 文字列ではなく行の一覧を返します。
-    /// <c>HintAlignment.Right</c> は解像度によって位置が動くので使いません。
-    /// </remarks>
     public static IReadOnlyList<string> Rows(Player? viewer)
     {
         if (viewer is null || viewer.Role is null) return [];
@@ -150,10 +129,6 @@ public static class ForceHud
     /// <summary>
     /// 隊に属していないときの案内です。
     /// </summary>
-    /// <remarks>
-    /// 「何をすれば隊に入れるか」を出します。ここが空白だと、
-    /// 単に部隊システムが動いていないのか、自分が外れているだけなのか区別が付きません。
-    /// </remarks>
     private static IEnumerable<string> LooseBlock(Player viewer)
     {
         yield return $"<color={MutedColor}>単独行動中</color>";
@@ -204,10 +179,6 @@ public static class ForceHud
     /// <summary>
     /// いま受けている隊バフです。
     /// </summary>
-    /// <remarks>
-    /// <b>これが「部隊システムがちゃんと効いているか」の答えになります。</b>
-    /// 数値が出ていれば効果が乗っている、0 なら乗っていないと一目で分かります。
-    /// </remarks>
     private static string Buffs(ForceBase force)
     {
         List<string> parts = [];
@@ -220,11 +191,8 @@ public static class ForceHud
     }
 
     /// <summary>
-    /// 隊長までの距離です。自分が隊長なら空文字。
+    /// 隊長までの距離です。自分が隊長なら空文字。しきい値に近づくと警告色にします。
     /// </summary>
-    /// <remarks>
-    /// 離脱しかけていることが分かるよう、しきい値に近づいたら警告色にします。
-    /// </remarks>
     private static string LeadDistance(Player viewer, ForceBase force)
     {
         if (force.TopLead is not { IsAlive: true } lead) return string.Empty;

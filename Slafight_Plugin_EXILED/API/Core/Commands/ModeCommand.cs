@@ -8,10 +8,6 @@ namespace Slafight_Plugin_EXILED.API.Core.Commands;
 /// <summary>
 /// ゲームモードを一覧・起動・停止します。
 /// </summary>
-/// <remarks>
-/// <see cref="GameMode.Weight"/> が 0 のモードは抽選に出ないので、
-/// 起動する手段はこのコマンドになります。
-/// </remarks>
 public sealed class ModeCommand : CommandBase
 {
     public override Type Parent => typeof(RootCommand);

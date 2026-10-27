@@ -14,7 +14,7 @@ public sealed class WaveCommand : CommandBase
 
     public override string Command => "wave";
 
-    public override string Usage => "wave <クラス名|context <クラス名|reset>|suspend <on|off>>";
+    public override string Usage => "wave <クラス名|announce <クラス名> [人数]|context <クラス名|reset>|suspend <on|off>>";
 
     public override string Description => "リスポーンウェーブの強制実行と抽選状況の切り替え。";
 
@@ -34,6 +34,9 @@ public sealed class WaveCommand : CommandBase
 
             case "suspend":
                 return HandleSuspend(out response);
+
+            case "announce":
+                return HandleAnnounce(out response);
         }
 
         if (SpawnContext.Find(first) is not { } wave)
@@ -89,6 +92,30 @@ public sealed class WaveCommand : CommandBase
         return true;
     }
 
+    /// <summary>
+    /// 出撃放送を流さずに文面だけ確認します。部隊名は付きません。
+    /// </summary>
+    private bool HandleAnnounce(out string response)
+    {
+        if (!TryGetArgument(1, out string name) || SpawnContext.Find(name) is not { } wave)
+        {
+            response = $"使い方: wave announce <クラス名> [人数]\n{BuildOverview()}";
+
+            return false;
+        }
+
+        int count = TryGetInt(2, out int parsed) ? parsed : 5;
+        SpawnAnnouncement announcement = wave.ComposeAnnouncement(count, null);
+
+        response = announcement.IsEmpty
+            ? $"'{wave.Name}' は放送しません。"
+            : $"'{wave.Name}' ({count} 人 / 季節: {announcement.Season})\n" +
+              $"Cassie: {announcement.CassieText}\n" +
+              $"字幕: {announcement.SubtitleText.Replace("<split>", "\n      ")}";
+
+        return true;
+    }
+
     private bool HandleSuspend(out string response)
     {
         if (!TryGetArgument(1, out string value))
@@ -128,9 +155,12 @@ public sealed class WaveCommand : CommandBase
             foreach (SpawnSet wave in entries)
             {
                 string kind = wave.IsMiniWave ? "増援" : "本隊";
+                string limit = wave.TriggerLimit < 0 ? "∞" : wave.TriggerLimit.ToString();
+                string blocked = inContext && !wave.CanTrigger ? " <color=#ffd966>(現在抽選不可)</color>" : string.Empty;
                 builder.AppendLine(
                     $"  <b>{wave.GetType().Name}</b> — {wave.Name} " +
-                    $"[{wave.RespawnFaction} / {kind} / 重み {context.WeightOf(wave)} / 割合 {wave.RespawnRatio:P0}]");
+                    $"[{wave.RespawnFaction} / {kind} / 重み {context.WeightOf(wave)} / 割合 {wave.RespawnRatio:P0} / " +
+                    $"回数 {wave.TriggerCount}/{limit}]{blocked}");
             }
         }
 

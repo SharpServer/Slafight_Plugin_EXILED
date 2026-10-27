@@ -107,9 +107,7 @@ public static class LockerFactory
 }
 
 /// <summary>
-/// Exiled の Locker / Chamber ラッパーを楽に操作するための拡張。
-/// アイテム指定は ItemSpawnpoint と同じ統一書式
-/// （bare 名 = カスタムアイテム優先 → ItemType、"(ItemType)X" / "(CustomItem)X" で種類固定）。
+/// Locker / Chamber の拡張。アイテム指定は ItemSpawnpoint と同じ統一書式。
 /// </summary>
 public static class LockerExtensions
 {
@@ -155,8 +153,7 @@ public static class LockerExtensions
         => index >= 0 && index < locker.Chambers.Count ? locker.Chambers.ElementAt(index) : null;
 
     /// <summary>
-    /// 統一書式でアイテムを追加する。
-    /// <paramref name="chamberIndex"/> を省略するとランダムなチャンバーに入る。
+    /// 統一書式でアイテムを追加する。<paramref name="chamberIndex"/> 省略時はランダムなチャンバー。
     /// </summary>
     /// <returns>生成された Pickup。解決できなければ null。</returns>
     public static Pickup? AddItem(this Locker locker, string itemSpec, int chamberIndex = -1)
@@ -183,8 +180,7 @@ public static class LockerExtensions
     // ==== Chamber ====
 
     /// <summary>
-    /// 統一書式でアイテムを追加する（カスタムアイテム優先 → ItemType）。
-    /// 閉じたチャンバーに入れた場合は開けるまでロックされる（Exiled の AddItem 準拠）。
+    /// 統一書式でアイテムを追加する。
     /// </summary>
     /// <returns>生成された Pickup。解決できなければ null。</returns>
     public static Pickup? AddItem(this Chamber chamber, string itemSpec)

@@ -17,15 +17,7 @@ namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
 /// Server Specific Settings のキーバインドを、対応する処理へ渡します。
-///
-/// <b>能力そのものは入力を知りません。</b>
-/// <see cref="AbilityBase"/> は「使えるか」「効果は何か」だけを持ち、
-/// どのキーで撃つかはここが決めます。入力方法を変えても能力側は無変更で済みます。
 /// </summary>
-/// <remarks>
-/// このクラスはどこからも登録されていません。<see cref="EventHandlerBase"/> を
-/// 継承しているだけで <see cref="EventHandlerRegistry"/> が購読させます。
-/// </remarks>
 public sealed class InputHandler : EventHandlerBase
 {
     /// <inheritdoc />
@@ -43,14 +35,8 @@ public sealed class InputHandler : EventHandlerBase
     }
 
     /// <summary>
-    /// ラウンドを跨いだあと、設定画面の値からデバッグ表示を入れ直します。
+    /// ラウンド再開後、設定画面の値からデバッグ表示を入れ直します。
     /// </summary>
-    /// <remarks>
-    /// <see cref="DebugMode"/> の寿命は <see cref="PlayerScope"/> なので、ラウンド再開で
-    /// 全員ぶん消えます。設定画面の値はサーバー側に残っているので、ここで入れ直さないと
-    /// 「設定は ON なのに出ない」ままになります。設定は値が変わったときにしか飛んでこないため、
-    /// その状態では ON を押し直しても戻せません。
-    /// </remarks>
     private static void RestoreDebugMode()
     {
         foreach (Player player in Player.List)
@@ -192,14 +178,8 @@ public sealed class InputHandler : EventHandlerBase
     }
 
     /// <summary>
-    /// 2 択設定の切り替えを受け取ります。
+    /// 2 択設定の切り替えを受け取ります。デバッグ表示は <see cref="DebugCommand.PermissionNode"/> が必要です。
     /// </summary>
-    /// <remarks>
-    /// デバッグ表示は管理者向けなので、設定画面から押されても
-    /// <see cref="DebugCommand.PermissionNode"/> を持っていなければ有効になりません。
-    /// クライアント側の見た目は ON のままになりますが、サーバーが持つ値は OFF に戻すので
-    /// <see cref="ServerSpecificUserSettings.IsDebugModeSelected"/> は実際の状態と食い違いません。
-    /// </remarks>
     private static void HandleTwoButtons(Player player, SSTwoButtonsSetting setting)
     {
         if (setting.SettingId != ServerSpecifics.DebugModeSettingId) return;

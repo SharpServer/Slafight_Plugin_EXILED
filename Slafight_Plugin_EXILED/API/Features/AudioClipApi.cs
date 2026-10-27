@@ -11,18 +11,8 @@ using VoiceChat;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
-/// 音声ファイル / PCM サンプルから <see cref="AudioClip"/> を作り、名前付きでキャッシュする。
+/// 音声ファイル / PCM から <see cref="AudioClip"/> (モノラル / <see cref="VoiceChatSettings.SampleRate"/>) を作り、名前付きでキャッシュする。
 /// </summary>
-/// <remarks>
-/// <para>
-/// 生成するクリップは常にモノラル / <see cref="VoiceChatSettings.SampleRate"/>。
-/// SCP:SL の音声送信経路（<see cref="SpeakerApi"/>）がその形式しか扱わないため。
-/// </para>
-/// <para>
-/// <see cref="AudioClip"/> は <see cref="UnityEngine.Object"/> なので、キャッシュから外すときは
-/// ネイティブ側も破棄する。キャッシュがクリップの所有者である前提。
-/// </para>
-/// </remarks>
 public static class AudioClipApi
 {
     private const int TargetSampleRate = VoiceChatSettings.SampleRate;

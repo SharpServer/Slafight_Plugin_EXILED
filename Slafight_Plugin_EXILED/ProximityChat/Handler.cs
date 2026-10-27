@@ -220,12 +220,8 @@ public static class Handler
     // ====== 近接送信処理 ======
 
     /// <summary>
-    /// この送り手について、近接に流すべき発声チャンネルです。
+    /// この送り手が近接に流す発声チャンネルです。役職が名乗らなければ SCP チャットです。
     /// </summary>
-    /// <remarks>
-    /// カスタム役職が名乗っていればそれに従います。
-    /// 名乗っていない (= <see cref="AllowedRoleTypes"/> のバニラ SCP) 場合は SCP チャットです。
-    /// </remarks>
     private static VoiceChatChannel ResolveSourceChannel(Player sender)
     {
         if (CustomRole.Of(sender) is { } role && role.Voice.Proximity.IsAvailable)
@@ -310,15 +306,8 @@ public static class Handler
 }
 
 /// <summary>
-/// <see cref="Handler"/>（近接ボイス）の寿命を持ちます。
+/// <see cref="Handler"/> の起動と停止を受け持ちます。
 /// </summary>
-/// <remarks>
-/// <see cref="Handler"/> は static クラスなので自分で
-/// <c>EventHandlerBase</c> を継承できません。起動と停止だけをここが引き受けます。
-///
-/// このクラスはどこからも登録されていません。<c>EventHandlerBase</c> を
-/// 継承しているだけで <c>EventHandlerRegistry</c> が生成・購読させます。
-/// </remarks>
 public sealed class HandlerLifecycle : EventHandlerBase
 {
     /// <inheritdoc />

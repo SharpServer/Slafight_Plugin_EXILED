@@ -39,7 +39,8 @@ public class FirstRolesSCPsSet : SpawnSet
         SpawnSetRoleDefinition.Custom<Scp106>(count: 1, weight: 1.1f),
         SpawnSetRoleDefinition.Custom<Scp939>(count: 1, weight: 1.1f),
         SpawnSetRoleDefinition.Custom<Scp049>(count: 1, weight: 1.08f),
-        SpawnSetRoleDefinition.Custom<Scp079>(count: 1, weight: 1.05f),
+        // 079 は単独だと何もできないので 2 体目以降から。
+        SpawnSetRoleDefinition.Custom<Scp079>(count: 1, weight: 1.05f).AfterSpawned(1),
         SpawnSetRoleDefinition.Custom<Scp3114>(count: 1, weight: 0.95f),
         SpawnSetRoleDefinition.Custom<Scp096>(count: 1, weight: 0.85f),
     ];

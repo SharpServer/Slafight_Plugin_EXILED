@@ -22,38 +22,8 @@ using LabPlayerEvents = LabApi.Events.Handlers.PlayerEvents;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// カスタム役職です。<b>プレイヤー 1 人につき 1 インスタンス</b>生成されます。
-/// フィールドをそのまま per-player 状態として使えるので、
-/// プレイヤー ID をキーにした static 辞書を自分で用意する必要はありません。
-///
-/// 何を持たせるかは <c>public override</c> を数行書くだけで宣言できます。
-/// 文字列の識別キーも専用 enum もありません。<b>型そのものが同一性です。</b>
+/// カスタム役職です。プレイヤー 1 人につき 1 インスタンス生成され、型そのものが識別子になります。
 /// </summary>
-/// <example>
-/// <code>
-/// public sealed class ChaosSniper : CustomRole
-/// {
-///     public override string Name     => "Chaos Sniper";
-///     public override CustomTeam Team => CustomTeam.Get&lt;ChaosTeam&gt;();
-///     public override RoleTypeId BaseRole => RoleTypeId.ChaosRifleman;
-///
-///     public override IReadOnlyList&lt;ItemType&gt; Items =>
-///     [
-///         ItemType.GunE11SR,
-///         ItemType.ArmorCombat,
-///     ];
-///
-///     public override IReadOnlyDictionary&lt;AmmoType, ushort&gt; Ammo =>
-///         new Dictionary&lt;AmmoType, ushort&gt; { [AmmoType.NatoRifle] = 120 };
-///
-///     protected override void OnSpawned()
-///     {
-///         // Scope は退出・ラウンド再開・役職変更で自動的に閉じる
-///         Scope.RunLoop(5f, p => p.ShowHint("狙撃手として動け", 2f));
-///     }
-/// }
-/// </code>
-/// </example>
 public abstract class CustomRole : IPlayerOwn
 {
     private static readonly Dictionary<uint, CustomRole> ActiveRoles = new Dictionary<uint, CustomRole>();
@@ -106,17 +76,9 @@ public abstract class CustomRole : IPlayerOwn
     public abstract RoleTypeId BaseRole { get; }
 
     /// <summary>
-    /// 部隊システムでの役職優先度です。大きいほど上位で、0 なら名乗りません。
+    /// 部隊システムでの役職優先度です。大きいほど上位で、0 ならバニラ役職の優先度を使います。
     /// </summary>
-    /// <remarks>
-    /// TopLead が死んだときや隊が昇格するとき、貢献度より先にこれが見られます。
-    /// 草案の「元帥がスポーンしたときは隊長級を差し置いて TopLead になる」がこれにあたります。
-    ///
-    /// 0 のままならバニラ役職の優先度 (<see cref="Slafight_Plugin_EXILED.ForceSystem.ForceRolePower"/>) にフォールバックするので、
-    /// 見た目だけを変えた役職はここを触らなくて構いません。
-    /// 値の目安はバニラに合わせて 二等兵 1 / 軍曹・特殊 2 / 隊長 3 です。
-    /// それより上位の役職を作るときは 4 以上を返してください。
-    /// </remarks>
+    /// <remarks>目安: 二等兵 1 / 軍曹・特殊 2 / 隊長 3。それより上位は 4 以上。</remarks>
     public virtual int ForceRolePower => 0;
 
     /// <summary>
@@ -140,39 +102,23 @@ public abstract class CustomRole : IPlayerOwn
     public virtual float? MaxHealth => null;
 
     /// <summary>
-    /// スポーン時の体力です。既定では <see cref="MaxHealth"/> と同じ値になります。
+    /// スポーン時の体力です。既定は <see cref="MaxHealth"/> と同じ値です。
     /// </summary>
-    /// <remarks>
-    /// <see cref="MaxHealth"/> が null でも、このプロパティだけを指定すれば
-    /// 土台役職の最大体力を変えずに初期体力だけを設定できます。
-    /// </remarks>
     public virtual float? Health => MaxHealth;
 
     /// <summary>
-    /// この役職のヒュームシールド最大値です。null なら土台役職の設定をそのまま使います。
+    /// ヒュームシールドの最大値です。null なら土台役職の設定を使います。
     /// </summary>
-    /// <remarks>
-    /// 値を指定すると EXILED の <c>CustomHumeShieldStat</c> に最大値 override を設定します。
-    /// 元からヒュームシールドを持つ SCP は、回復待機や回復速度など土台役職の仕組みを
-    /// 保ったまま、この最大値を使います。
-    /// </remarks>
     public virtual float? MaxHumeShield => null;
 
     /// <summary>
-    /// スポーン時のヒュームシールド値です。
+    /// スポーン時のヒュームシールド値です。既定は <see cref="MaxHumeShield"/> (満タン) です。
     /// </summary>
-    /// <remarks>
-    /// 既定では <see cref="MaxHumeShield"/> と同じ値、つまり満タンです。
-    /// <see cref="MaxHumeShield"/> が null の場合、この値も適用されません。
-    /// </remarks>
     public virtual float? HumeShield => MaxHumeShield;
 
     /// <summary>
-    /// 土台役職や所持品が供給するヒュームシールド回復速度に掛ける倍率です。
+    /// ヒュームシールド回復速度の倍率です。土台に回復源がない役職では効きません。
     /// </summary>
-    /// <remarks>
-    /// 人間役職など、土台に回復源がない役職へ単独で指定しても自動回復は発生しません。
-    /// </remarks>
     public virtual float HumeShieldRegenerationMultiplier => 1f;
 
     /// <summary>
@@ -197,38 +143,19 @@ public abstract class CustomRole : IPlayerOwn
     public virtual IReadOnlyList<RoleEffect> Effects => [];
 
     /// <summary>
-    /// この役職の声の扱いです。近接ボイスの可否と、独自の伝達経路を名乗ります。
+    /// この役職の声の扱い (近接ボイスの可否と独自の伝達経路) です。
     /// </summary>
-    /// <remarks>
-    /// 経路を持つ役職は、その役職を見に行く側 (<c>VoiceRoutingApi</c>) ではなく
-    /// <b>役職自身</b>がここで名乗ります。声の届き方を足すのに配線側は触りません。
-    /// </remarks>
     public virtual RoleVoiceSettings Voice => RoleVoiceSettings.None;
 
     /// <summary>
-    /// この役職だけに適用する定型文通信の上書きです。
-    /// 既定では所属する <see cref="Team"/> とバニラ陣営の設定を引き継ぎます。
+    /// この役職だけに適用する定型文通信の上書きです。既定は <see cref="Team"/> の設定を引き継ぎます。
     /// </summary>
-    /// <example>
-    /// <code>
-    /// // 所属陣営では禁止でも、この役職だけ専用 Prefix 付きで許可する。
-    /// public override CommunicationPolicy Communication =>
-    ///     CommunicationPolicy.Enabled(
-    ///         proximityPrefix: "司令部",
-    ///         radioPrefix: "秘匿回線",
-    ///         proximityRange: 12f);
-    /// </code>
-    /// </example>
     public virtual CommunicationPolicy Communication => CommunicationPolicy.Inherit();
 
     /// <summary>
     /// ネームプレートに出す追加情報です。null なら変更しません。
     /// </summary>
-    /// <remarks>
-    /// 生の <c>Player.CustomInfo</c> ではなく <see cref="CustomInfoDisplay"/> を通します。
-    /// あちらが名前欄・役職欄・部隊名の出し分け (<c>InfoArea</c> のフラグ) まで面倒を見るので、
-    /// 直接代入すると<b>バニラの名前と役職が残ったまま追記される</b>ことになります。
-    /// </remarks>
+    /// <remarks><see cref="CustomInfoDisplay"/> を通して表示します。</remarks>
     public virtual string CustomInfo => null;
 
     /// <summary>
@@ -237,20 +164,13 @@ public abstract class CustomRole : IPlayerOwn
     public virtual CustomInfoDisplayOptions CustomInfoOptions => CustomInfoDisplayOptions.Default;
 
     /// <summary>
-    /// HUD の役職欄に出す整形済みの文字列です。
-    /// 既定はチーム色を巻いた <see cref="Name"/> なので、
-    /// 部隊ごとに色や太字を変える役職だけ override します。
+    /// HUD の役職欄に出す文字列です。既定はチーム色を巻いた <see cref="Name"/> です。
     /// </summary>
     public virtual string HudLabel => Team.Colorize(CustomSeason.Current.LocalizeScpText(Name));
 
     /// <summary>
-    /// この役職で脱出したとき、何になるかです。null なら陣営 (<see cref="CustomTeam.Escape"/>) に任せます。
+    /// この役職で脱出したときの行き先です。null なら <see cref="CustomTeam.Escape"/> に任せます。
     /// </summary>
-    /// <remarks>
-    /// 陣営の既定と違う行き先を持つ役職だけが override します。
-    /// 「SCP-3005 が脱出したら第五教会の司祭になる」のような、
-    /// 役職 1 つのために陣営側へ例外を書き足したくなるものがこれにあたります。
-    /// </remarks>
     public virtual SpawnSetRoleDefinition? Escape(EscapeContext escape) => null;
 
     /// <summary>
@@ -265,19 +185,9 @@ public abstract class CustomRole : IPlayerOwn
     public virtual string Objective => null;
 
     /// <summary>
-    /// HUD の役職固有欄に出す、いま見せたい状態です。null / 空なら何も出しません。
+    /// HUD の役職固有欄に出す状態です。null / 空なら何も出しません。
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// ネームプレート (<see cref="CustomInfo"/>) とは別物です。あちらは他人が見る名札で、
-    /// こちらは本人 (と観戦者) が見る計器です。
-    /// </para>
-    /// <para>
-    /// 既定では <see cref="ShowStatus"/> で置かれた値を、その有効時間の間だけ返します。
-    /// 押し込まずに毎回組み立てたい役職は override してください。
-    /// HUD ループから毎秒読まれるので、<b>その場合は読むだけにしてください。</b>
-    /// </para>
-    /// </remarks>
+    /// <remarks>既定は <see cref="ShowStatus"/> の値を返します。毎秒読まれるので override 時は読むだけにしてください。</remarks>
     public virtual string Status => Time.time < statusExpiresAt ? status : null;
 
     /// <summary>
@@ -306,11 +216,8 @@ public abstract class CustomRole : IPlayerOwn
     public static IReadOnlyCollection<CustomRole> Active => ActiveRoles.Values;
 
     /// <summary>
-    /// いま有効な <typeparamref name="T"/> の役職インスタンスです。派生役職も含みます。
+    /// いま有効な <typeparamref name="T"/> の役職インスタンス (派生含む) のスナップショットです。
     /// </summary>
-    /// <remarks>
-    /// 反復中に役職を外しても壊れないよう、その場でスナップショットを取ります。
-    /// </remarks>
     public static IReadOnlyList<T> AllOf<T>() where T : CustomRole => [.. ActiveRoles.Values.OfType<T>()];
 
     /// <summary>
@@ -401,11 +308,6 @@ public abstract class CustomRole : IPlayerOwn
     /// <summary>
     /// この役職をプレイヤーに付与します。失敗したときは理由を返します。
     /// </summary>
-    /// <remarks>
-    /// 失敗を bool 1 個で返すと、呼び出し側は「対象が悪いのか、役職が悪いのか、
-    /// 役職変更を誰かに止められたのか」を区別できません。
-    /// コマンドやマップから叩く経路のために理由を残します。
-    /// </remarks>
     public bool Spawn(Player player, out string failure)
     {
         failure = null;
@@ -536,17 +438,8 @@ public abstract class CustomRole : IPlayerOwn
     protected virtual float HintDuration => 5f;
 
     /// <summary>
-    /// 役職の説明を本人に見せます。
+    /// 役職の説明を本人にヒントで見せます。
     /// </summary>
-    /// <remarks>
-    /// EXILED のヒントをそのまま使います。HSM の互換アダプタが吸収するので、
-    /// バニラの <c>HintDisplay</c> へ素通しされることはありません。
-    /// HUD の常設表示は <see cref="HudLabel"/> / <see cref="Objective"/> /
-    /// <see cref="Status"/> を表示層が読む形にしてあります。
-    ///
-    /// 縦位置は互換アダプタが Y≈700 中心に決めるので、こちらからは指定できません。
-    /// 大きさと行送りは下のリッチテキストから読まれます。
-    /// </remarks>
     protected virtual void ShowHint()
     {
         Player.ShowHint(
@@ -576,15 +469,8 @@ public abstract class CustomRole : IPlayerOwn
     }
 
     /// <summary>
-    /// 常時更新するステータス行 (残り時間・レベルなど) を出します。
-    /// 説明を出す <see cref="ShowHint"/> とは用途が別です。
+    /// <see cref="Status"/> に一定時間だけ値を置きます。
     /// </summary>
-    /// <remarks>
-    /// 中央にヒントを飛ばすのではなく、<see cref="Status"/> に置くだけです。
-    /// 画面のどこへ出すかは表示層の都合なので、役職側は「いま何を出したいか」だけを言います。
-    /// <paramref name="duration"/> を過ぎると <see cref="Status"/> は null に戻るので、
-    /// 更新が止まった役職の古い値が残りません。
-    /// </remarks>
     protected void ShowStatus(string text, float duration)
     {
         status = text;
@@ -785,11 +671,7 @@ public abstract class CustomRole : IPlayerOwn
         globalEventsRegistered = false;
     }
 
-    /// <remarks>
-    /// 役職変更は EXILED 側に相当イベントが無いため LabApi の
-    /// <c>PlayerEvents.ChangedRole</c> を使い、ReferenceHub 経由で EXILED の
-    /// <see cref="Player"/> に戻します。
-    /// </remarks>
+    /// <summary>LabApi の役職変更イベントを EXILED の <see cref="Player"/> に戻して処理します。</summary>
     private static void OnChangedRole(PlayerChangedRoleEventArgs ev)
     {
         if (ev.Player?.ReferenceHub is not { } hub) return;

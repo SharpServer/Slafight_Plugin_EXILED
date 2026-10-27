@@ -7,13 +7,8 @@ using PlayerHandlers = Exiled.Events.Handlers.Player;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
-/// プレイヤーが自分で決めた RP 名を、ネームプレートの表示名に反映します。
+/// SSS のテキスト欄で決めた RP 名を、ネームプレートの表示名に反映します。
 /// </summary>
-/// <remarks>
-/// 入力は Server Specific Settings のテキスト欄から来ます。
-/// 表示への反映は <see cref="CustomInfoDisplay"/> が持っているので、
-/// ここは <c>CustomName</c> を差し替えて再描画を頼むだけです。
-/// </remarks>
 public static class RPNameSetter
 {
     /// <summary>
@@ -107,13 +102,8 @@ public static class RPNameSetter
 }
 
 /// <summary>
-/// <see cref="RPNameSetter"/> の寿命を持ちます。
-/// </summary>
-/// <remarks>
 /// 参加時に記録済みの RP 名を貼り直し、退出時に記録を捨てます。
-/// このクラスはどこからも登録されていません。<c>EventHandlerBase</c> を
-/// 継承しているだけで <c>EventHandlerRegistry</c> が購読させます。
-/// </remarks>
+/// </summary>
 public sealed class RPNameLifecycle : EventHandlerBase
 {
     /// <inheritdoc />

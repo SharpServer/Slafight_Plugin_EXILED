@@ -3,6 +3,7 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Enums;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;
+using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.CustomRoles.FoundationForces.MTFs.Epsilon11;
 
 namespace Slafight_Plugin_EXILED.SpawnSets.FoundationForces;
@@ -26,11 +27,26 @@ public sealed class NtfWaveSet : SpawnSet
 
     public override string Theme => "./WaveThemes/_w_ntf.ogg";
 
-    public override (string Cassie, string Subtitle) Announcement(int spawnCount, string unitName) =>
-        CustomSeason.Current.NtfArrival(unitName) ??
-        ("MtfUnit Epsilon 11 Designated Ninetailedfox HasEntered AllRemaining",
-         "<color=#5bc5ff>機動部隊Epsilon-11 \"九尾狐\"</color>が施設に到着しました。" +
-         "残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。");
+    protected override void BuildAnnouncement(SpawnAnnouncement a)
+    {
+        string unitCassie = a.Seasonal("MtfUnit Epsilon 11 Designated Ninetailedfox")
+            .On(SeasonTypeId.Halloween, "MtfUnit Mu 13 Designated HALLOWEEN_GHOSTBUSTERS")
+            .On(SeasonTypeId.Christmas, "XMAS_EPSILON11");
+
+        string hasEntered = a.Seasonal("HasEntered AllRemaining")
+            .On(SeasonTypeId.Christmas, "XMAS_HASENTERED");
+
+        string unitName = a.Seasonal("機動部隊Epsilon-11 \"九尾狐\"")
+            .On(SeasonTypeId.Halloween, "機動部隊ミュー-13 \"ゴーストバスターズ\"");
+
+        string body = a.Seasonal("残存する全職員は、機動部隊が目的地に到着するまで、標準避難プロトコルに従って行動してください。")
+            .On(SeasonTypeId.Halloween, "残りの全職員は、機動部隊が貴方の場所まで到着するまで「標準避難プロトコル」の続行を推奨します。");
+
+        a.Cassie(unitCassie, a.UnitCassie, hasEntered)
+         .Subtitle($"{SpawnAnnouncement.Colored(unitName + a.UnitSuffix, "#5bc5ff")}が施設に到着しました。")
+         .Line(body)
+         .Note(SeasonTypeId.Christmas, "メリークリスマス。サンタクロースを名乗る不審者を発見した場合は、直ちに機動部隊へ報告してください。");
+    }
 
     public override IReadOnlyList<SpawnSetRoleDefinition> SpawnRoles =>
     [

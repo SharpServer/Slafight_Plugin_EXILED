@@ -4,9 +4,7 @@ using LabApi.Events.CustomHandlers;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
-/// Base class for LabAPI custom handlers used by this plugin.
-/// Put all LabAPI/EXILED event subscriptions in <see cref="RegisterEvents"/> through
-/// <see cref="EventSubscriptionScope.Add"/> so registration and cleanup stay paired.
+/// LabAPI ハンドラの基底です。購読は <see cref="RegisterEvents"/> で <see cref="EventSubscriptionScope.Add"/> を通して登録します。
 /// </summary>
 public abstract class SlafightLabApiHandler : CustomEventsHandler, IDisposable
 {

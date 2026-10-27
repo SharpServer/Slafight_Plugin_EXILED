@@ -7,29 +7,9 @@ using Slafight_Plugin_EXILED.API.Enums;
 namespace Slafight_Plugin_EXILED.API.Structs;
 
 /// <summary>
-/// 銃器サウンドの指定キー。<c>CItemWeapon.OverrideSounds</c> の辞書キーとして使う。
+/// 銃器サウンドの指定キー。<see cref="GunSoundKind"/> / クリップ名 / <see cref="MixerChannel"/> / AudioIndex から暗黙変換できる。
 /// </summary>
-/// <remarks>
-/// <para>
-/// <see cref="GunSoundKind"/> / クリップ名 / <see cref="MixerChannel"/> / AudioIndex の
-/// どれからでも暗黙変換できるので、1 つの辞書に混ぜて書ける。
-/// </para>
-/// <example>
-/// <code>
-/// protected override IReadOnlyDictionary&lt;GunSoundSelector, GunSoundOverride&gt; OverrideSounds => new Dictionary&lt;GunSoundSelector, GunSoundOverride&gt;
-/// {
-///     [GunSoundKind.Gunshot]                 = "MyGun_Fire.ogg",
-///     [GunSoundClips.Crossvec.MagInsert]     = "MyGun_MagIn.ogg",
-///     [MixerChannel.DefaultSfx]              = GunSoundOverride.Silent,
-///     [GunSoundSelector.FromIndex(14)]       = "MyGun_Rare.ogg",
-/// };
-/// </code>
-/// </example>
-/// <para>
-/// 同じ音に複数の指定が当たる場合は AudioIndex → クリップ名 → <see cref="GunSoundKind"/> →
-/// <see cref="MixerChannel"/> の順で具体的な方が勝つ。
-/// </para>
-/// </remarks>
+/// <remarks>複数当たる場合は AudioIndex → クリップ名 → Kind → チャンネルの順で優先する。</remarks>
 public readonly struct GunSoundSelector : IEquatable<GunSoundSelector>
 {
     /// <summary>何で指定しているか。</summary>

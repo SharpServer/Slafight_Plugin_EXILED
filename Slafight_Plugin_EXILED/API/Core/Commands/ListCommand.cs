@@ -7,12 +7,8 @@ using Slafight_Plugin_EXILED.API.Core.Features;
 namespace Slafight_Plugin_EXILED.API.Core.Commands;
 
 /// <summary>
-/// 宣言されているものを種類ごとに一覧します。
+/// 宣言されているものを種類ごとに一覧します。出た名前はそのまま他のコマンドの引数に使えます。
 /// </summary>
-/// <remarks>
-/// <b>ここに出た名前は、そのまま他のコマンドの引数として使えます。</b>
-/// 名前はクラス名そのもので、別名の対応表は存在しません。
-/// </remarks>
 public sealed class ListCommand : CommandBase
 {
     public override Type Parent => typeof(RootCommand);

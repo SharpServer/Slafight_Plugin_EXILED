@@ -9,20 +9,8 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.CustomMaps;
 
 /// <summary>
-/// 車両スイープの判定箱を Primitive で描くためのデバッグ表示です。
+/// 車両スイープの判定箱を Primitive の枠で描くデバッグ表示です (<c>slc hitbox van</c>)。
 /// </summary>
-/// <remarks>
-/// <para>
-/// 判定に使う箱は Collider ではないので <c>slc hitbox</c> のコライダ表示では見えません。
-/// そこで同じ <see cref="RespawnVehiclePhysicsImpact.TryGetCurrentShape"/> を使って
-/// 箱の枠だけを描くようにしました。描画と判定が同じ値なので、
-/// 見た目で車体に合っているかそのまま判断できます。
-/// </para>
-/// <para>
-/// <c>slc hitbox van</c> で表示の切り替え、<c>slc hitbox van size|offset</c> で
-/// 箱の実寸と中心オフセットを手動で変えられます。
-/// </para>
-/// </remarks>
 internal static class VanSweepDebugDraw
 {
     private const float RedrawInterval = 0.1f;

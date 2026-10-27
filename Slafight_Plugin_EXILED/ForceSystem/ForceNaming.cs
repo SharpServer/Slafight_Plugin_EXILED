@@ -6,21 +6,8 @@ using Random = UnityEngine.Random;
 namespace Slafight_Plugin_EXILED.ForceSystem;
 
 /// <summary>
-/// 隊の名前を作ります。
+/// 隊の名前を作ります。バニラが配った部隊名と衝突しない組み合わせだけを使います。
 /// </summary>
-/// <remarks>
-/// <b>バニラが表示している部隊名と衝突させないための層です。</b>
-///
-/// <see cref="Team.FoundationForces"/> の <c>UsesUnitNames</c> は true 固定なので、
-/// NTF の名札にはバニラの <c>(ALPHA-01)</c> が必ず出ます。これは避けられません。
-/// そこで分隊名と非 NTF 部隊名を作るときは、
-/// <b>バニラが実際に配った名前を突き合わせて、空いている組み合わせだけを使います</b>。
-///
-/// 生成数を offset にする方式は使いません。バニラの
-/// <see cref="NineTailedFoxNamingRule.GenerateNew"/> は NATO コードも番号も
-/// <c>Random.Range</c> で選ぶので、数から名前を決定的に計算しても
-/// 実際に使われた名前とは何の関係もなく、衝突を避けたことになりません。
-/// </remarks>
 public static class ForceNaming
 {
     /// <summary>
@@ -41,11 +28,6 @@ public static class ForceNaming
     /// <summary>
     /// バニラが採番した部隊名をそのまま採用します。名前が無ければこちらで作ります。
     /// </summary>
-    /// <remarks>
-    /// NTF の本隊用です。番号と名前は <c>SpawnSystem</c> が波を出すときに確保済みなので、
-    /// ここでは<b>受け取るだけ</b>で新しく採番しません。
-    /// 二重に採番すると名札の <c>(ALPHA-01)</c> と食い違います。
-    /// </remarks>
     public static string Adopt(string vanillaName)
     {
         if (string.IsNullOrEmpty(vanillaName))
@@ -57,20 +39,8 @@ public static class ForceNaming
     }
 
     /// <summary>
-    /// バニラの採番を消費せずに、こちら側だけで名前を作ります。
+    /// バニラの採番を消費せずに、空いている名前を作ります。分隊と非 NTF の隊に使います。
     /// </summary>
-    /// <remarks>
-    /// 分隊と非 NTF の隊に使います。
-    ///
-    /// <b>「バニラの生成数を offset にする」方式はやめました。</b>
-    /// バニラの <see cref="NineTailedFoxNamingRule.GenerateNew"/> は
-    /// NATO コードも番号も <c>Random.Range</c> で選ぶので、
-    /// 生成数から名前を決定的に計算しても、実際に使われた名前とは何の関係もありません。
-    /// 数を進めても衝突を避けたことにならないのです。
-    ///
-    /// 代わりに<b>バニラが実際に配った名前を突き合わせて</b>、
-    /// 空いている組み合わせだけを返します。これなら確実に重なりません。
-    /// </remarks>
     public static string IssueLocalName()
     {
         SyncVanillaNames();
@@ -105,24 +75,14 @@ public static class ForceNaming
     }
 
     /// <summary>
-    /// バニラが既に配った部隊名を取り込みます。
+    /// 名前のタグ記号を全角にして、リッチテキストとして解釈されないようにします。
     /// </summary>
-    /// <remarks>
-    /// <see cref="NamingRulesManager.GeneratedNames"/> はホストクライアントが
-    /// <c>UnitNameMessage</c> を処理してから増えるので、採番直後は載っていないことがあります。
-    /// そのぶんは <see cref="Adopt"/> 側が先に登録しているので取りこぼしません。
-    /// </remarks>
-    /// <summary>
-    /// 名前をそのまま表示できる形にします。
-    /// </summary>
-    /// <remarks>
-    /// タグの記号が入っているとリッチテキストとして解釈され、HUD と名札が崩れます。
-    /// 名札はバニラの検証も通らなくなります。
-    /// <see cref="ForceBase.Name"/> が自動で通すので、隊の側で呼ぶ必要はありません。
-    /// </remarks>
     internal static string Sanitize(string name) =>
         string.IsNullOrEmpty(name) ? name : name.Replace("<", "＜").Replace(">", "＞");
 
+    /// <summary>
+    /// バニラが既に配った部隊名を取り込みます。
+    /// </summary>
     private static void SyncVanillaNames()
     {
         if (!NamingRulesManager.GeneratedNames.TryGetValue(Team.FoundationForces, out List<string> names))

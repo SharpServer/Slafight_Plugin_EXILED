@@ -213,9 +213,7 @@ public static class MediaProcessingApi
     }
 
     /// <summary>
-    /// Decodes a direct HTTP(S) image, GIF, or video URL with ffmpeg. Use
-    /// <see cref="GetFramesFromUrl"/> instead for webpage URLs that require
-    /// yt-dlp extraction.
+    /// 直接の HTTP(S) 画像 / GIF / 動画 URL を ffmpeg でデコードします。Web ページの URL は <see cref="GetFramesFromUrl"/> を使ってください。
     /// </summary>
     public static IReadOnlyList<VideoFrameData> GetFramesFromDirectUrl(
         string url,

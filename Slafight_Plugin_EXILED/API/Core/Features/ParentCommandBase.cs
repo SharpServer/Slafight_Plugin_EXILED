@@ -8,29 +8,9 @@ using Exiled.API.Features;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// 子コマンドを自分で集める親コマンドの基底です。
-///
-/// <see cref="CommandBase.Parent"/> にこの型を書いた <see cref="CommandBase"/> が、
-/// 何も登録しなくても子として並びます。親側に登録の一覧を書く必要はありません。
-///
-/// 引数なしで実行された場合は、送信者が実行できる子コマンドの一覧を返します。
+/// <see cref="CommandBase.Parent"/> でこの型を指したコマンドを子として集める親コマンドの基底です。
 /// </summary>
-/// <example>
-/// <code>
-/// [CommandHandler(typeof(RemoteAdminCommandHandler))]
-/// public sealed class RootCommand : ParentCommandBase
-/// {
-///     public override string Command => "sl";
-/// }
-///
-/// // これだけで "sl spawn" として並ぶ。RootCommand 側は無変更。
-/// public sealed class SpawnCommand : CommandBase
-/// {
-///     public override Type Parent => typeof(RootCommand);
-///     public override string Command => "spawn";
-/// }
-/// </code>
-/// </example>
+/// <remarks>引数なしなら実行できる子コマンドの一覧を返します。</remarks>
 public abstract class ParentCommandBase : ParentCommand
 {
     protected ParentCommandBase() => LoadGeneratedCommands();

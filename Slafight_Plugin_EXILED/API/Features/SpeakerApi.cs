@@ -188,21 +188,9 @@ public static class SpeakerApi
     }
 
     /// <summary>
-    /// 短い SFX を高頻度で鳴らすための再生。<paramref name="audioPlayerName"/> ごとに最大
-    /// <paramref name="voices"/> 個のスピーカーを確保して使い回すため、発砲音のように連続する音でも
-    /// SpeakerToy と controller ID を消費し続けない。
+    /// 短い SFX を高頻度で鳴らす再生。<paramref name="audioPlayerName"/> ごとに最大 <paramref name="voices"/> 個のスピーカーを使い回す。
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// <see cref="Play"/> と違い、スピーカーは再生終了後も破棄されない。呼び出し側が
-    /// プレイヤー退出・ラウンド終了などのタイミングで <see cref="TryDestroy(string)"/> すること。
-    /// </para>
-    /// <para>
-    /// 音量・空間設定・リスナー条件は最初のスピーカー生成時にだけ適用される。途中で変えたい場合は
-    /// <see cref="SetVolume(Playback, float)"/> / <see cref="SetListeners(Playback, Predicate{Player})"/> を使う。
-    /// 1 つの <paramref name="audioPlayerName"/> には 1 種類のクリップだけを流す前提。
-    /// </para>
-    /// </remarks>
+    /// <remarks>スピーカーは自動で破棄されないので、呼び出し側が <see cref="TryDestroy(string)"/> すること。</remarks>
     public static Playback PlayOneShot(
         string fileName,
         string audioPlayerName,

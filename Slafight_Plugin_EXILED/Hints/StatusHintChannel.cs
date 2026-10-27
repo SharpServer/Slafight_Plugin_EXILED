@@ -13,9 +13,7 @@ public sealed class StatusHintLayout
     public HintAlignment Alignment { get; set; } = HintAlignment.Right;
 
     /// <summary>
-    /// <see cref="YCoordinate"/> がテキストブロックのどこを指すか。
-    /// 既定の <see cref="HintVerticalAlign.Top"/> ではブロックが下方向にのみ伸びるため、
-    /// 行数が増えても上方向へ食い込まない。
+    /// <see cref="YCoordinate"/> がテキストブロックのどこを指すか。既定の Top なら下方向にだけ伸びます。
     /// </summary>
     public HintVerticalAlign VerticalAlign { get; set; } = HintVerticalAlign.Top;
 

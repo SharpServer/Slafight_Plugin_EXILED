@@ -3,6 +3,7 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Enums;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;
+using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.CustomRoles.FoundationForces.MTFs.Epsilon11;
 
 namespace Slafight_Plugin_EXILED.SpawnSets.FoundationForces;
@@ -31,10 +32,18 @@ public sealed class NtfBackupWaveSet : SpawnSet
 
     public override string Theme => "./WaveThemes/_w_ntf.ogg";
 
-    public override (string Cassie, string Subtitle) Announcement(int spawnCount, string unitName) =>
-        CustomSeason.Current.NtfBackup() ??
-        ("Ninetailedfox Backup unit has entered the facility .",
-         "<color=#5bc5ff>九尾狐 予備部隊</color>が施設に到着しました。");
+    protected override void BuildAnnouncement(SpawnAnnouncement a)
+    {
+        string unitCassie = a.Seasonal("Ninetailedfox Backup unit")
+            .On(SeasonTypeId.Halloween, "HALLOWEEN_GHOSTBUSTERS Backup Unit");
+
+        string unitName = a.Seasonal("九尾狐 予備部隊")
+            .On(SeasonTypeId.Halloween, "ゴーストバスターズ 予備部隊");
+
+        a.Cassie(unitCassie, "has entered the facility .")
+            .Subtitle($"{SpawnAnnouncement.Colored(unitName, "#5bc5ff")}が施設に到着しました。")
+            .Note(SeasonTypeId.Christmas, "予備部隊はプレゼントの配達要員ではありません。");
+    }
 
     public override IReadOnlyList<SpawnSetRoleDefinition> SpawnRoles =>
     [

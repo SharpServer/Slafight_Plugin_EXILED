@@ -17,22 +17,9 @@ using LabPickup = LabApi.Features.Wrappers.Pickup;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// ひとつの物理アイテムを複数の <see cref="CustomItem"/> モードで共有する基底です。
-/// モード切替では物理アイテムだけを差し替え、現在モードと各モードの保存状態は
-/// シリアル単位で引き継ぎます。
+/// 1 つの物理アイテムを複数の <see cref="CustomItem"/> モードで共有する基底です。状態はシリアル単位で引き継ぎます。
 /// </summary>
-/// <remarks>
-/// <para>
-/// 各モードは通常の <see cref="CustomItem"/> として実装できます。Hybrid がイベント、
-/// カスタマイズ、拾得・投棄のライフサイクルを現在モードへ中継するため、モード側を
-/// 静的イベントへ個別登録する必要はありません。
-/// </para>
-/// <para>
-/// 状態を保存したいモードは <see cref="CustomItem.OnCaptureState"/> と
-/// <see cref="CustomItem.OnRestoreState"/> を override してください。
-/// <see cref="CustomFirearm"/> の弾数は基底側で自動的に保存・復元されます。
-/// </para>
-/// </remarks>
+/// <remarks>モードの状態保存は <see cref="CustomItem.OnCaptureState"/> / <see cref="CustomItem.OnRestoreState"/> で行います。</remarks>
 public abstract class CustomHybrid : CustomItem
 {
     private const float ModeSwitchHintDuration = 2f;
@@ -569,6 +556,9 @@ public abstract class CustomHybrid : CustomItem
         return mode?.CallCreatePickup(position, rotation, scale)
                ?? base.CreatePickup(position, rotation, scale);
     }
+
+    /// <summary>このシリアルで現在有効なモードのアイテムです。</summary>
+    internal CustomItem ActiveItem(ushort serial) => CurrentMode(serial)?.TargetItem;
 
     private CustomHybridMode CurrentMode() => CurrentMode(Serial);
 

@@ -273,12 +273,8 @@ public static class StaticUtils
     }
     
     /// <summary>
-    /// ColorA から ColorB まで、進行度合い (0.0〜1.0) でグラデーション_color を取得します
+    /// <paramref name="colorA"/> から <paramref name="colorB"/> へ <paramref name="progress"/> (0〜1) で補間した色を返します。
     /// </summary>
-    /// <param name="colorA">開始色</param>
-    /// <param name="colorB">終了色</param>
-    /// <param name="progress">進行度合い (0.0: ColorA, 1.0: ColorB)</param>
-    /// <returns>グラデーション色</returns>
     public static Color GetGradientColor(Color colorA, Color colorB, float progress)
     {
         // 進行度合いを 0.0〜1.0 の範囲に制限

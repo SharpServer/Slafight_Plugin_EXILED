@@ -5,27 +5,14 @@ using Slafight_Plugin_EXILED.API.Core.Enums;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// ラウンドごとにゲームモードを抽選して起動し、モードが名乗る制限を実際に効かせます。
+/// ラウンドごとにゲームモードを抽選して起動し、モードが名乗る制限を効かせます。
 /// </summary>
-/// <remarks>
-/// <b>ここにモードごとの分岐はありません。</b>
-/// 何を止めるかはモード自身が <see cref="GameMode.AllowsWarhead"/> などで名乗ります。
-/// モードを足すのにこのファイルを触る必要はありません。
-///
-/// <see cref="GameMode.Weight"/> が 0 のモードは抽選に出ません。手動起動専用です。
-///
-/// このクラスはどこからも登録されていません。<see cref="EventHandlerBase"/> を
-/// 継承しているだけで <see cref="EventHandlerRegistry"/> が購読させます。
-/// </remarks>
+/// <remarks><see cref="GameMode.Weight"/> が 0 のモードは手動起動専用です。</remarks>
 public sealed class GameModeRoundHandler : EventHandlerBase
 {
     /// <summary>
     /// ラウンド開始から抽選までの待ち時間です。
     /// </summary>
-    /// <remarks>
-    /// 開始直後は役職の割り当てが走っています。人数を数えるモードがそれを跨がないよう、
-    /// 一拍置いてから抽選します。
-    /// </remarks>
     private const float StartDelay = 0.75f;
 
     /// <inheritdoc />

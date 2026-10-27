@@ -10,12 +10,8 @@ namespace Slafight_Plugin_EXILED.API.Core.Commands;
 public sealed class DebugCommand : CommandBase
 {
     /// <summary>
-    /// デバッグ表示に必要な権限ノードです。
+    /// デバッグ表示に必要な権限ノードです。Server Specifics の切り替えも同じノードを見ます。
     /// </summary>
-    /// <remarks>
-    /// Server Specifics の切り替えも同じノードを見ます。コマンドだけ権限付きにすると、
-    /// 設定画面から誰でも有効にできてしまうためです。
-    /// </remarks>
     public const string PermissionNode = "slperm.debug";
 
     public override Type Parent => typeof(RootCommand);

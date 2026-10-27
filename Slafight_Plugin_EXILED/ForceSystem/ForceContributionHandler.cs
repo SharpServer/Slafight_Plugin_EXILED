@@ -22,13 +22,8 @@ using Scp914Handlers = Exiled.Events.Handlers.Scp914;
 namespace Slafight_Plugin_EXILED.ForceSystem;
 
 /// <summary>
-/// 貢献度の加点・減点を拾います。
+/// 貢献度の加点・減点を拾います。重みは隊 (<see cref="ForceBase.MembershipImpact"/> など) に聞きます。
 /// </summary>
-/// <remarks>
-/// 判定の重みは隊が持ちます (<see cref="ForceBase.MembershipImpact"/> など)。
-/// ここは「いつ評価するか」だけを担当し、「いくつ動かすか」は隊に聞きます。
-/// 派生システムの差分がこのクラスに漏れないようにするためです。
-/// </remarks>
 public sealed class ForceContributionHandler : EventHandlerBase
 {
     /// <summary>継続所属を評価する間隔 (秒)。</summary>
@@ -75,14 +70,8 @@ public sealed class ForceContributionHandler : EventHandlerBase
     }
 
     /// <summary>
-    /// 継続所属の評価ループを起こします。
+    /// 継続所属の評価ループをラウンドごとに <see cref="RoundScope"/> へ載せます。
     /// </summary>
-    /// <remarks>
-    /// <b><see cref="RegisterEvents"/> で直接 <see cref="RoundScope"/> に載せてはいけません。</b>
-    /// このハンドラは <see cref="HandlerLifetime.Manual"/> なのでプラグイン有効化時に 1 度しか
-    /// 走らず、そこで掴んだスコープはラウンド再開で閉じたきり作り直されません。
-    /// ラウンドごとに載せ直す必要があります。
-    /// </remarks>
     private static void OnRoundStarted()
     {
         LastCommunicationReward.Clear();
@@ -129,14 +118,8 @@ public sealed class ForceContributionHandler : EventHandlerBase
     }
 
     /// <summary>
-    /// 喋っている隊員に加点します。
+    /// 喋っている隊員に加点します。<see cref="CommunicationWindow"/> 秒に <see cref="CommunicationCapPerWindow"/> 回までです。
     /// </summary>
-    /// <remarks>
-    /// <see cref="PlayerHandlers.VoiceChatting"/> は音声パケットごとに飛ぶので、
-    /// そのまま加点すると連打で稼げてしまいます。
-    /// <see cref="CommunicationWindow"/> 秒に <see cref="CommunicationCapPerWindow"/> 回までに絞ります。
-    /// 草案の「ただし、スパム的な方法はカウントされません」がこれです。
-    /// </remarks>
     private static void OnVoiceChatting(VoiceChattingEventArgs ev)
     {
         if (ev?.Player is not { } player) return;
@@ -192,10 +175,6 @@ public sealed class ForceContributionHandler : EventHandlerBase
     /// <summary>
     /// SCP-914 にキーカードを通したことを評価します。
     /// </summary>
-    /// <remarks>
-    /// 標準は減点、カオスは無視、D クラスのギャングは加点です。
-    /// どれになるかは隊が決めるので、ここでは両方に聞いて足すだけにします。
-    /// </remarks>
     private static void Judge914(Player player, ItemType type)
     {
         if (!IsKeycard(type)) return;
@@ -235,13 +214,8 @@ public sealed class ForceContributionHandler : EventHandlerBase
     }
 
     /// <summary>
-    /// この同士討ちが「意図的」かどうか。
+    /// この同士討ちが意図的か。付近に敵が居らず、部隊の 40% がその場に居るときだけ true。
     /// </summary>
-    /// <remarks>
-    /// 草案の定義そのままです。<b>敵が付近に存在せず</b>、かつ
-    /// <b>部隊の 40% がその場に集まっている</b>ときだけ意図的と見なします。
-    /// 交戦中の流れ弾を減点しないための条件です。
-    /// </remarks>
     private static bool IsDeliberateFriendlyFire(Player attacker, ForceBase force)
     {
         Vector3 origin = attacker.Position;
@@ -265,21 +239,14 @@ public sealed class ForceContributionHandler : EventHandlerBase
     }
 
     /// <summary>
-    /// 相手が武装しているかどうか。
+    /// 相手が銃を持っているかどうか。
     /// </summary>
-    /// <remarks>
-    /// 草案の「非武装の敵陣営」の判定です。銃を持っているかだけを見ます。
-    /// </remarks>
     private static bool IsArmed(Player player) =>
         player.Items.Any(item => item is Firearm);
 
     /// <summary>
     /// SCP-018 を投げたら意図的な FF として減点します。
     /// </summary>
-    /// <remarks>
-    /// 草案が SCP-018 の使用を「意図的な FF」に名指ししています。
-    /// 跳ね回って味方を巻き込むため、当たったかどうかに関係なく使用自体を見ます。
-    /// </remarks>
     private static void OnThrownProjectile(ThrownProjectileEventArgs ev)
     {
         if (ev?.Player is null || ev.Item?.Type is not ItemType.SCP018) return;
@@ -297,15 +264,7 @@ public sealed class ForceContributionHandler : EventHandlerBase
     // 同じ機会をこちらでも拾って個人に付けます。
     // ───────────────────────────────
 
-    /// <remarks>
-    /// バニラの <c>Escaping</c> ではなく <see cref="EscapeHandler"/> の通知を見ます。
-    /// 脱出の可否と行き先はあちらが決めるので、こちらが <c>IsAllowed</c> を読んでも
-    /// 最終結果とは限らないためです。
-    ///
-    /// <b>いまの所属は見ません。</b>脱出は役職変更なので、この通知が届く時点では
-    /// <c>ForceRegistry.Refresh</c> が隊から外し終えています。加点先は
-    /// <see cref="EscapeContext"/> が写し取った<b>脱出する前</b>の隊です。
-    /// </remarks>
+    /// <summary>脱出した隊員の、脱出前の隊に加点します。</summary>
     private static void OnEscaped(EscapeContext escape)
     {
         if (escape.Force is not { } force) return;
@@ -340,12 +299,8 @@ public sealed class ForceContributionHandler : EventHandlerBase
     }
 
     /// <summary>
-    /// 隊の働きをリスポーンウェーブに反映します。
+    /// 隊の働きを陣営の influence と次の波のタイマーに反映します。
     /// </summary>
-    /// <remarks>
-    /// 草案の「チケットやスポーンに関連する」にあたります。
-    /// 陣営の influence を足し、次の波のタイマーを少し早めます。
-    /// </remarks>
     private static void GrantWaveProgress(ForceBase force, ForceImpact impact)
     {
         try

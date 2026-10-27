@@ -2,6 +2,7 @@ using Exiled.API.Features;
 using System.Collections.Generic;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Features;
+using Slafight_Plugin_EXILED.API.Core.Structs;
 using Slafight_Plugin_EXILED.API.Enums;
 
 namespace Slafight_Plugin_EXILED.CustomTeams;
@@ -10,7 +11,8 @@ public sealed class FoundationTeam : CustomTeam
 {
     public override string Name => "機動部隊";
     public override string Color => ServerColors.Cyan;
-    public override string CassieName => "MtfUnit";
+    public override string CassieName => Seasonal.Of("MtfUnit").On(SeasonTypeId.Halloween, "HALLOWEEN_GHOSTBUSTERS");
+    public override string SubtitleName => Seasonal.Of(Name).On(SeasonTypeId.Halloween, "ゴーストバスターズ");
     public override bool IsGroupOfInterest => false;
     public override VictoryCondition Victory => VictoryCondition.LastStanding(50);
     public override IReadOnlyList<CustomTeam> Allies =>

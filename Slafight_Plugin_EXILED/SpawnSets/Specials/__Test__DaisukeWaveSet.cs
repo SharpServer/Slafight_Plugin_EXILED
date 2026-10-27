@@ -23,11 +23,10 @@ public sealed class __Test__DaisukeWaveSet : SpawnSet
 
     public override string Theme => null;
 
-    public override (string Cassie, string Subtitle) Announcement(int spawnCount, string unitName) =>
-        CustomSeason.Current.NtfArrival(unitName) ??
-        ("MtfUnit Epsilon 999 Designated D A I S U K E HasEntered AllRemaining",
-         "<color=#999999>機動部隊Epsilon-999 \"DAISUKE\"</color>が施設に到着しました。" +
-         "残存する全職員は、機動部隊が目的地に到着するまで、標準DAISUKE避難プロトコルに従って行動してください。");
+    protected override void BuildAnnouncement(SpawnAnnouncement a) =>
+        a.Cassie("MtfUnit Epsilon 999 Designated D A I S U K E HasEntered AllRemaining")
+            .Subtitle($"{SpawnAnnouncement.Colored("機動部隊Epsilon-999 \"DAISUKE\"", "#999999")}が施設に到着しました。")
+            .Line("残存する全職員は、機動部隊が目的地に到着するまで、標準DAISUKE避難プロトコルに従って行動してください。");
 
     public override IReadOnlyList<SpawnSetRoleDefinition> SpawnRoles =>
     [

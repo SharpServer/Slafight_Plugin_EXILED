@@ -13,13 +13,6 @@ namespace Slafight_Plugin_EXILED.API.Core.Features;
 /// <summary>
 /// 現在の接続人数を Discord Bot へ定期送信します。
 /// </summary>
-/// <remarks>
-/// 以前は <c>Plugin.cs</c> が <c>CancellationTokenSource</c> を抱えて回していました。
-/// 常駐ハンドラとして持てば、開始と後始末が同じクラスの中で閉じます。
-///
-/// このクラスはどこからも登録されていません。<see cref="EventHandlerBase"/> を
-/// 継承しているだけで <see cref="EventHandlerRegistry"/> が購読させます。
-/// </remarks>
 public sealed class PlayerCountReporter : EventHandlerBase
 {
     private static readonly HttpClient HttpClient = new HttpClient

@@ -9,33 +9,14 @@ using Slafight_Plugin_EXILED.API.Core.Features.Attributes;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// 型そのものを同一性として扱うための型解決です。
-///
-/// 外部から文字列で指す必要がある箇所 (RA コマンド・ProjectMER のマップ・保存済み JSON) は
-/// ここが型名で解決します。<b>各クラスに <c>UniqueKey</c> プロパティを生やさないでください。</b>
+/// 文字列 (RA コマンド・マップ・JSON) から型を解決します。結果は <see cref="Type.FullName"/> の序数順です。
 /// </summary>
-/// <remarks>
-/// 結果は <see cref="Type.FullName"/> の序数順で返します。
-/// 既存の <c>API/Features/Common/DefinitionSourceLoader</c> が同じ順序付けをしており、
-/// <see cref="AppDomain.GetAssemblies"/> の並び順に依存して挙動が変わるのを防ぎます。
-///
-/// ここには結果のキャッシュを置きません。全件が要る利用側 (チーム一覧など) が
-/// 自分で一度だけ組み立てて持ちます。
-/// </remarks>
 public static class TypeParser
 {
     /// <summary>
-    /// 文字列から、<typeparamref name="TBase"/> を継承している型を取得します。
-    /// 型名・完全修飾名のどちらでも検索できます。
+    /// 文字列から <typeparamref name="TBase"/> の派生型を取得します。型名・完全修飾名のどちらでも検索できます。
     /// </summary>
-    /// <remarks>
-    /// 型名が複数の名前空間で衝突している場合は、<b>どれか 1 つを勝手に選ばず失敗させます</b>。
-    /// 黙って片方に解決すると、コマンドやマップデータの指す先が不定になるためです。
-    /// その場合は完全修飾名を渡してください。
-    ///
-    /// 現在の名前で見つからなかったときだけ、<see cref="LegacyNameAttribute"/> が
-    /// 名乗っている昔の綴りも探します。再構築前に作られたマップやセーブが指す先を拾うためです。
-    /// </remarks>
+    /// <remarks>型名が衝突していれば失敗します。見つからなければ <see cref="LegacyNameAttribute"/> も探します。</remarks>
     public static bool TryParse<TBase>(string value, out Type? result, bool ignoreCase = true)
     {
         result = null;
@@ -124,9 +105,7 @@ public static class TypeParser
     }
 
     /// <summary>
-    /// <typeparamref name="TBase"/> を継承している具象型をすべて返します。
-    /// 「宣言されているものを全部集める」用途 (チーム一覧・カタログ表示など) に使います。
-    /// 引数なしコンストラクターを持つ型だけが対象です。
+    /// <typeparamref name="TBase"/> を継承し、引数なしコンストラクターを持つ具象型をすべて返します。
     /// </summary>
     public static IReadOnlyList<Type> FindTypes<TBase>()
     {

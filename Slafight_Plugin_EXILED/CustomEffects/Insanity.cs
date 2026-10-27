@@ -20,36 +20,12 @@ using Random = System.Random;
 namespace Slafight_Plugin_EXILED.CustomEffects;
 
 /// <summary>
-/// 発狂状態。付与時に「進行パターン（<see cref="TripPattern"/>）」を 1 つ抽選し、
-/// そのパターンが持つフェーズ列を <see cref="StatusEffectBase.Duration"/> をかけて進んでいく幻覚エフェクト。
-/// <para>
-/// 画面は 3 層構成。<br/>
-/// ・ノイズ層 … 行を消さずに溜め込み、行数が増えるほどフォントを縮めて画面全体を埋める。
-///   行ごとに <c>&lt;pos&gt;</c> を打てるので、ブロック / 散乱 / 斜め / 横スクロールのレイアウトを切り替えられる。<br/>
-/// ・メッセージ層 … 巨大な一文。位置・装飾・文字化けがフェーズごとに変わる。<br/>
-/// ・暴走テキスト層 … 独立した Hint を複数持ち、各々が速度ベクトルを持って画面内を斜めに走り、
-///   壁で跳ね返るたびに文言と色を変える。
-/// </para>
-/// <para>
-/// 一定確率で 1 tick だけ「バースト」が挿入される（<see cref="BurstKind"/>）。
-/// さらに毎 tick、確率で短命の視覚エフェクトと霧種別が差し込まれるので、
-/// フェーズが変わらない間もエフェクトの切り替わりが止まらない。
-/// </para>
-/// <para>
-/// 鎮痛剤 / アドレナリン / SCP-500 / メディキットを飲むと <see cref="ICustomHealableEffect.OnHeal"/> 経由で
-/// 「一瞬治ったように見せてから、より速く・より悪い進行パターンで再発する」。
-/// 服用するほど <see cref="OverdoseLevel"/> が上がり、進行が加速する。
-/// </para>
-/// <para>
-/// <see cref="StatusEffectBase.Intensity"/> は「発狂の強さ」として使う（255 = 全開）。
-/// 画面揺れ・バースト率・文字化け率・ノイズ行数・暴走テキスト数がこの比率でスケールする。
-/// 段階の進行そのものは残り時間で決まるため、Intensity では変わらない。
-/// </para>
-/// <para>
-/// 演出パラメータ（<see cref="Patterns"/> / 各文言バンク / <see cref="DeathReasons"/> など）は
-/// すべて public static。プラグイン側から差し替えてカスタマイズできる。
-/// </para>
+/// 発狂状態。付与時に進行パターン (<see cref="TripPattern"/>) を抽選し、残り時間に応じてフェーズを進める幻覚エフェクト。
 /// </summary>
+/// <remarks>
+/// 回復アイテムを使うと悪化して再発し、<see cref="OverdoseLevel"/> が上がります。
+/// <see cref="StatusEffectBase.Intensity"/> は演出の強さだけを変えます。演出パラメータは public static で差し替えられます。
+/// </remarks>
 public partial class Insanity : CustomEffectBase, ICustomDisplayName, ICustomHealableEffect
 {
     // ===== カスタマイズ可能なパラメータ =====
@@ -177,12 +153,7 @@ public partial class Insanity : CustomEffectBase, ICustomDisplayName, ICustomHea
     }
 
     /// <summary>
-    /// <see cref="ICustomHealableEffect"/> なので本家は解除処理を行わない。
-    /// ここでは解除する代わりに悪化を予約する。
-    /// <para>
-    /// 呼び出し元は <c>AllEffects</c> を foreach 中なので、この場でエフェクトを触ると
-    /// 同じループの後続要素に踏まれる。実処理はコルーチン側の次 tick に回す。
-    /// </para>
+    /// 解除せず、次 tick で悪化させるよう予約する。
     /// </summary>
     public void OnHeal(ItemType item)
     {
@@ -352,8 +323,6 @@ public partial class Insanity : CustomEffectBase, ICustomDisplayName, ICustomHea
 
     /// <summary>
     /// 毎 tick、確率で短命の視覚 / 聴覚エフェクトと霧種別を差し込む。
-    /// フェーズが変わらない間もエフェクトの切り替わりを止めないための仕掛け。
-    /// ここで足したものは <see cref="SustainRefreshSeconds"/> ごとのリフレッシュで元へ戻る。
     /// </summary>
     private static void TickEffectFlicker(ExiledPlayer player, TripPhase phase, float severity, Random rng)
     {
@@ -644,9 +613,7 @@ public partial class Insanity : CustomEffectBase, ICustomDisplayName, ICustomHea
     }
 
     /// <summary>
-    /// 段階進行に使う 0..1 の進捗。時間指定ありなら残り時間から、
-    /// 永続付与なら <see cref="PermanentCycleSeconds"/> で周回させる。
-    /// <see cref="TripPattern.Cycles"/> が 2 以上ならフェーズ列を複数回まわす。
+    /// 段階進行に使う 0..1 の進捗。永続付与なら <see cref="PermanentCycleSeconds"/> で周回させる。
     /// </summary>
     private float ResolveProgress(TripPattern pattern, float elapsed)
     {

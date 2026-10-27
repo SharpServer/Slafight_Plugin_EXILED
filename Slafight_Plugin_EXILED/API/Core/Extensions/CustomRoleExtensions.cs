@@ -10,27 +10,8 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.API.Core.Extensions;
 
 /// <summary>
-/// カスタム役職をプレイヤー側から引くための糖衣です。
+/// プレイヤーからカスタム役職を引く拡張です。
 /// </summary>
-/// <remarks>
-/// <para>
-/// 役職の判定は <see cref="CustomRole"/>、所属と色は <see cref="CustomTeam"/> に委譲します。
-/// </para>
-/// <para>
-/// 旧 API の <c>GetCustomRole</c> は <c>CRoleTypeId</c> という enum を返していました。
-/// こちらは<b>インスタンスそのもの</b>を返すので、名前も所属陣営も per-player 状態も、
-/// 返り値から直接読めます。役職の同一性は型なので、比較は
-/// <see cref="IsCustomRole{T}(Player)"/> か <c>is</c> パターンで書いてください。
-/// </para>
-/// </remarks>
-/// <example>
-/// <code>
-/// if (player.TryGetCustomRole&lt;ChaosSniper&gt;(out ChaosSniper sniper))
-///     sniper.ShowStatus("残弾 " + sniper.Shots, 2f);
-///
-/// if (attacker.IsCustomRole&lt;Scp173&gt;()) { }
-/// </code>
-/// </example>
 public static class CustomRoleExtensions
 {
     /// <summary>

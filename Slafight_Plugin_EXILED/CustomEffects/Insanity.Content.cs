@@ -7,13 +7,7 @@ using CustomRendering;
 namespace Slafight_Plugin_EXILED.CustomEffects;
 
 /// <summary>
-/// <see cref="Insanity"/> の演出データ。フェーズ定義・進行パターン・文言バンク・死因・
-/// 医療アイテム服用時の悪化プロファイルをここに集約している。
-/// <para>
-/// すべて public static なので、プラグイン側から差し替え・追記できる。
-/// <see cref="Insanity.Patterns"/> は初回アクセス時に組み立てられるため、
-/// 文言バンクを書き換えてから最初の発狂が起きればそれが反映される。
-/// </para>
+/// <see cref="Insanity"/> の演出データ。すべて public static で差し替え・追記できる。
 /// </summary>
 public partial class Insanity
 {
@@ -282,11 +276,7 @@ public partial class Insanity
     private static Dictionary<ItemType, OverdoseProfile>? _overdoseProfiles;
 
     /// <summary>
-    /// 「発狂状態に効く薬」として名乗り出るアイテムと、その悪化内容。
-    /// ここに載っているアイテムだけが <see cref="IsHealable"/> で true を返す。
-    /// <para>
-    /// 文言バンクを参照するため、静的初期化ではなく初回アクセス時に組み立てる。
-    /// </para>
+    /// 発狂状態に効く薬と、その悪化内容。ここに載るアイテムだけが <see cref="IsHealable"/> で true になる。
     /// </summary>
     public static Dictionary<ItemType, OverdoseProfile> OverdoseProfiles
     {
@@ -1563,9 +1553,7 @@ public partial class Insanity
     }
 
     /// <summary>
-    /// 再発。SCP-500 を飲んだときだけ入る専用パターン。
-    /// 立ち上がりが無く、最初から最大強度で、静寂も来ない。
-    /// <see cref="TripPattern.Weight"/> が 0 なので通常抽選には出ない。
+    /// SCP-500 服用時専用の再発パターン。最初から最大強度で、通常抽選には出ない。
     /// </summary>
     private static TripPattern BuildRelapsePattern()
     {

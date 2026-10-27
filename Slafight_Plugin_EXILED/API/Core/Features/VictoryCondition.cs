@@ -4,22 +4,8 @@ using System.Linq;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// チームの勝利条件です。<see cref="CustomTeam.Victory"/> がこれを返します。
-///
-/// レジストリにも DefinitionSource にも登録しません。<b>チームが自分で持ちます。</b>
+/// チームの勝利条件です。<see cref="CustomTeam.Victory"/> が返します。
 /// </summary>
-/// <example>
-/// <code>
-/// public sealed class ScpTeam : CustomTeam
-/// {
-///     public override string Name => "SCP";
-///     protected override bool IncludesVanilla(Player player) => player.IsScp;
-///
-///     // 敵対する側が全滅したら勝ち
-///     public override VictoryCondition Victory => VictoryCondition.LastStanding(priority: 10);
-/// }
-/// </code>
-/// </example>
 public sealed class VictoryCondition
 {
     private readonly Func<CustomTeam, bool> isMet;
@@ -42,10 +28,7 @@ public sealed class VictoryCondition
     public string Reason { get; }
 
     /// <summary>
-    /// 敵対する側に生存者がいなくなったら勝ち、という最も普通の条件です。
-    ///
-    /// 「敵対する側」は <see cref="CustomTeam.IsSameSide"/> が false を返すチームで、
-    /// 自チームと <see cref="CustomTeam.Allies"/> は味方として数えます。
+    /// 敵対する側 (<see cref="CustomTeam.IsSameSide"/> が false) に生存者がいなくなったら勝ち。
     /// </summary>
     public static VictoryCondition LastStanding(int priority = 0, string reason = null)
     {

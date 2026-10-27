@@ -41,32 +41,16 @@ public abstract class CustomEffectBase : StatusEffectBase
     }
 
     /// <summary>
-    /// サブクラスはここでイベント購読を行う。エフェクトが有効化されるたびに呼ばれる。
-    /// 購読は <see cref="RegisterEvent"/> 経由で登録すること。そうすれば無効化 / 破棄時に自動解除される。
-    /// <para>
-    /// 注意: エフェクトインスタンスはプレイヤーごとに存在し、static な EXILED イベントへ
-    /// それぞれ個別に購読する。ハンドラは全プレイヤーのイベントで発火するため、
-    /// ハンドラ内で必ず <c>ev.Player == Player</c> のように対象プレイヤーを絞り込むこと。
-    /// </para>
+    /// 有効化のたびに呼ばれる。購読は <see cref="RegisterEvent"/> で登録する。
     /// </summary>
+    /// <remarks>ハンドラは全プレイヤー分発火するので、<c>ev.Player == Player</c> で絞り込むこと。</remarks>
     protected virtual void SubscribeEvents()
     {
     }
 
     /// <summary>
-    /// イベント購読を登録する。<paramref name="subscribe"/> を即時実行し、
-    /// <paramref name="unsubscribe"/> をエフェクト無効化 / 破棄時に自動実行する。
+    /// <paramref name="subscribe"/> を即時実行し、<paramref name="unsubscribe"/> を無効化 / 破棄時に実行する。
     /// </summary>
-    /// <example>
-    /// <code>
-    /// protected override void SubscribeEvents()
-    /// {
-    ///     RegisterEvent(
-    ///         () => Exiled.Events.Handlers.Player.Hurting += OnHurting,
-    ///         () => Exiled.Events.Handlers.Player.Hurting -= OnHurting);
-    /// }
-    /// </code>
-    /// </example>
     protected void RegisterEvent(Action subscribe, Action unsubscribe)
     {
         subscribe?.Invoke();

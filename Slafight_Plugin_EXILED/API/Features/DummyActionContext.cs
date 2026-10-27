@@ -4,14 +4,9 @@ using Exiled.API.Features;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
-/// Dummyアクションが押された際にコールバックへ渡される実行コンテキストです。
+/// Dummy アクションのコールバックへ渡される実行コンテキストです。
 /// </summary>
-/// <remarks>
-/// RemoteAdminの<c>action</c>コマンド経由で実行された場合、押した管理者(<see cref="Sender"/>)と
-/// その操作で選択されていたDummy一覧(<see cref="SelectedDummies"/>)を含みます。
-/// コマンド以外から直接実行された場合は<see cref="IsRemoteAdminInvocation"/>が<c>false</c>になり、
-/// <see cref="Sender"/>は<c>null</c>、<see cref="SelectedDummies"/>は<see cref="Target"/>のみを含みます。
-/// </remarks>
+/// <remarks>RA の <c>action</c> コマンド以外から実行された場合、<see cref="Sender"/> は null です。</remarks>
 public sealed class DummyActionContext
 {
     /// <param name="sender">アクションを実行した管理者。サーバーコンソール等の場合は<c>null</c>。</param>

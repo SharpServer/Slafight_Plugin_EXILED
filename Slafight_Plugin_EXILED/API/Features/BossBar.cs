@@ -9,23 +9,7 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
-/// 汎用ボス HP バー。Broadcast を一定間隔で更新し続けることで「常駐するバー」を表現する。
-/// 任意のボス／イベントから使い回せる。
-///
-/// <example>
-/// <code>
-/// var bar = new BossBar { Title = "DANTE", TitleColor = "#ff1a1a", BarColor = "#39ff14", MaxValue = 5000 };
-/// bar.Show();
-/// // 毎フレーム/毎 tick 値だけ更新（再ブロードキャストは BossBar 管理側で行う）
-/// bar.Value = currentHp;
-/// bar.Subtitle = "第二幕";
-/// bar.StateText = invulnerable ? "★ 無敵 ★" : null; // 設定するとバー行の代わりに表示
-/// // プレイヤーのHPをそのまま表示したい場合
-/// new BossBar { Title = "SERGEY" }.TrackPlayer(player, show: true);
-/// // 終了時
-/// bar.Hide();
-/// </code>
-/// </example>
+/// 汎用ボス HP バー。Broadcast を一定間隔で更新し続けて常駐表示する。
 /// </summary>
 public sealed class BossBar
 {
@@ -138,9 +122,7 @@ public sealed class BossBar
     }
 
     /// <summary>
-    /// 表示（更新ループ）を停止する。既定では最後のブロードキャストが自然消滅するのを待つだけで、
-    /// 他のブロードキャスト（勝利演出など）を巻き込まない。<paramref name="clearBroadcasts"/> が true の
-    /// ときだけ対象プレイヤーのブロードキャストを即時クリアする。
+    /// 更新ループを停止する。<paramref name="clearBroadcasts"/> が true なら対象のブロードキャストも即時消す。
     /// </summary>
     public void Hide(bool clearBroadcasts = false)
         => HideInternal(clearBroadcasts, refreshRemainingBars: true);

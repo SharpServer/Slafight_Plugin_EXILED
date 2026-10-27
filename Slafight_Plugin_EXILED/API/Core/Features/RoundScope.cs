@@ -8,21 +8,8 @@ using ServerHandlers = Exiled.Events.Handlers.Server;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// ラウンドに紐づくコルーチンと後始末をまとめて持つスコープです。
-///
-/// ラウンド再開時にここへ載せたものが必ず片付きます。
-/// 旧 Slafight ではラウンド後始末を 15 箇所以上が個別に購読していて、
-/// 「どこで何が消えるのか」が誰にも分からない状態でした。入口はここ 1 つです。
+/// ラウンドに紐づくコルーチンと後始末のスコープです。ラウンド再開時に必ず片付きます。
 /// </summary>
-/// <example>
-/// <code>
-/// // ラウンド中だけ回したい処理
-/// RoundScope.Current.RunLoop(1f, () => Cassie.Message("tick"));
-///
-/// // 生成したものをラウンド終了時に確実に消す
-/// RoundScope.Current.OnEnd(() => spawnedToy.Destroy());
-/// </code>
-/// </example>
 public sealed class RoundScope
 {
     private static RoundScope current;

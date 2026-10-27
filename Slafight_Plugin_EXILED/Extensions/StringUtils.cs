@@ -8,11 +8,8 @@ namespace Slafight_Plugin_EXILED.Extensions;
 public static class StringUtils
 {
     /// <summary>
-    /// stringがIsNullOrEmptyかを判定し、trueの場合はfallbackに指定されたstringが帰されます。
+    /// null または空なら <paramref name="fallback"/> を返します。
     /// </summary>
-    /// <param name="value">判定したいstring</param>
-    /// <param name="fallback">IsNullOrEmpty時にフォールバックするstring</param>
-    /// <returns></returns>
     public static string OrDefault(this string value, string fallback)
     {
         return string.IsNullOrEmpty(value) ? fallback : value;

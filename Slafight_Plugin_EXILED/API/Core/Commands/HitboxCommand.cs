@@ -20,22 +20,9 @@ using ServerHandlers = Exiled.Events.Handlers.Server;
 namespace Slafight_Plugin_EXILED.API.Core.Commands;
 
 /// <summary>
-/// 当たり判定を Primitive で可視化します。
+/// 当たり判定を Primitive で可視化します (<c>look</c> / <c>probe</c> / <c>near</c> / <c>area</c> / <c>name</c> / <c>player</c>)。
 /// </summary>
-/// <remarks>
-/// <para>見たいものだけを絞れるようにアクションを分けています。</para>
-/// <list type="bullet">
-/// <item><c>look</c> … 視線の先にあるコライダ 1 個</item>
-/// <item><c>probe</c> … 視線の先のコライダ情報を数値で返す（描画しない）</item>
-/// <item><c>near</c> / <c>area</c> … 周囲のコライダ</item>
-/// <item><c>name</c> … 名前で絞って全场から拾う</item>
-/// <item><c>player</c> … プレイヤーの当たり判定</item>
-/// </list>
-/// <para>
-/// 既定では自分だけに見えます。<c>all</c> を付けると全員に見え、
-/// <c>on</c> を付けると <c>clear</c> するまで描き続けます。
-/// </para>
-/// </remarks>
+/// <remarks>既定は自分だけに見えます。<c>all</c> で全員、<c>on</c> で <c>clear</c> まで描き続けます。</remarks>
 public sealed class HitboxCommand : CommandBase
 {
     private const float DefaultDuration = 300f;
@@ -468,12 +455,8 @@ public sealed class HitboxCommand : CommandBase
     }
 
     /// <summary>
-    /// 残っている描画セッションをすべて止めます。
+    /// 残っている描画セッションをすべて止めます。ラウンド再開とプラグイン停止で呼びます。
     /// </summary>
-    /// <remarks>
-    /// ラウンド再開で AdminToy が破棄されます。破棄済み Primitive を描き続けようとすると
-    /// 毎フレーム例外が出るので、ラウンド再開とプラグイン停止の両方で必ず呼びます。
-    /// </remarks>
     public static int ClearAll()
     {
         int count = Sessions.Count;
@@ -537,21 +520,8 @@ public sealed class HitboxCommand : CommandBase
     }
 
     /// <summary>
-    /// 車両スイープの判定箱の表示と、手動での寸法・オフセット調整を行います。
+    /// 車両スイープの判定箱の表示と、寸法・オフセットの調整を行います。次の車両到着時に反映されます。
     /// </summary>
-    /// <remarks>
-    /// <para>書式:</para>
-    /// <code>
-    /// slc hitbox van                      // 表示を ON
-    /// slc hitbox van off                  // 表示を OFF
-    /// slc hitbox van info                 // 現在の実寸とオフセット
-    /// slc hitbox van size 2.2 2.4 5.8     // 箱の実寸(m)。 vehicle 基準に戻すには auto
-    /// slc hitbox van offset 0 0.3 0       // 車両ローカル軸での中心オフセット(m)
-    /// </code>
-    /// <para>
-    /// 設定は次の車両到着時に反映されます。走行中の値には反映されません。
-    /// </para>
-    /// </remarks>
     private static bool ConfigureVanSweep(ArraySegment<string> arguments, out string response)
     {
         if (!TryGetArgument(arguments, 1, out string subAction))
@@ -1704,14 +1674,8 @@ public sealed class HitboxCommand : CommandBase
 }
 
 /// <summary>
-/// 当たり判定描画のセッションを、実行者の退出とラウンド再開で片付けるハンドラです。
+/// 当たり判定描画のセッションを、実行者の退出とラウンド再開で片付けます。
 /// </summary>
-/// <remarks>
-/// これが無いと <c>all</c> で見せた Primitive が切断後のプレイヤーに残り続け、
-/// ラウンド再開で破棄された Primitive への描き直しが毎フレーム例外になります。
-/// <see cref="EventHandlerRegistry"/> が自動で生成・購読するので、
-/// <see cref="Plugin"/> 側に登録処理を書く必要はありません。
-/// </remarks>
 public sealed class HitboxSessionHandler : EventHandlerBase
 {
     public override void RegisterEvents()

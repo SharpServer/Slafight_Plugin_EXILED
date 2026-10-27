@@ -11,27 +11,9 @@ using ServerHandlers = Exiled.Events.Handlers.Server;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// プレイヤーに紐づくコルーチンと後始末をまとめて持つスコープです。
-///
-/// ここに載せたものは、プレイヤーの退出・ラウンド再開・明示的な <see cref="Dispose"/> で
-/// 必ず止まります。そのため呼び出し側で ID を持ち回して <c>Player.Get(id)</c> し直したり、
-/// コルーチンハンドルを自分で抱えたりする必要がありません。
+/// プレイヤーに紐づくコルーチンと後始末のスコープです。退出・ラウンド再開・<see cref="Dispose"/> で止まります。
 /// </summary>
-/// <remarks>
-/// キーは <see cref="Player"/> ではなく <c>netId</c> です。
-/// AGENTS.md が「破棄され得るオブジェクトを遅延辞書のキーにせず、安定した netId を使い、
-/// コールバック実行時に同一性を確認すること」を求めているためです。
-/// <see cref="IsAlive"/> がその確認にあたり、再接続で別人が同じ枠に入っても取り違えません。
-/// </remarks>
-/// <example>
-/// <code>
-/// // 2 秒ごとに回復し、退出・ラウンド再開で自動的に止まる
-/// PlayerScope.Of(player).RunLoop(2f, p => p.Health += 5f);
-///
-/// // スコープが閉じるときに実行したい後始末
-/// PlayerScope.Of(player).OnDispose(p => p.ClearInventory());
-/// </code>
-/// </example>
+/// <remarks>キーは netId です。</remarks>
 public sealed class PlayerScope : IDisposable
 {
     private static readonly Dictionary<uint, PlayerScope> Scopes = new Dictionary<uint, PlayerScope>();

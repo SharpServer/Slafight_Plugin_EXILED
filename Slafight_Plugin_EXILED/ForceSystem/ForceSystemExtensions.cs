@@ -18,21 +18,14 @@ public static class ForceSystemExtensions
     public static ForceMember GetForceMember(this Player player) => ForceRegistry.FindMember(player);
 
     /// <summary>
-    /// このプレイヤーの表示上の階級です。
+    /// このプレイヤーの表示上の階級です。部隊システムの対象外でも <see cref="ForceClassLevel.Alone"/> を返します。
     /// </summary>
-    /// <remarks>
-    /// 隊員状態が無い (部隊システムの対象外) 場合も <see cref="ForceClassLevel.Alone"/> を返します。
-    /// 表示の都合上、無所属と対象外を区別しないためです。
-    /// </remarks>
     public static ForceClassLevel GetForceLevel(this Player player) =>
         player.GetForceMember()?.Level ?? ForceClassLevel.Alone;
 
     /// <summary>
-    /// この階級の呼称です。隊が分かっているなら隊に聞き、分からなければ既定を返します。
+    /// この階級の呼称です。隊があれば隊の呼称を優先します。
     /// </summary>
-    /// <remarks>
-    /// 呼称は隊ごとに変わる (ギャングなら「ボス」) ので、隊があるときは必ずそちらを優先します。
-    /// </remarks>
     public static string NameOf(this ForceClassLevel level, ForceBase force) =>
         force?.RankNameOf(level) ?? level.DefaultName();
 
@@ -48,12 +41,8 @@ public static class ForceSystemExtensions
     };
 
     /// <summary>
-    /// このプレイヤーが隊を率いられるかどうか。
+    /// このプレイヤーが隊を率いられる (生きていて役職優先度を持つ) かどうか。
     /// </summary>
-    /// <remarks>
-    /// 「率いられる」= 生きていて、役職優先度を名乗っていること。
-    /// TopLead が死んだときの昇格候補を絞るのに使います。
-    /// </remarks>
     public static bool IsLeadable(this Player player) =>
         player is { IsAlive: true } && ForceRolePower.Of(player) > 0;
 

@@ -18,15 +18,8 @@ public static class RoleSpecificTextProvider
     }
 
     /// <summary>
-    /// ロール固有 HUD テキストを取得
+    /// ロール固有 HUD テキストを取得します。押し込まれた文字列が無ければ <see cref="CustomRole.Status"/> を読みます。
     /// </summary>
-    /// <remarks>
-    /// 押し込まれた文字列が優先です。無ければ、いま就いているカスタム役職が
-    /// <see cref="CustomRole.Status"/> で名乗っているものを読みます。
-    ///
-    /// 新 API の役職は「いま何を出したいか」を言うだけで、
-    /// 表示層に向かって Set しに来ません。ここがその読み取り口です。
-    /// </remarks>
     public static string GetFor(Player player)
     {
         if (player == null) return string.Empty;

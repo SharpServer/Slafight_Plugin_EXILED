@@ -6,14 +6,8 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.ForceSystem;
 
 /// <summary>
-/// 部隊に属する 1 人ぶんの状態です。
+/// 部隊に属する 1 人ぶんの状態です。<see cref="NetId"/> で持ち主を識別します。
 /// </summary>
-/// <remarks>
-/// キーは <see cref="Player"/> ではなく <see cref="NetId"/> です。
-/// AGENTS.md が「破棄され得るオブジェクトを遅延辞書のキーにせず、安定した netId を使い、
-/// コールバック実行時に同一性を確認すること」を求めているためです。
-/// <see cref="IsAlive"/> がその確認にあたり、再接続で別人が同じ枠に入っても取り違えません。
-/// </remarks>
 public sealed class ForceMember
 {
     internal ForceMember(Player player)
@@ -36,12 +30,8 @@ public sealed class ForceMember
     public uint NetId { get; }
 
     /// <summary>
-    /// この隊員状態を作ったときの、陣営から決まる隊の種類です。
+    /// この隊員状態を作ったときの隊の種類です。今の役職と食い違ったら状態を捨てます。
     /// </summary>
-    /// <remarks>
-    /// 役職が変わったかどうかを、隊に属していないあいだも判定できるようにするために持ちます。
-    /// これが今の役職と食い違ったら、階級も貢献度も前の役職のものなので丸ごと捨てます。
-    /// </remarks>
     internal Type Kind { get; }
 
     /// <summary>
@@ -50,22 +40,13 @@ public sealed class ForceMember
     public ForceBase Force { get; internal set; }
 
     /// <summary>
-    /// 保持している階級です。
+    /// 保持している階級です。<see cref="ForceClassLevel.Alone"/> は入りません。
     /// </summary>
-    /// <remarks>
-    /// <b><see cref="ForceClassLevel.Alone"/> はここには入りません。</b>
-    /// 草案が「Alone は TopLead/SubLead の階級状態に影響しない」と定めているため、
-    /// 隊から離れても保持階級はそのままで、表示だけが <see cref="Level"/> で変わります。
-    /// </remarks>
     public ForceClassLevel Rank { get; internal set; } = ForceClassLevel.Member;
 
     /// <summary>
-    /// 表示用の階級です。
+    /// 表示用の階級です。隊に属していない Member だけが <see cref="ForceClassLevel.Alone"/> になります。
     /// </summary>
-    /// <remarks>
-    /// 隊に属していない一般隊員だけが <see cref="ForceClassLevel.Alone"/> になります。
-    /// TopLead は一人でも本隊を形成し続けるので Alone にはなりません。
-    /// </remarks>
     public ForceClassLevel Level => Force is null && Rank is ForceClassLevel.Member
         ? ForceClassLevel.Alone
         : Rank;
@@ -76,13 +57,8 @@ public sealed class ForceMember
     public float JoinedAt { get; internal set; }
 
     /// <summary>
-    /// 単独行動になった時刻です。隊に属していれば null。
+    /// 単独行動になった時刻です。隊に属していれば null。分隊の隊長選びに使います。
     /// </summary>
-    /// <remarks>
-    /// 分隊を組むときの隊長選びに使います。これが無いと候補の順が
-    /// <c>Player.List</c> (接続順) のままになり、先に単独だった人ではなく
-    /// たまたま並び順が前の人が隊長になります。
-    /// </remarks>
     public float? AloneSince { get; internal set; }
 
     /// <summary>
@@ -96,20 +72,13 @@ public sealed class ForceMember
     internal float? SubLeadHoldSince { get; set; }
 
     /// <summary>
-    /// 昇進条件が緩和されているかどうか。
+    /// 昇進条件が緩和 (70%/60 秒 → 60%/40 秒) されているかどうか。
     /// </summary>
-    /// <remarks>
-    /// 隊の昇格で TopLead になった隊員の次点だった者に立ちます。
-    /// 草案どおり、通常の「70% を 60 秒」が「60% を 40 秒」になります。
-    /// </remarks>
     internal bool HasRelaxedPromotion { get; set; }
 
     /// <summary>
-    /// 本人がまだ同一人物として生きているかどうか。
+    /// 本人がまだ同一人物 (netId 一致) として生きているかどうか。
     /// </summary>
-    /// <remarks>
-    /// netId まで見るのは、退出した枠に別人が入っても取り違えないためです。
-    /// </remarks>
     public bool IsAlive => Player.IsSafePlayer() && Player.GetNetId() == NetId;
 
     /// <summary>

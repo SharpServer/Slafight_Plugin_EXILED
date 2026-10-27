@@ -42,11 +42,7 @@ public sealed class VoiceRouteContext
     public VoiceChatChannel NativeChannel { get; private set; }
 
     /// <summary>
-    /// 送り手・受け手の組を差し替えます。
-    /// Context は「音声パケット x 受信者数」の頻度で作られる、このプラグインで最も確保回数の多い
-    /// オブジェクトだったため、ルータは 1 個を使い回します。
-    /// したがって Context が有効なのは、それを受け取った評価関数の呼び出し中だけです。
-    /// 経路の評価関数は必要な値を読んで即座に返すこと。インスタンスを保持してはいけません。
+    /// 送り手・受け手の組を差し替えます。Context は使い回すので、評価関数の外で保持しないこと。
     /// </summary>
     internal void Set(
         Player sender,
@@ -202,10 +198,7 @@ public sealed class VoiceRouteRule
     }
 
     /// <summary>
-    /// Convenience rule for the common [CTeam.a, CTeam.b] -> [CTeam.x] case.
-    /// Use the constructor directly when role state, distance, permissions, or other context is needed.
-    /// For example: BetweenTeams("allies", [CTeam.SCPs, CTeam.SerpentsHand],
-    /// [CTeam.SCPs, CTeam.SerpentsHand], VoiceRouteDecision.Direct()).
+    /// チーム間の経路を作る簡易ルールです。役職状態や距離が要るならコンストラクタを使ってください。
     /// </summary>
     public static VoiceRouteRule BetweenTeams(
         string id,
@@ -504,10 +497,7 @@ public static class VoiceRoutingApi
     }
 
     /// <summary>
-    /// 評価順に並べたルール。並び替えの結果は使い回します。
-    /// Resolve は「音声パケット x 受信者数」の頻度で呼ばれるため、
-    /// ここで毎回 LINQ の並び替えを走らせると単価がそのまま効いてしまいます。
-    /// Register / Unregister / ClearRules がキャッシュを捨てます。
+    /// 評価順に並べたルールのキャッシュ。Register / Unregister / ClearRules で破棄される。
     /// </summary>
     private static RegisteredRule[] OrderedRules()
     {
@@ -563,15 +553,8 @@ public static class VoiceRoutingApi
 }
 
 /// <summary>
-/// <see cref="VoiceRoutingApi"/>（声の経路制御）の寿命を持ちます。
+/// <see cref="VoiceRoutingApi"/> の起動と停止を受け持ちます。
 /// </summary>
-/// <remarks>
-/// <see cref="VoiceRoutingApi"/> は static クラスなので自分で
-/// <c>EventHandlerBase</c> を継承できません。起動と停止だけをここが引き受けます。
-///
-/// このクラスはどこからも登録されていません。<c>EventHandlerBase</c> を
-/// 継承しているだけで <c>EventHandlerRegistry</c> が生成・購読させます。
-/// </remarks>
 public sealed class VoiceRoutingApiLifecycle : EventHandlerBase
 {
     /// <inheritdoc />

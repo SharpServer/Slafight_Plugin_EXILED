@@ -332,8 +332,6 @@ public abstract class ObjectPrefab : IObjectPrefab
 
     /// <summary>
     /// スキマティック内の ObjectPrefabSchematicInfo 付きブロックを管理下へ採用する。
-    /// Interactable ブロックは <see cref="InteractableHandle"/> になり、
-    /// その他のブロックは <see cref="GetBlock"/> でキー参照できる。
     /// </summary>
     private void AdoptSchematicBlocks()
     {
@@ -433,9 +431,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     }
 
     /// <summary>
-    /// 採用ブロック（ObjectPrefabSchematicInfo キー）またはブロック名（完全一致）の
-    /// ブロックをサブツリーごとネットワーク破棄する。
-    /// 配下に採用 Interactable があれば自動で管理から外れる（Toy はブロックと一緒に破棄）。
+    /// キーまたはブロック名に一致するブロックをサブツリーごとネットワーク破棄する。
     /// </summary>
     protected bool DestroyBlock(string keyOrName)
     {
@@ -470,9 +466,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     }
 
     /// <summary>
-    /// 採用ブロック（ObjectPrefabSchematicInfo キー）またはブロック名（完全一致）の
-    /// ブロックサブツリーのネットワーク可視状態を UnSpawn / Spawn で切り替える。
-    /// サーバー側オブジェクトは保持されるため、何度でも切り替えられる。
+    /// キーまたはブロック名に一致するブロックの表示を UnSpawn / Spawn で切り替える。
     /// </summary>
     protected bool SetBlockSpawned(string keyOrName, bool spawned, Vector3? hiddenOffset = null)
     {
@@ -536,9 +530,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     }
 
     /// <summary>
-    /// managed Interactable を 1 つ生成して登録する。
-    /// 返り値のハンドルで Interacting / Interacted を購読できる。
-    /// 位置・スケールは Prefab（Schematic があればその transform）に自動追従する。
+    /// managed Interactable を生成して登録する。位置・スケールは Prefab に追従する。
     /// </summary>
     protected InteractableHandle AddInteractable(
         float duration = 3f,
@@ -811,9 +803,7 @@ public abstract class ObjectPrefab : IObjectPrefab
         => ObjectPrefabInstances.GetByTag<TPrefab>(tag, includeDerivedTypes);
 
     /// <summary>
-    /// 派生Prefabで宣言されたpublic getter/setter付きプロパティと
-    /// public な <see cref="Option"/> メンバーを自動収集する。
-    /// 独自のキー名や変換処理が必要な場合はoverrideできる。
+    /// 派生 Prefab の public プロパティと <see cref="Option"/> メンバーを Option として収集する。
     /// </summary>
     public virtual Dictionary<string, string> CollectOptions()
     {
@@ -894,11 +884,7 @@ public abstract class ObjectPrefab : IObjectPrefab
     }
 
     /// <summary>
-    /// このPrefab型が受け付けるOptionキーの定義一覧（名前・型・デフォルト値・制約）を返す。
-    /// ProjectMER側の問い合わせブリッジ向けの公開API。<see cref="GetDeclaredOptions"/> はprotectedのため
-    /// 内部表現（<see cref="Option"/>型）を晒さず、フラットなDTOへ変換して返す。
-    /// Create()を呼び出していない一時インスタンス（<see cref="ObjectPrefabRegistry.TryCreate"/>）に対して
-    /// 呼ぶ想定。
+    /// この Prefab 型が受け付ける Option キーの定義一覧を返す。ProjectMER 側の問い合わせ用。
     /// </summary>
     public IReadOnlyList<ObjectPrefabOptionDefinition> GetOptionDefinitions()
     {

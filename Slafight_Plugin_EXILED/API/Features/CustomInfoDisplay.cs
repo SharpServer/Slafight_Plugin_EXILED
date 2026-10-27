@@ -28,13 +28,8 @@ public sealed class CustomInfoDisplayOptions
     public static readonly CustomInfoDisplayOptions Default = new();
 
     /// <summary>
-    /// 既定では 名前 → 役職 → 追加情報 の順に積みます。
+    /// 表示順です。既定は 名前 → 役職 → 追加情報 です。
     /// </summary>
-    /// <remarks>
-    /// <see cref="ExtraInfoToken"/> を既定に入れてあるので、
-    /// 順序を上書きしていない役職の名札には部隊情報が自動で出ます。
-    /// 独自の <see cref="Order"/> を持つ役職に出したい場合は、自分でこのトークンを並べてください。
-    /// </remarks>
     public string Order { get; set; } = CustomNameToken + RoleNameToken + ExtraInfoToken;
     public bool ShowCustomName { get; set; } = true;
     public bool ShowRoleName { get; set; } = true;
@@ -42,18 +37,8 @@ public sealed class CustomInfoDisplayOptions
     public CustomInfoUnitNameMode UnitNameMode { get; set; } = CustomInfoUnitNameMode.Native;
 
     /// <summary>
-    /// バニラの階級表示 (GiveOrders / FollowOrders / SameRank) を出すかどうか。
+    /// バニラの階級表示 (GiveOrders / FollowOrders / SameRank) を出すかどうか。既定は true。
     /// </summary>
-    /// <remarks>
-    /// バニラは <c>UnitNamingRule.AppendName</c> が <see cref="PlayerInfoArea.PowerStatus"/> を見て
-    /// 自分と相手の役職を比べた文言をクライアント側で描きます。
-    /// 部隊システムは独自の階級 (TopLead / SubLead / …) を持つので、
-    /// 併記すると 2 種類の階級が名札に並んでしまいます。
-    /// false にするとサーバー側でフラグを落とし、バニラ側の表示だけを消せます。
-    ///
-    /// 既定は true です。<b>これまでの見え方を変えないため</b>で、
-    /// 消したい側が明示的に false にします。
-    /// </remarks>
     public bool ShowPowerStatus { get; set; } = true;
 
     public CustomInfoDisplayOptions Clone()
@@ -74,23 +59,13 @@ public static class CustomInfoDisplay
     private static readonly Dictionary<int, DisplayState> States = new();
 
     /// <summary>
-    /// <see cref="CustomInfoDisplayOptions.ExtraInfoToken"/> の中身を返すものです。
+    /// <see cref="CustomInfoDisplayOptions.ExtraInfoToken"/> の中身を返します。null ならその行は出ません。
     /// </summary>
-    /// <remarks>
-    /// 部隊システムがここに自分を差します。<see cref="Func{T, TResult}"/> で注入するのは、
-    /// 表示層が <c>ForceSystem</c> を直接知らずに済ませるためです。
-    /// null を返せばその行は出ません。
-    /// </remarks>
     public static Func<Player, string>? ExtraInfoProvider { get; set; }
 
     /// <summary>
-    /// まだ名札を管理していないプレイヤーを、既定の見た目で管理下に置きます。
+    /// まだ名札を管理していないプレイヤーを既定の見た目で管理下に置きます。管理済みなら何もしません。
     /// </summary>
-    /// <remarks>
-    /// <see cref="Apply"/> と違い、<b>既に管理下にある名札は書き換えません</b>。
-    /// カスタム役職が自分で <see cref="Apply"/> した名札を、
-    /// 部隊システムが横から潰さないようにするためです。
-    /// </remarks>
     public static void EnsureTracked(Player player, CustomInfoDisplayOptions? options = null)
     {
         if (player == null || States.ContainsKey(player.Id))

@@ -5,13 +5,8 @@ using Slafight_Plugin_EXILED.ForceSystem;
 namespace Slafight_Plugin_EXILED.API.Core.Structs;
 
 /// <summary>
-/// 脱出しようとしている 1 人ぶんの状況です。役職と陣営はこれを見て行き先を決めます。
+/// 脱出しようとしている 1 人ぶんの、役職が変わる前の状況です。
 /// </summary>
-/// <remarks>
-/// 役職が変わる<b>前</b>の状態を写し取ったものです。脱出後に配られる
-/// <see cref="Slafight_Plugin_EXILED.Handlers.EscapeHandler.Escaped"/> でも、
-/// 「誰がどの陣営から、誰に護送されて出て行ったか」がそのまま残ります。
-/// </remarks>
 public readonly struct EscapeContext
 {
     /// <summary>
@@ -47,12 +42,8 @@ public readonly struct EscapeContext
     public CustomTeam Team { get; }
 
     /// <summary>
-    /// そのプレイヤーの隊員状態です。部隊システムの対象外なら null。
+    /// 脱出前の隊員状態の写しです。部隊システムの対象外なら null。
     /// </summary>
-    /// <remarks>
-    /// 脱出は役職変更なので、脱出後には隊から外れて隊員状態も捨てられています
-    /// (<c>ForceRegistry.Refresh</c>)。脱出を評価する側はここの写しを見てください。
-    /// </remarks>
     public ForceMember ForceMember { get; }
 
     /// <summary>
@@ -88,10 +79,6 @@ public readonly struct EscapeContext
     /// <summary>
     /// <typeparamref name="T"/> と同じ側の陣営に護送されているかどうか。
     /// </summary>
-    /// <remarks>
-    /// 「財団側に連れて行かれた」のように、<see cref="CustomTeam.Allies"/> でひとまとまりに
-    /// なっている勢力を指したいときに使います。陣営をいくつも並べた配列は要りません。
-    /// </remarks>
     public bool IsEscortedByAllyOf<T>() where T : CustomTeam, new() =>
         EscortTeam is not null && CustomTeam.Get<T>().IsSameSide(EscortTeam);
 }

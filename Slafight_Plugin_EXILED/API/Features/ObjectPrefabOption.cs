@@ -7,9 +7,7 @@ using System.Linq;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
-/// Option の 1 パート定義（型 + 名前 + 制約）。
-/// <see cref="Int"/> / <see cref="Float"/> / <see cref="Bool"/> / <see cref="String"/> /
-/// <see cref="Enum{TEnum}"/> / <see cref="Of{T}"/> のファクトリで生成する。
+/// Option の 1 パート定義 (型 + 名前 + 制約)。ファクトリメソッドで生成する。
 /// </summary>
 public sealed class OptionPart
 {
@@ -78,9 +76,7 @@ public sealed class OptionPart
         => new(name, typeof(TEnum), defaultValue, null, string.Join("|", System.Enum.GetNames(typeof(TEnum))));
 
     /// <summary>
-    /// 任意型パート。ObjectPrefab の Option シリアライザで変換できる型
-    /// （enum / IFormattable / TypeConverter 対応型など）を使える。
-    /// Vector 系はカンマを含むため複数パートの Option には向かない。
+    /// 任意型パート。カンマを含む型 (Vector など) は複数パートの Option に向かない。
     /// </summary>
     public static OptionPart Of<T>(string name, T defaultValue, Func<T, bool>? validator = null, string? constraintDescription = null)
         => new(
@@ -135,17 +131,7 @@ public sealed class OptionPart
 }
 
 /// <summary>
-/// ObjectPrefab の宣言的オプション。public な Option プロパティ/フィールドとして宣言すると
-/// メンバー名がオプションキーとして自動収集され、`.sl objprefab modify option` やマーカーの
-/// Options から設定できる。値は "v1,v2,..." のカンマ区切りで、空パートは現在値を維持する。
-/// <code>
-/// public Option Inputs { get; } = new(
-///     OptionPart.Int("Mode", 0, min: 0, max: 3),
-///     OptionPart.Bool("Blinking"),
-///     OptionPart.Bool("Loop"));
-/// // 設定例: "2,true,false" / "2"（先頭のみ更新）/ ",true"（2番目のみ更新）
-/// // 参照例: Inputs.Get&lt;int&gt;("Mode")
-/// </code>
+/// ObjectPrefab の宣言的オプション。メンバー名がキーになり、値は "v1,v2,..." (空パートは現在値を維持)。
 /// </summary>
 public sealed class Option
 {

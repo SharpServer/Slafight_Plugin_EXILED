@@ -6,14 +6,9 @@ using Slafight_Plugin_EXILED.API.Features;
 namespace Slafight_Plugin_EXILED.Extensions;
 
 /// <summary>
-/// <see cref="Npc"/>のRemoteAdmin用Dummyアクションを拡張するためのヘルパーです。
+/// <see cref="Npc"/> の RemoteAdmin 用 Dummy アクションを扱う拡張です。
 /// </summary>
-/// <remarks>
-/// 本体のDummyアクション収集は<see cref="DummyActionCollector"/>がHubのコンポーネント配列を一度だけキャッシュします。
-/// そのためコンポーネントを後から追加した際は<see cref="DummyActionCollector.CollectionCache"/>を破棄して
-/// プロバイダー配列を再構築させる必要があります。アクション内容の変更時は
-/// <see cref="DummyActionProvider.DummyActionsDirty"/>のフラグだけでRemoteAdminへ反映されます。
-/// </remarks>
+/// <remarks>コンポーネント追加後は <see cref="DummyActionCollector.CollectionCache"/> を破棄して再収集させます。</remarks>
 public static class DummyActionExtensions
 {
     /// <summary>

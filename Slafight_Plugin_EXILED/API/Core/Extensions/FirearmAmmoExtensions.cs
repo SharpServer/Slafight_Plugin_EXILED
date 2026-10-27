@@ -23,7 +23,8 @@ public static class FirearmAmmoExtensions
             // EXILED's setter writes the base capacity, while the getter and native
             // reload validator include the attachment modifier (e.g. LowcapMagJHP).
             // Settings specify the final capacity, so compensate for that modifier.
-            int modifier = firearm.PrimaryMagazine is NormalMagazine
+            // 補正を加算する設定では基準値をそのまま書き、バニラの加算に任せる。
+            int modifier = !settings.AttachmentsModifyCapacity && firearm.PrimaryMagazine is NormalMagazine
                 ? (int)firearm.Base.AttachmentsValue(AttachmentParam.MagazineCapacityModifier)
                 : 0;
             firearm.MaxMagazineAmmo = Math.Max(0, capacity) - modifier;
@@ -49,7 +50,8 @@ public static class FirearmAmmoExtensions
         {
             // FirearmPickup.MaxAmmo is copied into the base capacity on acquisition.
             // Preserve the same attachment compensation as inventory firearms.
-            int modifier = AttachmentPreview.TryGet(pickup.Type, pickup.Attachments, false, out var preview) &&
+            int modifier = !settings.AttachmentsModifyCapacity &&
+                AttachmentPreview.TryGet(pickup.Type, pickup.Attachments, false, out var preview) &&
                 preview.TryGetModule<MagazineModule>(out _)
                 ? (int)preview.AttachmentsValue(AttachmentParam.MagazineCapacityModifier)
                 : 0;

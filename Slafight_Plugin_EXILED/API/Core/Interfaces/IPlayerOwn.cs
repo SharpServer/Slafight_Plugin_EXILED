@@ -3,9 +3,7 @@ using Exiled.API.Features;
 namespace Slafight_Plugin_EXILED.API.Core.Interfaces;
 
 /// <summary>
-/// 特定のプレイヤーに属するものです。
-/// <see cref="Features.EventHandlerBase"/> はこれを実装したハンドラを、
-/// 持ち主が退出した時点で自動的に破棄します。
+/// 特定のプレイヤーに属するものです。<see cref="Features.EventHandlerBase"/> は持ち主の退出時に自動で破棄します。
 /// </summary>
 public interface IPlayerOwn
 {

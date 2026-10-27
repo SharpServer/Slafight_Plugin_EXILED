@@ -7,15 +7,7 @@ namespace Slafight_Plugin_EXILED.API.Core.Samples;
 
 /// <summary>
 /// 役職の一括割り当ての書き方の見本です。
-///
-/// 1 行が「何を・何人まで・どれくらいの出やすさで」を同時に表します。
-/// 旧実装が別々に持っていた重み表と上限表が、この 1 行に畳まれています。
 /// </summary>
-/// <remarks>
-/// <b>波を作るときも、この <see cref="SpawnSet"/> を直接継承してください。</b>
-/// 波用の中間基底クラスや、波を指す enum を新設してはいけません。
-/// 陣営・重み・比率・テーマが要るなら、それはこの派生クラスのプロパティとして持たせます。
-/// </remarks>
 public sealed class SampleSpawnSet : SpawnSet
 {
     public override string Name => "Sample Spawn";

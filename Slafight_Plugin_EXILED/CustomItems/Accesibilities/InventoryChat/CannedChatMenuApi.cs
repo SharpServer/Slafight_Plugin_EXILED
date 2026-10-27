@@ -24,9 +24,7 @@ using ServerHandlers = Exiled.Events.Handlers.Server;
 namespace Slafight_Plugin_EXILED.CustomItems.Accesibilities.InventoryChat;
 
 /// <summary>
-/// SCP-330 の6分割セレクターを一時的な階層型定型文メニューとして使う API です。
-/// 通常所持品は置換せず、8枠上限を越える専用バッグを一時的に追加します。
-/// バッグは通常ホイールには並べず、サーバーから直接装備させてセレクターだけを使います。
+/// SCP-330 のセレクターを階層型の定型文メニューとして使う API です。所持品は置換せず、専用バッグを一時的に追加します。
 /// </summary>
 public static class CannedChatMenuApi
 {

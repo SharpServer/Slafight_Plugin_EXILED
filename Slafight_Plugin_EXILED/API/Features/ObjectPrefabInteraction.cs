@@ -10,9 +10,7 @@ using ExiledPlayer = Exiled.API.Features.Player;
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
-/// ObjectPrefab が管理する 1 つの Interactable。
-/// Interacting / Interacted はこの Interactable が対象のときだけ発火する
-/// （プレイヤーは Exiled 解決済みで渡される）。
+/// ObjectPrefab が管理する 1 つの Interactable。イベントはこの Interactable が対象のときだけ発火する。
 /// </summary>
 public sealed class InteractableHandle
 {

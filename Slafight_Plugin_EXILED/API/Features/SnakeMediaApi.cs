@@ -235,9 +235,7 @@ public static class SnakeMediaApi
         [.. ActivePlaybacks.Values];
 
     /// <summary>
-    /// Convenience entry point for the common pixel-video use case. It enables
-    /// owner-session takeover, square pixels, synchronized spatial audio, media
-    /// caching, and automatic stop-on-unequip behavior.
+    /// ピクセル動画再生の簡易入口。セッション乗っ取り・空間音声同期・キャッシュ・持ち替えで停止を有効にする。
     /// </summary>
     public static SnakeMediaPlayback PlayPixelMedia(
         Player player,
@@ -386,13 +384,9 @@ public static class SnakeMediaApi
     }
 
     /// <summary>
-    /// Stops all active media and drops every cached load task, including
-    /// completed and faulted tasks. In-flight loads cannot be canceled; once
-    /// this method returns they are no longer reachable through the cache,
-    /// are not inserted again when they complete, and become eligible for GC
-    /// after any remaining worker references are released.
+    /// 再生中のメディアをすべて止め、ロード済み / ロード中のキャッシュを破棄する。
     /// </summary>
-    /// <returns>The number of cache entries removed.</returns>
+    /// <returns>削除したキャッシュ数。</returns>
     public static int ClearCache()
     {
         StopAll(restoreSnake: false);

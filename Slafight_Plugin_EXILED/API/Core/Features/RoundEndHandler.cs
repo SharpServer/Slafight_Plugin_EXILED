@@ -7,20 +7,8 @@ using Slafight_Plugin_EXILED.Extensions;
 namespace Slafight_Plugin_EXILED.API.Core.Features;
 
 /// <summary>
-/// ラウンドの終了を判定します。
+/// ゲーム本体の終了判定に答えてラウンドの終了を決めます。勝者は <see cref="CustomTeam.FindWinner"/> が決めます。
 /// </summary>
-/// <remarks>
-/// <b>自前のタイマーを持ちません。</b>
-/// ゲーム本体が「もう終わってよいか」と訊いてくるのに乗って答えます。
-/// 旧実装は 1 秒ごとのコルーチンで全員を数え直していました。
-///
-/// 誰が勝ったかは <see cref="CustomTeam.FindWinner"/> が、
-/// その陣営がどう終わるかは <see cref="CustomTeam.UsesVanillaEnding"/> が決めます。
-/// ここに陣営ごとの分岐はありません。
-///
-/// このクラスはどこからも登録されていません。<see cref="EventHandlerBase"/> を
-/// 継承しているだけで <see cref="EventHandlerRegistry"/> が購読させます。
-/// </remarks>
 public sealed class RoundEndHandler : EventHandlerBase
 {
     /// <summary>

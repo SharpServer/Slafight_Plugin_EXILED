@@ -12,9 +12,11 @@ public sealed class FirearmAmmoSettings
         int? magazineCapacity = null,
         int? initialMagazineAmmo = null,
         ItemType? ammoItemType = null,
-        int ammoDrain = 1)
+        int ammoDrain = 1,
+        bool attachmentsModifyCapacity = false)
     {
         MagazineCapacity = magazineCapacity;
+        AttachmentsModifyCapacity = attachmentsModifyCapacity;
         InitialMagazineAmmo = initialMagazineAmmo ?? magazineCapacity;
         if (ammoItemType == ItemType.None)
             throw new ArgumentOutOfRangeException(nameof(ammoItemType), ammoItemType, "Ammo item type cannot be None.");
@@ -23,8 +25,13 @@ public sealed class FirearmAmmoSettings
         AmmoDrain = Math.Max(1, ammoDrain);
     }
 
-    /// <summary>アタッチメント補正後の実効マガジン容量です。</summary>
+    /// <summary>
+    /// マガジン容量です。<see cref="AttachmentsModifyCapacity"/> が false なら補正後の実効値、
+    /// true なら補正前の基準値です。
+    /// </summary>
     public int? MagazineCapacity { get; }
+    /// <summary>マガジン系アタッチメントの容量補正を <see cref="MagazineCapacity"/> に加算するか。</summary>
+    public bool AttachmentsModifyCapacity { get; }
     public int? InitialMagazineAmmo { get; }
     /// <summary>この銃が消費する予備弾薬の ItemType です。</summary>
     public ItemType? AmmoItemType { get; }

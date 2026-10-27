@@ -7,27 +7,8 @@ using Slafight_Plugin_EXILED.Extensions;
 namespace Slafight_Plugin_EXILED.API.Core.Extensions;
 
 /// <summary>
-/// 陣営をプレイヤー側から引くための糖衣と、陣営インスタンスの null 安全な読み取りです。
+/// プレイヤーから陣営を引く拡張です。陣営インスタンスが null でも落ちません。
 /// </summary>
-/// <remarks>
-/// <para>
-/// 所属判定の実体は <see cref="CustomTeam.Includes"/> 1 本だけです
-/// (カスタム役職があればその役職が名乗る陣営、無ければ <c>IncludesVanilla</c>)。
-/// ここに「役職 ID → 陣営」の表は生えません。
-/// </para>
-/// <para>
-/// 陣営インスタンスを受け取る側のメソッドは、レシーバーが null でも落ちません。
-/// 陣営に属さないプレイヤー (観戦者・中立) を毎回 <c>?.</c> で書き分けずに済ませるためです。
-/// </para>
-/// </remarks>
-/// <example>
-/// <code>
-/// if (player.IsInTeam&lt;ScpTeam&gt;()) { }
-///
-/// foreach (Player ally in player.GetAllies())
-///     ally.ShowHint(player.GetTeam().Colorize("援護しろ"), 3f);
-/// </code>
-/// </example>
 public static class CustomTeamExtensions
 {
     private const string DefaultColor = "#FFFFFF";

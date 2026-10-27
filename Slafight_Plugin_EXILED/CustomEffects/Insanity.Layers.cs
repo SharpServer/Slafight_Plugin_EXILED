@@ -132,9 +132,7 @@ public partial class Insanity
     }
 
     /// <summary>
-    /// 色付け済みの行を溜め込んでおくバッファ。
-    /// 「増えていく」表現のため行を消さずに積み、描画時にレイアウトぶんの
-    /// <c>&lt;pos&gt;</c> だけを前置する。色付けのやり直しは発生しない。
+    /// 色付け済みの行を消さずに溜め込むバッファ。描画時に <c>&lt;pos&gt;</c> だけを前置する。
     /// </summary>
     private sealed class NoiseCanvas
     {
@@ -518,9 +516,7 @@ public partial class Insanity
     // ===== メッセージのトークン解決 =====
 
     /// <summary>
-    /// 文言に埋め込まれたトークンを、そのプレイヤーの「いま」で置き換える。
-    /// 自分の名前・他人の名前・部屋・体力・手持ち・経過時間が混ざるので、
-    /// 同じ文言でも読むたびに刺さり方が変わる。
+    /// 文言のトークンを、そのプレイヤーの現在の状態 (名前・部屋・体力など) で置き換える。
     /// </summary>
     private sealed class MessageContext
     {

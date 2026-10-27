@@ -5,11 +5,7 @@ using Slafight_Plugin_EXILED.API.Core.Features;
 namespace Slafight_Plugin_EXILED.API.Core.Samples;
 
 /// <summary>
-/// 選択肢を持つ能力の書き方の見本です。
-///
-/// 見どころは <see cref="OnUsed"/> に<b>分岐が無い</b>ことです。
-/// 何をするかは選択肢自身が知っているので、選択肢を足しても能力本体は変わりません。
-/// 旧実装は <c>option.Is("gen_battleaxe")</c> のような比較を並べていました。
+/// 選択肢を持つ能力の書き方の見本です。処理は選択肢自身が持ちます。
 /// </summary>
 public sealed class SampleChoiceAbility : AbilityBase
 {

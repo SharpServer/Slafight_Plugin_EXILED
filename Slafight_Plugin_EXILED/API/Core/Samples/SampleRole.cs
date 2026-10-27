@@ -8,27 +8,8 @@ using VoiceChat;
 namespace Slafight_Plugin_EXILED.API.Core.Samples;
 
 /// <summary>
-/// カスタム役職の書き方の見本です。
-///
-/// 見どころは 2 つあります。
-/// <list type="number">
-/// <item>
-/// 装備・効果・体力・チームが、<b>処理ではなく宣言</b>で書けること。
-/// スポーン時にそれを反映するのは基底の仕事です。
-/// </item>
-/// <item>
-/// <see cref="usedCount"/> が<b>ただのフィールド</b>であること。
-/// この役職はプレイヤー 1 人につき 1 インスタンス作られるので、
-/// プレイヤー ID をキーにした static 辞書を用意する必要がありません。
-/// </item>
-/// </list>
+/// カスタム役職の書き方の見本です。装備などは宣言で書き、per-player 状態はフィールドに持ちます。
 /// </summary>
-/// <remarks>
-/// 追加イベントは RegisterEvents / UnregisterEvents で購読・解除できます。
-/// RegisterEvents は OnSpawned より前、UnregisterEvents は OnRemoved より前に呼ばれます。
-/// イベント内で Check(ev.Player) を使うと、この役職インスタンスの持ち主かを判定できます。
-/// 型全体の判定には CustomRole.Is&lt;SampleRole&gt;(player) を使います。
-/// </remarks>
 public sealed class SampleRole : CustomRole
 {
     /// <summary>
@@ -65,13 +46,8 @@ public sealed class SampleRole : CustomRole
     public override string CustomInfo => "Sample";
 
     /// <summary>
-    /// 声の扱いも役職が名乗ります。配線側 (VoiceRoutingApi / ProximityChat) は触りません。
+    /// 声の設定です。人間ベースなので、無線の声を周囲にも漏らします。
     /// </summary>
-    /// <remarks>
-    /// これは人間ベースの役職なので SCP チャットでは話せません。
-    /// 代わりに<b>無線の声を周囲にも漏らす</b>形にしています。
-    /// 流すチャンネルは、その土台の役職が実際に話せるものを指すのが要点です。
-    /// </remarks>
     public override RoleVoiceSettings Voice =>
         RoleVoiceSettings.WithProximity(sourceChannel: VoiceChatChannel.Radio);
 

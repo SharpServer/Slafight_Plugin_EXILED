@@ -8,42 +8,13 @@ using Slafight_Plugin_EXILED.API.Core.Features;
 namespace Slafight_Plugin_EXILED.ForceSystem;
 
 /// <summary>
-/// 「誰にどの隊が見えるか」を決めます。差し替え可能です。
+/// 「誰にどの隊が見えるか」を決めます。既定は <see cref="ForceBase.Team"/> (無ければ隊の型) で同じ側だけ見せます。
 /// </summary>
-/// <remarks>
-/// 部隊一覧をそのまま全部見せると索敵情報になってしまうので、
-/// 表示は必ずここを通します。
-///
-/// <b>既定は <see cref="ForceBase.Team"/> による仕分けです。</b>
-/// 隊が <see cref="CustomTeam"/> を名乗っていればそれで同じ側かを決め、
-/// 名乗っていなければ隊の型で決めます。
-/// <see cref="PlayerRoles.Faction"/> で括らないのは、
-/// <see cref="PlayerRoles.Faction.FoundationEnemy"/> にカオスと D クラスが両方入るからです。
-/// あれで括るとギャングにカオスの部隊が丸見えになります。
-///
-/// ゲームモードなどで見え方を変えたいときは <see cref="Rule"/> を差し替えてください。
-/// </remarks>
-/// <example>
-/// <code>
-/// // 全部隊を全員に見せる (観戦者向けモードなど)
-/// ForceVisibility.Rule = (_, _) => true;
-///
-/// // 自分の所属だけ見せる
-/// ForceVisibility.Rule = (viewer, force) => ReferenceEquals(viewer.GetForce(), force);
-///
-/// // 既定に戻す
-/// ForceVisibility.Reset();
-/// </code>
-/// </example>
 public static class ForceVisibility
 {
     /// <summary>
-    /// 見えるかどうかを決める述語です。差し替えると表示範囲が変わります。
+    /// 見えるかどうかを決める述語です。null で既定に戻ります。ラウンドをまたいで保持されます。
     /// </summary>
-    /// <remarks>
-    /// null を入れると既定に戻ります。ラウンドをまたいでも保持されるので、
-    /// ゲームモード側で差し替えたなら終了時に <see cref="Reset"/> してください。
-    /// </remarks>
     public static Func<Player, ForceBase, bool> Rule
     {
         get => rule;
@@ -68,12 +39,8 @@ public static class ForceVisibility
     }
 
     /// <summary>
-    /// この隊がこのプレイヤーに見えるかどうか。
+    /// この隊がこのプレイヤーに見えるかどうか。ルールの例外は握りつぶします。
     /// </summary>
-    /// <remarks>
-    /// 差し替えたルールが例外を投げても表示を巻き添えにしません。
-    /// HUD は 1 秒ごとに回るので、落ちるたびにログが溢れるのも避けます。
-    /// </remarks>
     public static bool IsVisible(Player viewer, ForceBase force)
     {
         if (viewer is null || force is null) return false;
