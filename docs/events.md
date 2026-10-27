@@ -1,53 +1,20 @@
 ---
-layout: default
+layout: catalog
 title: 特殊イベント
 description: Slafight Pluginの特殊イベント一覧。
 permalink: /events/
+code: EVNT
+lead: 通常ラウンドとは違う流れになる特殊イベントの概要です。発生条件、目的、主な展開を確認できます。
+catalog:
+  data: events
+  group: status
+  placeholder: 例 Warhead, Raid, 季節
+  fields:
+    - { key: requirement, label: 表示条件 }
+    - { key: min_players, label: 最低人数, suffix: 人 }
+    - { key: season, label: 季節条件 }
+    - { key: win_condition, label: 勝利 / 目的, wide: true }
+  lists:
+    - { key: flow, label: 主な流れ }
+    - { key: notes, label: 注意 }
 ---
-<section class="page-hero">
-  <div>
-    <p class="eyebrow">Special Events</p>
-    <h1>特殊イベント</h1>
-    <p>通常ラウンドとは違う流れになる特殊イベントの概要です。発生条件、目的、主な展開を確認できます。</p>
-  </div>
-  <div class="filter-box">
-    <label for="event-filter">このページを絞り込み</label>
-    <input id="event-filter" data-filter-input data-filter-scope="#events-list" type="search" placeholder="例: Warhead, Raid, 無効">
-  </div>
-</section>
-
-<div id="events-list">
-<section class="content-section" data-group>
-  <h2>イベント一覧</h2>
-  <div class="card-grid">
-  {% for event in site.data.events %}
-    {% capture event_search %}{{ event.name }} {{ event.status }} {{ event.requirement }} {{ event.summary }} {{ event.tags | join: ' ' }}{% endcapture %}
-    <article class="wiki-card" id="{{ event.id }}" data-card data-search="{{ event_search | strip_html | escape }}">
-      <header>
-        {% if event.status %}<p class="eyebrow">{{ event.status }}</p>{% endif %}
-        <h3>{{ event.name }}</h3>
-      </header>
-      <p>{{ event.summary }}</p>
-      <dl class="meta-grid">
-        {% if event.requirement %}<div><dt>表示条件</dt><dd>{{ event.requirement }}</dd></div>{% endif %}
-        {% if event.min_players != nil %}<div><dt>最低人数</dt><dd>{{ event.min_players }}人</dd></div>{% endif %}
-        {% if event.season %}<div><dt>季節条件</dt><dd>{{ event.season }}</dd></div>{% endif %}
-        {% if event.win_condition %}<div><dt>勝利 / 目的</dt><dd>{{ event.win_condition }}</dd></div>{% endif %}
-      </dl>
-      {% if event.flow %}
-      <h4>主な流れ</h4>
-      <ul class="clean-list">
-        {% for step in event.flow %}<li>{{ step }}</li>{% endfor %}
-      </ul>
-      {% endif %}
-      {% if event.notes %}
-      <h4>注意</h4>
-      <ul class="clean-list">
-        {% for note in event.notes %}<li>{{ note }}</li>{% endfor %}
-      </ul>
-      {% endif %}
-    </article>
-  {% endfor %}
-  </div>
-</section>
-</div>

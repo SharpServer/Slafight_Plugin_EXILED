@@ -1,0 +1,84 @@
+---
+layout: default
+---
+{% comment %}
+  _data の一覧をページ化する。設定はページの front matter `catalog:` に書く。
+  data / group / label / badge / title / summary / fields / lists / placeholder
+{% endcomment %}
+{% assign cfg = page.catalog %}
+{% assign entries = site.data[cfg.data] %}
+{% assign title_key = cfg.title | default: "name" %}
+{% assign summary_key = cfg.summary | default: "summary" %}
+{% assign group_key = cfg.group | default: "__none" %}
+{% assign groups = entries | group_by: group_key %}
+
+<header class="doc-head">
+  <p class="doc-meta">
+    <span>FILE // {{ page.code }}</span>
+    <span>{{ entries | size }} ENTRIES</span>
+    <span>CLEARANCE: {% if page.url contains '/internal/' %}LEVEL 4{% else %}PUBLIC{% endif %}</span>
+  </p>
+  <h1>{{ page.title }}</h1>
+  {% if page.lead %}<p class="lead">{{ page.lead }}</p>{% endif %}
+</header>
+
+<div class="catalog">
+  <div class="catalog-main" id="catalog">
+    <div class="filter">
+      <label class="visually-hidden" for="page-filter">このページを絞り込み</label>
+      <input id="page-filter" type="search" autocomplete="off" spellcheck="false" placeholder="このページを絞り込み（{{ cfg.placeholder }}）" data-filter-input data-filter-scope="#catalog">
+      <span class="filter-count" data-filter-count aria-live="polite">{{ entries | size }} 件</span>
+    </div>
+
+    {% for group in groups %}
+    <section class="group" id="group-{{ forloop.index }}" data-group>
+      <h2 class="group-title">{{ group.name | default: cfg.group_title | default: "一覧" }}<span class="group-count" data-group-count>{{ group.items | size }}</span></h2>
+      {% for entry in group.items %}
+        {% assign label = entry[cfg.label] %}{% if label == group.name %}{% assign label = nil %}{% endif %}
+        {% capture haystack %}{{ entry[title_key] }} {{ entry.id }} {{ group.name }} {{ label }} {{ entry[summary_key] }}{% for f in cfg.fields %} {{ entry[f.key] }}{% endfor %}{% for l in cfg.lists %} {{ entry[l.key] | join: ' ' }}{% endfor %} {{ entry.tags | join: ' ' }}{% endcapture %}
+      <article class="entry" id="{{ entry.id }}" data-card data-search="{{ haystack | strip_html | strip_newlines | escape }}">
+        <header class="entry-head">
+          <a class="entry-id" href="#{{ entry.id }}" title="この項目へのリンク">{{ page.code }}-{{ entry.id | upcase }}</a>
+          {% if label %}<span class="entry-label">{{ label }}</span>{% endif %}
+          {% if cfg.badge and entry[cfg.badge] %}<span class="entry-badge">{{ entry[cfg.badge] }}</span>{% endif %}
+        </header>
+        <h3 class="entry-title">{{ entry[title_key] }}</h3>
+        {% if entry[summary_key] %}<p class="entry-summary">{{ entry[summary_key] }}</p>{% endif %}
+
+        {% capture meta %}{% for f in cfg.fields %}{% assign v = entry[f.key] %}{% if v != nil and v != "" %}<div{% if f.wide %} class="wide"{% endif %}><dt>{{ f.label }}</dt><dd>{{ v }}{{ f.suffix }}</dd></div>{% endif %}{% endfor %}{% endcapture %}
+        {% assign meta = meta | strip %}
+        {% if meta != "" %}<dl class="entry-meta">{{ meta }}</dl>{% endif %}
+
+        {% for l in cfg.lists %}
+          {% assign values = entry[l.key] %}
+          {% if values and values.size > 0 %}
+        <div class="entry-block">
+          <h4>{{ l.label }}</h4>
+          {% if l.style == "tags" %}
+          <ul class="chips">{% for v in values %}<li>{{ v }}</li>{% endfor %}</ul>
+          {% elsif l.style == "links" %}
+          <ul class="bullets">{% for v in values %}<li><a href="{{ v }}" rel="noopener">{{ v }}</a></li>{% endfor %}</ul>
+          {% else %}
+          <ul class="bullets">{% for v in values %}<li>{{ v }}</li>{% endfor %}</ul>
+          {% endif %}
+        </div>
+          {% endif %}
+        {% endfor %}
+      </article>
+      {% endfor %}
+    </section>
+    {% endfor %}
+    <p class="empty" data-filter-empty hidden>該当する項目がありません。語句を短くしてみてください。</p>
+  </div>
+
+  {% if groups.size > 1 %}
+  <nav class="toc" aria-label="このページの目次">
+    <p class="toc-title">目次</p>
+    <ul>
+      {% for group in groups %}
+      <li data-toc-for="group-{{ forloop.index }}"><a href="#group-{{ forloop.index }}">{{ group.name }}<span>{{ group.items | size }}</span></a></li>
+      {% endfor %}
+    </ul>
+  </nav>
+  {% endif %}
+</div>

@@ -1,20 +1,58 @@
 version: v1.9.0.2
 updated: 2026-07-31
 source_note: Public player wiki generated from the current repository data.
+
+# サイドバーとホームの目次。data があるものは件数を表示する。
 nav:
-  - title: ホーム
-    url: /
   - title: ロール
     url: /roles/
+    code: ROLE
+    data: roles
+    desc: SCP・財団・GoI・職員・Dクラス系の追加ロール。
   - title: アイテム
     url: /items/
+    code: ITEM
+    data: items
+    desc: キーカード、武器、防具、医療品、アノマリー由来アイテム。
   - title: イベント
     url: /events/
-  - title: マップ/ギミック
+    code: EVNT
+    data: events
+    desc: 特殊イベントの発生条件・目的・流れ。
+  - title: マップ / ギミック
     url: /maps/
+    code: SITE
+    data: maps
+    desc: 追加部屋、施設改修、弾頭演出などをゾーン別に。
   - title: アビリティ
     url: /abilities/
+    code: ABIL
+    data: abilities
+    desc: キー設定から使う特殊能力と主な利用者。
   - title: キー設定
     url: /server-specifics/
+    code: CTRL
+    data: server_specifics
+    desc: Server Specifics で設定する項目。
   - title: クレジット
     url: /credits/
+    code: CRED
+    data: credits
+    desc: SCP財団、BGM、音声素材、ロゴのライセンス。
+
+# /internal/ 配下でのみサイドバーに出す。
+internal_nav:
+  - title: 内部管理ガイド
+    url: /internal/
+  - title: 共通仕様メモ
+    url: /internal/mechanics/
+  - title: 定型文通信
+    url: /internal/communications/
+  - title: 銃器サウンド採取
+    url: /internal/gun-sound-capture-checklist/
+  - title: Patch / Network 調査
+    url: /internal/patch-networksync-research-report/
+  - title: v2.0.0.0 草案
+    url: /internal/projects/ultimateSecretProjectImplementationPlan/
+  - title: SCP-914 カードフロー
+    url: /internal/scp914-keycard-flow.html
