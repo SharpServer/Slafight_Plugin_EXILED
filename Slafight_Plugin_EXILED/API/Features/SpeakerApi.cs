@@ -18,6 +18,7 @@ public static class SpeakerApi
     private const int PacketSize = VoiceChatSettings.PacketSizePerChannel;
     private const float MinimumAudibleDistance = 1f;
     private const int MaxOneShotVoices = 8;
+    private const float PlaybackEndTailSeconds = 0.75f;
     private static readonly Dictionary<string, CachedClip> ClipCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, List<Playback>> PlaybacksByName = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<string, List<LivePlayback>> LivePlaybacksByName = new(StringComparer.OrdinalIgnoreCase);
@@ -27,7 +28,7 @@ public static class SpeakerApi
 
     public readonly struct Playback
     {
-        public Playback(string audioPlayerName, string clipName, LabSpeakerToy speaker, byte controllerId, CoroutineHandle cleanupHandle = default)
+        public Playback(string audioPlayerName, string clipName, ExtendedSpeaker speaker, byte controllerId, CoroutineHandle cleanupHandle = default)
         {
             AudioPlayerName = audioPlayerName;
             ClipName = clipName;
@@ -38,11 +39,29 @@ public static class SpeakerApi
 
         public string AudioPlayerName { get; }
         public string ClipName { get; }
-        public LabSpeakerToy Speaker { get; }
+        public ExtendedSpeaker Speaker { get; }
         public byte ControllerId { get; }
         public CoroutineHandle CleanupHandle { get; }
         public bool IsValid => Speaker != null && !Speaker.IsDestroyed && ControllerId != 0;
         public float Volume => IsValid ? Speaker.Volume : 0f;
+
+        /// <summary>
+        /// この再生の残り秒数。別クリップに差し替わったあと、停止中、破棄後は 0。
+        /// ループ再生では、いまの周回が終わるまでの残り。
+        /// </summary>
+        public float RemainingClipTime
+        {
+            get
+            {
+                if (!IsValid || Speaker.CurrentPlayback is not { } current || current.ControllerId != ControllerId)
+                    return 0f;
+
+                if (!string.Equals(current.ClipName, ClipName, StringComparison.OrdinalIgnoreCase))
+                    return 0f;
+
+                return Speaker.RemainingClipTime;
+            }
+        }
 
         public bool Stop()
             => SpeakerApi.Stop(this);
@@ -62,7 +81,7 @@ public static class SpeakerApi
 
     public readonly struct LivePlayback
     {
-        public LivePlayback(string audioPlayerName, LabSpeakerToy speaker, byte controllerId)
+        public LivePlayback(string audioPlayerName, ExtendedSpeaker speaker, byte controllerId)
         {
             AudioPlayerName = audioPlayerName;
             Speaker = speaker;
@@ -70,7 +89,7 @@ public static class SpeakerApi
         }
 
         public string AudioPlayerName { get; }
-        public LabSpeakerToy Speaker { get; }
+        public ExtendedSpeaker Speaker { get; }
         public byte ControllerId { get; }
         public bool IsValid => Speaker != null && !Speaker.IsDestroyed && ControllerId != 0;
         public float Volume => IsValid ? Speaker.Volume : 0f;
@@ -121,7 +140,7 @@ public static class SpeakerApi
         if (string.IsNullOrWhiteSpace(audioPlayerName))
             throw new ArgumentException("Audio player name cannot be empty.", nameof(audioPlayerName));
 
-        LabSpeakerToy? speaker = null;
+        ExtendedSpeaker? speaker = null;
         var playback = default(LivePlayback);
         try
         {
@@ -248,7 +267,7 @@ public static class SpeakerApi
             return default;
         }
 
-        return playback;
+        return BindPlayback(playback, clipName);
     }
 
     /// <summary>破棄済みスピーカーを掃除したうえで、その audioPlayerName の生存中 Playback を返す。</summary>
@@ -294,7 +313,7 @@ public static class SpeakerApi
             return default;
         }
 
-        LabSpeakerToy? speaker = null;
+        ExtendedSpeaker? speaker = null;
         var playback = default(Playback);
         try
         {
@@ -302,9 +321,10 @@ public static class SpeakerApi
             speaker.Play(clip.Samples, queue: false, loop);
             playback = new Playback(audioPlayerName, clipName, speaker, speaker.ControllerId);
             AddPlayback(playback);
+            speaker.CurrentPlayback = playback;
 
             if (destroyOnEnd && !loop)
-                Timing.CallDelayed(clip.Duration + 0.75f, () => Stop(playback));
+                Timing.RunCoroutine(StopWhenFinished(playback));
 
             return playback;
         }
@@ -356,7 +376,7 @@ public static class SpeakerApi
                 (existingListeners == null || existingListeners(player));
         }
 
-        LabSpeakerToy? speaker = null;
+        ExtendedSpeaker? speaker = null;
         var playback = default(Playback);
         try
         {
@@ -364,12 +384,10 @@ public static class SpeakerApi
             speaker.Play(samples, queue: false, loop);
             playback = new Playback(audioPlayerName, audioPlayerName, speaker, speaker.ControllerId);
             AddPlayback(playback);
+            speaker.CurrentPlayback = playback;
 
             if (destroyOnEnd && !loop)
-            {
-                float duration = samples.Length * VoiceChatSettings.SampleToDuartionRate;
-                Timing.CallDelayed(duration + 0.75f, () => Stop(playback));
-            }
+                Timing.RunCoroutine(StopWhenFinished(playback));
 
             return playback;
         }
@@ -450,6 +468,8 @@ public static class SpeakerApi
     {
         if (playback.ControllerId == 0)
             return false;
+
+        playback.Speaker?.ClearCurrentPlayback(playback.ControllerId);
 
         var trackedBeforeStop = IsPlaybackTracked(playback);
         var ownsController = trackedBeforeStop || playback.IsValid;
@@ -789,7 +809,7 @@ public static class SpeakerApi
     public static IEnumerable<string> GetAudioPlayerNames()
         => [.. PlaybacksByName.Keys.Concat(LivePlaybacksByName.Keys).Distinct(StringComparer.OrdinalIgnoreCase)];
 
-    private static LabSpeakerToy CreateSpeaker(
+    private static ExtendedSpeaker CreateSpeaker(
         Vector3 position,
         Transform? parent,
         bool isSpatial,
@@ -826,8 +846,9 @@ public static class SpeakerApi
             }
 
             speaker.Spawn();
-            ApplyListeners(speaker, listeners);
-            return speaker;
+            var extended = new ExtendedSpeaker(speaker);
+            ApplyListeners(extended, listeners);
+            return extended;
         }
         catch
         {
@@ -846,7 +867,7 @@ public static class SpeakerApi
         }
     }
 
-    private static void SetTransform(LabSpeakerToy speaker, Vector3 position, Transform? parent)
+    private static void SetTransform(ExtendedSpeaker speaker, Vector3 position, Transform? parent)
     {
         if (parent)
         {
@@ -860,13 +881,13 @@ public static class SpeakerApi
         speaker.Position = position;
     }
 
-    private static void SetVolume(LabSpeakerToy speaker, float volume)
+    private static void SetVolume(ExtendedSpeaker speaker, float volume)
     {
         speaker.Volume = volume;
         speaker.Base.NetworkVolume = volume;
     }
 
-    private static void ApplyListeners(LabSpeakerToy speaker, Predicate<Player>? listeners)
+    private static void ApplyListeners(ExtendedSpeaker speaker, Predicate<Player>? listeners)
     {
         if (speaker == null)
             return;
@@ -955,6 +976,57 @@ public static class SpeakerApi
         }
 
         throw new InvalidOperationException("No available SpeakerToy controller IDs.");
+    }
+
+    /// <summary>送信が終わってから、最後のパケットが届く余裕を見てスピーカーを破棄する。</summary>
+    private static IEnumerator<float> StopWhenFinished(Playback playback)
+    {
+        while (IsCurrentClipActive(playback))
+            yield return Timing.WaitForSeconds(0.05f);
+
+        // 鳴り終わると CurrentPlayback は null になる。別クリップへ差し替わったときだけ破棄しない。
+        if (!playback.IsValid || HasBeenReplaced(playback))
+            yield break;
+
+        yield return Timing.WaitForSeconds(PlaybackEndTailSeconds);
+        if (!playback.IsValid || HasBeenReplaced(playback) || IsCurrentClipActive(playback))
+            yield break;
+
+        Stop(playback);
+    }
+
+    private static bool IsCurrentClipActive(Playback playback)
+        => playback.IsValid &&
+           playback.Speaker.IsClipActive &&
+           playback.Speaker.CurrentPlayback is { } current &&
+           current.ControllerId == playback.ControllerId &&
+           string.Equals(current.ClipName, playback.ClipName, StringComparison.OrdinalIgnoreCase);
+
+    private static bool HasBeenReplaced(Playback playback)
+        => playback.Speaker?.CurrentPlayback is { } current &&
+           (current.ControllerId != playback.ControllerId ||
+            !string.Equals(current.ClipName, playback.ClipName, StringComparison.OrdinalIgnoreCase));
+
+    /// <summary>使い回したスピーカーのクリップ名を合わせ、<see cref="ExtendedSpeaker.CurrentPlayback"/> を差し替える。</summary>
+    private static Playback BindPlayback(Playback playback, string clipName)
+    {
+        if (!string.Equals(playback.ClipName, clipName, StringComparison.OrdinalIgnoreCase))
+        {
+            var restarted = new Playback(playback.AudioPlayerName, clipName, playback.Speaker, playback.ControllerId, playback.CleanupHandle);
+            if (PlaybacksByName.TryGetValue(playback.AudioPlayerName, out var list))
+            {
+                int index = list.FindIndex(p => p.ControllerId == playback.ControllerId);
+                if (index >= 0)
+                    list[index] = restarted;
+            }
+
+            playback = restarted;
+        }
+
+        if (playback.Speaker != null)
+            playback.Speaker.CurrentPlayback = playback;
+
+        return playback;
     }
 
     private static void AddPlayback(Playback playback)
