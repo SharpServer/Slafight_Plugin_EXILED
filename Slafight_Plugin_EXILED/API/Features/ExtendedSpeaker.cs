@@ -23,6 +23,8 @@ public sealed class ExtendedSpeaker
     private double _pausedAccumulated;
     private float _clipDuration;
     private bool _loop;
+    private int _generation;
+    private int _announcedGeneration;
 
     internal ExtendedSpeaker(LabSpeakerToy labSpeaker)
     {
@@ -99,6 +101,37 @@ public sealed class ExtendedSpeaker
 
     /// <summary>ファイルから渡したクリップの尺(秒)。再生していなければ 0。</summary>
     public float ClipDuration => _clipDuration;
+
+    internal bool Loop => _loop;
+
+    internal int TakeGeneration() => ++_generation;
+
+    internal bool IsAnnounced(SpeakerApi.Playback playback)
+        => _announcedGeneration != 0 && playback.Generation == _announcedGeneration;
+
+    internal bool TryGetAnnounced(out SpeakerApi.Playback playback)
+    {
+        if (_current is { } current && IsAnnounced(current))
+        {
+            playback = current;
+            return true;
+        }
+
+        playback = default;
+        return false;
+    }
+
+    internal void MarkAnnounced(SpeakerApi.Playback playback)
+    {
+        _current = playback;
+        _announcedGeneration = playback.Generation;
+    }
+
+    internal void MarkEnded()
+    {
+        _announcedGeneration = 0;
+        _current = null;
+    }
 
     /// <summary>送信がまだ続いているか、一時停止中か。</summary>
     internal bool IsClipActive
@@ -229,6 +262,7 @@ public sealed class ExtendedSpeaker
     private void ClearClock()
     {
         _current = null;
+        _announcedGeneration = 0;
         _clipDuration = 0f;
         _loop = false;
         _pauseStarted = -1d;

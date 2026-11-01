@@ -25,15 +25,17 @@ public static class SpeakerApi
     private static readonly Dictionary<string, int> OneShotCursors = new(StringComparer.OrdinalIgnoreCase);
     private static readonly Dictionary<byte, CoroutineHandle> PlaybackStreams = new();
     private static readonly HashSet<byte> AllocatedControllerIds = [];
+    private static readonly HashSet<long> EndingPlaybacks = [];
 
     public readonly struct Playback
     {
-        public Playback(string audioPlayerName, string clipName, ExtendedSpeaker speaker, byte controllerId, CoroutineHandle cleanupHandle = default)
+        public Playback(string audioPlayerName, string clipName, ExtendedSpeaker speaker, byte controllerId, int generation = 0, CoroutineHandle cleanupHandle = default)
         {
             AudioPlayerName = audioPlayerName;
             ClipName = clipName;
             Speaker = speaker;
             ControllerId = controllerId;
+            Generation = generation;
             CleanupHandle = cleanupHandle;
         }
 
@@ -41,6 +43,10 @@ public static class SpeakerApi
         public string ClipName { get; }
         public ExtendedSpeaker Speaker { get; }
         public byte ControllerId { get; }
+
+        /// <summary>このスピーカーで何回目の再生か。差し替えと、<see cref="SpeakerApi.PlaybackStopped"/> の対応に使う。</summary>
+        public int Generation { get; }
+
         public CoroutineHandle CleanupHandle { get; }
         public bool IsValid => Speaker != null && !Speaker.IsDestroyed && ControllerId != 0;
         public float Volume => IsValid ? Speaker.Volume : 0f;
@@ -53,7 +59,7 @@ public static class SpeakerApi
         {
             get
             {
-                if (!IsValid || Speaker.CurrentPlayback is not { } current || current.ControllerId != ControllerId)
+                if (!IsValid || Speaker.CurrentPlayback is not { } current || current.ControllerId != ControllerId || current.Generation != Generation)
                     return 0f;
 
                 if (!string.Equals(current.ClipName, ClipName, StringComparison.OrdinalIgnoreCase))
@@ -125,6 +131,18 @@ public static class SpeakerApi
     }
 
     public static string AudioDirectory => Plugin.Singleton.Config.AudioReferences;
+
+    /// <summary>サンプルを送る直前に起きます。<see cref="SpeakerPlaybackStartingEventArgs.IsAllowed"/> で止められます。</summary>
+    public static event Action<SpeakerPlaybackStartingEventArgs> PlaybackStarting;
+
+    /// <summary>再生が始まり、<see cref="ExtendedSpeaker.CurrentPlayback"/> が入った直後に起きます。</summary>
+    public static event Action<SpeakerPlaybackStartedEventArgs> PlaybackStarted;
+
+    /// <summary>再生を片付ける直前に起きます。<see cref="SpeakerPlaybackStoppingEventArgs.IsAllowed"/> で止められます。</summary>
+    public static event Action<SpeakerPlaybackStoppingEventArgs> PlaybackStopping;
+
+    /// <summary>再生を片付けた直後に起きます。</summary>
+    public static event Action<SpeakerPlaybackStoppedEventArgs> PlaybackStopped;
 
     public static LivePlayback CreateLiveSpeaker(
         string audioPlayerName,
@@ -256,18 +274,7 @@ public static class SpeakerApi
         OneShotCursors[audioPlayerName] = (cursor + 1) % speakers.Count;
 
         SetTransform(playback, position, parent);
-        try
-        {
-            playback.Speaker.Play(clip.Samples, queue: false, loop: false);
-        }
-        catch (Exception ex)
-        {
-            Log.Warn($"[SpeakerApi] PlayOneShot failed for {audioPlayerName}/{clipName}: {ex.Message}");
-            Stop(playback);
-            return default;
-        }
-
-        return BindPlayback(playback, clipName);
+        return PlayClip(playback.Speaker, audioPlayerName, clipName, clip.Samples, loop: false, destroyOnEnd: false, ownsNewSpeaker: false);
     }
 
     /// <summary>破棄済みスピーカーを掃除したうえで、その audioPlayerName の生存中 Playback を返す。</summary>
@@ -318,15 +325,7 @@ public static class SpeakerApi
         try
         {
             speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, volume, listeners);
-            speaker.Play(clip.Samples, queue: false, loop);
-            playback = new Playback(audioPlayerName, clipName, speaker, speaker.ControllerId);
-            AddPlayback(playback);
-            speaker.CurrentPlayback = playback;
-
-            if (destroyOnEnd && !loop)
-                Timing.RunCoroutine(StopWhenFinished(playback));
-
-            return playback;
+            return PlayClip(speaker, audioPlayerName, clipName, clip.Samples, loop, destroyOnEnd, ownsNewSpeaker: true);
         }
         catch (Exception ex)
         {
@@ -381,15 +380,7 @@ public static class SpeakerApi
         try
         {
             speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, volume, listeners);
-            speaker.Play(samples, queue: false, loop);
-            playback = new Playback(audioPlayerName, audioPlayerName, speaker, speaker.ControllerId);
-            AddPlayback(playback);
-            speaker.CurrentPlayback = playback;
-
-            if (destroyOnEnd && !loop)
-                Timing.RunCoroutine(StopWhenFinished(playback));
-
-            return playback;
+            return PlayClip(speaker, audioPlayerName, audioPlayerName, samples, loop, destroyOnEnd, ownsNewSpeaker: true);
         }
         catch (Exception ex)
         {
@@ -465,9 +456,35 @@ public static class SpeakerApi
     }
 
     public static bool Stop(Playback playback)
+        => Stop(playback, SpeakerPlaybackEndReason.Stopped);
+
+    private static bool Stop(Playback playback, SpeakerPlaybackEndReason reason)
     {
         if (playback.ControllerId == 0)
             return false;
+
+        var speaker = playback.Speaker;
+        bool announce = speaker != null && speaker.IsAnnounced(playback);
+        long key = PlaybackKey(playback);
+        if (announce && !EndingPlaybacks.Add(key))
+            return false;
+
+        SpeakerPlaybackStoppedEventArgs stopped = null;
+        if (announce)
+        {
+            float duration = speaker.ClipDuration;
+            bool loop = speaker.Loop;
+            var stopping = new SpeakerPlaybackStoppingEventArgs(playback, loop, duration, reason);
+            Raise(PlaybackStopping, stopping);
+            if (!stopping.IsAllowed)
+            {
+                EndingPlaybacks.Remove(key);
+                return false;
+            }
+
+            speaker.MarkEnded();
+            stopped = new SpeakerPlaybackStoppedEventArgs(playback, loop, duration, reason);
+        }
 
         playback.Speaker?.ClearCurrentPlayback(playback.ControllerId);
 
@@ -501,6 +518,12 @@ public static class SpeakerApi
 
         var removedPlayback = RemovePlayback(playback);
         var releasedId = !IsControllerTracked(playback.ControllerId) && AllocatedControllerIds.Remove(playback.ControllerId);
+        if (announce)
+        {
+            Raise(PlaybackStopped, stopped);
+            EndingPlaybacks.Remove(key);
+        }
+
         return destroyed || releasedId || removedPlayback || removedStream;
     }
 
@@ -992,41 +1015,140 @@ public static class SpeakerApi
         if (!playback.IsValid || HasBeenReplaced(playback) || IsCurrentClipActive(playback))
             yield break;
 
-        Stop(playback);
+        Stop(playback, SpeakerPlaybackEndReason.Completed);
     }
 
     private static bool IsCurrentClipActive(Playback playback)
         => playback.IsValid &&
            playback.Speaker.IsClipActive &&
            playback.Speaker.CurrentPlayback is { } current &&
-           current.ControllerId == playback.ControllerId &&
-           string.Equals(current.ClipName, playback.ClipName, StringComparison.OrdinalIgnoreCase);
+           IsSamePlayback(playback, current);
 
     private static bool HasBeenReplaced(Playback playback)
-        => playback.Speaker?.CurrentPlayback is { } current &&
-           (current.ControllerId != playback.ControllerId ||
-            !string.Equals(current.ClipName, playback.ClipName, StringComparison.OrdinalIgnoreCase));
+        => playback.Speaker?.CurrentPlayback is { } current && !IsSamePlayback(playback, current);
 
-    /// <summary>使い回したスピーカーのクリップ名を合わせ、<see cref="ExtendedSpeaker.CurrentPlayback"/> を差し替える。</summary>
-    private static Playback BindPlayback(Playback playback, string clipName)
+    private static bool IsSamePlayback(Playback playback, Playback current)
+        => current.ControllerId == playback.ControllerId &&
+           current.Generation == playback.Generation &&
+           string.Equals(current.ClipName, playback.ClipName, StringComparison.OrdinalIgnoreCase);
+
+    private static Playback PlayClip(
+        ExtendedSpeaker speaker,
+        string audioPlayerName,
+        string clipName,
+        float[] samples,
+        bool loop,
+        bool destroyOnEnd,
+        bool ownsNewSpeaker)
     {
-        if (!string.Equals(playback.ClipName, clipName, StringComparison.OrdinalIgnoreCase))
-        {
-            var restarted = new Playback(playback.AudioPlayerName, clipName, playback.Speaker, playback.ControllerId, playback.CleanupHandle);
-            if (PlaybacksByName.TryGetValue(playback.AudioPlayerName, out var list))
-            {
-                int index = list.FindIndex(p => p.ControllerId == playback.ControllerId);
-                if (index >= 0)
-                    list[index] = restarted;
-            }
+        if (speaker == null || samples == null || samples.Length == 0)
+            return default;
 
-            playback = restarted;
+        var playback = new Playback(audioPlayerName, clipName, speaker, speaker.ControllerId, speaker.TakeGeneration());
+        float duration = samples.Length * VoiceChatSettings.SampleToDuartionRate;
+        var starting = new SpeakerPlaybackStartingEventArgs(playback, loop, duration, destroyOnEnd);
+        Raise(PlaybackStarting, starting);
+        if (!starting.IsAllowed)
+        {
+            if (ownsNewSpeaker)
+                Stop(playback, SpeakerPlaybackEndReason.Stopped);
+
+            return speaker.TryGetAnnounced(out var existing) ? existing : default;
         }
 
-        if (playback.Speaker != null)
-            playback.Speaker.CurrentPlayback = playback;
+        Playback? replaced = null;
+        float replacedDuration = 0f;
+        bool replacedLoop = false;
+        if (speaker.TryGetAnnounced(out var current))
+        {
+            replacedDuration = speaker.ClipDuration;
+            replacedLoop = speaker.Loop;
+            long key = PlaybackKey(current);
+            if (!EndingPlaybacks.Add(key))
+            {
+                if (ownsNewSpeaker)
+                    Stop(playback, SpeakerPlaybackEndReason.Stopped);
+
+                return current;
+            }
+
+            var stopping = new SpeakerPlaybackStoppingEventArgs(current, replacedLoop, replacedDuration, SpeakerPlaybackEndReason.Replaced);
+            Raise(PlaybackStopping, stopping);
+            if (!stopping.IsAllowed)
+            {
+                EndingPlaybacks.Remove(key);
+                if (ownsNewSpeaker)
+                    Stop(playback, SpeakerPlaybackEndReason.Stopped);
+
+                return current;
+            }
+
+            speaker.MarkEnded();
+            EndingPlaybacks.Remove(key);
+            replaced = current;
+        }
+
+        try
+        {
+            speaker.Play(samples, queue: false, loop);
+        }
+        catch (Exception ex)
+        {
+            Log.Warn($"[SpeakerApi] Play failed for {audioPlayerName}/{clipName}: {ex.Message}");
+            if (replaced is { } failedPrevious)
+                Raise(PlaybackStopped, new SpeakerPlaybackStoppedEventArgs(failedPrevious, replacedLoop, replacedDuration, SpeakerPlaybackEndReason.Replaced));
+
+            Stop(playback, SpeakerPlaybackEndReason.Stopped);
+            return default;
+        }
+
+        if (replaced is { } previous)
+            Raise(PlaybackStopped, new SpeakerPlaybackStoppedEventArgs(previous, replacedLoop, replacedDuration, SpeakerPlaybackEndReason.Replaced));
+
+        PublishPlayback(playback);
+        speaker.MarkAnnounced(playback);
+        Raise(PlaybackStarted, new SpeakerPlaybackStartedEventArgs(playback, loop, duration, destroyOnEnd));
+
+        if (destroyOnEnd && !loop && speaker.IsAnnounced(playback))
+            Timing.RunCoroutine(StopWhenFinished(playback));
 
         return playback;
+    }
+
+    private static void PublishPlayback(Playback playback)
+    {
+        if (!PlaybacksByName.TryGetValue(playback.AudioPlayerName, out var list))
+        {
+            AddPlayback(playback);
+            return;
+        }
+
+        int index = list.FindIndex(p => p.ControllerId == playback.ControllerId);
+        if (index < 0)
+            list.Add(playback);
+        else
+            list[index] = playback;
+    }
+
+    private static long PlaybackKey(Playback playback)
+        => ((long)playback.ControllerId << 32) | (uint)playback.Generation;
+
+    private static void Raise<TArgs>(Action<TArgs> handlers, TArgs args)
+    {
+        if (handlers == null)
+            return;
+
+        foreach (Action<TArgs> handler in handlers.GetInvocationList())
+        {
+            try
+            {
+                handler(args);
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"[SpeakerApi] {typeof(TArgs).Name} の購読者で例外が発生しました: {ex}");
+            }
+        }
     }
 
     private static void AddPlayback(Playback playback)
