@@ -1,6 +1,6 @@
 # Slafight Plugin EXILED
 
-**Version:** `v2.0.0.0` | **Target:** SCP: Secret Laboratory / EXILED `9.15.0` / .NET Framework 4.8
+**Version:** `v2.0.0.0` | **Target:** SCP: Secret Laboratory / EXILED `9.15.2` / .NET Framework 4.8
 
 シャープ鯖向けに開発されている大型EXILEDプラグインです。カスタムロール、
 カスタムアイテム、特殊イベント、HUD、音声、ProjectMER製マップ・ギミックを
