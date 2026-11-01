@@ -78,6 +78,8 @@ public partial class Insanity : CustomEffectBase, ICustomDisplayName, ICustomHea
     /// </summary>
     public static string? ForcedPatternName { get; set; }
 
+    public static string EvilSongName { get; set; } = "forbidden.ogg";
+
     // ===== 定数 =====
 
     /// <summary>元テキストを刻む単位。行はこの断片を繋いで作る。</summary>
@@ -109,6 +111,8 @@ public partial class Insanity : CustomEffectBase, ICustomDisplayName, ICustomHea
 
     /// <summary>Intensity を 0..1 に正規化した「発狂の強さ」。</summary>
     private float Severity => Mathf.Clamp01(Intensity / 255f);
+    
+    public SpeakerApi.Playback? Playback { get; private set; }
 
     public override void Enabled()
     {
@@ -121,6 +125,8 @@ public partial class Insanity : CustomEffectBase, ICustomDisplayName, ICustomHea
         _speedScale = 1f;
         OverdoseLevel = 0;
         _pendingOverdose = null;
+
+        Playback = SpeakerApi.PlayLoop($"./{EvilSongName}", Player.NetId.ToString(), Player.Position, Player.Transform, listeners: p => (p == Player || p.IsDead));
 
         // if (StalkWithScp513)
         //     Scp513.AddTarget(Player);
@@ -179,6 +185,7 @@ public partial class Insanity : CustomEffectBase, ICustomDisplayName, ICustomHea
         // if (StalkWithScp513)
         //     Scp513.RemoveTarget(player);
 
+        Playback?.Stop();
         RemoveEffects(player);
         RemoveHints(player);
     }
