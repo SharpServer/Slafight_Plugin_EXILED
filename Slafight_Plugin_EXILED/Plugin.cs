@@ -28,7 +28,7 @@ public class Plugin : Plugin<Config>
 
     public override Version Version => new(2, 0, 0, 0);
 
-    public List<string> SpecificVersionTags => ["261009a"];
+    public List<string> SpecificVersionTags => ["261102a"];
 
     public override Version RequiredExiledVersion { get; } = new(9, 15, 2);
 
