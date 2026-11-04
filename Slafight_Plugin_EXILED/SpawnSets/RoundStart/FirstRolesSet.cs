@@ -33,15 +33,18 @@ public class FirstRolesSCPsSet : SpawnSet
 
     public override IReadOnlyList<SpawnSetRoleDefinition> SpawnRoles =>
     [
-        // 重みは master の RoleTableContext.DefaultScpRoles() に準拠。
-        // SCP は 1 体につき 1 人なので count はすべて 1。
+        // バニラSCPs
         SpawnSetRoleDefinition.Custom<Scp173>(count: 1, weight: 1.15f),
         SpawnSetRoleDefinition.Custom<Scp106>(count: 1, weight: 1.1f),
         SpawnSetRoleDefinition.Custom<Scp939>(count: 1, weight: 1.1f),
         SpawnSetRoleDefinition.Custom<Scp049>(count: 1, weight: 1.08f),
-        // 079 は単独だと何もできないので 2 体目以降から。
+        // 079は単独だと何もできないので2体目以降から。
         SpawnSetRoleDefinition.Custom<Scp079>(count: 1, weight: 1.05f).AfterSpawned(1),
         SpawnSetRoleDefinition.Custom<Scp3114>(count: 1, weight: 0.95f),
         SpawnSetRoleDefinition.Custom<Scp096>(count: 1, weight: 0.85f),
+
+        // カスタムSCPs
+        // 3005は強力なので2体目以降から。
+        SpawnSetRoleDefinition.Custom<Scp3005>(count: 1, weight: 0.95f).AfterSpawned(1),
     ];
 }
