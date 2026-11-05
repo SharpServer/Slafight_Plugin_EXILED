@@ -182,6 +182,14 @@ public sealed class InputHandler : EventHandlerBase
     /// </summary>
     private static void HandleTwoButtons(Player player, SSTwoButtonsSetting setting)
     {
+        // 接続時の設定復元もここへ届くので、切り替えと同じ経路で見た目を合わせる。
+        if (setting.SettingId == ServerSpecifics.AccessibilityModeSettingId)
+        {
+            NetworkVisibilityManager.RefreshPlayer(player);
+
+            return;
+        }
+
         if (setting.SettingId != ServerSpecifics.DebugModeSettingId) return;
 
         // A が ON。定義 (ServerSpecifics の SSTwoButtonsSetting) の並びと合わせている。

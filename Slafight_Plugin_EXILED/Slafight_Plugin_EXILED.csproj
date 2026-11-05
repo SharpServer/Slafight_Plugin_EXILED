@@ -200,8 +200,7 @@
         インターフェースの静的メンバー実装が CS8701 になる。
         サーバー実体（Unity Mono）と同じ mscorlib を明示的に採用し直して Windows と揃える。
     -->
-    <Target Name="PreferServerMscorlib" AfterTargets="ResolveAssemblyReferences"
-            Condition="Exists('$(SL_References)\mscorlib.dll')">
+    <Target Name="PreferServerMscorlib" AfterTargets="ResolveAssemblyReferences" Condition="Exists('$(SL_References)\mscorlib.dll')">
         <ItemGroup>
             <ReferencePath Remove="@(ReferencePath->WithMetadataValue('Filename', 'mscorlib'))" />
             <ReferencePath Include="$(SL_References)\mscorlib.dll">

@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using CustomPlayerEffects;
 using Exiled.API.Enums;
@@ -7,7 +6,6 @@ using Exiled.Events.EventArgs.Player;
 using Exiled.Events.EventArgs.Scp0492;
 using MEC;
 using PlayerRoles;
-using ProjectMER.Features;
 using Slafight_Plugin_EXILED.Abilities;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Extensions;
@@ -17,6 +15,7 @@ using Slafight_Plugin_EXILED.CustomRoles.Fifthists;
 using Slafight_Plugin_EXILED.CustomTeams;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using Light = Exiled.API.Features.Toys.Light;
 
 namespace Slafight_Plugin_EXILED.CustomRoles.SCPs;
 
@@ -27,10 +26,11 @@ public sealed class Scp3005 : CustomRole
     public override string Description =>
         "第五的なピンクの光を放つ、謎に包まれた存在。\n" +
         "近づく敵を第五の力で侵食する。二つの能力を使い、第五教会を導け。";
-    public override string CustomInfo => "<color=#ff00fa>SCP-3005</color>";
+    public override string CustomInfo => $"<color={CustomTeam.Get<FifthistTeam>().Color}>SCP-3005</color>";
     public override CustomTeam Team => CustomTeam.Get<ScpTeam>();
     public override RoleTypeId BaseRole => RoleTypeId.Scp0492;
     public override Vector3? SpawnPosition => PositionProvider.GetNtfSpawnPosition();
+    public override string DeathSchematic => "SCP3005_N";
     public override float? MaxHealth => 55556f;
     public override float? Health => 55555f;
     public override IReadOnlyList<RoleEffect> Effects => [RoleEffect.Of<MovementBoost>(50)];
@@ -52,29 +52,40 @@ public sealed class Scp3005 : CustomRole
         AbilityBase.Give<Scp3005Mindblast>(Player);
         AbilityBase.Give<Scp3005Sound>(Player);
 
-        try
-        {
-            var schematic = ObjectSpawner.SpawnSchematic("SCP3005", Player.Position, Player.Rotation);
-            Scope.OnDispose(_ =>
-            {
-                if (schematic != null)
-                    schematic.Destroy();
-            });
-            Scope.RunLoop(0.05f, owner =>
-            {
-                if (schematic != null && Check(owner))
-                {
-                    schematic.Position = owner.Position;
-                    schematic.Rotation = owner.Rotation;
-                }
-            });
-        }
-        catch (System.Exception exception)
-        {
-            Log.Warn($"[Scp3005] SCP3005 schematic could not be spawned: {exception.Message}");
-        }
+        WearModels();
 
         Scope.RunLoop(1.5f, ApplyAura);
+    }
+
+    /// <summary>
+    /// 光の強い通常モデルと、アクセシビリティ用の控えめなモデルを閲覧者の設定で出し分けます。
+    /// 素体は隠し、通常モデルの Sphere を体の当たり判定にします。アクセシビリティ用も同じ形です。
+    /// </summary>
+    private void WearModels()
+    {
+        Player.Wear("SCP3005", new WearOptions
+        {
+            Slot = "scp3005-default",
+            Visibility = viewer => !ServerSpecificUserSettings.IsAccessibilityModeEnabled(viewer),
+            ReplaceBody = true,
+            Hitboxes = [new WearHitboxOptions()],
+        });
+        Player.Wear("SCP3005_A", new WearOptions
+        {
+            Slot = "scp3005-accessibility",
+            Visibility = ServerSpecificUserSettings.IsAccessibilityModeEnabled,
+            IgnoreInvisibility = true,
+        });
+
+        Light light = Light.Create(Player.Position, null, null, true, Color.magenta);
+        light.Range = 10f;
+        light.Intensity = 1.25f;
+        Player.Wear(light, new WearOptions
+        {
+            Slot = "scp3005-light",
+            Offset = new Vector3(0f, -0.08f, 0f),
+            IgnoreInvisibility = true,
+        });
     }
 
     private void ApplyAura(Player source)

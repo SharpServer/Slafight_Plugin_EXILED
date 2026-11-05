@@ -8,6 +8,8 @@ using Exiled.Events.EventArgs.Player;
 using LabApi.Events.Arguments.PlayerEvents;
 using PlayerRoles;
 using PlayerRoles.PlayableScps.HumeShield;
+using ProjectMER.Features;
+using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Core.Interfaces;
 using Slafight_Plugin_EXILED.API.Core.Extensions;
 using Slafight_Plugin_EXILED.API.Core.Structs;
@@ -95,6 +97,11 @@ public abstract class CustomRole : IPlayerOwn
     /// 体の大きさです。null なら等倍のままです。役職が外れるときに等倍へ戻します。
     /// </summary>
     public virtual Vector3? Scale => null;
+
+    /// <summary>
+    /// 死亡時にラグドールの代わりに置く Schematic 名です。null ならラグドールのままです。
+    /// </summary>
+    public virtual string DeathSchematic => null;
 
     /// <summary>
     /// 最大 HP です。null ならバニラのままです。
@@ -658,6 +665,7 @@ public abstract class CustomRole : IPlayerOwn
 
         LabPlayerEvents.ChangedRole += OnChangedRole;
         PlayerHandlers.Left += OnLeft;
+        PlayerHandlers.SpawningRagdoll += OnSpawningRagdoll;
         ServerHandlers.RestartingRound += RemoveAll;
     }
 
@@ -667,6 +675,7 @@ public abstract class CustomRole : IPlayerOwn
 
         LabPlayerEvents.ChangedRole -= OnChangedRole;
         PlayerHandlers.Left -= OnLeft;
+        PlayerHandlers.SpawningRagdoll -= OnSpawningRagdoll;
         ServerHandlers.RestartingRound -= RemoveAll;
         globalEventsRegistered = false;
     }
@@ -688,4 +697,26 @@ public abstract class CustomRole : IPlayerOwn
     }
 
     private static void OnLeft(LeftEventArgs ev) => Remove(ev.Player);
+
+    /// <summary>
+    /// ラグドールは役職が外れる前に作られるので、死亡確定の合図としてここで死体モデルへ置き換えます。
+    /// </summary>
+    private static void OnSpawningRagdoll(SpawningRagdollEventArgs ev)
+    {
+        if (!ev.IsAllowed || Of(ev.Player)?.DeathSchematic is not { } schematicName) return;
+
+        if (!ObjectSpawner.TrySpawnSchematic(schematicName, ev.Player.Position, ev.Player.Rotation, out SchematicObject model))
+        {
+            Log.Warn($"[Slafight] 死体モデル '{schematicName}' を生成できませんでした。");
+
+            return;
+        }
+
+        ev.IsAllowed = false;
+        RoundScope.Current.OnEnd(() =>
+        {
+            if (model != null)
+                model.Destroy();
+        });
+    }
 }

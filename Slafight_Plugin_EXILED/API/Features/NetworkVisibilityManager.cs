@@ -168,7 +168,7 @@ public static class NetworkVisibilityManager
         if (_registered)
             return;
 
-        Server.RoundStarted            += OnRoundStarted;
+        Server.RestartingRound         += OnRestartingRound;
         Exiled.Events.Handlers.Player.Verified                += OnVerified;
         Exiled.Events.Handlers.Player.Spawned                 += OnSpawned;
         Exiled.Events.Handlers.Player.ChangingSpectatedPlayer += OnChangingSpectatedPlayer;
@@ -179,7 +179,7 @@ public static class NetworkVisibilityManager
     {
         if (_registered)
         {
-            Server.RoundStarted            -= OnRoundStarted;
+            Server.RestartingRound         -= OnRestartingRound;
             Exiled.Events.Handlers.Player.Verified                -= OnVerified;
             Exiled.Events.Handlers.Player.Spawned                 -= OnSpawned;
             Exiled.Events.Handlers.Player.ChangingSpectatedPlayer -= OnChangingSpectatedPlayer;
@@ -197,7 +197,10 @@ public static class NetworkVisibilityManager
     // イベントハンドラ
     // =========================================================
 
-    private static void OnRoundStarted()
+    /// <summary>
+    /// 初期役職は RoundStarted の中で配られるので、ここで消すとその場で着た物の条件まで失う。
+    /// </summary>
+    private static void OnRestartingRound()
     {
         _states.Clear();
         _identityCache.Clear();
@@ -312,7 +315,7 @@ public static class NetworkVisibilityManager
     /// <summary>指定プレイヤーにオブジェクトを表示させる。</summary>
     public static void ShowNetworkIdentity(this Player? player, NetworkIdentity identity)
     {
-        if (player?.Connection == null || identity == null) return;
+        if (!API.Core.Features.NetGuards.IsReadyClient(player) || identity == null) return;
         if (IsShowVetoed(identity, player)) return;
         try { NetworkServer.ShowForConnection(identity, player.Connection); }
         catch (Exception ex) { Log.Warn($"[NetworkVisibility] ShowNetworkIdentity 失敗: {ex.Message}"); }
@@ -321,7 +324,7 @@ public static class NetworkVisibilityManager
     /// <summary>指定プレイヤーからオブジェクトを非表示にする。</summary>
     public static void HideNetworkIdentity(this Player? player, NetworkIdentity identity)
     {
-        if (player?.Connection == null || identity == null) return;
+        if (!API.Core.Features.NetGuards.IsReadyClient(player) || identity == null) return;
         try { NetworkServer.HideForConnection(identity, player.Connection); }
         catch (Exception ex) { Log.Warn($"[NetworkVisibility] HideNetworkIdentity 失敗: {ex.Message}"); }
     }
