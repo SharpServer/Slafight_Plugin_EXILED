@@ -65,9 +65,9 @@ public abstract class SpawnContext
     public static void Invalidate() => waves = null;
 
     /// <summary>
-    /// この状況での重みです。既定は波が名乗るとおり。
+    /// この状況での重みです。既定は波が名乗る <see cref="SpawnSet.EffectiveWeight"/> (条件付きの上乗せを含む)。
     /// </summary>
-    public virtual int WeightOf(SpawnSet wave) => wave?.RespawnWeight ?? 0;
+    public virtual int WeightOf(SpawnSet wave) => wave?.EffectiveWeight ?? 0;
 
     /// <summary>
     /// 条件に合う波から重み付き抽選で 1 つ選びます。<see cref="SpawnSet.CanTrigger"/> でない波は除きます。候補が無ければ null。
@@ -75,28 +75,28 @@ public abstract class SpawnContext
     /// <param name="chooseIndex">0 以上・引数未満の整数を返すもの。試験で固定したいときに差し替えます。</param>
     public SpawnSet Roll(Faction faction, bool miniWave, Func<int, int> chooseIndex)
     {
-        List<SpawnSet> candidates =
+        // 重みは候補ごとに 1 回だけ計算し、抽選の途中で条件が変わらないようにする。
+        List<(SpawnSet Wave, int Weight)> candidates =
         [
             .. AllWaves
-                .Where(wave => wave.RespawnFaction == faction &&
-                               wave.IsMiniWave == miniWave &&
-                               WeightOf(wave) > 0 &&
-                               wave.CanTrigger)
+                .Where(wave => wave.RespawnFaction == faction && wave.IsMiniWave == miniWave)
+                .Select(wave => (Wave: wave, Weight: WeightOf(wave)))
+                .Where(entry => entry.Weight > 0 && entry.Wave.CanTrigger)
         ];
 
         if (candidates.Count == 0) return null;
 
-        int total = candidates.Sum(WeightOf);
+        int total = candidates.Sum(entry => entry.Weight);
         int roll = chooseIndex is null ? UnityEngine.Random.Range(0, total) : chooseIndex(total);
 
-        foreach (SpawnSet wave in candidates)
+        foreach ((SpawnSet wave, int weight) in candidates)
         {
-            roll -= WeightOf(wave);
+            roll -= weight;
 
             if (roll < 0) return wave;
         }
 
-        return candidates[candidates.Count - 1];
+        return candidates[candidates.Count - 1].Wave;
     }
 
     private static SpawnSet[] BuildWaves()

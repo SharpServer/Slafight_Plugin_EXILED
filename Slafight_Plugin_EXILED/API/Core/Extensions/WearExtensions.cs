@@ -20,11 +20,6 @@ namespace Slafight_Plugin_EXILED.API.Core.Extensions;
 public static class WearExtensions
 {
     /// <summary>
-    /// 着せる Schematic は動かすので、クライアント側プリミティブへの最適化を切って生成します。
-    /// </summary>
-    private static readonly SchematicSpawnOptions WearSpawnOptions = new SchematicSpawnOptions { OptimizePrimitives = false };
-
-    /// <summary>
     /// Schematic を名前で生成して着せます。
     /// </summary>
     public static PlayerWear Wear(this Player player, string schematicName, WearOptions options = null)
@@ -41,7 +36,8 @@ public static class WearExtensions
             Rotation = (anchor.rotation * (options.RotationOffset ?? Quaternion.identity)).eulerAngles,
         };
 
-        if (!ObjectSpawner.TrySpawnSchematic(serializable, WearSpawnOptions, out SchematicObject schematic))
+        // 着せる Schematic は動かすので、最適化を切って生成する。
+        if (!ObjectSpawner.TrySpawnSchematic(serializable, SchematicSpawner.MovableOptions, out SchematicObject schematic))
         {
             Log.Warn($"[Slafight] Schematic '{schematicName}' を生成できませんでした。");
 

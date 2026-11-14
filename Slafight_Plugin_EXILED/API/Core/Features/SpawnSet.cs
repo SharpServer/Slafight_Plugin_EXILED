@@ -83,6 +83,44 @@ public abstract class SpawnSet
     public virtual int RespawnWeight => 0;
 
     /// <summary>
+    /// <see cref="BoostCondition"/> が成り立つ間、<see cref="RespawnWeight"/> に上乗せする重みです。
+    /// </summary>
+    public virtual int BoostWeight => 0;
+
+    /// <summary>
+    /// 重みを上乗せする条件です。抽選の直前に評価されます。
+    /// </summary>
+    protected virtual bool BoostCondition() => false;
+
+    /// <summary>
+    /// いま重みを上乗せされているか。<see cref="BoostWeight"/> が正のときだけ <see cref="BoostCondition"/> を見ます。
+    /// </summary>
+    public bool IsBoosted
+    {
+        get
+        {
+            if (BoostWeight <= 0)
+                return false;
+
+            try
+            {
+                return BoostCondition();
+            }
+            catch (Exception exception)
+            {
+                Log.Error($"[Slafight] SpawnSet '{Name}' の BoostCondition で例外が発生しました: {exception}");
+
+                return false;
+            }
+        }
+    }
+
+    /// <summary>
+    /// 抽選で使う重みです。<see cref="RespawnWeight"/> に、上乗せ中なら <see cref="BoostWeight"/> を足します。
+    /// </summary>
+    public int EffectiveWeight => RespawnWeight + (IsBoosted ? BoostWeight : 0);
+
+    /// <summary>
     /// 待機者のうち実際に出す割合です。1 なら全員。
     /// </summary>
     public virtual float RespawnRatio => 1f;

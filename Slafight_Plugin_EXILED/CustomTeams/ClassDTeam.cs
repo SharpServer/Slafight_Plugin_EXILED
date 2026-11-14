@@ -5,6 +5,7 @@ using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Core.Structs;
 using Slafight_Plugin_EXILED.CustomRoles.FoundationForces.MTFs.Epsilon11;
+using Slafight_Plugin_EXILED.CustomRoles.Fifthists;
 
 namespace Slafight_Plugin_EXILED.CustomTeams;
 
@@ -23,6 +24,9 @@ public sealed class ClassDTeam : CustomTeam
 
     public override SpawnSetRoleDefinition? Escape(EscapeContext escape)
     {
+        if (escape.IsEscortedBy<FifthistTeam>())
+            return SpawnSetRoleDefinition.Custom<FifthistConvert>();
+
         return escape.IsEscortedByAllyOf<FoundationTeam>()
             ? SpawnSetRoleDefinition.Custom<NtfCombatSpecialist>()
             : null;

@@ -104,6 +104,11 @@ public abstract class CustomTeam
     public virtual bool ShowsRoster => false;
 
     /// <summary>
+    /// 味方一覧に載せ、一覧を受け取るプレイヤーか。既定は <see cref="Includes"/> と同じです。
+    /// </summary>
+    public virtual bool IsRosterMember(Player player) => Includes(player);
+
+    /// <summary>
     /// 味方一覧の末尾に添える、この陣営の状況表示です。<paramref name="viewer"/> は画面の持ち主です。
     /// </summary>
     public virtual string RosterFooter(Player viewer) => string.Empty;

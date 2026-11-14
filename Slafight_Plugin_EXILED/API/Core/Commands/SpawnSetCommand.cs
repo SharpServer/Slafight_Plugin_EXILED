@@ -56,7 +56,7 @@ public sealed class SpawnSetCommand : CommandBase
 
         var sets = CoreCatalog.Types<SpawnSet>()
             .Select(type => (Type: type, Probe: CoreCatalog.Probe<SpawnSet>(type)))
-            .Where(entry => entry.Probe is not null && entry.Probe.RespawnWeight <= 0)
+            .Where(entry => entry.Probe is not null && entry.Probe.RespawnWeight <= 0 && entry.Probe.BoostWeight <= 0)
             .ToList();
 
         builder.AppendLine(CoreCatalog.Header("Spawn Sets", sets.Count));

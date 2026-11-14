@@ -1,41 +1,72 @@
+using System.Collections.Generic;
+using System.Linq;
 using CustomPlayerEffects;
+using Exiled.API.Enums;
 using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Core.Extensions;
 using Slafight_Plugin_EXILED.API.Core.Features;
+using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.API.Features;
 using Slafight_Plugin_EXILED.CustomTeams;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
 namespace Slafight_Plugin_EXILED.Abilities;
 
-/// <summary>SCP-3005 の範囲効果です。近くの敵を苦しめ、第五教会の仲間を奮い立たせます。</summary>
+/// <summary>
+/// SCP-3005 の範囲効果です。近くの敵を反ミームで侵し、第五教会の仲間を奮い立たせます。
+/// 敵への効果は近いほど強く、長く続きます。
+/// </summary>
 public sealed class Scp3005Sound : AbilityBase
 {
+    private const float Range = 12f;
+
     public override string Name => "第五からの音";
 
-    public override string Description => "近くの者を反ミームに侵し、第五教会の仲間を奮い立たせる。";
+    public override string Description => "近くの者ほど強く反ミームに侵し、第五教会の仲間を奮い立たせる。";
 
     public override float Cooldown => 20f;
 
+    protected override bool CanUse(out string failureReason)
+    {
+        if (!base.CanUse(out failureReason))
+            return false;
+
+        if (!Targets().Any())
+        {
+            failureReason = "効果範囲内に対象が存在しません。";
+
+            return false;
+        }
+
+        return true;
+    }
+
     protected override void OnUsed()
     {
-        Player owner = Player;
-
-        foreach (Player target in Player.List)
+        foreach (Player target in Targets().ToList())
         {
-            if (!target.IsSafePlayer() || target == owner || !target.IsAlive ||
-                Vector3.Distance(target.Position, owner.Position) > 12f) continue;
-
             if (target.IsInTeam<FifthistTeam>())
             {
-                target.EnableEffect<Invigorated>(5, 5f);
+                target.EnableEffect(EffectType.Invigorated, 5f);
                 continue;
             }
 
-            target.EnableEffect<Flashed>(2.5f);
-            target.EnableEffect<Deafened>(255, 8f);
-            target.EnableEffect<Blurred>(255, 8f);
-            target.EnableEffect<Hemorrhage>(100, 8f);
+            // 0m で 1、範囲の端で 0。
+            float power = 1f - Mathf.Clamp01(Vector3.Distance(target.Position, Player.Position) / Range);
+            float duration = Mathf.Lerp(10f, 45f, power);
+
+            target.ExplodeEffect(ProjectileType.Flashbang);
+            target.EnableEffect<Flashed>(Mathf.Lerp(0.5f, 2.5f, power));
+            target.EnableEffect<Deafened>(255, duration);
+            target.EnableEffect<Hemorrhage>(255, duration);
+            target.EnableEffect<Blindness>((byte)Mathf.RoundToInt(Mathf.Lerp(10f, 40f, power)), duration);
+            target.EnableEffect<Blurred>(255, duration);
         }
     }
+
+    private IEnumerable<Player> Targets() => Player.List.Where(target =>
+        target.IsSafePlayer() && target != Player && target.IsAlive &&
+        !target.HasFlag(SpecificFlagType.AntiMemeEffectDisabled) &&
+        Vector3.Distance(target.Position, Player.Position) <= Range);
 }

@@ -156,10 +156,11 @@ public sealed class WaveCommand : CommandBase
             {
                 string kind = wave.IsMiniWave ? "増援" : "本隊";
                 string limit = wave.TriggerLimit < 0 ? "∞" : wave.TriggerLimit.ToString();
+                string boosted = wave.IsBoosted ? $" (+{wave.BoostWeight} 条件成立)" : string.Empty;
                 string blocked = inContext && !wave.CanTrigger ? " <color=#ffd966>(現在抽選不可)</color>" : string.Empty;
                 builder.AppendLine(
                     $"  <b>{wave.GetType().Name}</b> — {wave.Name} " +
-                    $"[{wave.RespawnFaction} / {kind} / 重み {context.WeightOf(wave)} / 割合 {wave.RespawnRatio:P0} / " +
+                    $"[{wave.RespawnFaction} / {kind} / 重み {context.WeightOf(wave)}{boosted} / 割合 {wave.RespawnRatio:P0} / " +
                     $"回数 {wave.TriggerCount}/{limit}]{blocked}");
             }
         }

@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.CustomRoles.Fifthists;
+using Slafight_Plugin_EXILED.API.Core.Structs;
 
 namespace Slafight_Plugin_EXILED.CustomTeams;
 
@@ -20,4 +22,8 @@ public sealed class ChaosTeam : CustomTeam
 
     protected override bool IncludesVanilla(Player player) => player.Role.Type is
         RoleTypeId.ChaosConscript or RoleTypeId.ChaosRifleman or RoleTypeId.ChaosRepressor;
+
+    public override SpawnSetRoleDefinition? Escape(EscapeContext escape) => escape.IsEscortedBy<FifthistTeam>()
+        ? SpawnSetRoleDefinition.Custom<FifthistConvert>()
+        : null;
 }

@@ -86,7 +86,7 @@ public sealed class ListCommand : CommandBase
         return builder.ToString().TrimEnd();
     }
 
-    private static bool OnlySets(SpawnSet set) => set.RespawnWeight <= 0;
+    private static bool OnlySets(SpawnSet set) => set.RespawnWeight <= 0 && set.BoostWeight <= 0;
 
     private static string DescribeRole(CustomRole role)
     {

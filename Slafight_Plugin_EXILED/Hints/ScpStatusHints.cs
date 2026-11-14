@@ -312,7 +312,7 @@ public class ScpStatusHints : EventHandlerBase
 
             CustomTeam captured = team;
 
-            RegisterChannel(new StatusHintChannel(captured.GetType().Name, captured.Includes)
+            RegisterChannel(new StatusHintChannel(captured.GetType().Name, captured.IsRosterMember)
             {
                 Title = captured.HudName,
                 Color = captured.Color,

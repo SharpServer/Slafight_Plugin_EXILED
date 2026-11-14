@@ -4,6 +4,7 @@ using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Core.Structs;
 using Slafight_Plugin_EXILED.API.Enums;
+using Slafight_Plugin_EXILED.CustomRoles.Fifthists;
 
 namespace Slafight_Plugin_EXILED.CustomTeams;
 
@@ -24,4 +25,8 @@ public sealed class FoundationTeam : CustomTeam
 
     protected override bool IncludesVanilla(Player player) => player.Role.Type is
         RoleTypeId.NtfPrivate or RoleTypeId.NtfSergeant or RoleTypeId.NtfSpecialist or RoleTypeId.NtfCaptain;
+
+    public override SpawnSetRoleDefinition? Escape(EscapeContext escape) => escape.IsEscortedBy<FifthistTeam>()
+        ? SpawnSetRoleDefinition.Custom<FifthistConvert>()
+        : null;
 }
