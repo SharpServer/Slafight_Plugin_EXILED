@@ -214,19 +214,45 @@ public sealed class ProjectMERBridgeHandler : EventHandlerBase, IObjectPrefabInf
         CustomItem custom = CustomItem.Spawn(type, position, rotation, spawnpoint.Scale);
         pickup = custom?.Pickup?.Base;
         if (pickup == null)
+        {
+            Log.Warn($"[ProjectMERBridge] Custom item '{customItemKey}' の Pickup スポーンに失敗しました。");
             return false;
+        }
 
         pickup.transform.SetParent(parent, true);
+        Log.Warn($"[ProjectMERBridge] Custom item '{customItemKey}' を serial={pickup.Info.Serial} でスポーンしました。 " +
+                 $"requestedPos={position} actualPos={pickup.transform.position} scale={pickup.transform.lossyScale}");
         return true;
     }
 
     private bool TryGiveCustomItem(string customItemKey, ItemPickupBase pickup, LabPlayer player)
     {
-        if (!TryResolveCustomItem(customItemKey, out Type type) || player?.ReferenceHub == null)
+        if (!TryResolveCustomItem(customItemKey, out Type type))
+        {
+            Log.Warn($"[ProjectMERBridge] Custom item '{customItemKey}' を解決できず、拾得時付与に失敗しました。");
             return false;
+        }
+
+        if (player?.ReferenceHub == null)
+        {
+            Log.Warn($"[ProjectMERBridge] Custom item '{customItemKey}' の付与先プレイヤーの ReferenceHub がありません。");
+            return false;
+        }
 
         Player target = Player.Get(player.ReferenceHub);
-        return target != null && CustomItem.Give(type, target) != null;
+        if (target is null)
+        {
+            Log.Warn($"[ProjectMERBridge] Custom item '{customItemKey}' の付与先 Exiled Player を取得できませんでした。");
+            return false;
+        }
+
+        if (CustomItem.Give(type, target) is null)
+        {
+            Log.Warn($"[ProjectMERBridge] Custom item '{customItemKey}' のインベントリ付与に失敗しました。");
+            return false;
+        }
+
+        return true;
     }
 
     private void OnMarkerSpawned(SchematicObjectPrefabObject marker) => QueueMarker(marker);
