@@ -37,6 +37,7 @@ public sealed class CaneOfTheStars : CustomItem
         if (!Check(ev.Attacker)) return;
 
         ev.IsAllowed = false;
-        CustomRole.Spawn<FifthistConvert>(ev.Player);
+        var pos = ev.Player.Position + Vector3.up * 0.25f;
+        CustomRole.Spawn<FifthistConvert>(ev.Player).Player.Position = pos;
     }
 }

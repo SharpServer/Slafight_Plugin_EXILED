@@ -36,7 +36,8 @@ public sealed class Scp3005 : CustomRole
     public override string Objective => "第五教会に道を示し、施設を占領せよ";
     public override RoleTypeId BaseRole => RoleTypeId.Scp0492;
     public override Vector3? SpawnPosition => PositionProvider.GetNtfSpawnPosition();
-    public override string DeathSchematic => "SCP3005_N";
+    internal const string NeutralizedSchematic = "SCP3005_N";
+    public override string DeathSchematic => NeutralizedSchematic;
     public override float? MaxHealth => 55556f;
     public override float? Health => 55555f;
     public override IReadOnlyList<RoleEffect> Effects => [RoleEffect.Of<Slowness>(25)];
@@ -62,6 +63,7 @@ public sealed class Scp3005 : CustomRole
         // 能力は役職と寿命を共にする。役職が外れると PlayerScope が自動で取り上げる。
         AbilityBase.Give<Scp3005Mindblast>(Player);
         AbilityBase.Give<Scp3005Sound>(Player);
+        AbilityBase.Give<Scp3005Afterglow>(Player);
 
         WearModels();
 

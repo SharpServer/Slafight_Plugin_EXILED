@@ -7,6 +7,7 @@ using HintServiceMeow.Core.Extension;
 using MEC;
 using PlayerRoles;
 using PlayerRoles.Spectating;
+using ProjectMER.Features.Objects;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Features;
@@ -46,6 +47,7 @@ public static class Handler
         Server.RestartingRound += OnRoundRestarted;
         Exiled.Events.Handlers.Player.ChangingRole += OnPlayerChangingRole;
         Exiled.Events.Handlers.Player.Left += OnPlayerLeft;
+        TeleporterVoice.CustomProfileProvider = GetTeleporterVoiceProfile;
         VoiceRoutingApi.Register(new VoiceRouteRule(
             "proximity.scp-chat-mirror",
             EvaluateProximityRoute,
@@ -57,6 +59,8 @@ public static class Handler
         Server.RestartingRound -= OnRoundRestarted;
         Exiled.Events.Handlers.Player.ChangingRole -= OnPlayerChangingRole;
         Exiled.Events.Handlers.Player.Left -= OnPlayerLeft;
+        if (TeleporterVoice.CustomProfileProvider == GetTeleporterVoiceProfile)
+            TeleporterVoice.CustomProfileProvider = null;
         VoiceRoutingApi.Unregister("proximity.scp-chat-mirror");
         ClearState();
     }
@@ -186,35 +190,29 @@ public static class Handler
 
     private static VoiceRouteDecision? EvaluateProximityRoute(VoiceRouteContext context)
     {
-        // ここは「音声パケット x 受信者数」の頻度で呼ばれる。
-        // 安く大半を弾ける順に並べ、名簿の掃除は Left 側へ移した。
-
-        // 誰も近接チャットを使っていないなら即座に降りる。
-        if (ActivatedPlayers.Count == 0)
-            return null;
-
-        if (!IsValid(context.Sender) || !IsValid(context.Receiver))
-            return null;
-
-        if (!ContainsPlayer(ActivatedPlayers, context.Sender))
-            return null;
-
-        // どのチャンネルを流すかは役職が名乗る。ここでチャンネルを決め打ちしない。
-        if (context.SourceChannel != ResolveSourceChannel(context.Sender))
-            return null;
-
-        if (!CanPlayerUseProximityChat(context.Sender))
-            return null;
-
-        if (!CanReceiveProximity(context.Sender, context.Receiver, AudioMaxDistance))
+        var profile = GetProximityVoiceProfile(context.Sender, context.SourceChannel);
+        if (profile == null || !IsValid(context.Receiver) ||
+            !CanReceiveProximity(context.Sender, context.Receiver, profile.Value.MaxDistance))
             return null;
 
         return VoiceRouteDecision.Spatial(
             PlayerSpeakerManager.PurposeProximity,
-            AudioMaxDistance,
-            AudioMinDistance,
-            AudioVolume,
+            profile.Value.MaxDistance,
+            profile.Value.MinDistance,
+            profile.Value.Volume,
             suppressNative: false);
+    }
+
+    private static ProximityVoiceProfile? GetTeleporterVoiceProfile(ReferenceHub sender, VoiceChatChannel channel)
+        => ActivatedPlayers.Count > 0 ? GetProximityVoiceProfile(Player.Get(sender), channel) : null;
+
+    private static ProximityVoiceProfile? GetProximityVoiceProfile(Player sender, VoiceChatChannel channel)
+    {
+        if (ActivatedPlayers.Count == 0 || !ContainsPlayer(ActivatedPlayers, sender) ||
+            channel != ResolveSourceChannel(sender) || !CanPlayerUseProximityChat(sender))
+            return null;
+
+        return new ProximityVoiceProfile(AudioMaxDistance, AudioMinDistance, AudioVolume);
     }
 
     // ====== 近接送信処理 ======

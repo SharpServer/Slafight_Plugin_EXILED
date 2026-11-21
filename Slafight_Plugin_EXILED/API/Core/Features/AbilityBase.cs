@@ -295,7 +295,7 @@ public abstract class AbilityBase
         if (!CanUse(out failureReason)) return false;
 
         UsedCount++;
-        readyAt = Time.time + Cooldown;
+        RestartCooldown(Cooldown);
 
         Invoke(OnUsed, nameof(OnUsed));
 
@@ -303,6 +303,9 @@ public abstract class AbilityBase
 
         return true;
     }
+
+    /// <summary>現在時刻から指定秒数のクールダウンを開始します。</summary>
+    protected void RestartCooldown(float seconds) => readyAt = Time.time + seconds;
 
     /// <summary>
     /// 今使えるかどうかを判定します。
