@@ -102,14 +102,14 @@ public enum CRoleTypeId
     Bloodfiend,
     StrongMan,
 
-    // ==== GoC ==== //
-    GoCSquadLeader,
-    GoCDeputy,
-    GoCMedic,
-    GoCThaumaturgist,
-    GoCCommunications,
-    GoCOperative,
-    GoCHoundDog,
+    // ==== GOC ==== //
+    GocSquadLeader,
+    GocDeputy,
+    GocMedic,
+    GocThaumaturgist,
+    GocCommunications,
+    GocOperative,
+    GocHoundDog,
 
     // ==== Initiative ==== //
     InitiativeWolf,

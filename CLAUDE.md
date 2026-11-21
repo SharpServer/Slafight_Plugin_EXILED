@@ -37,3 +37,21 @@ network invariants, and log locations.
 - Do not weaken authentication, `netId`, role-sync, round-cleanup, or NPC lifecycle
   guards for convenience. When touching these paths, follow the invariants in
   `AGENTS.md`.
+
+## Custom zone / room volumes
+
+- Server-authored spatial volumes live in `API/Features/CustomRoom.cs` and
+  `API/Features/CustomRooms.cs` (Waypoint-style static registry, immutable
+  snapshot, no `Config.cs` fields). Use `CustomRooms.TryGetAt/TryGet`,
+  `IsInRoom`, `IsInZone`, and `GetZoneOverride` for queries.
+- Authoring is via a ProjectMER ObjectPrefab marker with `Zone` (`LCZ`/`HCZ`/
+  `EZ`/`Surface`/`Pocket`/`Other`), optional `RoomId`, and optional `Size`;
+  see `CustomMaps/ObjectPrefabs/CustomRoomMarkerPrefab.cs`. No ProjectMER
+  rebuild is needed for this feature.
+- Vanilla decontamination checks `MapGeneration.RoomUtils.GetLastKnownZone()`,
+  not `GetCurrentZone()`. `Patches/CustomRoomZonePatch.cs` patches all three
+  `RoomUtils` zone queries together; never patch only one of them.
+- Exiled `Player.Zone` is **not** affected by the patch (it reads
+  `CurrentRoom.Zone`). Callers that need custom-zone awareness must use the
+  `CustomRooms` API. `ZoneType.Pocket` maps to `FacilityZone.Other`.
+

@@ -47,4 +47,6 @@ public class Config : IConfig
                  "空のままだとBot側で401拒否され、人数送信・モデレーション通知が届きません。")]
     public string DiscordBotApiSecret { get; set; } = string.Empty;
 
+    [Description("ドアのアクセス拒否 Hint の文言です。")]
+    public DoorAccessDeniedHintConfig DoorAccessDeniedHint { get; set; } = new();
 }

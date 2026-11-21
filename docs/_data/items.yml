@@ -316,10 +316,10 @@
   tags: [weapon, guard]
 
 - id: goc-railgun
-  name: GoC Railgun
+  name: GOC Railgun
   category: 武器
   base: 3-X Particle Disruptor
-  summary: ホワイトスーツ主砲を歩兵用に改造したGoC兵装。
+  summary: ホワイトスーツ主砲を歩兵用に改造したGOC兵装。
   effect: 命中地点にグレネード1個分の爆発を発生させ、対象に2000ダメージを与える。3発モードでは合計6000ダメージ。1発のみ使用可能。
   tags: [weapon, goc]
 
@@ -526,7 +526,7 @@
   name: UNGOC一般工作員セット
   category: 医療 / ユーティリティ
   base: 医療キット
-  summary: 一般工作員一人分の装備が入ったセット。使用するとGoC工作員を一人増やせる。
+  summary: 一般工作員一人分の装備が入ったセット。使用するとGOC工作員を一人増やせる。
   tags: [goc, recruit]
 
 - id: anomaly-detainer
@@ -547,7 +547,7 @@
   name: GOC戦略兵装 EMR-X1
   category: 武器
   base: 3-X Particle Disruptor
-  summary: GoCのホワイトスーツ用主砲を歩兵運用向けに再設計した電磁加速兵装。
+  summary: GOCのホワイトスーツ用主砲を歩兵運用向けに再設計した電磁加速兵装。
   tags: [weapon, goc, railgun]
 
 - id: goc-emr-01
@@ -561,7 +561,7 @@
   name: GOC高出力指向性電磁照射兵装《HID-Ω》
   category: 武器
   base: Micro H.I.D.
-  summary: 財団製Micro H.I.D.をGoCが大幅改修した高出力モデル。
+  summary: 財団製Micro H.I.D.をGOCが大幅改修した高出力モデル。
   tags: [weapon, goc, hid]
 
 - id: project-90
@@ -794,7 +794,7 @@
   name: VERITAS
   category: 医療 / ユーティリティ
   base: SCP-1344
-  summary: GoC系ロールが遠距離の敵や脅威を認識するための視覚補助装備。
+  summary: GOC系ロールが遠距離の敵や脅威を認識するための視覚補助装備。
   tags: [goc, equipment]
 
 

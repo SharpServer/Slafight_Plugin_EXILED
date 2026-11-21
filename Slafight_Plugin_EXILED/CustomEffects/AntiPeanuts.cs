@@ -2,10 +2,7 @@ using Exiled.Events.EventArgs.Player;
 using PlayerRoles;
 using RemoteAdmin.Interfaces;
 using Slafight_Plugin_EXILED.API.Features;
-using Slafight_Plugin_EXILED.Extensions;
 using ExiledEventHandlers = Exiled.Events.Handlers;
-using LabApiEventHandlers = LabApi.Events.Handlers;
-using Log = Exiled.API.Features.Log;
 
 namespace Slafight_Plugin_EXILED.CustomEffects;
 
@@ -30,7 +27,7 @@ public class AntiPeanuts : CustomEffectBase, ICustomDisplayName
 
         ev.IsAllowed = false;
         ev.Player.Health = 1f;
-        ev.Attacker?.PlayShieldBreakSound();
+        ev.Attacker.PlayShieldBreakSound();
         DisableEffect();
     }
 }

@@ -13,10 +13,18 @@ public sealed class UsefulDoorButton : UsefulDoorObject
     public UDoorAction Action { get; set; } = UDoorAction.Toggle;
     public UDoorButtonTargetMode TargetMode { get; set; } = UDoorButtonTargetMode.All;
 
-    protected override void Interact(Player player) => Press();
-
-    public UDoorInteractionResult Press()
+    protected override void Interact(Player player)
     {
+        UDoorInteractionResult result = Press(player, out var denied);
+        if (result != UDoorInteractionResult.Success && denied is { } failure)
+            DoorAccessManager.Show(player, failure.Door, failure.Reason);
+    }
+
+    public UDoorInteractionResult Press() => Press(null, out _);
+
+    private UDoorInteractionResult Press(Player? player, out (UsefulDoor Door, DoorAccessDenialReason Reason)? denied)
+    {
+        denied = null;
         if (Marker == null) return UDoorInteractionResult.InvalidContext;
         if (IsLocked) return UDoorInteractionResult.Locked;
         int[] ids =
@@ -33,7 +41,22 @@ public sealed class UsefulDoorButton : UsefulDoorObject
         UDoorInteractionResult result = UDoorInteractionResult.NoChange;
         foreach (UsefulDoor door in doors)
         {
-            UDoorInteractionResult next = door.Request(Action);
+            DoorAccessDenialReason? reason = player != null ? door.AccessDenial(player) : null;
+            UDoorInteractionResult next;
+            if (reason is { } failure)
+            {
+                denied ??= (door, failure);
+                next = failure switch
+                {
+                    DoorAccessDenialReason.Locked => UDoorInteractionResult.Locked,
+                    DoorAccessDenialReason.IncorrectCode => UDoorInteractionResult.IncorrectCode,
+                    _ => UDoorInteractionResult.PermissionDenied,
+                };
+            }
+            else
+            {
+                next = door.Request(Action);
+            }
             if (next == UDoorInteractionResult.Success) result = next;
             else if (result != UDoorInteractionResult.Success) result = next;
             if (TargetMode == UDoorButtonTargetMode.First) break;

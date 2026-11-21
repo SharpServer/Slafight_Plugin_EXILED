@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Core.Features;
+using Slafight_Plugin_EXILED.Extensions;
 
 using ExiledItem = Exiled.API.Features.Items.Item;
 using ExiledPickup = Exiled.API.Features.Pickups.Pickup;
@@ -12,7 +13,7 @@ using LabPickup = LabApi.Features.Wrappers.Pickup;
 namespace Slafight_Plugin_EXILED.API.Core.Extensions;
 
 /// <summary>
-/// アイテム・ピックアップ・プレイヤーから <see cref="CustomItem"/> を判定・取得する拡張です。
+/// カスタムアイテムの判定・取得と、プレイヤーへの付与・削除を行う拡張です。
 /// </summary>
 public static class CustomItemExtensions
 {
@@ -197,6 +198,14 @@ public static class CustomItemExtensions
     public static IEnumerable<T> GetCustomItems<T>(this Player player) where T : CustomItem =>
         player?.Items?.Select(GetCustomItem<T>).Where(custom => custom is not null) ?? [];
 
+    /// <summary>所持しているカスタムアイテムをシリアルで取得します。所持していなければ null。</summary>
+    public static CustomItem GetCustomItem(this Player player, ushort serial) =>
+        player?.Items?.FirstOrDefault(item => item.Serial == serial).GetCustomItem();
+
+    /// <summary>実行時に指定した型の所持アイテムを列挙します。派生型も含みます。</summary>
+    public static IEnumerable<CustomItem> GetCustomItems(this Player player, Type customItemType) =>
+        customItemType is null ? [] : player.GetCustomItems().Where(customItemType.IsInstanceOfType);
+
     /// <summary>プレイヤーが何らかのカスタムアイテムを所持しているかどうか。</summary>
     public static bool HasCustomItem(this Player player) => player?.Items?.Any(IsCustomItem) == true;
 
@@ -217,4 +226,56 @@ public static class CustomItemExtensions
         customItem = player.GetCustomItems<T>().FirstOrDefault();
         return customItem is not null;
     }
+
+    /// <summary>実行時に指定した型のカスタムアイテムを所持しているか調べます。</summary>
+    public static bool HasCustomItem(this Player player, Type customItemType) =>
+        player.GetCustomItems(customItemType).Any();
+
+    /// <summary>新しいカスタムアイテムをインベントリに付与します。失敗時は null。</summary>
+    public static T GiveCustomItem<T>(this Player player) where T : CustomItem, new() =>
+        player.IsSafePlayer() ? CustomItem.Give<T>(player) : null;
+
+    /// <summary>実行時に指定した型のカスタムアイテムを付与します。失敗時は null。</summary>
+    public static CustomItem GiveCustomItem(this Player player, Type customItemType) =>
+        player.IsSafePlayer() ? CustomItem.Give(customItemType, player) : null;
+
+    /// <summary>指定した個体を所持していれば、破棄して追跡を終了します。</summary>
+    public static bool RemoveCustomItem(this Player player, CustomItem customItem)
+    {
+        if (customItem is null || !player.IsSafePlayer()) return false;
+
+        ushort serial = customItem.Serial;
+        if (!ReferenceEquals(player.GetCustomItem(serial), customItem) || !player.RemoveItem(serial, destroy: true))
+            return false;
+
+        if (ReferenceEquals(CustomItem.Of(serial), customItem))
+            customItem.Release();
+
+        return true;
+    }
+
+    /// <summary>指定シリアルのカスタムアイテムを所持していれば破棄します。</summary>
+    public static bool RemoveCustomItem(this Player player, ushort serial) =>
+        player.IsSafePlayer() && player.RemoveCustomItem(player.GetCustomItem(serial));
+
+    /// <summary>指定型に一致する最初の所持アイテムを破棄します。</summary>
+    public static bool RemoveCustomItem<T>(this Player player) where T : CustomItem =>
+        player.RemoveCustomItem(typeof(T));
+
+    /// <summary>実行時に指定した型に一致する最初の所持アイテムを破棄します。</summary>
+    public static bool RemoveCustomItem(this Player player, Type customItemType) =>
+        player.IsSafePlayer() && player.RemoveCustomItem(player.GetCustomItems(customItemType).FirstOrDefault());
+
+    /// <summary>所持しているカスタムアイテムをすべて破棄し、削除数を返します。</summary>
+    public static int RemoveCustomItems(this Player player) => player.RemoveCustomItems<CustomItem>();
+
+    /// <summary>指定型に一致する所持アイテムをすべて破棄し、削除数を返します。</summary>
+    public static int RemoveCustomItems<T>(this Player player) where T : CustomItem =>
+        player.RemoveCustomItems(typeof(T));
+
+    /// <summary>実行時に指定した型に一致する所持アイテムをすべて破棄し、削除数を返します。</summary>
+    public static int RemoveCustomItems(this Player player, Type customItemType) =>
+        player.IsSafePlayer()
+            ? player.GetCustomItems(customItemType).ToArray().Count(item => player.RemoveCustomItem(item))
+            : 0;
 }

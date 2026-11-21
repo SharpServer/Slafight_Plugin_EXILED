@@ -129,7 +129,7 @@ public static class CassieHelper
             true);
     }
 
-    public static void AnnounceGoCEnter(int count)
+    public static void AnnounceGocEnter(int count)
     {
         Exiled.API.Features.Cassie.MessageTranslated(
             $"Attention All personnel . Detected {count} G o C Forces in Gate B . Please Terminate Them",

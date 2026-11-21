@@ -9,7 +9,7 @@ public enum CTeam
     Guards,
     ChaosInsurgency,
     Fifthists,
-    GoC,
+    Goc,
     UIU,
     SerpentsHand,
     SCPs,

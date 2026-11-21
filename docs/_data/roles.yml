@@ -1100,9 +1100,9 @@
     - antimeme
     - scp3125
 - id: goc-operative
-  name: GoC Broken Dagger Operative
+  name: GOC Broken Dagger Operative
   side: GoI - Global Occult Coalition
-  team: GoC
+  team: GOC
   base: MTF二等兵
   hp: 100
   version: v1.7.0.0
@@ -1114,9 +1114,9 @@
     - goc
     - goi
 - id: goc-medic
-  name: GoC Broken Dagger Medic
+  name: GOC Broken Dagger Medic
   side: GoI - Global Occult Coalition
-  team: GoC
+  team: GOC
   base: MTFスペシャリスト
   hp: 100
   version: v1.7.0.0
@@ -1130,9 +1130,9 @@
     - goc
     - medic
 - id: goc-communications
-  name: GoC Broken Dagger Communications
+  name: GOC Broken Dagger Communications
   side: GoI - Global Occult Coalition
-  team: GoC
+  team: GOC
   base: MTFスペシャリスト
   hp: 100
   version: v1.7.0.0
@@ -1146,9 +1146,9 @@
   tags:
     - goc
 - id: goc-thaumaturgist
-  name: GoC Broken Dagger Thaumaturgist
+  name: GOC Broken Dagger Thaumaturgist
   side: GoI - Global Occult Coalition
-  team: GoC
+  team: GOC
   base: MTFスペシャリスト
   hp: 100
   version: v1.7.0.0
@@ -1162,9 +1162,9 @@
     - goc
     - thaumaturgist
 - id: goc-deputy
-  name: GoC Broken Dagger Deputy
+  name: GOC Broken Dagger Deputy
   side: GoI - Global Occult Coalition
-  team: GoC
+  team: GOC
   base: MTFスペシャリスト
   hp: 100
   version: v1.7.0.0
@@ -1177,31 +1177,31 @@
   tags:
     - goc
 - id: goc-squad-leader
-  name: GoC Broken Dagger Squad Leader
+  name: GOC Broken Dagger Squad Leader
   side: GoI - Global Occult Coalition
-  team: GoC
+  team: GOC
   base: MTFスペシャリスト
   hp: 110
   version: v1.7.0.0
   summary: 部隊を指揮し任務を遂行させるBroken Dagger班長。
   items:
     - FRMG-0
-    - GoCレールガン
+    - GOCレールガン
     - Serum-C
     - 要人用アーマー
   tags:
     - goc
     - leader
 - id: goc-hound-dog
-  name: GoC Hound Dog Mark II White Suit
+  name: GOC Hound Dog Mark II White Suit
   side: GoI - Global Occult Coalition
-  team: GoC
+  team: GOC
   base: MTFスペシャリスト
   hp: 120
-  summary: GoC製の戦闘強化服。高速移動、VERITAS、自爆装置、自動認証など複数の機能を持つ強力なロール。
+  summary: GOC製の戦闘強化服。高速移動、VERITAS、自爆装置、自動認証など複数の機能を持つ強力なロール。
   items:
     - 外套ジェネレータ
-    - GoC戦略兵装 EMR-01
+    - GOC戦略兵装 EMR-01
     - アドレナリン
     - 医療キット
   tags:

@@ -58,6 +58,7 @@ public enum UDoorInteractionResult
     NoChange,
     InvalidContext,
     Failed,
+    IncorrectCode,
 }
 
 /// <summary>

@@ -13,7 +13,7 @@
   kind: 部屋
   entrance: Gate B側
   access: 武器権限3
-  summary: 武器ロッカーが詰め込まれた上層武器庫。GoC Railgunが置かれているため重要度が高い。
+  summary: 武器ロッカーが詰め込まれた上層武器庫。GOC Railgunが置かれているため重要度が高い。
   tags: [entrance, armory, goc]
 
 - id: ez-communications-control

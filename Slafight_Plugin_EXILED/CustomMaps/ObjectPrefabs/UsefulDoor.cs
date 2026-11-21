@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using AdminToys;
 using Exiled.API.Features;
+using Interactables.Interobjects.DoorUtils;
 using LabApi.Events.Arguments.PlayerEvents;
 using MEC;
 using ProjectMER.Features.Objects;
@@ -14,7 +15,7 @@ using UnityEngine;
 namespace Slafight_Plugin_EXILED.CustomMaps.ObjectPrefabs;
 
 /// <summary>Behavior bound to an authored block; never owns the surrounding schematic.</summary>
-public abstract class UsefulDoorObject : ObjectPrefab, IObjectPrefabMarkerReceiver
+public abstract class UsefulDoorObject : ObjectPrefab, IObjectPrefabMarkerReceiver, IDoorPermissionRequester
 {
     protected SchematicObjectPrefabObject? Marker;
     private InteractableHandle? interaction;
@@ -25,6 +26,10 @@ public abstract class UsefulDoorObject : ObjectPrefab, IObjectPrefabMarkerReceiv
     public float InteractionDuration { get; set; }
     public bool InteractionEnabled { get; set; } = true;
     public bool IsLocked { get; set; }
+    public DoorPermissionFlags RequiredPermissions { get; set; }
+    public bool RequireAll { get; set; } = true;
+    public string AccessDeniedMessage { get; set; } = string.Empty;
+    public string SecretCode { get; set; } = string.Empty;
     public override bool IsSaveable { get; set; } = false;
     protected override float SetupDelay => 0f;
 
@@ -45,15 +50,45 @@ public abstract class UsefulDoorObject : ObjectPrefab, IObjectPrefabMarkerReceiv
 
     private void OnInteracting(Player player, PlayerSearchingToyEventArgs ev)
     {
-        if (!player.IsSafePlayer() || IsLocked || Marker == null || !CanInteract)
+        if (ev.IsAllowed && !CanPlayerInteract(player))
             ev.IsAllowed = false;
     }
 
     private void OnInteracted(Player player, PlayerSearchedToyEventArgs ev)
     {
-        if (player.IsSafePlayer() && !IsLocked && Marker != null && CanInteract)
+        if (CanPlayerInteract(player))
             Interact(player);
     }
+
+    private bool CanPlayerInteract(Player player)
+    {
+        if (!player.IsSafePlayer() || Marker == null)
+            return false;
+
+        if (AccessDenial(player) is { } reason)
+        {
+            DoorAccessManager.Show(player, this, reason);
+            return false;
+        }
+
+        return CanInteract;
+    }
+
+    internal DoorAccessDenialReason? AccessDenial(Player player)
+    {
+        if (IsLocked)
+            return DoorAccessDenialReason.Locked;
+
+        if (RequiredPermissions != DoorPermissionFlags.None &&
+            !PermissionsPolicy.CheckPermissions(DoorAccessManager.AvailablePermissions(player.ReferenceHub, this)))
+            return DoorAccessDenialReason.MissingPermissions;
+
+        return DoorAccessManager.HasCorrectCode(player.ReferenceHub, SecretCode) ? null : DoorAccessDenialReason.IncorrectCode;
+    }
+
+    private DoorPermissionsPolicy PermissionsPolicy => new(RequiredPermissions, RequireAll);
+    DoorPermissionsPolicy IDoorPermissionRequester.PermissionsPolicy => PermissionsPolicy;
+    string IDoorPermissionRequester.RequesterLogSignature => Marker != null ? Marker.name : "UDoor";
 
     protected virtual bool CanInteract => true;
     protected abstract void Interact(Player player);

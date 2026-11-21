@@ -18,14 +18,18 @@ public static class WaypointChunkStreamer
     public const float DefaultGcDelay = 30f;
 
     private const float UpdateInterval = 0.1f;
-    private const int ReservedWaypointSlots = 8;
+    private const int MinFreeWaypointSlots = 16;
+    private const float PressureGcDelayFloor = 5f;
 
     private static readonly Dictionary<ChunkKey, ActiveChunk> ActiveChunks = new();
     private static readonly HashSet<ChunkKey> RequiredChunks = [];
+    private static readonly HashSet<ChunkKey> CoreChunks = [];
+    private static readonly HashSet<byte> ReferencedWaypointIds = [];
     private static readonly List<ChunkKey> RemovalBuffer = [];
 
     private static CoroutineHandle _streamingCoroutine;
     private static bool _registered;
+    private static bool _underPressure;
     private static float _lastCapacityWarning;
 
     public static bool IsConfigured { get; private set; }
@@ -132,7 +136,7 @@ public static class WaypointChunkStreamer
             return 0;
 
         RequiredChunks.Clear();
-        CollectRequiredChunks(position, RequiredChunks);
+        CollectRequiredChunks(position, RequiredChunks, includePreload: !IsUnderPressure());
 
         int created = 0;
         float now = Time.realtimeSinceStartup;
@@ -154,6 +158,7 @@ public static class WaypointChunkStreamer
     public static string GetStatus()
     {
         string state = IsConfigured ? "streaming" : ActiveChunks.Count > 0 ? "draining" : "stopped";
+        CollectReferencedWaypointIds();
         int referencedChunks = 0;
         foreach (ActiveChunk active in ActiveChunks.Values)
         {
@@ -161,9 +166,14 @@ public static class WaypointChunkStreamer
                 referencedChunks++;
         }
 
+        int occupied = CountOccupiedWaypointSlots();
+        int others = Mathf.Clamp(occupied - ActiveChunks.Count, 0, occupied);
+        int budget = Mathf.Max(0, (byte.MaxValue - 1) - MinFreeWaypointSlots - others);
+
         return
             $"Waypoint stream: {state}\n" +
             $"Active chunks: {ActiveChunks.Count} ({referencedChunks} currently referenced)\n" +
+            $"Waypoint slots: {occupied}/{(byte.MaxValue - 1)} occupied, {ActiveChunks.Count} streamed, {others} other, budget={budget}\n" +
             "Bounds: global\n" +
             $"Chunk={ChunkSize:0.##}m, preload={PreloadDistance:0.##}m, GC={GcDelay:0.##}s";
     }
@@ -181,8 +191,12 @@ public static class WaypointChunkStreamer
 
     private static void UpdateStreaming()
     {
-        RequiredChunks.Clear();
+        bool pressure = IsUnderPressure();
+        float now = Time.realtimeSinceStartup;
+        CollectReferencedWaypointIds();
 
+        RequiredChunks.Clear();
+        CoreChunks.Clear();
         if (IsConfigured)
         {
             foreach (Player player in Player.List)
@@ -190,41 +204,46 @@ public static class WaypointChunkStreamer
                 if (!ShouldTrack(player))
                     continue;
 
-                CollectRequiredChunks(player.Position, RequiredChunks);
+                CollectRequiredChunks(player.Position, RequiredChunks, includePreload: !pressure);
+                CollectRequiredChunks(player.Position, CoreChunks, includePreload: false);
             }
         }
 
-        float now = Time.realtimeSinceStartup;
         foreach (ChunkKey key in RequiredChunks)
         {
             if (ActiveChunks.TryGetValue(key, out ActiveChunk active))
-            {
                 active.LastNeededAt = now;
-                continue;
-            }
-
-            TrySpawnChunk(key, now);
         }
 
+        float gc = pressure
+            ? Mathf.Max(PressureGcDelayFloor, GcDelay * 0.25f)
+            : GcDelay;
+
+        // Eviction runs before spawning so freed waypoint IDs can be reused immediately.
         RemovalBuffer.Clear();
         foreach (KeyValuePair<ChunkKey, ActiveChunk> pair in ActiveChunks)
         {
             ActiveChunk active = pair.Value;
+            if (RequiredChunks.Contains(pair.Key))
+                continue;
+
             bool isReferenced = IsWaypointReferenced(active.Waypoint.WaypointId);
             if (isReferenced)
+            {
                 active.LastReferencedAt = now;
+                active.WasEverReferenced = true;
+            }
 
             // A client can still have movement packets in flight after it switches to a
             // different waypoint. Delay ID reuse from both the last coverage request and
             // the last observed reference; reusing an ID too early decodes those packets
             // relative to a completely different chunk and causes position corrections.
-            float lastInUseAt = Mathf.Max(active.LastNeededAt, active.LastReferencedAt);
-            if (RequiredChunks.Contains(pair.Key) ||
-                now - lastInUseAt < GcDelay ||
-                isReferenced)
-            {
+            // Only chunks no client has ever referenced may use the shortened pressure
+            // delay; once a waypoint has carried client packets it keeps the full GcDelay.
+            float lastUse = Mathf.Max(active.LastNeededAt, active.LastReferencedAt);
+            float effectiveGc = active.WasEverReferenced ? GcDelay : gc;
+            if (now - lastUse < effectiveGc)
                 continue;
-            }
 
             RemovalBuffer.Add(pair.Key);
         }
@@ -245,6 +264,20 @@ public static class WaypointChunkStreamer
 
             ActiveChunks.Remove(key);
         }
+
+        // Core (single-chunk) coverage first, then the best-effort preload ring.
+        foreach (ChunkKey key in CoreChunks)
+            SpawnChunkIfMissing(key, now);
+        foreach (ChunkKey key in RequiredChunks)
+            SpawnChunkIfMissing(key, now);
+    }
+
+    private static void SpawnChunkIfMissing(ChunkKey key, float now)
+    {
+        if (ActiveChunks.ContainsKey(key))
+            return;
+
+        TrySpawnChunk(key, now);
     }
 
     private static bool TrySpawnChunk(ChunkKey key, float now)
@@ -253,7 +286,9 @@ public static class WaypointChunkStreamer
         {
             if (now - _lastCapacityWarning >= 5f)
             {
-                Log.Warn("[WaypointChunkStreamer] Waypoint ID capacity reached; new chunks cannot be spawned.");
+                int occupied = CountOccupiedWaypointSlots();
+                int cap = byte.MaxValue - 1 - MinFreeWaypointSlots;
+                Log.Warn($"[WaypointChunkStreamer] Waypoint ID capacity reached ({occupied}/{cap} occupied, {ActiveChunks.Count} streamed chunks); new chunks cannot be spawned.");
                 _lastCapacityWarning = now;
             }
 
@@ -296,13 +331,13 @@ public static class WaypointChunkStreamer
         }
     }
 
-    private static void CollectRequiredChunks(Vector3 position, HashSet<ChunkKey> output)
+    private static void CollectRequiredChunks(Vector3 position, HashSet<ChunkKey> output, bool includePreload)
     {
         if (!IsFinite(position))
             return;
 
-        Vector3 low = position - Vector3.one * PreloadDistance;
-        Vector3 high = position + Vector3.one * PreloadDistance;
+        Vector3 low = includePreload ? position - Vector3.one * PreloadDistance : position;
+        Vector3 high = includePreload ? position + Vector3.one * PreloadDistance : position;
         Vector3Int first = GetChunkIndex(low);
         Vector3Int last = GetChunkIndex(high);
 
@@ -345,6 +380,7 @@ public static class WaypointChunkStreamer
 
     private static bool HasReferencedChunks()
     {
+        CollectReferencedWaypointIds();
         foreach (ActiveChunk active in ActiveChunks.Values)
         {
             if (IsWaypointReferenced(active.Waypoint.WaypointId))
@@ -354,27 +390,24 @@ public static class WaypointChunkStreamer
         return false;
     }
 
-    private static bool IsWaypointReferenced(byte waypointId)
+    private static void CollectReferencedWaypointIds()
     {
+        ReferencedWaypointIds.Clear();
         foreach (Player player in Player.List)
         {
             if (player?.ReferenceHub?.roleManager?.CurrentRole is not IFpcRole fpcRole ||
                 !fpcRole.FpcModule.ModuleReady)
-            {
                 continue;
-            }
 
-            if (fpcRole.FpcModule.RelativePosition.WaypointId == waypointId ||
-                fpcRole.FpcModule.Motor.ReceivedPosition.WaypointId == waypointId)
-            {
-                return true;
-            }
+            ReferencedWaypointIds.Add(fpcRole.FpcModule.RelativePosition.WaypointId);
+            ReferencedWaypointIds.Add(fpcRole.FpcModule.Motor.ReceivedPosition.WaypointId);
         }
-
-        return false;
     }
 
-    private static bool HasWaypointCapacity()
+    private static bool IsWaypointReferenced(byte waypointId)
+        => ReferencedWaypointIds.Contains(waypointId);
+
+    private static int CountOccupiedWaypointSlots()
     {
         int occupied = 0;
         for (int i = 1; i < byte.MaxValue; i++)
@@ -383,7 +416,41 @@ public static class WaypointChunkStreamer
                 occupied++;
         }
 
-        return occupied < byte.MaxValue - 1 - ReservedWaypointSlots;
+        return occupied;
+    }
+
+    private static bool HasWaypointCapacity()
+        => HasWaypointCapacity(CountOccupiedWaypointSlots());
+
+    private static bool HasWaypointCapacity(int occupied)
+        => occupied < byte.MaxValue - 1 - MinFreeWaypointSlots;
+
+    private static bool IsUnderPressure()
+    {
+        int occupied = CountOccupiedWaypointSlots();
+        int others = Mathf.Clamp(occupied - ActiveChunks.Count, 0, occupied);
+        int budget = Mathf.Max(0, (byte.MaxValue - 1) - MinFreeWaypointSlots - others);
+
+        if (!HasWaypointCapacity(occupied))
+        {
+            _underPressure = true;
+            return true;
+        }
+
+        // Hysteresis: once we drop preloading, keep it off until there is enough
+        // headroom to rebuild the ring. Otherwise eviction and respawn oscillate
+        // every tick and churn network objects for no benefit.
+        if (_underPressure)
+        {
+            if (ActiveChunks.Count < budget - 24)
+                _underPressure = false;
+        }
+        else if (ActiveChunks.Count >= budget - 4)
+        {
+            _underPressure = true;
+        }
+
+        return _underPressure;
     }
 
     private static void EnsureCoroutine()
@@ -414,7 +481,11 @@ public static class WaypointChunkStreamer
 
         ActiveChunks.Clear();
         RequiredChunks.Clear();
+        CoreChunks.Clear();
         RemovalBuffer.Clear();
+        ReferencedWaypointIds.Clear();
+        _underPressure = false;
+        _lastCapacityWarning = 0f;
     }
 
     private static bool IsFinite(Vector3 value)
@@ -435,6 +506,7 @@ public static class WaypointChunkStreamer
         public Waypoint Waypoint { get; }
         public float LastNeededAt { get; set; }
         public float LastReferencedAt { get; set; }
+        public bool WasEverReferenced { get; set; }
     }
 
     private readonly struct ChunkKey : IEquatable<ChunkKey>

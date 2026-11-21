@@ -10,7 +10,7 @@ catalog:
   group: side
   label: team
   badge: version
-  placeholder: 例 SCP-610, GoC, ハンマー
+  placeholder: 例 SCP-610, GOC, ハンマー
   fields:
     - { key: base, label: ベース }
     - { key: hp, label: HP }
