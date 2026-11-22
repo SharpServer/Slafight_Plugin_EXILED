@@ -25,6 +25,7 @@ public abstract class UsefulDoorObject : ObjectPrefab, IObjectPrefabMarkerReceiv
     public Vector3 InteractionSize { get; set; } = Vector3.one;
     public float InteractionDuration { get; set; }
     public bool InteractionEnabled { get; set; } = true;
+    public string HintDisplayName { get; set; } = string.Empty;
     public bool IsLocked { get; set; }
     public DoorPermissionFlags RequiredPermissions { get; set; }
     public bool RequireAll { get; set; } = true;
@@ -43,6 +44,10 @@ public abstract class UsefulDoorObject : ObjectPrefab, IObjectPrefabMarkerReceiv
         if (Marker == null || !InteractionEnabled)
             return;
         interaction = AddInteractable(duration: InteractionDuration, offset: InteractionCenter, scale: InteractionSize);
+        string displayName = HintDisplayName;
+        if (string.IsNullOrWhiteSpace(displayName) && Marker.Schematic is { } schematic)
+            displayName = $"{schematic.Name} Interactable";
+        InteractableHintMetadata.SetDisplayName(interaction.Toy.Base, displayName);
         interaction.Interacting += OnInteracting;
         interaction.Interacted += OnInteracted;
         SyncManagedObjects();
