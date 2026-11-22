@@ -88,6 +88,8 @@ public class PlayerHUD : EventHandlerBase
         _abilityHudLoop = Timing.RunCoroutine(AbilityHudLoop());
         _taskSyncLoop = Timing.RunCoroutine(TaskSync());
         _debugHudLoop = Timing.RunCoroutine(DebugHudLoop());
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -122,6 +124,8 @@ public class PlayerHUD : EventHandlerBase
             Timing.KillCoroutines(_bulkSetupHandle);
 
         _spectateTargets.Clear();
+
+        base.UnregisterEvents();
     }
 
 

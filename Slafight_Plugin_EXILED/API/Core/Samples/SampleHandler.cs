@@ -23,12 +23,16 @@ public sealed class SampleHandler : EventHandlerBase
     public override void RegisterEvents()
     {
         PlayerHandlers.Verified += OnVerified;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
     public override void UnregisterEvents()
     {
         PlayerHandlers.Verified -= OnVerified;
+
+        base.UnregisterEvents();
     }
 
     /// <summary>

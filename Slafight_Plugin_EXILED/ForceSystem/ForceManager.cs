@@ -26,6 +26,8 @@ public sealed class ForceManager : EventHandlerBase
         ServerHandlers.RestartingRound += OnRestartingRound;
         ServerHandlers.WaitingForPlayers += OnRestartingRound;
         ServerHandlers.RoundStarted += OnRoundStarted;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -41,6 +43,8 @@ public sealed class ForceManager : EventHandlerBase
         ServerHandlers.RoundStarted -= OnRoundStarted;
 
         ForceRegistry.Reset();
+
+        base.UnregisterEvents();
     }
 
     /// <summary>

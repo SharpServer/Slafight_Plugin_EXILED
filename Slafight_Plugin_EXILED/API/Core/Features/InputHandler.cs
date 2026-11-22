@@ -25,6 +25,8 @@ public sealed class InputHandler : EventHandlerBase
     {
         ServerSpecificSettingsSync.ServerOnSettingValueReceived += OnSettingValueReceived;
         ServerHandlers.WaitingForPlayers += RestoreDebugMode;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -32,6 +34,8 @@ public sealed class InputHandler : EventHandlerBase
     {
         ServerSpecificSettingsSync.ServerOnSettingValueReceived -= OnSettingValueReceived;
         ServerHandlers.WaitingForPlayers -= RestoreDebugMode;
+
+        base.UnregisterEvents();
     }
 
     /// <summary>

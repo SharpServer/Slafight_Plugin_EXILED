@@ -29,6 +29,8 @@ public sealed class GunSoundHandler : EventHandlerBase
     {
         PlayerHandlers.SendingGunSound += OnSendingGunSound;
         PlayerHandlers.ReceivingGunSound += OnReceivingGunSound;
+
+        base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
@@ -36,6 +38,8 @@ public sealed class GunSoundHandler : EventHandlerBase
         PlayerHandlers.SendingGunSound -= OnSendingGunSound;
         PlayerHandlers.ReceivingGunSound -= OnReceivingGunSound;
         DestroySpeakers(_ => true);
+
+        base.UnregisterEvents();
     }
 
     public override void OnPlayerLeft(PlayerLeftEventArgs ev)

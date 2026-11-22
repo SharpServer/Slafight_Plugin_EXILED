@@ -371,8 +371,18 @@ public static class FilmmakerAnimationRecorder
 public sealed class FilmmakerAnimationRecorderLifecycle : Slafight_Plugin_EXILED.API.Core.Features.EventHandlerBase
 {
     /// <inheritdoc />
-    public override void RegisterEvents() => FilmmakerAnimationRecorder.RegisterEvents();
+    public override void RegisterEvents()
+    {
+        FilmmakerAnimationRecorder.RegisterEvents();
+
+        base.RegisterEvents();
+    }
 
     /// <inheritdoc />
-    public override void UnregisterEvents() => FilmmakerAnimationRecorder.UnregisterEvents();
+    public override void UnregisterEvents()
+    {
+        FilmmakerAnimationRecorder.UnregisterEvents();
+
+        base.UnregisterEvents();
+    }
 }

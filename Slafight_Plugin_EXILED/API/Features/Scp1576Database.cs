@@ -26,6 +26,8 @@ public class Scp1576DatabaseHandler : Slafight_Plugin_EXILED.API.Core.Features.E
         Server.WaitingForPlayers += OnWaitingForPlayers;
         Exiled.Events.Handlers.Player.Scp1576TransmissionEnded += OnTransmissionEnded;
         Exiled.Events.Handlers.Player.Left += OnLeft;
+
+        base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
@@ -36,6 +38,8 @@ public class Scp1576DatabaseHandler : Slafight_Plugin_EXILED.API.Core.Features.E
 
         Timing.KillCoroutines(_coroutineHandle);
         ClearInstances();
+
+        base.UnregisterEvents();
     }
 
     private static CoroutineHandle _coroutineHandle;

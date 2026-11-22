@@ -30,6 +30,8 @@ public sealed class EscapeZoneHandler : EventHandlerBase
         MerSchematic.SchematicSpawned += OnSchematicSpawned;
         MerSchematic.SchematicDestroyed += OnSchematicDestroyed;
         ServerHandlers.RestartingRound += OnRestartingRound;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -38,6 +40,8 @@ public sealed class EscapeZoneHandler : EventHandlerBase
         MerSchematic.SchematicSpawned -= OnSchematicSpawned;
         MerSchematic.SchematicDestroyed -= OnSchematicDestroyed;
         ServerHandlers.RestartingRound -= OnRestartingRound;
+
+        base.UnregisterEvents();
     }
 
     /// <summary>

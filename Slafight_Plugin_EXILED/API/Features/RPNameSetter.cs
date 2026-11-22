@@ -111,6 +111,8 @@ public sealed class RPNameLifecycle : EventHandlerBase
     {
         PlayerHandlers.Verified += OnVerified;
         PlayerHandlers.Left += OnLeft;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -120,6 +122,8 @@ public sealed class RPNameLifecycle : EventHandlerBase
         PlayerHandlers.Left -= OnLeft;
 
         RPNameSetter.ClearAll();
+
+        base.UnregisterEvents();
     }
 
     private static void OnVerified(VerifiedEventArgs ev) => RPNameSetter.ApplyStoredInputName(ev.Player);

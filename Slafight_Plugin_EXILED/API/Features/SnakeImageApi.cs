@@ -903,8 +903,18 @@ public static class SnakeImageApi
 public sealed class SnakeImageApiLifecycle : Slafight_Plugin_EXILED.API.Core.Features.EventHandlerBase
 {
     /// <inheritdoc />
-    public override void RegisterEvents() => SnakeImageApi.RegisterEvents();
+    public override void RegisterEvents()
+    {
+        SnakeImageApi.RegisterEvents();
+
+        base.RegisterEvents();
+    }
 
     /// <inheritdoc />
-    public override void UnregisterEvents() => SnakeImageApi.UnregisterEvents();
+    public override void UnregisterEvents()
+    {
+        SnakeImageApi.UnregisterEvents();
+
+        base.UnregisterEvents();
+    }
 }

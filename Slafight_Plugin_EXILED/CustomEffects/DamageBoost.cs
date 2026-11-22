@@ -10,10 +10,18 @@ public class DamageBoost : CustomEffectBase, ICustomDisplayName
     public string DisplayName => "Damage Boost";
     public override EffectClassification Classification => EffectClassification.Positive;
 
-    protected override void SubscribeEvents()
+    protected override void RegisterEvents()
     {
-        RegisterEvent(() => Exiled.Events.Handlers.Player.Hurting += OnHurting, () => Exiled.Events.Handlers.Player.Hurting -= OnHurting);
-        base.SubscribeEvents();
+        Exiled.Events.Handlers.Player.Hurting += OnHurting;
+
+        base.RegisterEvents();
+    }
+
+    protected override void UnregisterEvents()
+    {
+        Exiled.Events.Handlers.Player.Hurting -= OnHurting;
+
+        base.UnregisterEvents();
     }
 
     private void OnHurting(HurtingEventArgs ev)

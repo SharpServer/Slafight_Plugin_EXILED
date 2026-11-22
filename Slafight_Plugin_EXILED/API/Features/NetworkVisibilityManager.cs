@@ -849,8 +849,18 @@ public static class NetworkVisibilityManager
 public sealed class NetworkVisibilityManagerLifecycle : Slafight_Plugin_EXILED.API.Core.Features.EventHandlerBase
 {
     /// <inheritdoc />
-    public override void RegisterEvents() => NetworkVisibilityManager.Register();
+    public override void RegisterEvents()
+    {
+        NetworkVisibilityManager.Register();
+
+        base.RegisterEvents();
+    }
 
     /// <inheritdoc />
-    public override void UnregisterEvents() => NetworkVisibilityManager.Unregister();
+    public override void UnregisterEvents()
+    {
+        NetworkVisibilityManager.Unregister();
+
+        base.UnregisterEvents();
+    }
 }

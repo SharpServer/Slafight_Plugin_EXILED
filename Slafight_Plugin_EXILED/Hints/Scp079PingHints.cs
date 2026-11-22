@@ -21,6 +21,8 @@ public sealed class Scp079PingHints : EventHandlerBase
     {
         Exiled.Events.Handlers.Scp079.Pinging += OnPinging;
         Exiled.Events.Handlers.Server.RestartingRound += ClearAll;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -29,6 +31,8 @@ public sealed class Scp079PingHints : EventHandlerBase
         Exiled.Events.Handlers.Scp079.Pinging -= OnPinging;
         Exiled.Events.Handlers.Server.RestartingRound -= ClearAll;
         ClearAll();
+
+        base.UnregisterEvents();
     }
 
     private void OnPinging(PingingEventArgs? ev)

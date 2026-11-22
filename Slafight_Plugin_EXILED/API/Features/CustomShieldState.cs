@@ -353,8 +353,18 @@ public sealed class CustomShieldState
 public sealed class CustomShieldStateLifecycle : Slafight_Plugin_EXILED.API.Core.Features.EventHandlerBase
 {
     /// <inheritdoc />
-    public override void RegisterEvents() => CustomShieldState.RegisterEvents();
+    public override void RegisterEvents()
+    {
+        CustomShieldState.RegisterEvents();
+
+        base.RegisterEvents();
+    }
 
     /// <inheritdoc />
-    public override void UnregisterEvents() => CustomShieldState.UnregisterEvents();
+    public override void UnregisterEvents()
+    {
+        CustomShieldState.UnregisterEvents();
+
+        base.UnregisterEvents();
+    }
 }

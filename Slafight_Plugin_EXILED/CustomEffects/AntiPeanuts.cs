@@ -12,12 +12,18 @@ public class AntiPeanuts : CustomEffectBase, ICustomDisplayName
     public string DisplayName => "Anti Peanuts";
     public override EffectClassification Classification => EffectClassification.Positive;
 
-    protected override void SubscribeEvents()
+    protected override void RegisterEvents()
     {
-        RegisterEvent(
-            () => ExiledEventHandlers.Player.Hurting += OnHurting,
-            () => ExiledEventHandlers.Player.Hurting -= OnHurting);
-        base.SubscribeEvents();
+        ExiledEventHandlers.Player.Hurting += OnHurting;
+
+        base.RegisterEvents();
+    }
+
+    protected override void UnregisterEvents()
+    {
+        ExiledEventHandlers.Player.Hurting -= OnHurting;
+
+        base.UnregisterEvents();
     }
 
     private void OnHurting(HurtingEventArgs ev)

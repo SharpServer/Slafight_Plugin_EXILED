@@ -221,6 +221,8 @@ public class ScpStatusHints : EventHandlerBase
 
         if (!Round.IsLobby)
             StartUpdateCoroutine();
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -238,6 +240,8 @@ public class ScpStatusHints : EventHandlerBase
         Timing.KillCoroutines(_coroutineHandle);
         ClearAll();
         Channels.Clear();
+
+        base.UnregisterEvents();
     }
 
     public static bool RegisterChannel(StatusHintChannel? channel)

@@ -412,8 +412,18 @@ public static class FilmmakerAnimationPlayer
 public sealed class FilmmakerAnimationPlayerLifecycle : Slafight_Plugin_EXILED.API.Core.Features.EventHandlerBase
 {
     /// <inheritdoc />
-    public override void RegisterEvents() => FilmmakerAnimationPlayer.RegisterEvents();
+    public override void RegisterEvents()
+    {
+        FilmmakerAnimationPlayer.RegisterEvents();
+
+        base.RegisterEvents();
+    }
 
     /// <inheritdoc />
-    public override void UnregisterEvents() => FilmmakerAnimationPlayer.UnregisterEvents();
+    public override void UnregisterEvents()
+    {
+        FilmmakerAnimationPlayer.UnregisterEvents();
+
+        base.UnregisterEvents();
+    }
 }

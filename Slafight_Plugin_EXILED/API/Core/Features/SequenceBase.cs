@@ -20,6 +20,12 @@ public abstract class SequenceBase
     /// <summary>人数など、シーケンス固有の開始条件だけを副作用なしで判定します。</summary>
     protected virtual bool MeetsTriggerConditions() => true;
 
+    /// <summary>シーケンスの開始が確定したあと、<see cref="OnTrigger"/> の前にイベントを購読します。</summary>
+    protected virtual void RegisterEvents() { }
+
+    /// <summary>シーケンスの終了時にイベント購読を解除します。登録の途中で失敗した場合も呼ばれます。</summary>
+    protected virtual void UnregisterEvents() { }
+
     /// <summary>
     /// 開始時に呼ばれます。遅延処理にはこの実行の scope を渡し、完了時に scope.Complete() を呼びます。
     /// </summary>
@@ -29,6 +35,21 @@ public abstract class SequenceBase
     protected virtual void OnEnd(SequenceEndReason reason) { }
 
     internal bool CheckTriggerConditions() => MeetsTriggerConditions();
-    internal void Start(SequenceRun scope) => OnTrigger(scope);
+
+    internal void Start(SequenceRun scope)
+    {
+        try
+        {
+            RegisterEvents();
+        }
+        finally
+        {
+            scope.OnEnd(UnregisterEvents);
+        }
+
+        if (scope.IsActive)
+            OnTrigger(scope);
+    }
+
     internal void End(SequenceEndReason reason) => OnEnd(reason);
 }

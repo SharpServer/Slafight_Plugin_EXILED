@@ -38,9 +38,19 @@ public sealed class FifthistPriest : FifthistRole
     ];
     public override IReadOnlyList<Type> CustomItems => [typeof(FifthistPriestKeycard), typeof(LsdPillSafe)];
 
-    protected override void RegisterEvents() => Hook(
-        () => Exiled.Events.Handlers.Player.Hurting += OnHurting,
-        () => Exiled.Events.Handlers.Player.Hurting -= OnHurting);
+    protected override void RegisterEvents()
+    {
+        Exiled.Events.Handlers.Player.Hurting += OnHurting;
+
+        base.RegisterEvents();
+    }
+
+    protected override void UnregisterEvents()
+    {
+        Exiled.Events.Handlers.Player.Hurting -= OnHurting;
+
+        base.UnregisterEvents();
+    }
 
     protected override void OnSpawned()
     {

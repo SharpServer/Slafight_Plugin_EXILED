@@ -34,12 +34,18 @@ public sealed class Scp3125 : CustomRole
 
     protected override void RegisterEvents()
     {
-        Hook(
-            () => Exiled.Events.Handlers.Player.Hurting += OnHurting,
-            () => Exiled.Events.Handlers.Player.Hurting -= OnHurting);
-        Hook(
-            () => Exiled.Events.Handlers.Player.Dying += OnDying,
-            () => Exiled.Events.Handlers.Player.Dying -= OnDying);
+        Exiled.Events.Handlers.Player.Hurting += OnHurting;
+        Exiled.Events.Handlers.Player.Dying += OnDying;
+
+        base.RegisterEvents();
+    }
+
+    protected override void UnregisterEvents()
+    {
+        Exiled.Events.Handlers.Player.Dying -= OnDying;
+        Exiled.Events.Handlers.Player.Hurting -= OnHurting;
+
+        base.UnregisterEvents();
     }
 
     // 3 秒待ってから 2 秒ごとに蝕み始める。

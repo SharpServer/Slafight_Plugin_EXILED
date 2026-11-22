@@ -830,6 +830,8 @@ public sealed class IntercomApiHandler : Slafight_Plugin_EXILED.API.Core.Feature
         ServerHandler.WaitingForPlayers += OnRoundReset;
         ServerHandler.RestartingRound += OnRoundReset;
         ServerHandler.RoundStarted += OnRoundStarted;
+
+        base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
@@ -840,6 +842,8 @@ public sealed class IntercomApiHandler : Slafight_Plugin_EXILED.API.Core.Feature
         ServerHandler.RestartingRound -= OnRoundReset;
         ServerHandler.RoundStarted -= OnRoundStarted;
         IntercomApi.ClearAll(resetIntercom: true);
+
+        base.UnregisterEvents();
     }
 
     private static void OnPlayerLeft(LeftEventArgs ev)

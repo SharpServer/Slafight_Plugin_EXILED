@@ -773,6 +773,8 @@ public sealed class CannedChatMenuHandler : EventHandlerBase
         PlayerHandlers.Left += OnLeft;
         ServerHandlers.WaitingForPlayers += OnWaitingForPlayers;
         ServerHandlers.RestartingRound += OnRestartingRound;
+
+        base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
@@ -784,6 +786,8 @@ public sealed class CannedChatMenuHandler : EventHandlerBase
         ServerHandlers.WaitingForPlayers -= OnWaitingForPlayers;
         ServerHandlers.RestartingRound -= OnRestartingRound;
         CannedChatMenuApi.Shutdown();
+
+        base.UnregisterEvents();
     }
 
     private static void OnChangedItem(ChangedItemEventArgs ev)

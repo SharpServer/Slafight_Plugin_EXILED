@@ -549,8 +549,18 @@ public static class WaypointChunkStreamer
 public sealed class WaypointChunkStreamerLifecycle : Slafight_Plugin_EXILED.API.Core.Features.EventHandlerBase
 {
     /// <inheritdoc />
-    public override void RegisterEvents() => WaypointChunkStreamer.RegisterEvents();
+    public override void RegisterEvents()
+    {
+        WaypointChunkStreamer.RegisterEvents();
+
+        base.RegisterEvents();
+    }
 
     /// <inheritdoc />
-    public override void UnregisterEvents() => WaypointChunkStreamer.UnregisterEvents();
+    public override void UnregisterEvents()
+    {
+        WaypointChunkStreamer.UnregisterEvents();
+
+        base.UnregisterEvents();
+    }
 }

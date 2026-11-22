@@ -558,8 +558,18 @@ public static class VoiceRoutingApi
 public sealed class VoiceRoutingApiLifecycle : EventHandlerBase
 {
     /// <inheritdoc />
-    public override void RegisterEvents() => VoiceRoutingApi.RegisterEvents();
+    public override void RegisterEvents()
+    {
+        VoiceRoutingApi.RegisterEvents();
+
+        base.RegisterEvents();
+    }
 
     /// <inheritdoc />
-    public override void UnregisterEvents() => VoiceRoutingApi.UnregisterEvents();
+    public override void UnregisterEvents()
+    {
+        VoiceRoutingApi.UnregisterEvents();
+
+        base.UnregisterEvents();
+    }
 }

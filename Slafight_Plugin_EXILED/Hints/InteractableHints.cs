@@ -34,6 +34,8 @@ public sealed class InteractableHints : EventHandlerBase
     {
         Exiled.Events.Handlers.Player.Left += OnLeft;
         _loop = Timing.RunCoroutine(UpdateHints());
+
+        base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
@@ -41,6 +43,8 @@ public sealed class InteractableHints : EventHandlerBase
         Exiled.Events.Handlers.Player.Left -= OnLeft;
         Timing.KillCoroutines(_loop);
         ClearHints();
+
+        base.UnregisterEvents();
     }
 
     public override void OnServerRoundEnded(RoundEndedEventArgs ev) => ClearHints();

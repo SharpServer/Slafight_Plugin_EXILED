@@ -37,6 +37,8 @@ public sealed class ModerationEventsHandler : EventHandlerBase
         PlayerHandlers.Kicking += OnKicking;
         PlayerHandlers.Kicked += OnKicked;
         PlayerHandlers.Banned += OnBanned;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -52,6 +54,8 @@ public sealed class ModerationEventsHandler : EventHandlerBase
 
         pendingKickIssuers.Clear();
         suppressNextKick.Clear();
+
+        base.UnregisterEvents();
     }
 
     private void OnRestartingRound()

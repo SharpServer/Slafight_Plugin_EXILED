@@ -35,6 +35,8 @@ public sealed class RespawnTimerHints : EventHandlerBase
         Exiled.Events.Handlers.Server.RoundStarted += EnsureAll;
         Exiled.Events.Handlers.Server.RestartingRound += ClearAll;
         _loop = Timing.RunCoroutine(UpdateLoop());
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -49,6 +51,8 @@ public sealed class RespawnTimerHints : EventHandlerBase
             Timing.KillCoroutines(_loop);
 
         ClearAll();
+
+        base.UnregisterEvents();
     }
 
     private void OnVerified(VerifiedEventArgs? ev)

@@ -16,7 +16,7 @@ public class OmegaWarheadSequence : SequenceBase
     }
     
     public Playback Playback { get; private set; }
-
+    
     protected override void OnTrigger(SequenceRun scope)
     {
         

@@ -701,6 +701,8 @@ public sealed class CommunicationHudHandler : EventHandlerBase
         ServerHandlers.RoundStarted += OnRoundStarted;
         ServerHandlers.WaitingForPlayers += OnRoundReset;
         ServerHandlers.RestartingRound += OnRestartingRound;
+
+        base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
@@ -711,6 +713,8 @@ public sealed class CommunicationHudHandler : EventHandlerBase
         ServerHandlers.WaitingForPlayers -= OnRoundReset;
         ServerHandlers.RestartingRound -= OnRestartingRound;
         CommunicationApi.Shutdown();
+
+        base.UnregisterEvents();
     }
 
     private static void OnVerified(VerifiedEventArgs ev) => CommunicationApi.Ensure(ev.Player);

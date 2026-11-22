@@ -22,6 +22,8 @@ public sealed class FirstRolesHandler : EventHandlerBase
     {
         PlayerHandlers.ChangingRole += CancelVanillaAssignment;
         ServerHandlers.RoundStarted += AssignFirstRoles;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -29,6 +31,8 @@ public sealed class FirstRolesHandler : EventHandlerBase
     {
         PlayerHandlers.ChangingRole -= CancelVanillaAssignment;
         ServerHandlers.RoundStarted -= AssignFirstRoles;
+
+        base.UnregisterEvents();
     }
 
     /// <summary>

@@ -41,12 +41,16 @@ public sealed class ProjectMERBridgeHandler : EventHandlerBase, IObjectPrefabInf
     {
         SchematicObjectPrefabObject.Spawned += OnMarkerSpawned;
         SchematicObjectPrefabObject.Destroyed += OnMarkerDestroyed;
+
+        base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
         SchematicObjectPrefabObject.Spawned -= OnMarkerSpawned;
         SchematicObjectPrefabObject.Destroyed -= OnMarkerDestroyed;
+
+        base.UnregisterEvents();
     }
 
     protected override void OnEnabled()

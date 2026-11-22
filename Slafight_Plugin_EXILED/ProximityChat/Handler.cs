@@ -309,8 +309,18 @@ public static class Handler
 public sealed class HandlerLifecycle : EventHandlerBase
 {
     /// <inheritdoc />
-    public override void RegisterEvents() => Handler.RegisterEvents();
+    public override void RegisterEvents()
+    {
+        Handler.RegisterEvents();
+
+        base.RegisterEvents();
+    }
 
     /// <inheritdoc />
-    public override void UnregisterEvents() => Handler.UnregisterEvents();
+    public override void UnregisterEvents()
+    {
+        Handler.UnregisterEvents();
+
+        base.UnregisterEvents();
+    }
 }

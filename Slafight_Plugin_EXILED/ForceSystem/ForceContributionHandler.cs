@@ -67,6 +67,8 @@ public sealed class ForceContributionHandler : EventHandlerBase
         PlayerHandlers.Died += OnDied;
 
         ServerHandlers.RoundStarted += OnRoundStarted;
+
+        base.RegisterEvents();
     }
 
     /// <summary>
@@ -95,6 +97,8 @@ public sealed class ForceContributionHandler : EventHandlerBase
         ServerHandlers.RoundStarted -= OnRoundStarted;
 
         LastCommunicationReward.Clear();
+
+        base.UnregisterEvents();
     }
 
     // ───────────────────────────────

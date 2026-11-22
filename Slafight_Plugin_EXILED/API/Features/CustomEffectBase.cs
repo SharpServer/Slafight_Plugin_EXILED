@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using CustomPlayerEffects;
 using Exiled.API.Features;
 
@@ -12,23 +11,33 @@ public abstract class CustomEffectBase : StatusEffectBase
     /// </summary>
     public Player Player { get; private set; }
 
-    /// <summary>
-    /// <see cref="RegisterEvent"/> で登録された購読解除アクション。
-    /// エフェクト無効化 / 破棄時に自動実行される。
-    /// </summary>
-    private readonly List<Action> _eventCleanup = [];
+    private bool eventsRegistered;
 
     public override void Enabled()
     {
         base.Enabled();
         Player = Player.Get(Hub);
-        SubscribeEvents();
+
+        if (eventsRegistered)
+            return;
+
+        eventsRegistered = true;
+        try
+        {
+            RegisterEvents();
+        }
+        catch
+        {
+            RemoveEventHandlers();
+            Player = null;
+            throw;
+        }
     }
 
     public override void Disabled()
     {
         base.Disabled();
-        RunEventCleanup();
+        RemoveEventHandlers();
         Player = null;
     }
 
@@ -37,45 +46,33 @@ public abstract class CustomEffectBase : StatusEffectBase
     /// </summary>
     public virtual void OnDestroy()
     {
-        RunEventCleanup();
+        RemoveEventHandlers();
     }
 
     /// <summary>
-    /// 有効化のたびに呼ばれる。購読は <see cref="RegisterEvent"/> で登録する。
+    /// エフェクトの有効化時にイベントを購読します。
     /// </summary>
     /// <remarks>ハンドラは全プレイヤー分発火するので、<c>ev.Player == Player</c> で絞り込むこと。</remarks>
-    protected virtual void SubscribeEvents()
-    {
-    }
+    protected virtual void RegisterEvents() { }
 
     /// <summary>
-    /// <paramref name="subscribe"/> を即時実行し、<paramref name="unsubscribe"/> を無効化 / 破棄時に実行する。
+    /// 無効化・破棄・登録失敗時にイベント購読を解除します。
     /// </summary>
-    protected void RegisterEvent(Action subscribe, Action unsubscribe)
-    {
-        subscribe?.Invoke();
+    protected virtual void UnregisterEvents() { }
 
-        if (unsubscribe != null)
-            _eventCleanup.Add(unsubscribe);
-    }
-
-    private void RunEventCleanup()
+    private void RemoveEventHandlers()
     {
-        if (_eventCleanup.Count == 0)
+        if (!eventsRegistered)
             return;
 
-        foreach (Action unsubscribe in _eventCleanup)
+        eventsRegistered = false;
+        try
         {
-            try
-            {
-                unsubscribe();
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"[{GetType().Name}] Failed to unsubscribe event: {ex}");
-            }
+            UnregisterEvents();
         }
-
-        _eventCleanup.Clear();
+        catch (Exception exception)
+        {
+            Log.Error($"[{GetType().Name}] Failed to unsubscribe events: {exception}");
+        }
     }
 }

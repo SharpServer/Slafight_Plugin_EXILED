@@ -704,8 +704,18 @@ public static class PlayerSpeakerManager
 public sealed class PlayerSpeakerManagerLifecycle : Slafight_Plugin_EXILED.API.Core.Features.EventHandlerBase
 {
     /// <inheritdoc />
-    public override void RegisterEvents() => PlayerSpeakerManager.RegisterEvents();
+    public override void RegisterEvents()
+    {
+        PlayerSpeakerManager.RegisterEvents();
+
+        base.RegisterEvents();
+    }
 
     /// <inheritdoc />
-    public override void UnregisterEvents() => PlayerSpeakerManager.UnregisterEvents();
+    public override void UnregisterEvents()
+    {
+        PlayerSpeakerManager.UnregisterEvents();
+
+        base.UnregisterEvents();
+    }
 }

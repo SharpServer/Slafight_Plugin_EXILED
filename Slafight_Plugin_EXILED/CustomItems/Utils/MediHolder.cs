@@ -115,12 +115,16 @@ public class MediHolder : CustomUsableItem
     {
         InventoryExtensions.OnItemRemoved += OnItemRemoved;
         PlayerEvents.DroppingAmmo += OnDroppingAmmo;
+
+        base.RegisterEvents();
     }
 
     protected override void UnregisterEvents()
     {
         InventoryExtensions.OnItemRemoved -= OnItemRemoved;
         PlayerEvents.DroppingAmmo -= OnDroppingAmmo;
+
+        base.UnregisterEvents();
     }
 
     private void NormalizeSelection()

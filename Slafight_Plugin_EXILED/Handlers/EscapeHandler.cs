@@ -52,6 +52,8 @@ public sealed class EscapeHandler : EventHandlerBase
     {
         PlayerHandlers.Escaping += OnEscaping;
         ServerHandlers.RestartingRound += LastAttempt.Clear;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -60,6 +62,8 @@ public sealed class EscapeHandler : EventHandlerBase
         PlayerHandlers.Escaping -= OnEscaping;
         ServerHandlers.RestartingRound -= LastAttempt.Clear;
         LastAttempt.Clear();
+
+        base.UnregisterEvents();
     }
 
     private static void OnEscaping(EscapingEventArgs ev)

@@ -19,12 +19,16 @@ public sealed class SpawnAnnouncer : EventHandlerBase
     public override void RegisterEvents()
     {
         SpawnSystem.Spawned += OnSpawned;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
     public override void UnregisterEvents()
     {
         SpawnSystem.Spawned -= OnSpawned;
+
+        base.UnregisterEvents();
     }
 
     /// <summary>

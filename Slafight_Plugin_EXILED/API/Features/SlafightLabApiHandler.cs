@@ -1,16 +1,15 @@
 using System;
+using Exiled.API.Features;
 using LabApi.Events.CustomHandlers;
 
 namespace Slafight_Plugin_EXILED.API.Features;
 
 /// <summary>
-/// LabAPI ハンドラの基底です。購読は <see cref="RegisterEvents"/> で <see cref="EventSubscriptionScope.Add"/> を通して登録します。
+/// LabAPI のイベントオーバーライドと、追加のイベント購読を管理します。
 /// </summary>
 public abstract class SlafightLabApiHandler : CustomEventsHandler, IDisposable
 {
     private bool _enabled;
-
-    protected EventSubscriptionScope Subscriptions { get; } = new();
 
     internal void Enable()
     {
@@ -19,13 +18,21 @@ public abstract class SlafightLabApiHandler : CustomEventsHandler, IDisposable
 
         try
         {
-            RegisterEvents(Subscriptions);
+            RegisterEvents();
             CustomHandlersManager.RegisterEventsHandler(this);
             _enabled = true;
         }
         catch
         {
-            Subscriptions.Dispose();
+            try
+            {
+                RemoveEventHandlers();
+            }
+            catch (Exception exception)
+            {
+                Log.Error($"[{GetType().Name}] Failed to roll back LabAPI event registration: {exception}");
+            }
+
             throw;
         }
     }
@@ -35,21 +42,43 @@ public abstract class SlafightLabApiHandler : CustomEventsHandler, IDisposable
         if (!_enabled)
             return;
 
+        _enabled = false;
+        try
+        {
+            RemoveEventHandlers();
+        }
+        finally
+        {
+            OnDisposed();
+        }
+    }
+
+    /// <summary>LabAPI が自動で登録するイベントオーバーライドに加え、必要なイベントを購読します。</summary>
+    protected virtual void RegisterEvents() { }
+
+    /// <summary>追加のイベント購読を解除します。登録に失敗した場合も呼ばれます。</summary>
+    protected virtual void UnregisterEvents() { }
+
+    protected virtual void OnDisposed()
+    {
+    }
+
+    private void RemoveEventHandlers()
+    {
         try
         {
             CustomHandlersManager.UnregisterEventsHandler(this);
         }
         finally
         {
-            Subscriptions.Dispose();
-            OnDisposed();
-            _enabled = false;
+            try
+            {
+                UnregisterEvents();
+            }
+            catch (Exception exception)
+            {
+                Log.Error($"[{GetType().Name}] Failed to unsubscribe events: {exception}");
+            }
         }
-    }
-
-    protected abstract void RegisterEvents(EventSubscriptionScope subscriptions);
-
-    protected virtual void OnDisposed()
-    {
     }
 }

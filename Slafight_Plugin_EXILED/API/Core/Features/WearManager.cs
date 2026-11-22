@@ -67,6 +67,8 @@ public sealed class WearManager : EventHandlerBase
         ServerHandlers.RestartingRound += RemoveAll;
 
         NetworkVisibilityManager.ShowVeto = IsHiddenByInvisibility;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -83,6 +85,8 @@ public sealed class WearManager : EventHandlerBase
             NetworkVisibilityManager.ShowVeto = null;
 
         RemoveAll();
+
+        base.UnregisterEvents();
     }
 
     /// <summary>

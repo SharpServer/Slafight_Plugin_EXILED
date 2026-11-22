@@ -184,6 +184,8 @@ public sealed class ItemLimitApiHandler : EventHandlerBase
     {
         Exiled.Events.Handlers.Player.Left += OnLeft;
         Exiled.Events.Handlers.Server.WaitingForPlayers += ItemLimitApi.ClearAll;
+
+        base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
@@ -191,6 +193,8 @@ public sealed class ItemLimitApiHandler : EventHandlerBase
         Exiled.Events.Handlers.Player.Left -= OnLeft;
         Exiled.Events.Handlers.Server.WaitingForPlayers -= ItemLimitApi.ClearAll;
         ItemLimitApi.ClearAll();
+
+        base.UnregisterEvents();
     }
 
     private static void OnLeft(Exiled.Events.EventArgs.Player.LeftEventArgs ev) => ItemLimitApi.Clear(ev.Player);

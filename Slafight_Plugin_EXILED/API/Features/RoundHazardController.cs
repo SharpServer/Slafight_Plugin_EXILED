@@ -21,6 +21,8 @@ public sealed class RoundHazardController : EventHandlerBase
     {
         WarheadHandler.DeadmanSwitchInitiating += OnDeadmanSwitchInitiating;
         MapHandler.Decontaminating += OnDecontaminating;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -30,6 +32,8 @@ public sealed class RoundHazardController : EventHandlerBase
         MapHandler.Decontaminating -= OnDecontaminating;
 
         ResetRoundState();
+
+        base.UnregisterEvents();
     }
 
     public static bool IsDeadmanSwitchBlocked { get; private set; }

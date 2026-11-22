@@ -477,6 +477,8 @@ public sealed class ServerSpecificsPageSync : EventHandlerBase
         PlayerHandlers.ChangingGroup += OnChangingGroup;
         PlayerHandlers.Left += OnLeft;
         ServerHandlers.RestartingRound += ServerSpecifics.ForgetAll;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -489,6 +491,8 @@ public sealed class ServerSpecificsPageSync : EventHandlerBase
         ServerHandlers.RestartingRound -= ServerSpecifics.ForgetAll;
 
         ServerSpecifics.ForgetAll();
+
+        base.UnregisterEvents();
     }
 
     private static void OnInstanceModeChanged(ReferenceHub hub, ClientInstanceMode mode)

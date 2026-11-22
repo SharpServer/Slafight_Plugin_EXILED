@@ -1682,12 +1682,16 @@ public sealed class HitboxSessionHandler : EventHandlerBase
     {
         PlayerHandlers.Left += OnLeft;
         ServerHandlers.RestartingRound += OnRestartingRound;
+
+        base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
     {
         PlayerHandlers.Left -= OnLeft;
         ServerHandlers.RestartingRound -= OnRestartingRound;
+
+        base.UnregisterEvents();
     }
 
     private static void OnLeft(LeftEventArgs ev) => HitboxCommand.CleanupPlayer(ev.Player);

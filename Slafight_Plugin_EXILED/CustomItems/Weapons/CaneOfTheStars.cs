@@ -29,9 +29,19 @@ public sealed class CaneOfTheStars : CustomItem
         base.Customize(item);
     }
 
-    protected override void RegisterEvents() => Exiled.Events.Handlers.Player.Dying += OnDying;
+    protected override void RegisterEvents()
+    {
+        Exiled.Events.Handlers.Player.Dying += OnDying;
 
-    protected override void UnregisterEvents() => Exiled.Events.Handlers.Player.Dying -= OnDying;
+        base.RegisterEvents();
+    }
+
+    protected override void UnregisterEvents()
+    {
+        Exiled.Events.Handlers.Player.Dying -= OnDying;
+
+        base.UnregisterEvents();
+    }
 
     private void OnDying(DyingEventArgs ev)
     {

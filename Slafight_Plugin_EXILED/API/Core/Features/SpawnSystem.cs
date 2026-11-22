@@ -63,6 +63,8 @@ public sealed class SpawnSystem : EventHandlerBase
         ServerHandlers.RestartingRound += ResetRuntimeState;
         ServerHandlers.WaitingForPlayers += ResetRuntimeState;
         ControlsVehicleEffects = true;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -73,6 +75,8 @@ public sealed class SpawnSystem : EventHandlerBase
         ServerHandlers.RestartingRound -= ResetRuntimeState;
         ServerHandlers.WaitingForPlayers -= ResetRuntimeState;
         ResetRuntimeState();
+
+        base.UnregisterEvents();
     }
 
     /// <summary>

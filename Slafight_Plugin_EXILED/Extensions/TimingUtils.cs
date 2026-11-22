@@ -16,6 +16,8 @@ public class TimingUtils : EventHandlerBase
     {
         ManagedCoroutines.ForEach(x => Timing.KillCoroutines(x.CoroutineHandle));
         ManagedCoroutines.Clear();
+
+        base.UnregisterEvents();
     }
 
     public static CoroutineHandle CreateManagedCoroutine(string key, Func<bool> predicate, Action action, float returnInterval, float killTime = -1f)

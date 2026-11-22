@@ -18,6 +18,8 @@ public sealed class DummyBadgeRemover : EventHandlerBase
     {
         originalColor ??= DummyUtils.DummyGroup.BadgeColor;
         DummyUtils.DummyGroup.BadgeColor = NoBadgeColor;
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -25,5 +27,7 @@ public sealed class DummyBadgeRemover : EventHandlerBase
     {
         if (originalColor is not null)
             DummyUtils.DummyGroup.BadgeColor = originalColor;
+
+        base.UnregisterEvents();
     }
 }

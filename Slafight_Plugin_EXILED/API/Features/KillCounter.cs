@@ -30,6 +30,8 @@ public class KillCounter : Slafight_Plugin_EXILED.API.Core.Features.EventHandler
         LabPlayerEvents.ChangedRole += OnChangedRole;
 
         _registered = true;
+
+        base.RegisterEvents();
     }
 
     public override void UnregisterEvents()
@@ -46,6 +48,8 @@ public class KillCounter : Slafight_Plugin_EXILED.API.Core.Features.EventHandler
 
         ResetAll();
         _registered = false;
+
+        base.UnregisterEvents();
     }
 
     public static int GetRoundKills(Player? player)

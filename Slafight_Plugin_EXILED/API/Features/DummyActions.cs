@@ -310,6 +310,8 @@ public sealed class DummyActionsLifecycle : Slafight_Plugin_EXILED.API.Core.Feat
 
         foreach (ReferenceHub hub in ReferenceHub.AllHubs.ToArray())
             Attach(hub);
+
+        base.RegisterEvents();
     }
 
     /// <inheritdoc />
@@ -321,6 +323,8 @@ public sealed class DummyActionsLifecycle : Slafight_Plugin_EXILED.API.Core.Feat
             registration.Dispose();
 
         builtIns = [];
+
+        base.UnregisterEvents();
     }
 
     internal static void Attach(ReferenceHub hub)

@@ -47,15 +47,20 @@ public sealed class Scp3005 : CustomRole
 
     protected override void RegisterEvents()
     {
-        Hook(
-            () => Exiled.Events.Handlers.Player.Hurting += OnHurting,
-            () => Exiled.Events.Handlers.Player.Hurting -= OnHurting);
-        Hook(
-            () => Exiled.Events.Handlers.Player.Dying += OnDying,
-            () => Exiled.Events.Handlers.Player.Dying -= OnDying);
-        Hook(
-            () => Exiled.Events.Handlers.Scp0492.ConsumedCorpse += OnConsumedCorpse,
-            () => Exiled.Events.Handlers.Scp0492.ConsumedCorpse -= OnConsumedCorpse);
+        Exiled.Events.Handlers.Player.Hurting += OnHurting;
+        Exiled.Events.Handlers.Player.Dying += OnDying;
+        Exiled.Events.Handlers.Scp0492.ConsumedCorpse += OnConsumedCorpse;
+
+        base.RegisterEvents();
+    }
+
+    protected override void UnregisterEvents()
+    {
+        Exiled.Events.Handlers.Scp0492.ConsumedCorpse -= OnConsumedCorpse;
+        Exiled.Events.Handlers.Player.Dying -= OnDying;
+        Exiled.Events.Handlers.Player.Hurting -= OnHurting;
+
+        base.UnregisterEvents();
     }
 
     protected override void OnSpawned()

@@ -480,16 +480,6 @@ public abstract class CustomRole : IPlayerOwn
         Player is not null && ReferenceEquals(hub, Player.ReferenceHub);
 
     /// <summary>
-    /// 役職が続くあいだだけイベントを購読します。解除は <see cref="Scope"/> が引き受けるので、
-    /// 死亡・役職変更・退出・ラウンド再開のどれでも取り残されません。
-    /// </summary>
-    protected void Hook(Action subscribe, Action unsubscribe)
-    {
-        subscribe();
-        Scope.OnDispose(_ => unsubscribe());
-    }
-
-    /// <summary>
     /// <see cref="Status"/> に一定時間だけ値を置きます。
     /// </summary>
     protected void ShowStatus(string text, float duration)
