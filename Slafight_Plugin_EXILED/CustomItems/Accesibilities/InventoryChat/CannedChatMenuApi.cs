@@ -769,6 +769,7 @@ public sealed class CannedChatMenuHandler : EventHandlerBase
     {
         PlayerHandlers.ChangedItem += OnChangedItem;
         PlayerHandlers.ChangingRole += OnChangingRole;
+        PlayerHandlers.Dying += OnDying;
         PlayerHandlers.Left += OnLeft;
         ServerHandlers.WaitingForPlayers += OnWaitingForPlayers;
         ServerHandlers.RestartingRound += OnRestartingRound;
@@ -778,6 +779,7 @@ public sealed class CannedChatMenuHandler : EventHandlerBase
     {
         PlayerHandlers.ChangedItem -= OnChangedItem;
         PlayerHandlers.ChangingRole -= OnChangingRole;
+        PlayerHandlers.Dying -= OnDying;
         PlayerHandlers.Left -= OnLeft;
         ServerHandlers.WaitingForPlayers -= OnWaitingForPlayers;
         ServerHandlers.RestartingRound -= OnRestartingRound;
@@ -791,6 +793,12 @@ public sealed class CannedChatMenuHandler : EventHandlerBase
 
         if (ev.Item?.Serial != bagSerial)
             CannedChatMenuApi.Close(ev.Player);
+    }
+
+    private static void OnDying(DyingEventArgs ev)
+    {
+        if (ev.IsAllowed)
+            CannedChatMenuApi.CloseWithoutRestore(ev.Player);
     }
 
     private static void OnChangingRole(ChangingRoleEventArgs ev)
