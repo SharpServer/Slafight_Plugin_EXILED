@@ -1,5 +1,6 @@
 #nullable enable
 
+using Slafight_Plugin_EXILED.API.Structs;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -231,7 +232,7 @@ public partial class Insanity
                 if (i > 0)
                     _output.Append('\n');
 
-                GlitchText.GlitchWriter writer = new(_output, colorRunLength, 0f, _rng);
+                GlitchWriter writer = new(_output, colorRunLength, 0f, _rng);
 
                 for (int c = 0; c < charsPerLine; c++)
                     writer.Feed(_rng.Next(4) == 0 ? '▓' : '█');
@@ -280,7 +281,7 @@ public partial class Insanity
         /// <summary>断片を繋いで指定文字数ぶんの 1 行を書き出す。</summary>
         private void AppendLine(StringBuilder sb, in NoiseStyle style)
         {
-            GlitchText.GlitchWriter writer =
+            GlitchWriter writer =
                 new(sb, style.ColorRunLength, style.CorruptChance, _rng, style.Dim);
 
             while (writer.VisibleLength < style.CharsPerLine)
@@ -494,7 +495,7 @@ public partial class Insanity
             _sb.Clear();
             _sb.Append("<b>");
 
-            GlitchText.GlitchWriter writer = new(
+            GlitchWriter writer = new(
                 _sb,
                 Mathf.Max(2, phase.RoamerColorRunLength),
                 phase.MessageCorruptChance * 1.5f,

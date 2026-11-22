@@ -1,3 +1,4 @@
+using Slafight_Plugin_EXILED.API.Structs;
 using System;
 using System.Collections.Generic;
 using MEC;
@@ -7,12 +8,6 @@ namespace Slafight_Plugin_EXILED.Extensions;
 
 public class TimingUtils : EventHandlerBase
 {
-    public struct ManagedCoroutine
-    {
-        public CoroutineHandle CoroutineHandle;
-        public string Key;
-    }
-
     public static readonly List<ManagedCoroutine> ManagedCoroutines = [];
 
     /// <inheritdoc />

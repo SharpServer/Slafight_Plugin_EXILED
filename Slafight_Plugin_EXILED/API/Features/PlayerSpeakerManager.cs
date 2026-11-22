@@ -1,3 +1,4 @@
+using Slafight_Plugin_EXILED.API.Structs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,11 +15,11 @@ namespace Slafight_Plugin_EXILED.API.Features;
 public static class PlayerSpeakerManager
 {
     // playerId -> purposeKey -> speaker
-    private static readonly Dictionary<int, Dictionary<string, SpeakerApi.LivePlayback>> Speakers
+    private static readonly Dictionary<int, Dictionary<string, LivePlayback>> Speakers
         = new();
 
     // playerId -> purposeKey -> file playback
-    private static readonly Dictionary<int, Dictionary<string, SpeakerApi.Playback>> Playbacks
+    private static readonly Dictionary<int, Dictionary<string, Playback>> Playbacks
         = new();
 
     // playerId -> purposeKey -> coroutine
@@ -66,7 +67,7 @@ public static class PlayerSpeakerManager
     /// <summary>
     /// 特定プレイヤー・特定用途のスピーカーを取得。
     /// </summary>
-    public static bool TryGetSpeaker(Player player, string purpose, out SpeakerApi.LivePlayback speaker)
+    public static bool TryGetSpeaker(Player player, string purpose, out LivePlayback speaker)
     {
         speaker = default;
         if (!ShouldManageSpeaker(player) || string.IsNullOrWhiteSpace(purpose))
@@ -89,7 +90,7 @@ public static class PlayerSpeakerManager
     /// <summary>
     /// 特定用途のスピーカーを取得 or 作成。
     /// </summary>
-    public static SpeakerApi.LivePlayback GetOrCreateSpeaker(
+    public static LivePlayback GetOrCreateSpeaker(
         Player player,
         string purpose,
         bool isSpatial,
@@ -105,7 +106,7 @@ public static class PlayerSpeakerManager
         var playerId = player.Id;
         if (!Speakers.TryGetValue(playerId, out var dict))
         {
-            dict = new Dictionary<string, SpeakerApi.LivePlayback>(StringComparer.OrdinalIgnoreCase);
+            dict = new Dictionary<string, LivePlayback>(StringComparer.OrdinalIgnoreCase);
             Speakers[playerId] = dict;
         }
 
@@ -122,7 +123,7 @@ public static class PlayerSpeakerManager
             DestroySpeaker(playerId, purpose);
             if (!Speakers.TryGetValue(playerId, out dict))
             {
-                dict = new Dictionary<string, SpeakerApi.LivePlayback>(StringComparer.OrdinalIgnoreCase);
+                dict = new Dictionary<string, LivePlayback>(StringComparer.OrdinalIgnoreCase);
                 Speakers[playerId] = dict;
             }
         }
@@ -198,7 +199,7 @@ public static class PlayerSpeakerManager
     /// プレイヤーに追従する音声を1回再生する。
     /// 同じ用途キーの音声がある場合は置き換える。
     /// </summary>
-    public static SpeakerApi.Playback Play(
+    public static Playback Play(
         Player player,
         string fileName,
         string purpose = null,
@@ -222,7 +223,7 @@ public static class PlayerSpeakerManager
     /// プレイヤーに追従する音声をループ再生する。
     /// 同じ用途キーの音声がある場合は置き換える。
     /// </summary>
-    public static SpeakerApi.Playback PlayLoop(
+    public static Playback PlayLoop(
         Player player,
         string fileName,
         string purpose = null,
@@ -242,7 +243,7 @@ public static class PlayerSpeakerManager
             volume,
             listeners);
 
-    public static bool TryGetPlayback(Player player, string purpose, out SpeakerApi.Playback playback)
+    public static bool TryGetPlayback(Player player, string purpose, out Playback playback)
     {
         playback = default;
         if (!ShouldManageSpeaker(player) || string.IsNullOrWhiteSpace(purpose))
@@ -528,7 +529,7 @@ public static class PlayerSpeakerManager
     // 用途キーをログに出せるように拡張
     private static IEnumerator<float> FollowPlayerCoroutine(
         int playerId,
-        SpeakerApi.LivePlayback liveSpeaker,
+        LivePlayback liveSpeaker,
         string purpose)
     {
         Log.Debug($"[PlayerSpeakerManager] FollowPlayerCoroutine[{purpose}]: started for {GetPlayerName(playerId)} (ControllerId: {liveSpeaker.ControllerId})");
@@ -574,7 +575,7 @@ public static class PlayerSpeakerManager
         }
     }
 
-    private static SpeakerApi.Playback PlayManaged(
+    private static Playback PlayManaged(
         Player player,
         string fileName,
         string purpose,
@@ -594,7 +595,7 @@ public static class PlayerSpeakerManager
         Stop(player.Id, purpose);
 
         var audioPlayerName = $"PlayerAudio_{player.Id}_{purpose}";
-        SpeakerApi.Playback playback;
+        Playback playback;
         try
         {
             playback = loop
@@ -634,7 +635,7 @@ public static class PlayerSpeakerManager
 
         if (!Playbacks.TryGetValue(player.Id, out var dict))
         {
-            dict = new Dictionary<string, SpeakerApi.Playback>(StringComparer.OrdinalIgnoreCase);
+            dict = new Dictionary<string, Playback>(StringComparer.OrdinalIgnoreCase);
             Playbacks[player.Id] = dict;
         }
 
@@ -652,7 +653,7 @@ public static class PlayerSpeakerManager
             Playbacks.Remove(playerId);
     }
 
-    private static void CleanupStoppedFollow(int playerId, string purpose, SpeakerApi.LivePlayback liveSpeaker)
+    private static void CleanupStoppedFollow(int playerId, string purpose, LivePlayback liveSpeaker)
     {
         if (FollowCoroutines.TryGetValue(playerId, out var followDict))
         {

@@ -1,3 +1,4 @@
+using Slafight_Plugin_EXILED.API.Structs;
 using System;
 using System.Collections.Generic;
 using Exiled.API.Features;
@@ -19,7 +20,7 @@ public static class LookSoundApi
         public bool StingerPlayed;
         public bool ChasePlaying;
         public CoroutineHandle Coroutine;
-        public SpeakerApi.Playback? CurrentChasePlayback;
+        public Playback? CurrentChasePlayback;
     }
 
     private static readonly Dictionary<int, LookSession> Sessions = new();

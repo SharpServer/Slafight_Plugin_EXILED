@@ -1,3 +1,4 @@
+using Slafight_Plugin_EXILED.API.Structs;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -128,7 +129,7 @@ public static class MediaProcessingApi
         }
     }
 
-    public static SpeakerApi.Playback PlayAudioFromUrl(
+    public static Playback PlayAudioFromUrl(
         string url,
         string audioPlayerName,
         Vector3 position,

@@ -1,6 +1,7 @@
 using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Structs;
 using UnityEngine;
 using Light = Exiled.API.Features.Toys.Light;
 
@@ -10,7 +11,7 @@ public class DAISUKE : CustomRole
 {
     public override string Name => "DAISUKE";
     public override RoleTypeId BaseRole => RoleTypeId.Tutorial;
-    private SpeakerApi.Playback _playback;
+    private Playback _playback;
 
     protected override void OnSpawned()
     {

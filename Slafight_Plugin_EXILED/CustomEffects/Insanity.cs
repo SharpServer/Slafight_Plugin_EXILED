@@ -1,5 +1,6 @@
 #nullable enable
 
+using Slafight_Plugin_EXILED.API.Structs;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -112,7 +113,7 @@ public partial class Insanity : CustomEffectBase, ICustomDisplayName, ICustomHea
     /// <summary>Intensity を 0..1 に正規化した「発狂の強さ」。</summary>
     private float Severity => Mathf.Clamp01(Intensity / 255f);
     
-    public SpeakerApi.Playback? Playback { get; private set; }
+    public Playback? Playback { get; private set; }
 
     public override void Enabled()
     {
@@ -815,7 +816,7 @@ public partial class Insanity : CustomEffectBase, ICustomDisplayName, ICustomHea
 
         if (phase.MessageColor is null)
         {
-            GlitchText.GlitchWriter writer = new(sb, phase.MessageColorRunLength, corruptChance, rng);
+            GlitchWriter writer = new(sb, phase.MessageColorRunLength, corruptChance, rng);
             writer.Feed(body);
             writer.End();
         }

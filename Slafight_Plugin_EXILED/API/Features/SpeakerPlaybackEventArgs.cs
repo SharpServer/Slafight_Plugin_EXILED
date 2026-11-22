@@ -1,3 +1,4 @@
+using Slafight_Plugin_EXILED.API.Structs;
 using System;
 
 namespace Slafight_Plugin_EXILED.API.Features;
@@ -16,9 +17,9 @@ public enum SpeakerPlaybackEndReason
 }
 
 /// <summary>スピーカー再生のイベントに共通する情報です。</summary>
-public abstract class SpeakerPlaybackEventArgs(SpeakerApi.Playback playback, bool loop, float duration) : EventArgs
+public abstract class SpeakerPlaybackEventArgs(Playback playback, bool loop, float duration) : EventArgs
 {
-    public SpeakerApi.Playback Playback { get; } = playback;
+    public Playback Playback { get; } = playback;
 
     public ExtendedSpeaker Speaker => Playback.Speaker;
 
@@ -39,7 +40,7 @@ public abstract class SpeakerPlaybackEventArgs(SpeakerApi.Playback playback, boo
 /// <see cref="SpeakerApi.Play"/> などがサンプルを送る直前です。
 /// <see cref="IsAllowed"/> を false にすると、この再生は始まりません。
 /// </summary>
-public sealed class SpeakerPlaybackStartingEventArgs(SpeakerApi.Playback playback, bool loop, float duration, bool destroyOnEnd)
+public sealed class SpeakerPlaybackStartingEventArgs(Playback playback, bool loop, float duration, bool destroyOnEnd)
     : SpeakerPlaybackEventArgs(playback, loop, duration)
 {
     /// <summary>鳴り終わったあとスピーカーを破棄するか。</summary>
@@ -49,7 +50,7 @@ public sealed class SpeakerPlaybackStartingEventArgs(SpeakerApi.Playback playbac
 }
 
 /// <summary>サンプルを送り、<see cref="ExtendedSpeaker.CurrentPlayback"/> を載せてからの直後です。</summary>
-public sealed class SpeakerPlaybackStartedEventArgs(SpeakerApi.Playback playback, bool loop, float duration, bool destroyOnEnd)
+public sealed class SpeakerPlaybackStartedEventArgs(Playback playback, bool loop, float duration, bool destroyOnEnd)
     : SpeakerPlaybackEventArgs(playback, loop, duration)
 {
     /// <summary>鳴り終わったあとスピーカーを破棄するか。</summary>
@@ -60,7 +61,7 @@ public sealed class SpeakerPlaybackStartedEventArgs(SpeakerApi.Playback playback
 /// 再生を片付ける直前です。
 /// <see cref="IsAllowed"/> を false にすると、スピーカーは残し、再生も切りません。
 /// </summary>
-public sealed class SpeakerPlaybackStoppingEventArgs(SpeakerApi.Playback playback, bool loop, float duration, SpeakerPlaybackEndReason reason)
+public sealed class SpeakerPlaybackStoppingEventArgs(Playback playback, bool loop, float duration, SpeakerPlaybackEndReason reason)
     : SpeakerPlaybackEventArgs(playback, loop, duration)
 {
     public SpeakerPlaybackEndReason Reason { get; } = reason;
@@ -69,7 +70,7 @@ public sealed class SpeakerPlaybackStoppingEventArgs(SpeakerApi.Playback playbac
 }
 
 /// <summary>再生を片付けた直後です。差し替えのときはスピーカー自体は残っています。</summary>
-public sealed class SpeakerPlaybackStoppedEventArgs(SpeakerApi.Playback playback, bool loop, float duration, SpeakerPlaybackEndReason reason)
+public sealed class SpeakerPlaybackStoppedEventArgs(Playback playback, bool loop, float duration, SpeakerPlaybackEndReason reason)
     : SpeakerPlaybackEventArgs(playback, loop, duration)
 {
     public SpeakerPlaybackEndReason Reason { get; } = reason;

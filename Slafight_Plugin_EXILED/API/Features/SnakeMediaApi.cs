@@ -1,3 +1,4 @@
+using Slafight_Plugin_EXILED.API.Structs;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -70,7 +71,7 @@ public sealed class SnakeMediaPlayback : IDisposable
     private readonly SnakeMediaOptions _options;
     private CoroutineHandle _coroutine;
     private SnakeImagePlayback? _imagePlayback;
-    private SpeakerApi.Playback _audioPlayback;
+    private Playback _audioPlayback;
     private bool _stopped;
 
     internal SnakeMediaPlayback(

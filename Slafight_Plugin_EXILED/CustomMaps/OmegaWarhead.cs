@@ -3,6 +3,7 @@ using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Core.Enums;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Structs;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
 
@@ -12,7 +13,7 @@ public class OmegaWarhead : EventHandlerBase
 {
     public static bool IsStarted { get; private set; }
     public static bool IsAvailable => CanBeStart();
-    public static SpeakerApi.Playback Playback { get; private set; }
+    public static Playback Playback { get; private set; }
     
     public override void RegisterEvents()
     {

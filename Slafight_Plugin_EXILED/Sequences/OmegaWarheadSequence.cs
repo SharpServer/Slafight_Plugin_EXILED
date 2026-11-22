@@ -1,6 +1,6 @@
 using Exiled.API.Features;
 using Slafight_Plugin_EXILED.API.Core.Features;
-using Slafight_Plugin_EXILED.API.Features;
+using Slafight_Plugin_EXILED.API.Structs;
 
 namespace Slafight_Plugin_EXILED.Sequences;
 
@@ -15,7 +15,7 @@ public class OmegaWarheadSequence : SequenceBase
         return true;
     }
     
-    public SpeakerApi.Playback Playback { get; private set; }
+    public Playback Playback { get; private set; }
 
     protected override void OnTrigger(SequenceRun scope)
     {

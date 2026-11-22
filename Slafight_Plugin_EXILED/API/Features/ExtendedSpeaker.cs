@@ -1,3 +1,4 @@
+using Slafight_Plugin_EXILED.API.Structs;
 using System;
 using AdminToys;
 using Mirror;
@@ -17,7 +18,7 @@ public sealed class ExtendedSpeaker
 {
     private const float EndResetWindow = 0.02f;
 
-    private SpeakerApi.Playback? _current;
+    private Playback? _current;
     private double _anchorTime;
     private double _pauseStarted = -1d;
     private double _pausedAccumulated;
@@ -38,7 +39,7 @@ public sealed class ExtendedSpeaker
     public SpeakerToy Base => LabSpeaker.Base;
 
     /// <summary>このスピーカーでいま鳴っているクリップ。鳴り終わったあとと、ライブ送信のみのときは null。</summary>
-    public SpeakerApi.Playback? CurrentPlayback
+    public Playback? CurrentPlayback
     {
         get
         {
@@ -106,10 +107,10 @@ public sealed class ExtendedSpeaker
 
     internal int TakeGeneration() => ++_generation;
 
-    internal bool IsAnnounced(SpeakerApi.Playback playback)
+    internal bool IsAnnounced(Playback playback)
         => _announcedGeneration != 0 && playback.Generation == _announcedGeneration;
 
-    internal bool TryGetAnnounced(out SpeakerApi.Playback playback)
+    internal bool TryGetAnnounced(out Playback playback)
     {
         if (_current is { } current && IsAnnounced(current))
         {
@@ -121,7 +122,7 @@ public sealed class ExtendedSpeaker
         return false;
     }
 
-    internal void MarkAnnounced(SpeakerApi.Playback playback)
+    internal void MarkAnnounced(Playback playback)
     {
         _current = playback;
         _announcedGeneration = playback.Generation;
