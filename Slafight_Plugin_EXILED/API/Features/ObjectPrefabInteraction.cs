@@ -138,8 +138,11 @@ public static class ObjectPrefabInteractionRouter
     /// イベントの Interactable から対応するハンドルを引く。
     /// </summary>
     public static bool TryRoute(InteractableToy? toy, out InteractableHandle handle)
+        => TryRouteToy(toy?.Base, out handle);
+
+    internal static bool TryRouteToy(InvisibleInteractableToy? toy, out InteractableHandle handle)
     {
         handle = null!;
-        return toy?.Base != null && Routes.TryGetValue(toy.Base, out handle!);
+        return toy != null && Routes.TryGetValue(toy, out handle!);
     }
 }
