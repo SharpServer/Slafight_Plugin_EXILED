@@ -30,6 +30,8 @@ public static class SpeakerApi
 
     private sealed class CachedClip
     {
+        private float[]? oneShotSamples;
+
         public CachedClip(string name, float[] samples)
         {
             Name = name;
@@ -40,6 +42,8 @@ public static class SpeakerApi
         public string Name { get; }
         public float[] Samples { get; }
         public float Duration { get; }
+
+        public float[] GetSamples(bool loop) => loop ? Samples : (oneShotSamples ??= PadFinalPacket(Samples));
     }
 
     public static string AudioDirectory => Plugin.Singleton.Config.AudioReferences;
@@ -53,7 +57,7 @@ public static class SpeakerApi
     /// <summary>再生を片付ける直前に起きます。<see cref="SpeakerPlaybackStoppingEventArgs.IsAllowed"/> で止められます。</summary>
     public static event Action<SpeakerPlaybackStoppingEventArgs> PlaybackStopping;
 
-    /// <summary>再生を片付けた直後に起きます。</summary>
+    /// <summary>再生が終了した直後に起きます。自然終了した場合はスピーカーを残す設定でも発火します。</summary>
     public static event Action<SpeakerPlaybackStoppedEventArgs> PlaybackStopped;
 
     public static LivePlayback CreateLiveSpeaker(
@@ -186,7 +190,7 @@ public static class SpeakerApi
         OneShotCursors[audioPlayerName] = (cursor + 1) % speakers.Count;
 
         SetTransform(playback, position, parent);
-        return PlayClip(playback.Speaker, audioPlayerName, clipName, clip.Samples, loop: false, destroyOnEnd: false, ownsNewSpeaker: false);
+        return PlayClip(playback.Speaker, audioPlayerName, clipName, clip.GetSamples(loop: false), loop: false, destroyOnEnd: false, ownsNewSpeaker: false);
     }
 
     /// <summary>破棄済みスピーカーを掃除したうえで、その audioPlayerName の生存中 Playback を返す。</summary>
@@ -237,7 +241,7 @@ public static class SpeakerApi
         try
         {
             speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, volume, listeners);
-            return PlayClip(speaker, audioPlayerName, clipName, clip.Samples, loop, destroyOnEnd, ownsNewSpeaker: true);
+            return PlayClip(speaker, audioPlayerName, clipName, clip.GetSamples(loop), loop, destroyOnEnd, ownsNewSpeaker: true);
         }
         catch (Exception ex)
         {
@@ -292,7 +296,7 @@ public static class SpeakerApi
         try
         {
             speaker = CreateSpeaker(position, parent, isSpatial, maxDistance, minDistance, volume, listeners);
-            return PlayClip(speaker, audioPlayerName, audioPlayerName, samples, loop, destroyOnEnd, ownsNewSpeaker: true);
+            return PlayClip(speaker, audioPlayerName, audioPlayerName, loop ? samples : PadFinalPacket(samples), loop, destroyOnEnd, ownsNewSpeaker: true);
         }
         catch (Exception ex)
         {
@@ -370,7 +374,7 @@ public static class SpeakerApi
     public static bool Stop(Playback playback)
         => Stop(playback, SpeakerPlaybackEndReason.Stopped);
 
-    private static bool Stop(Playback playback, SpeakerPlaybackEndReason reason)
+    private static bool Stop(Playback playback, SpeakerPlaybackEndReason reason, bool destroySpeaker = true)
     {
         if (playback.ControllerId == 0)
             return false;
@@ -388,14 +392,22 @@ public static class SpeakerApi
             bool loop = speaker.Loop;
             var stopping = new SpeakerPlaybackStoppingEventArgs(playback, loop, duration, reason);
             Raise(PlaybackStopping, stopping);
-            if (!stopping.IsAllowed)
+            if (!stopping.IsAllowed && reason != SpeakerPlaybackEndReason.Completed)
             {
                 EndingPlaybacks.Remove(key);
                 return false;
             }
 
+            destroySpeaker &= stopping.IsAllowed;
             speaker.MarkEnded();
             stopped = new SpeakerPlaybackStoppedEventArgs(playback, loop, duration, reason);
+        }
+
+        if (!destroySpeaker)
+        {
+            EndingPlaybacks.Remove(key);
+            Raise(PlaybackStopped, stopped);
+            return true;
         }
 
         playback.Speaker?.ClearCurrentPlayback(playback.ControllerId);
@@ -432,8 +444,8 @@ public static class SpeakerApi
         var releasedId = !IsControllerTracked(playback.ControllerId) && AllocatedControllerIds.Remove(playback.ControllerId);
         if (announce)
         {
-            Raise(PlaybackStopped, stopped);
             EndingPlaybacks.Remove(key);
+            Raise(PlaybackStopped, stopped);
         }
 
         return destroyed || releasedId || removedPlayback || removedStream;
@@ -913,36 +925,42 @@ public static class SpeakerApi
         throw new InvalidOperationException("No available SpeakerToy controller IDs.");
     }
 
-    /// <summary>送信が終わってから、最後のパケットが届く余裕を見てスピーカーを破棄する。</summary>
-    private static IEnumerator<float> StopWhenFinished(Playback playback)
+    private static float[] PadFinalPacket(float[] samples)
     {
-        while (IsCurrentClipActive(playback))
-            yield return Timing.WaitForSeconds(0.05f);
+        int remainder = samples.Length % PacketSize;
+        if (remainder == 0)
+            return samples;
 
-        // 鳴り終わると CurrentPlayback は null になる。別クリップへ差し替わったときだけ破棄しない。
-        if (!playback.IsValid || HasBeenReplaced(playback))
-            yield break;
-
-        yield return Timing.WaitForSeconds(PlaybackEndTailSeconds);
-        if (!playback.IsValid || HasBeenReplaced(playback) || IsCurrentClipActive(playback))
-            yield break;
-
-        Stop(playback, SpeakerPlaybackEndReason.Completed);
+        // LabAPI は端数のある最終パケットの後、無音バッファを送り続けてしまう。
+        var padded = new float[checked(samples.Length + PacketSize - remainder)];
+        Array.Copy(samples, padded, samples.Length);
+        return padded;
     }
 
-    private static bool IsCurrentClipActive(Playback playback)
-        => playback.IsValid &&
-           playback.Speaker.IsClipActive &&
-           playback.Speaker.CurrentPlayback is { } current &&
-           IsSamePlayback(playback, current);
+    private static IEnumerator<float> WatchClipEnd(Playback playback, bool destroyOnEnd)
+    {
+        // 短いクリップでも Play の戻り値が呼び出し側に渡ってから終了を通知する。
+        yield return Timing.WaitForOneFrame;
 
-    private static bool HasBeenReplaced(Playback playback)
-        => playback.Speaker?.CurrentPlayback is { } current && !IsSamePlayback(playback, current);
+        var speaker = playback.Speaker;
+        while (playback.IsValid && speaker.IsAnnounced(playback))
+        {
+            if (!speaker.IsClipActive)
+            {
+                // 破棄する場合は、最後のパケットがクライアントへ届くまで待つ。
+                if (destroyOnEnd)
+                    yield return Timing.WaitForSeconds(PlaybackEndTailSeconds);
 
-    private static bool IsSamePlayback(Playback playback, Playback current)
-        => current.ControllerId == playback.ControllerId &&
-           current.Generation == playback.Generation &&
-           string.Equals(current.ClipName, playback.ClipName, StringComparison.OrdinalIgnoreCase);
+                if (playback.IsValid && speaker.IsAnnounced(playback) && !speaker.IsClipActive)
+                {
+                    Stop(playback, SpeakerPlaybackEndReason.Completed, destroyOnEnd);
+                    yield break;
+                }
+            }
+
+            yield return Timing.WaitForSeconds(0.05f);
+        }
+    }
 
     private static Playback PlayClip(
         ExtendedSpeaker speaker,
@@ -1021,8 +1039,8 @@ public static class SpeakerApi
         speaker.MarkAnnounced(playback);
         Raise(PlaybackStarted, new SpeakerPlaybackStartedEventArgs(playback, loop, duration, destroyOnEnd));
 
-        if (destroyOnEnd && !loop && speaker.IsAnnounced(playback))
-            Timing.RunCoroutine(StopWhenFinished(playback));
+        if (!loop && speaker.IsAnnounced(playback))
+            Timing.RunCoroutine(WatchClipEnd(playback, destroyOnEnd));
 
         return playback;
     }

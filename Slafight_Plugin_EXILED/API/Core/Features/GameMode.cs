@@ -104,7 +104,9 @@ public abstract class GameMode
     /// <summary>
     /// 起動可能なモードから重み付き抽選で 1 つ選びます。候補が無ければ null。
     /// </summary>
-    public static GameMode Roll(Random random = null)
+    public static GameMode Roll(Random random = null) => Roll(0, random);
+
+    internal static GameMode Roll(int noModeWeight, Random random = null)
     {
         List<GameMode> candidates =
         [
@@ -114,7 +116,7 @@ public abstract class GameMode
 
         if (candidates.Count == 0) return null;
 
-        int total = candidates.Sum(mode => mode.Weight);
+        int total = noModeWeight + candidates.Sum(mode => mode.Weight);
         int roll = (random ?? new Random()).Next(total);
 
         foreach (GameMode mode in candidates)
@@ -124,7 +126,7 @@ public abstract class GameMode
             if (roll < 0) return mode;
         }
 
-        return candidates[candidates.Count - 1];
+        return null;
     }
 
     /// <summary>

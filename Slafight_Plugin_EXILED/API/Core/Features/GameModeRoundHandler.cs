@@ -15,6 +15,9 @@ public sealed class GameModeRoundHandler : EventHandlerBase
     /// </summary>
     private const float StartDelay = 0.75f;
 
+    /// <summary>通常ラウンド（モード無し）の抽選の重みです。</summary>
+    private const int NoModeWeight = 1;
+
     /// <inheritdoc />
     public override HandlerLifetime Lifetime => HandlerLifetime.Round;
 
@@ -37,7 +40,7 @@ public sealed class GameModeRoundHandler : EventHandlerBase
     {
         if (GameMode.Current is not null) return;
 
-        if (GameMode.Roll() is not { } mode) return;
+        if (GameMode.Roll(NoModeWeight) is not { } mode) return;
 
         if (mode.Start())
             Log.Debug($"[Slafight] ゲームモード '{mode.Name}' を開始しました。");

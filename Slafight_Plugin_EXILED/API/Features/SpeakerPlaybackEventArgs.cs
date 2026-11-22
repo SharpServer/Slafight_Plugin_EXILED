@@ -59,7 +59,8 @@ public sealed class SpeakerPlaybackStartedEventArgs(Playback playback, bool loop
 
 /// <summary>
 /// 再生を片付ける直前です。
-/// <see cref="IsAllowed"/> を false にすると、スピーカーは残し、再生も切りません。
+/// <see cref="IsAllowed"/> を false にすると停止や差し替えを取り消します。
+/// 自然終了の場合はスピーカーの破棄だけを取り消し、終了は通知されます。
 /// </summary>
 public sealed class SpeakerPlaybackStoppingEventArgs(Playback playback, bool loop, float duration, SpeakerPlaybackEndReason reason)
     : SpeakerPlaybackEventArgs(playback, loop, duration)
@@ -69,7 +70,7 @@ public sealed class SpeakerPlaybackStoppingEventArgs(Playback playback, bool loo
     public bool IsAllowed { get; set; } = true;
 }
 
-/// <summary>再生を片付けた直後です。差し替えのときはスピーカー自体は残っています。</summary>
+/// <summary>再生を片付けた直後です。自然終了や差し替えでスピーカーが残る場合も発火します。</summary>
 public sealed class SpeakerPlaybackStoppedEventArgs(Playback playback, bool loop, float duration, SpeakerPlaybackEndReason reason)
     : SpeakerPlaybackEventArgs(playback, loop, duration)
 {
