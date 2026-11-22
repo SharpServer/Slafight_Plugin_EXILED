@@ -38,14 +38,12 @@ public class NtfMedicalSpecialist : CustomRole
     
     protected override void OnSpawned()
     {
-        Player.GetCustomItems<MediHolder>().FirstOrDefault()?.HolderInventory = 
-        [
+        Player.GetCustomItems<MediHolder>().FirstOrDefault()?.AddStartingContents(
             ItemType.Medkit,
             ItemType.Medkit,
             ItemType.Painkillers,
             ItemType.Painkillers,
-            ItemType.Painkillers,
-        ];
+            ItemType.Painkillers);
         base.OnSpawned();
     }
 }

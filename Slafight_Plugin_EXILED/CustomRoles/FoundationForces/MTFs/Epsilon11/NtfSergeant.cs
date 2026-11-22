@@ -39,10 +39,8 @@ public class NtfSergeant : CustomRole
     
     protected override void OnSpawned()
     {
-        Player.GetCustomItems<MediHolder>().FirstOrDefault()?.HolderInventory = 
-        [
-            ItemType.Medkit
-        ];
+        Player.GetCustomItems<MediHolder>().FirstOrDefault()?.AddStartingContents(
+            ItemType.Medkit);
         base.OnSpawned();
     }
 }

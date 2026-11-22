@@ -38,6 +38,7 @@ public abstract class CustomItem
 
     private ushort trackedSerial;
     private bool eventsRegistered;
+    private bool pickupStored;
 
     // CustomHybrid のモード定義が、実際に紐付いた物理アイテムを参照するための文脈。
     private ushort hybridContextSerial;
@@ -335,9 +336,32 @@ public abstract class CustomItem
         BySerial.Remove(trackedSerial);
         Invoke(StopTracking, nameof(OnTrackingStopped));
         trackedSerial = 0;
+        pickupStored = false;
         hybridContextSerial = 0;
         hybridDestroyAction = null;
         hybridRefreshPickupSchematicAction = null;
+    }
+
+    // A container can destroy the world pickup while keeping the original
+    // serial and the live custom instance, including its registered events.
+    internal bool HasStoredPickup => pickupStored && ReferenceEquals(Of(trackedSerial), this);
+
+    internal bool TryStorePickup(Pickup pickup)
+    {
+        if (pickupStored || !ReferenceEquals(Of(pickup), this) || !pickup.IsSpawned)
+            return false;
+
+        pickupStored = true;
+        return true;
+    }
+
+    internal void RestoreStoredPickup(Item item)
+    {
+        if (!HasStoredPickup || !Check(item))
+            return;
+
+        pickupStored = false;
+        ApplyItemCustomization(item, initialize: false);
     }
 
     /// <summary>
@@ -1330,12 +1354,16 @@ public abstract class CustomItem
         custom.DetachPickupSchematic();
         custom.Invoke(() => custom.OnPickupDestroyed(ev), nameof(OnPickupDestroyed));
 
+        if (custom.pickupStored)
+            return;
+
         // 拾得遷移でも Pickup は破棄されるため、その場では Release しない。
         // 次フレームにも Item/Pickup のどちらも無ければ、PMER の複数回 Pickup 等で
         // 実体だけ消えた追跡を解放する。
         Timing.CallDelayed(0f, () =>
         {
-            if (serial != 0 && ReferenceEquals(Of(serial), custom) && custom.Item == null && custom.Pickup == null)
+            if (serial != 0 && ReferenceEquals(Of(serial), custom) &&
+                !custom.pickupStored && custom.Item == null && custom.Pickup == null)
                 custom.Release();
         });
     }

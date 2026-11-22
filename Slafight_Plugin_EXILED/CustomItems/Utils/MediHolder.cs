@@ -1,8 +1,15 @@
+using System;
 using System.Collections.Generic;
-using Exiled.API.Features.Items;
+using Exiled.API.Features.Pickups;
+using InventorySystem;
+using InventorySystem.Items;
+using InventorySystem.Items.Pickups;
+using InventorySystem.Items.Usables;
 using LabApi.Events.Arguments.PlayerEvents;
+using LabApi.Events.Handlers;
 using MEC;
 using Slafight_Plugin_EXILED.API.Core.Features;
+using Slafight_Plugin_EXILED.CustomItems.SCPs;
 using Slafight_Plugin_EXILED.Extensions;
 using Player = Exiled.API.Features.Player;
 
@@ -10,11 +17,30 @@ namespace Slafight_Plugin_EXILED.CustomItems.Utils;
 
 public class MediHolder : CustomUsableItem
 {
+    private const int PickupCapacity = 3;
+    private static readonly Type[] ExcludedCustomItemTypes =
+    [
+        typeof(MediHolder),
+        typeof(Scp1425)
+    ];
+
+    private readonly List<StoredMedicine> _contents = [];
+    private Player _ammoOwner;
+
+    private sealed class StoredMedicine(ItemType type, CustomItem custom = null, UsablePickup pickup = null)
+    {
+        public ItemType Type { get; } = type;
+        public CustomItem Custom { get; } = custom;
+        public string Name => Custom?.Name ?? Type.ToString();
+        public float? UseTime { get; } = pickup?.UseTime;
+        public float? MaxCancellableTime { get; } = pickup?.MaxCancellableTime;
+        public float? Weight { get; } = pickup?.Weight;
+    }
+
     public override string Name => "MediHolder";
-    public override string Description => "弾薬スロットに拾った回復アイテムを収納でき、使用することができる。";
+    public override string Description => "拾った回復アイテムを収納する。投げ操作で選び、使用操作で取り出す。";
     public override ItemType BaseType => ItemType.Medkit;
-    public CoroutineHandle HintCoroutine;
-    public List<ItemType> HolderInventory = [];
+    private CoroutineHandle _hintCoroutine;
     private int _selected;
     private int _hintVersion;
     private Player _hintPlayer;
@@ -28,7 +54,7 @@ public class MediHolder : CustomUsableItem
 
         var scope = PlayerScope.Of(player);
         _hintPlayer = player;
-        HintCoroutine = scope.Track(Timing.RunCoroutine(DisplayHint(scope, _hintVersion)));
+        _hintCoroutine = scope.Track(Timing.RunCoroutine(DisplayHint(scope, _hintVersion)));
     }
 
     private IEnumerator<float> DisplayHint(PlayerScope scope, int version)
@@ -44,7 +70,7 @@ public class MediHolder : CustomUsableItem
                    Check(scope.Player) && ReferenceEquals(Of(Serial), this))
             {
                 NormalizeSelection();
-                string selected = HolderInventory.Count > 0 ? HolderInventory[_selected].ToString() : "無し";
+                string selected = _contents.Count > 0 ? _contents[_selected].Name : "無し";
                 _hintVisible = true;
                 // Let the last frame expire even if a lifecycle event bypasses normal cleanup.
                 scope.Player.ShowHint($"<size=26><<color=yellow>{selected}</color>></size>", 0.3f);
@@ -62,7 +88,7 @@ public class MediHolder : CustomUsableItem
     private void StopHint()
     {
         _hintVersion++;
-        Timing.KillCoroutines(HintCoroutine);
+        Timing.KillCoroutines(_hintCoroutine);
         ClearHint();
     }
 
@@ -70,7 +96,7 @@ public class MediHolder : CustomUsableItem
     {
         var player = _hintPlayer;
         bool wasVisible = _hintVisible;
-        HintCoroutine = default;
+        _hintCoroutine = default;
         _hintPlayer = null;
         _hintVisible = false;
 
@@ -78,123 +104,181 @@ public class MediHolder : CustomUsableItem
             player.ShowHint(string.Empty);
     }
 
+    internal void AddStartingContents(params ItemType[] types)
+    {
+        SetAmmoOwner(Owner);
+        foreach (ItemType type in types)
+            AddMedicine(new StoredMedicine(type));
+    }
+
+    protected override void RegisterEvents()
+    {
+        InventoryExtensions.OnItemRemoved += OnItemRemoved;
+        PlayerEvents.DroppingAmmo += OnDroppingAmmo;
+    }
+
+    protected override void UnregisterEvents()
+    {
+        InventoryExtensions.OnItemRemoved -= OnItemRemoved;
+        PlayerEvents.DroppingAmmo -= OnDroppingAmmo;
+    }
+
     private void NormalizeSelection()
     {
-        if (_selected < 0 || _selected >= HolderInventory.Count)
+        if (_selected >= _contents.Count)
             _selected = 0;
     }
 
     protected override void OnDropStarting(PlayerDroppingItemEventArgs ev)
     {
-        if (!ev.Throw) return;
+        if (!ev.IsAllowed || !ev.Throw) return;
         ev.IsAllowed = false;
+        _selected++;
         NormalizeSelection();
-        var count = _selected + 1;
-        if (HolderInventory.Count <= count)
-        {
-            _selected = 0;
-        }
-        else
-        {
-            _selected++;
-        }
     }
 
     protected override void OnUseStarting(PlayerUsingItemEventArgs ev)
     {
+        if (!ev.IsAllowed) return;
         ev.IsAllowed = false;
+
         Player player = Owner;
-        if (!player.IsSafePlayer()) return;
+        if (!player.IsSafePlayer() || !player.IsAlive) return;
         NormalizeSelection();
-        if (HolderInventory.Count <= 0)
+        if (_contents.Count == 0)
         {
             player.ShowHint("<size=26>アイテムが何も入っていません！</size>");
             return;
         }
 
-        player.CurrentItem = Exiled.API.Features.Items.Item.Create(HolderInventory[_selected]);
-        if (player.CurrentItem is Usable usable)
+        StoredMedicine medicine = _contents[_selected];
+        CustomItem custom = medicine.Custom;
+        if (custom != null && !custom.HasStoredPickup)
         {
-            HolderInventory.RemoveAt(_selected);
-            _selected = 0;
-            PlayerScope.Of(player).Delay(1f, p =>
-            {
-                if (!p.IsAlive || !ReferenceEquals(p.CurrentItem?.Base, usable.Base))
-                    return;
-
-                usable.MaxCancellableTime = 0f;
-                usable.IsUsing = true;
-            });
+            RemoveSelectedMedicine();
+            player.ShowHint("<size=26>収納していたアイテムは既に失われています。</size>");
+            return;
         }
+
+        ushort serial = custom?.Serial ?? 0;
+        if (serial != 0 && (custom.Pickup is { IsDestroyed: false } ||
+                            InventoryExtensions.ServerTryGetItemWithSerial(serial, out _)))
+            return;
+
+        if (player.Inventory.ServerAddItem(medicine.Type, ItemAddReason.PickedUp, serial) is not UsableItem item)
+        {
+            player.ShowHint("<size=26>インベントリに空きが必要です。</size>");
+            return;
+        }
+
+        item.UseTime = medicine.UseTime ?? item.UseTime;
+        item.MaxCancellableTime = medicine.MaxCancellableTime ?? item.MaxCancellableTime;
+        item._weight = medicine.Weight ?? item.Weight;
+        custom?.RestoreStoredPickup(LabApi.Features.Wrappers.Item.Get(item));
+
+        RemoveSelectedMedicine();
+        player.Inventory.ServerSelectItem(item.ItemSerial);
+        PlayerScope.Of(player).Delay(1f, p =>
+        {
+            if (p.IsAlive && NetGuards.IsReadyClient(p) &&
+                ReferenceEquals(p.Inventory.CurInstance, item) && !item.IsUsing)
+                UsableItemsController.ServerEmulateMessage(item.ItemSerial, StatusMessage.StatusType.Start);
+        });
     }
 
-    protected override void OnPickupCompleted(PlayerPickedUpItemEventArgs ev)
-    {
-        Player player = Owner;
-        if (player == null) return;
-
-        foreach (var itemType in HolderInventory)
-            AddAmmo(player, itemType);
-    }
-
-    protected override void OnDropCompleted(PlayerDroppedItemEventArgs ev)
-    {
-        StopHint();
-        Player player = ev.Player?.ReferenceHub is { } hub ? Player.Get(hub) : null;
-        if (player == null) return;
-
-        foreach (var itemType in HolderInventory)
-            RemoveAmmo(player, itemType);
-    }
+    protected override void OnPickupCompleted(PlayerPickedUpItemEventArgs ev) =>
+        SetAmmoOwner(Player.Get(ev.Player.ReferenceHub));
 
     protected override void OnDeselected(PlayerChangedItemEventArgs ev) => StopHint();
 
     protected override void OnTrackingStopped()
     {
         StopHint();
+        SetAmmoOwner(null);
+        foreach (StoredMedicine medicine in _contents)
+        {
+            if (medicine.Custom is { HasStoredPickup: true } custom)
+                custom.Release();
+        }
+
+        _contents.Clear();
+        _selected = 0;
         base.OnTrackingStopped();
     }
 
     protected override void OnOwnerPickupStarting(PlayerPickingUpItemEventArgs ev)
     {
-        if (ev.Pickup == null) return;
-        if (Check(ev.Pickup)) return;
-
-        if (HolderInventory.Count >= 3)
+        if (!ev.IsAllowed || _contents.Count >= PickupCapacity ||
+            ev.Pickup is not { IsSpawned: true, IsLocked: false } pickup ||
+            pickup.Type is not (ItemType.Painkillers or ItemType.Medkit or ItemType.Adrenaline or ItemType.SCP500))
             return;
 
-        if (Is(ev.Pickup, out _))
+        CustomItem custom = Of(pickup);
+        if (custom != null && Array.Exists(ExcludedCustomItemTypes, type => type.IsInstanceOfType(custom)))
             return;
 
-        if (ev.Pickup.Type is not (
-            ItemType.Painkillers or
-            ItemType.Medkit or
-            ItemType.Adrenaline or
-            ItemType.SCP500))
+        var medicine = new StoredMedicine(pickup.Type, custom, Exiled.API.Features.Pickups.Pickup.Get(pickup.Base) as UsablePickup);
+        if (custom != null && !custom.TryStorePickup(pickup))
             return;
 
         ev.IsAllowed = false;
-
-        HolderInventory.Add(ev.Pickup.Type);
-        if (Owner is { } owner)
-            AddAmmo(owner, ev.Pickup.Type);
-
-        ev.Pickup.Destroy();
-    }
-    
-    private static void AddAmmo(Player player, ItemType type)
-    {
-        if (player.Ammo.ContainsKey(type))
-            player.Ammo[type]++;
-        else
-            player.Ammo.Add(type, 1);
+        pickup.IsLocked = true;
+        SetAmmoOwner(Owner);
+        AddMedicine(medicine);
+        // The search completor clears InUse on a denied pickup before destruction.
+        Timing.CallDelayed(0f, () =>
+        {
+            if (!pickup.IsDestroyed && pickup.IsSpawned)
+                pickup.Destroy();
+        });
     }
 
-    private static void RemoveAmmo(Player player, ItemType type)
+    private void OnItemRemoved(ReferenceHub hub, ItemBase item, ItemPickupBase pickup)
     {
-        if (!player.Ammo.TryGetValue(type, out var amount) || amount == 0)
-            return;
+        if (!Check(item.ItemSerial)) return;
 
-        player.Ammo[type]--;
+        StopHint();
+        SetAmmoOwner(null);
+        if (pickup == null)
+            Release();
+    }
+
+    private void OnDroppingAmmo(PlayerDroppingAmmoEventArgs ev)
+    {
+        // Reserve ammo is only the inventory display. Dropping it would spawn
+        // real medicine pickups while leaving the stored entries intact.
+        if (_ammoOwner != null && ev.Player.ReferenceHub == _ammoOwner.ReferenceHub &&
+            _contents.Exists(medicine => medicine.Type == ev.Type))
+            ev.IsAllowed = false;
+    }
+
+    private void AddMedicine(StoredMedicine medicine)
+    {
+        _contents.Add(medicine);
+        _ammoOwner?.Inventory.ServerAddAmmo(medicine.Type, 1);
+    }
+
+    private void RemoveSelectedMedicine()
+    {
+        _ammoOwner?.Inventory.ServerAddAmmo(_contents[_selected].Type, -1);
+        _contents.RemoveAt(_selected);
+        NormalizeSelection();
+    }
+
+    private void SetAmmoOwner(Player player)
+    {
+        if (ReferenceEquals(_ammoOwner, player)) return;
+
+        if (_ammoOwner.IsSafePlayer())
+        {
+            foreach (StoredMedicine medicine in _contents)
+                _ammoOwner.Inventory.ServerAddAmmo(medicine.Type, -1);
+        }
+
+        _ammoOwner = player.IsSafePlayer() ? player : null;
+        if (_ammoOwner == null) return;
+
+        foreach (StoredMedicine medicine in _contents)
+            _ammoOwner.Inventory.ServerAddAmmo(medicine.Type, 1);
     }
 }

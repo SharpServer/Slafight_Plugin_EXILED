@@ -40,6 +40,8 @@ public class Plugin : Plugin<Config>
 
         InitializeMediaTools();
 
+        SequenceManager.Initialize();
+
         // 自動登録の起動。EventHandlerBase の派生クラスはこれだけで購読される。
         EventHandlerRegistry.Initialize();
 
@@ -62,6 +64,8 @@ public class Plugin : Plugin<Config>
 
     public override void OnDisabled()
     {
+        SequenceManager.Shutdown();
+
         HarmonyInstance?.UnpatchAll(HarmonyInstance.Id);
         HarmonyInstance = null;
 

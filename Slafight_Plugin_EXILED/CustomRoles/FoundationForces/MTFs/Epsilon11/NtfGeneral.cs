@@ -40,11 +40,9 @@ public class NtfGeneral : CustomRole
 
     protected override void OnSpawned()
     {
-        Player.GetCustomItems<MediHolder>().FirstOrDefault()?.HolderInventory = 
-        [
+        Player.GetCustomItems<MediHolder>().FirstOrDefault()?.AddStartingContents(
             ItemType.Adrenaline,
-            ItemType.Medkit
-        ];
+            ItemType.Medkit);
         base.OnSpawned();
     }
 }
