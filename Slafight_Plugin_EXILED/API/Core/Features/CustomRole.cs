@@ -260,18 +260,24 @@ public abstract class CustomRole : IPlayerOwn
     /// <summary>
     /// 新しいインスタンスを作って付与します。呼び出しごとに別インスタンスになります。
     /// </summary>
-    public static T Spawn<T>(Player player) where T : CustomRole, new()
+    public static T Spawn<T>(Player player) where T : CustomRole, new() => Spawn<T>(player, null);
+
+    /// <summary>装備とスポーン地点の適用を呼び出しごとに指定します。null は役職の既定動作です。</summary>
+    public static T Spawn<T>(Player player, RoleSpawnFlags? flags) where T : CustomRole, new()
     {
         T role = new T();
 
-        return role.Spawn(player) ? role : null;
+        return role.Spawn(player, flags) ? role : null;
     }
 
     /// <summary>
     /// 実行時に決まった型の役職を付与します。スポーンセットや脱出規則など、
     /// 外部データではなく型を値として持ち回る経路で使います。
     /// </summary>
-    public static CustomRole Spawn(Type type, Player player)
+    public static CustomRole Spawn(Type type, Player player) => Spawn(type, player, null);
+
+    /// <inheritdoc cref="Spawn{T}(Player, RoleSpawnFlags?)"/>
+    public static CustomRole Spawn(Type type, Player player, RoleSpawnFlags? flags)
     {
         if (type is null || !typeof(CustomRole).IsAssignableFrom(type) || type.IsAbstract)
         {
@@ -284,7 +290,7 @@ public abstract class CustomRole : IPlayerOwn
         {
             CustomRole role = (CustomRole)Activator.CreateInstance(type);
 
-            return role.Spawn(player) ? role : null;
+            return role.Spawn(player, flags) ? role : null;
         }
         catch (Exception exception)
         {
@@ -315,7 +321,13 @@ public abstract class CustomRole : IPlayerOwn
     /// <summary>
     /// この役職をプレイヤーに付与します。失敗したときは理由を返します。
     /// </summary>
-    public bool Spawn(Player player, out string failure)
+    public bool Spawn(Player player, out string failure) => Spawn(player, null, out failure);
+
+    /// <inheritdoc cref="Spawn{T}(Player, RoleSpawnFlags?)"/>
+    public bool Spawn(Player player, RoleSpawnFlags? flags) => Spawn(player, flags, out _);
+
+    /// <summary>スポーンオプションを指定して役職を付与し、失敗したときは理由を返します。</summary>
+    public bool Spawn(Player player, RoleSpawnFlags? spawnFlags, out string failure)
     {
         failure = null;
 
@@ -350,15 +362,17 @@ public abstract class CustomRole : IPlayerOwn
         Player = player;
         NetId = netId;
 
-        // バニラに任せる分だけフラグを立てる。
-        // 装備を自分で配るならバニラの初期装備は要らないし、
-        // 位置を指定するならバニラのスポーン地点も要らない。
+        bool assignInventory = spawnFlags is null || (spawnFlags.Value & RoleSpawnFlags.AssignInventory) != 0;
+        bool useSpawnpoint = spawnFlags is null || (spawnFlags.Value & RoleSpawnFlags.UseSpawnpoint) != 0;
+        Vector3? retainedPosition = useSpawnpoint ? null : player.Position + Vector3.up * 0.1f;
+        bool hasCustomItems = Items.Count != 0 || CustomItems.Count != 0;
+
         RoleSpawnFlags flags = RoleSpawnFlags.None;
 
-        if (Items.Count == 0 && CustomItems.Count == 0)
+        if (assignInventory && !hasCustomItems)
             flags |= RoleSpawnFlags.AssignInventory;
 
-        if (!SpawnPosition.HasValue)
+        if (useSpawnpoint && !SpawnPosition.HasValue)
             flags |= RoleSpawnFlags.UseSpawnpoint;
 
         player.Role.Set(BaseRole, SpawnReason.ForceClass, flags);
@@ -380,7 +394,7 @@ public abstract class CustomRole : IPlayerOwn
         ActiveRoles[netId] = this;
         RegisterGlobalEvents();
 
-        Apply();
+        Apply(assignInventory, retainedPosition);
 
         try
         {
@@ -507,9 +521,9 @@ public abstract class CustomRole : IPlayerOwn
     /// <summary>
     /// スポーン記述を実際に反映します。
     /// </summary>
-    private void Apply()
+    private void Apply(bool assignInventory, Vector3? retainedPosition)
     {
-        if (SpawnPosition is { } position)
+        if ((retainedPosition ?? SpawnPosition) is { } position)
             Player.Position = position;
 
         if (SpawnRotation is { } rotation)
@@ -526,7 +540,7 @@ public abstract class CustomRole : IPlayerOwn
 
         ApplyHumeShieldSettings();
 
-        if (Items.Count > 0 || CustomItems.Count > 0)
+        if (assignInventory && (Items.Count > 0 || CustomItems.Count > 0))
         {
             Player.ClearInventory();
 
@@ -541,9 +555,12 @@ public abstract class CustomRole : IPlayerOwn
             }
         }
 
-        foreach (KeyValuePair<ItemType, ushort> ammo in Ammo)
+        if (assignInventory)
         {
-            Player.SetAmmo(ammo.Key, ammo.Value);
+            foreach (KeyValuePair<ItemType, ushort> ammo in Ammo)
+            {
+                Player.SetAmmo(ammo.Key, ammo.Value);
+            }
         }
 
         foreach (RoleEffect effect in Effects)

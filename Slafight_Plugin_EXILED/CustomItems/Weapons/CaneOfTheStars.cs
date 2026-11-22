@@ -2,6 +2,7 @@ using Exiled.API.Features.Items;
 using Exiled.Events.EventArgs.Player;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.CustomRoles.Fifthists;
+using PlayerRoles;
 using UnityEngine;
 using LabItem = LabApi.Features.Wrappers.Item;
 
@@ -34,10 +35,9 @@ public sealed class CaneOfTheStars : CustomItem
 
     private void OnDying(DyingEventArgs ev)
     {
-        if (!Check(ev.Attacker)) return;
+        if (!ev.IsAllowed || !CheckHeld(ev.Attacker)) return;
 
-        ev.IsAllowed = false;
-        var pos = ev.Player.Position + Vector3.up * 0.25f;
-        CustomRole.Spawn<FifthistConvert>(ev.Player).Player.Position = pos;
+        if (CustomRole.Spawn<FifthistConvert>(ev.Player, RoleSpawnFlags.AssignInventory) is not null)
+            ev.IsAllowed = false;
     }
 }

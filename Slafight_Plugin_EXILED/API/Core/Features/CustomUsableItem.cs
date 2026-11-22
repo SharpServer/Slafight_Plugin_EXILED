@@ -1,4 +1,5 @@
 using System;
+using InventorySystem.Items.Usables;
 using LabApi.Events.Arguments.PlayerEvents;
 
 namespace Slafight_Plugin_EXILED.API.Core.Features;
@@ -61,15 +62,18 @@ public abstract class CustomUsableItem : CustomItem
 
     protected override void OnUseEffectsApplying(PlayerItemUsageEffectsApplyingEventArgs ev)
     {
-        if (!CanCompleteUse(ev))
+        if (ev.IsAllowed)
         {
-            ev.IsAllowed = false;
-            OnUseCompletionDenied(ev);
-        }
-        else if (SuppressVanillaEffects)
-        {
-            ev.IsAllowed = false;
-            CompleteUse();
+            if (!CanCompleteUse(ev))
+            {
+                CancelCompletedUse(ev);
+                OnUseCompletionDenied(ev);
+            }
+            else if (SuppressVanillaEffects)
+            {
+                CancelCompletedUse(ev);
+                CompleteUse();
+            }
         }
 
         base.OnUseEffectsApplying(ev);
@@ -107,6 +111,20 @@ public abstract class CustomUsableItem : CustomItem
     /// <summary>使用回数を使い切ったときに呼ばれます。</summary>
     protected virtual void OnUsesDepleted()
     {
+    }
+
+    private static void CancelCompletedUse(PlayerItemUsageEffectsApplyingEventArgs ev)
+    {
+        ev.IsAllowed = false;
+        ev.ContinueProcess = false;
+
+        // LabAPI は使用状態を消すだけなので、旧 EXILED と同じ終了通知を送る。
+        UsableItem item = ev.UsableItem.Base;
+        item.OnUsingCancelled();
+
+        ReferenceHub hub = ev.Player.ReferenceHub;
+        if (NetGuards.IsReadyClient(hub))
+            hub.connectionToClient.Send(new StatusMessage(StatusMessage.StatusType.Cancel, item.ItemSerial));
     }
 
     private void CompleteUse()

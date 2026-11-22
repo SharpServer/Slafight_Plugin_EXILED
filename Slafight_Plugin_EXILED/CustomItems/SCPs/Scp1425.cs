@@ -1,12 +1,14 @@
 using System.Collections.Generic;
 using CustomPlayerEffects;
 using Exiled.API.Features;
-using LabApi.Events.Arguments.PlayerEvents;
+using Exiled.Events.EventArgs.Player;
+using PlayerRoles;
 using Slafight_Plugin_EXILED.API.Core.Features;
 using Slafight_Plugin_EXILED.API.Enums;
 using Slafight_Plugin_EXILED.CustomRoles.Fifthists;
 using Slafight_Plugin_EXILED.Extensions;
 using UnityEngine;
+using PlayerHandlers = Exiled.Events.Handlers.Player;
 
 namespace Slafight_Plugin_EXILED.CustomItems.SCPs;
 
@@ -16,7 +18,7 @@ namespace Slafight_Plugin_EXILED.CustomItems.SCPs;
 public sealed class Scp1425 : CustomUsableItem
 {
     // 読んだページ数は本ではなく読者が持つ。死ぬと最初から。
-    private static readonly Dictionary<uint, byte> ReadCounts = [];
+    private static readonly Dictionary<uint, ReadingProgress> ReadCounts = [];
     private static RoundScope countsScope;
 
     public override string Name => "SCP-1425";
@@ -27,13 +29,9 @@ public sealed class Scp1425 : CustomUsableItem
     protected override Color PickupLightColor => Color.magenta;
     protected override string PickupSchematicName => "Scp1425Model";
 
-    protected override void OnOwnerDying(PlayerDyingEventArgs ev)
-    {
-        if (Player.Get(ev.Player?.ReferenceHub) is { } player)
-            ReadCounts[player.GetNetId()] = 0;
+    private static void OnDied(DiedEventArgs ev) => ReadCounts.Remove(ev.Player.GetNetId());
 
-        base.OnOwnerDying(ev);
-    }
+    private static void OnLeft(LeftEventArgs ev) => ReadCounts.Remove(ev.Player.GetNetId());
 
     protected override void OnCustomUse()
     {
@@ -43,11 +41,24 @@ public sealed class Scp1425 : CustomUsableItem
         {
             countsScope = RoundScope.Current;
             ReadCounts.Clear();
-            countsScope.OnEnd(ReadCounts.Clear);
+            PlayerHandlers.Died += OnDied;
+            PlayerHandlers.Left += OnLeft;
+            countsScope.OnEnd(() =>
+            {
+                PlayerHandlers.Died -= OnDied;
+                PlayerHandlers.Left -= OnLeft;
+                ReadCounts.Clear();
+            });
         }
 
         uint netId = reader.GetNetId();
-        byte count = ReadCounts.TryGetValue(netId, out byte read) ? read : (byte)0;
+        if (!ReadCounts.TryGetValue(netId, out ReadingProgress progress))
+        {
+            progress = new ReadingProgress();
+            ReadCounts.Add(netId, progress);
+        }
+
+        byte count = progress.PagesRead;
 
         switch (count)
         {
@@ -60,7 +71,7 @@ public sealed class Scp1425 : CustomUsableItem
             case 2:
                 reader.ShowHint($"<size=22>3ページ目\n<color={ServerColors.Magenta}>精神を呼び起こす五つの感覚</color></size>", 5f);
                 reader.EnableEffect<Flashed>(3f);
-                PlayerScope.Of(reader).Delay(2.5f, player => CustomRole.Spawn<FifthistConvert>(player));
+                ScheduleConversion<FifthistConvert>(reader, netId, progress);
                 break;
             case 3:
                 reader.ShowHint("<size=22>4ページ目\n五つの欠片が緩慢に解かれてゆく</size>", 5f);
@@ -68,13 +79,28 @@ public sealed class Scp1425 : CustomUsableItem
             case 4:
                 reader.ShowHint($"<size=22>5ページ目\n<b><color={ServerColors.Magenta}>咆哮する黒き月は、見るに値しない幻である</color></b></size>", 5f);
                 reader.EnableEffect<Flashed>(3f);
-                PlayerScope.Of(reader).Delay(2.5f, player => CustomRole.Spawn<FifthistMarionette>(player));
+                ScheduleConversion<FifthistMarionette>(reader, netId, progress);
                 break;
             default:
-                ReadCounts[netId] = 0;
+                progress.PagesRead = 0;
                 return;
         }
 
-        ReadCounts[netId] = count >= 4 ? (byte)0 : (byte)(count + 1);
+        progress.PagesRead = count >= 4 ? (byte)0 : (byte)(count + 1);
+    }
+
+    private static void ScheduleConversion<T>(Player reader, uint netId, ReadingProgress progress)
+        where T : CustomRole, new()
+    {
+        PlayerScope.Of(reader).Delay(2.5f, player =>
+        {
+            if (ReadCounts.TryGetValue(netId, out ReadingProgress current) && ReferenceEquals(current, progress))
+                CustomRole.Spawn<T>(player, RoleSpawnFlags.AssignInventory);
+        });
+    }
+
+    private sealed class ReadingProgress
+    {
+        public byte PagesRead { get; set; }
     }
 }
